@@ -1,0 +1,12 @@
+{
+  "name": "inv-app",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.34.2",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}

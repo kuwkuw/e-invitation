@@ -9,17 +9,12 @@ E-invitation web app: describe your event in one sentence → get an AI-generate
 
 ## Quick start
 
-```sh
-# terminal 1 — API (port 3001)
-cd server
-cp .env.example .env   # add your ANTHROPIC_API_KEY
-npm install
-npm run dev
+pnpm monorepo — one install and one command for both servers:
 
-# terminal 2 — UI (port 5173)
-cd web
-npm install
-npm run dev
+```sh
+cp server/.env.example server/.env   # add your ANTHROPIC_API_KEY
+pnpm install
+pnpm dev   # API on 3001 + UI on 5173
 ```
 
 Open http://localhost:5173, type a sentence like
@@ -28,5 +23,5 @@ Open http://localhost:5173, type a sentence like
 ## Tests
 
 ```sh
-cd server && npm test
+pnpm test
 ```

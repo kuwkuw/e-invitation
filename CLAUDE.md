@@ -8,17 +8,16 @@ E-invitation web app: the user describes an event in one sentence → AI generat
 
 ## Commands
 
-Two independent npm packages; run commands inside each directory.
+pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From the root:
 
-**server/** (Fastify API, port 3001):
-- `npm run dev` — dev server with reload (tsx watch). Needs `ANTHROPIC_API_KEY` in `server/.env` (see `.env.example`); boots without it but generation calls fail.
-- `npm test` — vitest suite (mocks the LLM gateway, no API key needed)
-- `npx vitest run test/routing.test.ts` — single test file; `npx vitest run -t "name"` — single test by name
-- `npm run typecheck` / `npm run build`
+- `pnpm install` — all workspaces (new native deps needing postinstall scripts must be added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`)
+- `pnpm dev` — both dev servers in parallel
+- `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces
+- `pnpm --filter inv-app-server <script>` — one workspace (`inv-app-web` for web)
 
-**web/** (Vite + React, port 5173, proxies `/api` → localhost:3001):
-- `npm run dev`
-- `npm run build` (includes typecheck) / `npm run typecheck`
+**server/** (Fastify API, port 3001): dev server reloads via tsx watch. Needs `ANTHROPIC_API_KEY` in `server/.env` (see `.env.example`); boots without it but generation calls fail. Tests mock the LLM gateway — no key needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.
+
+**web/** (Vite + React, port 5173, proxies `/api` → localhost:3001): `build` includes typecheck.
 
 ## Architecture
 
