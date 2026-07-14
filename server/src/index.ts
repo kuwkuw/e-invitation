@@ -1,14 +1,7 @@
 import "dotenv/config";
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import { registerInvitationRoutes } from "./routes/invitations.js";
+import { buildApp } from "./app.js";
 
-const app = Fastify({ logger: true });
-
-await app.register(cors, { origin: true });
-
-app.get("/healthz", async () => ({ ok: true }));
-registerInvitationRoutes(app);
+const app = await buildApp();
 
 const port = Number(process.env.PORT ?? 3001);
 try {

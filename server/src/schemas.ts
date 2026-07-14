@@ -71,3 +71,30 @@ export const RegenerateFieldRequest = z.object({
   current_value: z.string(),
 });
 export type RegenerateFieldRequest = z.infer<typeof RegenerateFieldRequest>;
+
+// Publish + RSVP -------------------------------------------------------
+
+// IDs are URL-safe slugs; the pattern also guards the file store against
+// path traversal, so keep it strict.
+export const InvitationId = z.string().regex(/^[A-Za-z0-9_-]{6,32}$/);
+
+export const PublishRequest = z.object({
+  invitation: Invitation,
+  // Both present = republish (new version of an existing invitation).
+  id: InvitationId.optional(),
+  manage_token: z.string().optional(),
+});
+export type PublishRequest = z.infer<typeof PublishRequest>;
+
+export const RsvpRequest = z.object({
+  name: z.string().trim().min(1).max(100),
+  attending: z.boolean(),
+  guests_count: z.number().int().min(1).max(10).default(1),
+  note: z.string().trim().max(500).nullable().default(null),
+});
+export type RsvpRequest = z.infer<typeof RsvpRequest>;
+
+export const Rsvp = RsvpRequest.extend({
+  created_at: z.string(),
+});
+export type Rsvp = z.infer<typeof Rsvp>;

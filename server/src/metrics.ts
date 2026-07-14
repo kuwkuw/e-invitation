@@ -5,6 +5,8 @@
 const counters = {
   generations: 0,
   field_regenerations: {} as Record<string, number>,
+  publishes: 0,
+  rsvps: 0,
 };
 
 export function recordGeneration(): void {
@@ -15,11 +17,21 @@ export function recordFieldRegeneration(field: string): void {
   counters.field_regenerations[field] = (counters.field_regenerations[field] ?? 0) + 1;
 }
 
+export function recordPublish(): void {
+  counters.publishes += 1;
+}
+
+export function recordRsvp(): void {
+  counters.rsvps += 1;
+}
+
 export function metricsSnapshot() {
   const totalRegens = Object.values(counters.field_regenerations).reduce((a, b) => a + b, 0);
   return {
     generations: counters.generations,
     field_regenerations: { ...counters.field_regenerations },
     regenerate_rate: counters.generations === 0 ? 0 : totalRegens / counters.generations,
+    publishes: counters.publishes,
+    rsvps: counters.rsvps,
   };
 }

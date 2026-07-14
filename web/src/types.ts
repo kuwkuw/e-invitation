@@ -38,3 +38,33 @@ export interface Invitation {
   copy: InvitationCopy;
   design: DesignTokens;
 }
+
+// Publish + RSVP
+
+export interface PublishResult {
+  id: string;
+  version: number;
+  manage_token: string;
+}
+
+export interface PublishedInvitation {
+  id: string;
+  version: number;
+  invitation: Invitation;
+}
+
+export interface RsvpInput {
+  name: string;
+  attending: boolean;
+  guests_count: number;
+  note: string | null;
+}
+
+export interface RsvpEntry extends RsvpInput {
+  created_at: string;
+}
+
+export interface RsvpSummary {
+  rsvps: RsvpEntry[];
+  counts: { yes: number; no: number; guests: number };
+}

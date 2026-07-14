@@ -75,6 +75,73 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .field-head button:disabled { opacity: 0.5; cursor: default; }
 
+/* Publish panel --------------------------------------------------------- */
+
+.publish-panel { margin-top: 20px; }
+.publish-status { color: #6b6659; font-size: 0.85rem; margin: 10px 0 0; }
+.share-hint { font-size: 0.9rem; margin: 12px 0 6px; }
+.share-row { display: flex; gap: 8px; }
+.share-row input {
+  flex: 1;
+  border: 1px solid #c8c4bb;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+}
+.share-row button, .responses-head button {
+  border: 1px solid #c8c4bb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.share-row button:disabled, .responses-head button:disabled { opacity: 0.5; cursor: default; }
+
+.responses { margin-top: 20px; }
+.responses-head { display: flex; align-items: baseline; gap: 12px; }
+.responses-head h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b6659; margin: 0; }
+.responses-empty, .responses-counts { font-size: 0.9rem; color: #6b6659; }
+.responses-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.95rem; }
+.responses-list li { padding: 4px 0; border-bottom: 1px solid #e8e5de; }
+.rsvp-yes { color: #2f7d4f; }
+.rsvp-no { color: #a4262c; }
+.rsvp-note { color: #6b6659; }
+
+/* Guest page ------------------------------------------------------------ */
+
+.guest-page { max-width: 560px; margin: 0 auto; padding: 32px 20px 64px; }
+.guest-status { text-align: center; color: #6b6659; margin-top: 48px; }
+
+.rsvp-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: 0 4px 16px rgba(35, 33, 29, 0.1);
+}
+.rsvp-card h2 { margin: 0 0 14px; font-size: 1.15rem; }
+.rsvp-card label { display: block; font-size: 0.85rem; font-weight: 600; margin: 12px 0 4px; }
+.rsvp-card input[type="text"], .rsvp-card input:not([type]), .rsvp-card select, .rsvp-card textarea {
+  width: 100%;
+  border: 1px solid #c8c4bb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: inherit;
+  background: #fff;
+}
+.rsvp-card select { width: auto; min-width: 80px; }
+.rsvp-card fieldset { border: none; padding: 0; margin: 12px 0 0; }
+.rsvp-card legend { font-size: 0.85rem; font-weight: 600; padding: 0; margin-bottom: 4px; }
+.rsvp-choice { display: flex; gap: 18px; }
+.rsvp-choice label { display: flex; align-items: center; gap: 6px; font-weight: 400; margin: 0; }
+.rsvp-choice input { width: auto; }
+.rsvp-card button.primary { margin-top: 16px; }
+.rsvp-thanks { text-align: center; font-size: 1.05rem; margin: 12px 0; }
+
 /* Invitation card ------------------------------------------------------ */
 /* Design tokens map 1:1 to the classes below. The card only ever reads
    the custom properties set by its palette-* / type-* classes. */
