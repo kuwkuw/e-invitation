@@ -1,0 +1,136 @@
+/* App chrome ---------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f6f5f2;
+  color: #23211d;
+}
+
+.page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 1.4rem; margin: 0; }
+
+.lang-toggle button {
+  border: 1px solid #c8c4bb;
+  background: #fff;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.lang-toggle button:first-child { border-radius: 6px 0 0 6px; }
+.lang-toggle button:last-child { border-radius: 0 6px 6px 0; }
+.lang-toggle button.active { background: #23211d; color: #fff; border-color: #23211d; }
+
+.tagline { color: #6b6659; margin: 12px 0 20px; }
+
+.composer { display: flex; flex-direction: column; gap: 10px; }
+.composer textarea, .field textarea {
+  width: 100%;
+  border: 1px solid #c8c4bb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+  background: #fff;
+}
+
+button.primary {
+  align-self: flex-start;
+  background: #23211d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+button.primary:disabled { opacity: 0.5; cursor: default; }
+
+.error { color: #a4262c; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: 28px;
+  margin-top: 28px;
+  align-items: start;
+}
+@media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
+
+.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b6659; }
+
+.field { margin-bottom: 14px; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.field-head label { font-size: 0.85rem; font-weight: 600; }
+.field-head button {
+  border: 1px solid #c8c4bb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.field-head button:disabled { opacity: 0.5; cursor: default; }
+
+/* Invitation card ------------------------------------------------------ */
+/* Design tokens map 1:1 to the classes below. The card only ever reads
+   the custom properties set by its palette-* / type-* classes. */
+
+.inv {
+  --bg: #ffffff;
+  --ink: #23211d;
+  --accent: #23211d;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: Georgia, "Times New Roman", serif;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  border-radius: 12px;
+  padding: 44px 36px;
+  box-shadow: 0 8px 28px rgba(35, 33, 29, 0.14);
+  text-align: center;
+  min-height: 380px;
+}
+
+.inv-title { font-family: var(--font-display); color: var(--accent); font-size: 1.8rem; margin: 8px 0 18px; }
+.inv-greeting { font-style: italic; }
+.inv-body { line-height: 1.55; }
+.inv-details { font-weight: 600; margin: 22px 0; white-space: pre-line; }
+.inv-rsvp { font-size: 0.95rem; }
+.inv-closing { margin-top: 26px; color: var(--accent); font-family: var(--font-display); }
+
+/* palette-* */
+.palette-warm     { --bg: #f7efe3; --ink: #4a3728; --accent: #b3592e; }
+.palette-elegant  { --bg: #fcfbf8; --ink: #2b2b2e; --accent: #9a7b2d; }
+.palette-playful  { --bg: #fff8e1; --ink: #22336b; --accent: #e64980; }
+.palette-minimal  { --bg: #ffffff; --ink: #1c1c1c; --accent: #555555; }
+.palette-festive  { --bg: #1f2a44; --ink: #f4efe6; --accent: #e4b95b; }
+.palette-romantic { --bg: #fbeef0; --ink: #5a3540; --accent: #c25b74; }
+
+/* type-* */
+.type-serif  { --font-display: Georgia, "Playfair Display", serif; --font-body: Georgia, serif; }
+.type-sans   { --font-display: "Segoe UI", system-ui, sans-serif; --font-body: "Segoe UI", system-ui, sans-serif; }
+.type-script { --font-display: "Segoe Script", "Brush Script MT", cursive; --font-body: Georgia, serif; }
+
+/* layout-* */
+.layout-classic { text-align: center; }
+.layout-banner .inv-title {
+  background: var(--accent);
+  color: var(--bg);
+  margin: -44px -36px 24px;
+  padding: 20px 36px;
+  border-radius: 12px 12px 0 0;
+}
+.layout-split { text-align: left; }
+.layout-split .inv-details { border-left: 3px solid var(--accent); padding-left: 14px; text-align: left; }
+
+/* ornament-* */
+.inv-ornament { font-size: 1.5rem; color: var(--accent); min-height: 1em; }
+.ornament-none .inv-ornament::before { content: ""; }
+.ornament-floral .inv-ornament::before { content: "❀ ❀ ❀"; }
+.ornament-geometric .inv-ornament::before { content: "◆ ◇ ◆"; }
+.ornament-sparkle .inv-ornament::before { content: "✦ ✧ ✦"; }
