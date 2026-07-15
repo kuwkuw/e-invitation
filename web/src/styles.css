@@ -224,3 +224,142 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* geometric also frames the card with an inset hairline */
 .ornament-geometric { outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: -12px; }
+
+/* Landing page --------------------------------------------------------- */
+/* "Тепла класика" direction: warm terracotta accent + Playfair display,
+   Manrope UI. Composes the real InvitationPreview card in the hero fan. */
+
+.landing {
+  --lp-bg: #f6f5f2;
+  --lp-surface: #ffffff;
+  --lp-ink: #4a3728;
+  --lp-muted: #6b6659;
+  --lp-border: #e4ddd0;
+  --lp-accent: #b3592e;
+  --lp-accent-wash: #f7efe3;
+  --lp-display: "Playfair Display", Georgia, serif;
+
+  background: var(--lp-bg);
+  color: var(--lp-ink);
+  font-family: "Manrope", system-ui, sans-serif;
+  min-height: 100vh;
+}
+.landing h1, .landing h2 { font-family: var(--lp-display); font-weight: 700; }
+
+.lp-cta {
+  border: none;
+  cursor: pointer;
+  background: var(--lp-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 16px 32px;
+  border-radius: 8px;
+}
+.lp-cta:hover { background: #9d4d26; }
+.lp-cta-sm { font-size: 0.95rem; padding: 11px 22px; }
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--lp-surface);
+  border-bottom: 1px solid var(--lp-border);
+  padding: 18px clamp(22px, 5vw, 64px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--lp-ink); font-weight: 700; }
+
+.lp-hero {
+  padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.lp-hero-copy h1 { margin: 0 0 20px; font-size: clamp(2.15rem, 4vw, 3.2rem); line-height: 1.1; max-width: 11ch; }
+.lp-hero-copy p { margin: 0 0 28px; max-width: 38ch; color: var(--lp-muted); font-size: 1.15rem; line-height: 1.55; }
+
+/* Hero fan: three real invitation cards, overlapped and rotated. */
+.lp-fan { display: flex; justify-content: center; align-items: flex-start; }
+.lp-fan-card { position: relative; filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.15)); }
+.lp-fan-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
+.lp-fan-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
+.lp-fan-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
+.lp-fan-card .inv-details { margin: 12px auto; }
+.lp-fan-0 { width: 245px; transform: rotate(-9deg); margin-top: 40px; margin-right: -66px; z-index: 1; }
+.lp-fan-1 { width: 265px; transform: rotate(2deg); z-index: 3; }
+.lp-fan-2 { width: 245px; transform: rotate(10deg); margin-top: 46px; margin-left: -66px; z-index: 2; }
+
+.lp-steps { padding: clamp(40px, 5vw, 64px); }
+.lp-steps h2 { margin: 0 0 40px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
+.lp-steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1000px; margin: 0 auto; }
+.lp-step { text-align: center; }
+.lp-step-icon {
+  margin: 0 auto 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--lp-accent-wash);
+  color: var(--lp-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.lp-step-title { font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
+.lp-step-text { color: var(--lp-muted); font-size: 1rem; line-height: 1.55; max-width: 26ch; margin: 0 auto; }
+
+.lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.lp-chip { background: var(--lp-accent-wash); color: var(--lp-accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
+
+.lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--lp-surface); border-top: 1px solid var(--lp-border); border-bottom: 1px solid var(--lp-border); }
+.lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
+.lp-rsvp-copy h2 { margin: 0 0 14px; font-size: clamp(1.5rem, 3vw, 2.1rem); }
+.lp-rsvp-copy p { margin: 0; color: var(--lp-muted); font-size: 1.1rem; line-height: 1.6; max-width: 36ch; }
+.lp-rsvp-card { background: var(--lp-bg); border: 1px solid var(--lp-border); border-radius: 16px; padding: 28px; }
+.lp-rsvp-summary { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+.lp-rsvp-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--lp-border); font-size: 1rem; }
+.lp-rsvp-row:last-child { border-bottom: none; }
+.lp-rsvp-status { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.lp-rsvp-yes { color: #2f7d4f; }
+.lp-rsvp-no { color: #a4262c; }
+.lp-rsvp-wait { color: var(--lp-muted); }
+
+.lp-final { padding: clamp(56px, 7vw, 88px) clamp(22px, 5vw, 64px); text-align: center; }
+.lp-final h2 { margin: 0 0 26px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
+
+.lp-footer { padding: 26px clamp(22px, 5vw, 64px); text-align: center; color: var(--lp-muted); font-size: 0.9rem; border-top: 1px solid var(--lp-border); }
+
+/* Sticky bottom CTA: mobile only. */
+.lp-sticky-cta { display: none; }
+
+@media (max-width: 800px) {
+  .lp-nav .lp-cta { display: none; } /* mobile uses the sticky bottom bar instead */
+  .lp-hero { grid-template-columns: 1fr; text-align: center; }
+  .lp-hero-copy h1 { max-width: none; }
+  .lp-hero-copy p { max-width: none; margin-left: auto; margin-right: auto; }
+  .lp-fan { margin-top: 12px; }
+  .lp-fan-0 { width: 175px; margin-right: -50px; }
+  .lp-fan-1 { width: 190px; }
+  .lp-fan-2 { width: 175px; margin-left: -50px; }
+  .lp-steps-grid { grid-template-columns: 1fr; gap: 22px; }
+  .lp-step { display: flex; gap: 16px; text-align: left; align-items: flex-start; }
+  .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }
+  .lp-step-text { max-width: none; margin: 0; }
+  .lp-rsvp-inner { grid-template-columns: 1fr; gap: 24px; }
+  .lp-footer { padding-bottom: 96px; }
+  .lp-sticky-cta {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    background: var(--lp-surface);
+    border-top: 1px solid var(--lp-border);
+    padding: 14px clamp(22px, 5vw, 64px);
+    justify-content: center;
+  }
+  .lp-sticky-cta .lp-cta { width: 100%; max-width: 320px; padding: 13px 0; }
+}
