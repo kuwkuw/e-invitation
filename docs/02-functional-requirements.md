@@ -1,0 +1,110 @@
+# 02 — Functional requirements
+
+IDs are stable; reference them in PRs and ADRs. "Status: built" means
+implemented and covered by the current code; file references point at the
+implementation.
+
+## FR-1 Generate invitation from one sentence
+
+**Status: built** — `POST /api/invitations/generate`
+([routes/invitations.ts](../server/src/routes/invitations.ts),
+[pipeline/generate.ts](../server/src/pipeline/generate.ts))
+
+- FR-1.1 Input is a single free-text sentence, 1–500 chars (`GenerateRequest`).
+- FR-1.2 The system extracts a structured `EventBrief`: event type, hosts,
+  date, time, venue, city, tone, language, extra details. Facts absent from the
+  sentence are `null` — never invented.
+- FR-1.3 From the brief the system produces, **in parallel**, the invitation
+  copy (6 fields: title, greeting, body, details_line, rsvp_prompt, closing)
+  and the design tokens (palette, typography, layout, ornament).
+- FR-1.4 The response is a complete `Invitation` JSON (brief + copy + design);
+  the client renders it immediately as an editable preview.
+- FR-1.5 The copy is written in the language of the input sentence
+  (`EventBrief.language`, `uk` or `en`).
+- FR-1.6 If all routed models fail, respond `502` with a user-safe error.
+
+## FR-2 Edit and regenerate per field
+
+**Status: built** — `POST /api/invitations/regenerate-field`
+([pipeline/copy.ts](../server/src/pipeline/copy.ts), [App.tsx](../web/src/App.tsx))
+
+- FR-2.1 Every copy field is directly editable in the UI; edits are local state
+  until published.
+- FR-2.2 Any single copy field can be regenerated: request carries the brief,
+  the field name, and the current value; response is one rewritten value.
+- FR-2.3 Whole-invitation regeneration is intentionally not offered
+  (see [decisions/adr-004-per-field-regeneration.md](decisions/adr-004-per-field-regeneration.md)).
+- FR-2.4 Each regeneration is counted per field for the regenerate-rate metric.
+
+## FR-3 Publish & share
+
+**Status: built** — `POST /api/invitations/publish`
+([store.ts](../server/src/store.ts))
+
+- FR-3.1 Publishing snapshots the current invitation and returns `{id, version,
+  manage_token}`. The share URL is `/i/:id`.
+- FR-3.2 Republishing (same `id` + valid `manage_token`) appends a new
+  **version**; the guest page always serves the latest version. Old versions
+  are retained.
+- FR-3.3 The `manage_token` is the only host credential (capability token — no
+  accounts). The web client keeps it in `localStorage` so the host survives a
+  reload.
+- FR-3.4 A fresh generation in the editor detaches from any previously
+  published link (new event → new link).
+- FR-3.5 Planned, not built: OG image for messenger link unfurling.
+
+## FR-4 Guest page & RSVP
+
+**Status: built** — `GET /api/invitations/:id`,
+`POST /api/invitations/:id/rsvp` ([GuestPage.tsx](../web/src/GuestPage.tsx))
+
+- FR-4.1 The share link renders the published invitation publicly — no
+  authentication, no registration.
+- FR-4.2 The public payload contains only the latest invitation version: never
+  the manage token, never other guests' RSVPs.
+- FR-4.3 A guest RSVPs with: name (≤100 chars), attending yes/no, party size
+  1–10, optional note (≤500 chars).
+- FR-4.4 RSVPs append to the invitation record; duplicates are not deduplicated
+  (a guest may change their mind by submitting again).
+
+## FR-5 Host views responses
+
+**Status: built** — `GET /api/invitations/:id/rsvps`
+
+- FR-5.1 Requires the `x-manage-token` header matching the record's token
+  (constant-time comparison).
+- FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, and total
+  guests among attendees.
+
+## FR-6 Bilingual UI
+
+**Status: built** — [i18n.ts](../web/src/i18n.ts)
+
+- FR-6.1 The editor UI toggles between Ukrainian and English.
+- FR-6.2 UI language is independent of invitation copy language (FR-1.5): a
+  host can drive an English UI while producing a Ukrainian invitation.
+
+## FR-7 Operational metrics
+
+**Status: built** — `GET /api/metrics` ([metrics.ts](../server/src/metrics.ts))
+
+- FR-7.1 Expose counters: generations, per-field regenerations, publishes,
+  RSVPs, and the derived regenerate-rate.
+- FR-7.2 Counters are in-process (reset on restart) — acceptable at current
+  scale; see NFR-7.
+
+## Routing map (web)
+
+| Path | Page | Audience |
+| --- | --- | --- |
+| `/` | Landing page | Public |
+| `/create` | Editor (generate → edit → publish → RSVP dashboard) | Host |
+| `/i/:id` | Published invitation + RSVP form | Guest |
+
+## Not yet built (backlog)
+
+- OG image generation on publish (FR-3.5).
+- BYOK / user-level API keys via LiteLLM Proxy
+  ([adr-002](decisions/adr-002-llm-gateway.md)).
+- Optional AI background image layer (no text in image) — allowed by
+  [adr-003](decisions/adr-003-no-image-generation.md), not started.

@@ -2,6 +2,11 @@
 
 E-invitation web app: describe your event in one sentence → get an AI-generated, editable invitation. Bilingual (Ukrainian/English). Planned: share link + RSVP page, no guest registration.
 
+## Docs
+
+Vision, functional/non-functional requirements, architecture, and ADRs live in
+[docs/](docs/README.md).
+
 ## Layout
 
 - `server/` — Fastify + TypeScript API. Pipeline: brief extraction → parallel copy + design tokens → invitation JSON. LLM routing table in `src/llm/routing.ts`.
