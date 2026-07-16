@@ -7,7 +7,7 @@
   "cssEntry": "src/styles.css",
   "readmeHeader": ".design-sync/conventions.md",
   "dtsPropsFor": {
-    "InvitationPreview": "copy: { title: string; greeting: string; body: string; details_line: string; rsvp_prompt: string; closing: string }; design: { palette: 'warm' | 'elegant' | 'playful' | 'minimal' | 'festive' | 'romantic'; typography: 'serif' | 'sans' | 'script'; layout: 'classic' | 'banner' | 'split'; ornament: 'none' | 'floral' | 'geometric' | 'sparkle' }"
+    "InvitationPreview": "copy: { title: string; greeting: string; body: string; details_line: string; rsvp_prompt: string; closing: string }; design: { palette: 'warm' | 'elegant' | 'playful' | 'minimal' | 'festive' | 'romantic'; typography: 'serif' | 'sans' | 'script'; layout: 'classic' | 'banner' | 'split'; ornament: 'none' | 'floral' | 'geometric' | 'sparkle' }; activeField?: 'title' | 'greeting' | 'body' | 'details_line' | 'rsvp_prompt' | 'closing' | null; onFieldClick?: (field: 'title' | 'greeting' | 'body' | 'details_line' | 'rsvp_prompt' | 'closing') => void"
   },
   "componentSrcMap": {
     "InvitationPreview": "src/components/InvitationPreview.tsx",
