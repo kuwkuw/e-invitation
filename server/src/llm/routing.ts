@@ -16,28 +16,32 @@ export interface Route {
 }
 
 export const TASK_ROUTES: Record<Task, Route> = {
+  // Gemini fallbacks resolve only through the LiteLLM proxy (LLM_BASE_URL set);
+  // called directly against Anthropic they fail and the walker moves on.
   // Cheap, fast structured extraction (per spec: brief uses a cheap model).
   brief_extraction: {
     primary: "claude-haiku-4-5",
-    fallbacks: ["claude-sonnet-5"],
+    fallbacks: ["claude-sonnet-5", "gemini-2.5-flash"],
     maxTokens: 1024,
   },
   // Quality-sensitive: the invitation text is the product.
+  // (gemini-2.5-pro would fit better here but has zero free-tier quota;
+  // upgrade the fallback when a paid Gemini key lands.)
   copy_generation: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5"],
+    fallbacks: ["claude-sonnet-5", "gemini-2.5-flash"],
     maxTokens: 2048,
   },
   // Enum picking — small output. If the ~3s target is missed, this is the
   // first candidate to downgrade.
   design_resolution: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5"],
+    fallbacks: ["claude-sonnet-5", "gemini-2.5-flash"],
     maxTokens: 256,
   },
   field_regeneration: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5"],
+    fallbacks: ["claude-sonnet-5", "gemini-2.5-flash"],
     maxTokens: 512,
   },
 };

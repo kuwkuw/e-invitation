@@ -17,6 +17,8 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 
 **server/** (Fastify API, port 3001): dev server reloads via tsx watch. Needs `ANTHROPIC_API_KEY` in `server/.env` (see `.env.example`); boots without it but generation calls fail. Tests mock the LLM gateway — no key needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.
 
+**litellm/** (LiteLLM Proxy, port 4000): `docker compose up -d litellm` — multi-provider gateway (Anthropic + Gemini). Reads keys from `server/.env`; the API routes through it when `LLM_BASE_URL=http://localhost:4000` is set there. Model aliases in `litellm/config.yaml` must match the ids in `routing.ts` exactly. Config changes need `docker compose restart litellm`.
+
 **web/** (Vite + React, port 5173, proxies `/api` → localhost:3001): `build` includes typecheck.
 
 ## Architecture
@@ -25,9 +27,9 @@ Pipeline (`server/src/pipeline/`): sentence → `extractBrief` (cheap model, str
 
 LLM gateway (`server/src/llm/`):
 - `routing.ts` is the **single operator switch point**: task → primary model → fallbacks (+ per-task `maxTokens`). Change models here and nowhere else.
-- `gateway.ts` `completeJson()` walks that list until a model succeeds, enforces the zod schema via Anthropic structured outputs (`messages.parse` + `zodOutputFormat`), and emits one JSON log line per request: task, model, fallback flag, latency, tokens, cost.
+- `gateway.ts` `completeJson()` walks that list until a model succeeds, sends the zod schema as an Anthropic structured-output format (`zodOutputFormat`), validates the response with lenient JSON extraction + zod (proxied providers sometimes wrap JSON in prose), and emits one JSON log line per request: task, model, fallback flag, latency, tokens, cost.
 - `pricing.ts` must have an entry for every routed model — `test/routing.test.ts` enforces this.
-- The gateway calls the Anthropic SDK directly today. The settled plan for multi-provider/BYOK is to stand up **LiteLLM Proxy** later and point the client at it via `LLM_BASE_URL` — keep the routing-table interface stable so that swap stays cheap. Do not replace it with another multi-provider library.
+- Multi-provider goes through **LiteLLM Proxy** (`litellm/config.yaml`, run via docker compose): with `LLM_BASE_URL` set the Anthropic SDK talks to the proxy's Anthropic-format endpoint and any configured provider resolves; unset, the SDK calls Anthropic directly and non-Anthropic models in `routing.ts` simply fail over. Gemini quirks handled in config: free-tier keys have zero `gemini-2.5-pro` quota (use flash), and thinking must be disabled (`reasoning_effort: "disable"`) or small `maxTokens` caps are consumed by reasoning before any JSON is emitted. Do not replace LiteLLM with another multi-provider library.
 
 Rendering: **no full-image generation.** The model only picks design tokens — closed enums in `schemas.ts` (`palette`/`typography`/`layout`/`ornament`). `web/src/components/InvitationPreview.tsx` maps tokens 1:1 to CSS classes in `web/src/styles.css`; model output is never interpreted as markup or styles. Keep tokens enums-only.
 
@@ -41,4 +43,4 @@ Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input 
 
 ## Status
 
-First milestone implemented: generate + per-field regeneration + deterministic preview. Not yet built: publish (versioned snapshot + share link + OG image), RSVP page, BYOK/user-level keys, LiteLLM Proxy.
+Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link) + guest RSVP page; LiteLLM Proxy with Gemini fallbacks (local dev). Not yet built: OG image for share links, BYOK/user-level keys, hosted proxy deployment.
