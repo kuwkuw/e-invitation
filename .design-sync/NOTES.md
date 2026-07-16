@@ -12,7 +12,7 @@
 
 ## Known render warns
 
-- `[FONT_REMOTE] "Cormorant Garamond", "Marck Script", "Segoe Script"` — expected; families served by the Google Fonts `@import` at runtime.
+- `[FONT_REMOTE] "Cormorant Garamond", "Marck Script", "Segoe Script", "Manrope", "Playfair Display"` — expected; families served by the Google Fonts `@import` at runtime (Manrope/Playfair joined the warn when the landing page moved their usage into `styles.css`, 2026-07-16).
 
 ## Re-sync risks
 
