@@ -26,6 +26,21 @@ model_list:
       # maxTokens caps (design_resolution: 256) before any JSON is emitted.
       reasoning_effort: "disable"
 
+  - model_name: gpt-5.1
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+      # Same reasoning-vs-maxTokens concern as Gemini: keep reasoning off
+      # so small output caps go to JSON, not thinking.
+      reasoning_effort: "none"
+
+  - model_name: gpt-5-mini
+    litellm_params:
+      model: openai/gpt-5-mini
+      api_key: os.environ/OPENAI_API_KEY
+      # gpt-5-mini has no "none" tier; minimal is its floor.
+      reasoning_effort: "minimal"
+
   - model_name: gemini-2.5-pro
     litellm_params:
       model: gemini/gemini-2.5-pro

@@ -6,6 +6,8 @@ export const MODEL_PRICES_PER_MTOK: Record<string, { input: number; output: numb
   "claude-haiku-4-5": { input: 1, output: 5 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5 },
   "gemini-2.5-pro": { input: 1.25, output: 10 },
+  "gpt-5.1": { input: 1.25, output: 10 },
+  "gpt-5-mini": { input: 0.25, output: 2 },
 };
 
 export interface UsageLike {

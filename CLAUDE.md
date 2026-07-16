@@ -17,7 +17,7 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 
 **server/** (Fastify API, port 3001): dev server reloads via tsx watch. Needs `ANTHROPIC_API_KEY` in `server/.env` (see `.env.example`); boots without it but generation calls fail. Tests mock the LLM gateway — no key needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.
 
-**litellm/** (LiteLLM Proxy, port 4000): `docker compose up -d litellm` — multi-provider gateway (Anthropic + Gemini). Reads keys from `server/.env`; the API routes through it when `LLM_BASE_URL=http://localhost:4000` is set there. Model aliases in `litellm/config.yaml` must match the ids in `routing.ts` exactly. Config changes need `docker compose restart litellm`.
+**litellm/** (LiteLLM Proxy, port 4000): `docker compose up -d litellm` — multi-provider gateway (Anthropic + Gemini). Reads keys from `server/.env`; the API routes through it when `LLM_BASE_URL=http://localhost:4000` is set there. Model aliases in `litellm/config.yaml` must match the ids in `routing.ts` exactly. Config changes need `docker compose restart litellm`; changes to `server/.env` (new keys) need `docker compose up -d --force-recreate litellm` — env_file is only read at container creation.
 
 **web/** (Vite + React, port 5173, proxies `/api` → localhost:3001): `build` includes typecheck.
 
