@@ -23,7 +23,7 @@ export const TASK_ROUTES: Record<Task, Route> = {
   // so it stays the last resort.
   brief_extraction: {
     primary: "claude-haiku-4-5",
-    fallbacks: ["claude-sonnet-5", "gpt-5-mini", "gemini-2.5-flash"],
+    fallbacks: ["claude-sonnet-5", "gpt-5-mini", "gemini-2.5-flash", "gemma3-4b"],
     maxTokens: 1024,
   },
   // Quality-sensitive: the invitation text is the product.
@@ -31,19 +31,19 @@ export const TASK_ROUTES: Record<Task, Route> = {
   // quota; upgrade that fallback when a paid Gemini key lands.)
   copy_generation: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5", "gpt-5.1", "gemini-2.5-flash"],
+    fallbacks: ["claude-sonnet-5", "gpt-5.1", "gemini-2.5-flash", "gemma3-4b"],
     maxTokens: 2048,
   },
   // Enum picking — small output. If the ~3s target is missed, this is the
   // first candidate to downgrade.
   design_resolution: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5", "gpt-5-mini", "gemini-2.5-flash"],
+    fallbacks: ["claude-sonnet-5", "gpt-5-mini", "gemini-2.5-flash", "gemma3-4b"],
     maxTokens: 256,
   },
   field_regeneration: {
     primary: "claude-opus-4-8",
-    fallbacks: ["claude-sonnet-5", "gpt-5.1", "gemini-2.5-flash"],
+    fallbacks: ["claude-sonnet-5", "gpt-5.1", "gemini-2.5-flash", "gemma3-4b"],
     maxTokens: 512,
   },
 };

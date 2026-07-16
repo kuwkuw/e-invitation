@@ -8,6 +8,8 @@ export const MODEL_PRICES_PER_MTOK: Record<string, { input: number; output: numb
   "gemini-2.5-pro": { input: 1.25, output: 10 },
   "gpt-5.1": { input: 1.25, output: 10 },
   "gpt-5-mini": { input: 0.25, output: 2 },
+  // Local Ollama model — free.
+  "gemma3-4b": { input: 0, output: 0 },
 };
 
 export interface UsageLike {
