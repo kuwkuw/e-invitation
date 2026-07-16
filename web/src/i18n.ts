@@ -1,4 +1,42 @@
-import type { CopyField, Language } from "./types";
+import type { CopyField, DesignTokens, Language } from "./types";
+
+type DesignValue =
+  | DesignTokens["palette"]
+  | DesignTokens["typography"]
+  | DesignTokens["layout"]
+  | DesignTokens["ornament"];
+
+export interface DesignStrings {
+  title: string;
+  palette: string;
+  typography: string;
+  layout: string;
+  ornament: string;
+  values: Record<DesignValue, string>;
+}
+
+export interface ChatStrings {
+  newInvitation: string;
+  back: string;
+  share: string;
+  startTitle: string;
+  startHint: string;
+  tryExamples: string;
+  examples: string[];
+  previewPlaceholder: string;
+  placeholderEmpty: string;
+  placeholderRefine: string;
+  creating: string;
+  doneMsg: string;
+  failMsg: string;
+  editingLabel: string;
+  actionRegenerate: string;
+  actionManual: string;
+  actionVariants: string;
+  variantsTitle: string;
+  save: string;
+  send: string;
+}
 
 interface UiStrings {
   appTitle: string;
@@ -11,6 +49,8 @@ interface UiStrings {
   previewTitle: string;
   error: string;
   fields: Record<CopyField, string>;
+  design: DesignStrings;
+  chat: ChatStrings;
   publish: string;
   publishing: string;
   republish: string;
@@ -45,6 +85,58 @@ export const UI: Record<Language, UiStrings> = {
       rsvp_prompt: "RSVP",
       closing: "Sign-off",
     },
+    design: {
+      title: "Design",
+      palette: "Palette",
+      typography: "Font",
+      layout: "Layout",
+      ornament: "Ornament",
+      values: {
+        warm: "Warm",
+        elegant: "Elegant",
+        playful: "Playful",
+        minimal: "Minimal",
+        festive: "Festive",
+        romantic: "Romantic",
+        serif: "Serif",
+        sans: "Sans",
+        script: "Script",
+        classic: "Classic",
+        banner: "Banner",
+        split: "Split",
+        none: "None",
+        floral: "Floral",
+        geometric: "Geometric",
+        sparkle: "Sparkle",
+      },
+    },
+    chat: {
+      newInvitation: "New invitation",
+      back: "Back",
+      share: "Share",
+      startTitle: "Where shall we start?",
+      startHint: "Describe your event in one sentence — I'll pick the style, colors and wording.",
+      tryExamples: "Try, for example",
+      examples: [
+        "Wedding in September for 80 guests…",
+        "My daughter turns 5, party in the park…",
+        "Team party for 40 people…",
+        "Christening on Sunday…",
+      ],
+      previewPlaceholder: "Your invitation will appear here",
+      placeholderEmpty: "Describe your event in one sentence…",
+      placeholderRefine: "Add a detail…",
+      creating: "Creating your invitation",
+      doneMsg: "Done — tap any part of the invitation to tweak it.",
+      failMsg: "Something went wrong. Please try again.",
+      editingLabel: "Editing",
+      actionRegenerate: "Regenerate",
+      actionManual: "Edit manually",
+      actionVariants: "Variants",
+      variantsTitle: "Variants",
+      save: "Save",
+      send: "Send",
+    },
     publish: "Publish & get link",
     publishing: "Publishing…",
     republish: "Publish changes",
@@ -76,6 +168,58 @@ export const UI: Record<Language, UiStrings> = {
       details_line: "Деталі",
       rsvp_prompt: "RSVP",
       closing: "Підпис",
+    },
+    design: {
+      title: "Дизайн",
+      palette: "Палітра",
+      typography: "Шрифт",
+      layout: "Композиція",
+      ornament: "Орнамент",
+      values: {
+        warm: "Тепла",
+        elegant: "Елегантна",
+        playful: "Грайлива",
+        minimal: "Мінімальна",
+        festive: "Святкова",
+        romantic: "Романтична",
+        serif: "Серифний",
+        sans: "Гротеск",
+        script: "Рукописний",
+        classic: "Класична",
+        banner: "Банер",
+        split: "Асиметрична",
+        none: "Без",
+        floral: "Квітковий",
+        geometric: "Геометричний",
+        sparkle: "Іскристий",
+      },
+    },
+    chat: {
+      newInvitation: "Нове запрошення",
+      back: "Назад",
+      share: "Поділитися",
+      startTitle: "З чого почнемо?",
+      startHint: "Опишіть вашу подію одним реченням — я підберу стиль, кольори й оформлення запрошення.",
+      tryExamples: "Спробуйте, наприклад",
+      examples: [
+        "Весілля у вересні на 80 гостей…",
+        "Донечці 5 років, свято в парку…",
+        "Корпоратив на 40 людей…",
+        "Хрестини у неділю…",
+      ],
+      previewPlaceholder: "Тут з'явиться ваше запрошення",
+      placeholderEmpty: "Опишіть вашу подію одним реченням…",
+      placeholderRefine: "Додайте деталь…",
+      creating: "Створюю запрошення",
+      doneMsg: "Готово — торкніться будь-якої частини запрошення, щоб змінити її.",
+      failMsg: "Щось пішло не так. Спробуйте ще раз.",
+      editingLabel: "Редагування",
+      actionRegenerate: "Перегенерувати",
+      actionManual: "Редагувати вручну",
+      actionVariants: "Варіанти",
+      variantsTitle: "Варіанти",
+      save: "Зберегти",
+      send: "Надіслати",
     },
     publish: "Опублікувати й отримати лінк",
     publishing: "Публікуємо…",

@@ -26,11 +26,16 @@ export type CopyField = (typeof COPY_FIELDS)[number];
 
 export type InvitationCopy = Record<CopyField, string>;
 
+export const PALETTES = ["warm", "elegant", "playful", "minimal", "festive", "romantic"] as const;
+export const TYPOGRAPHIES = ["serif", "sans", "script"] as const;
+export const LAYOUTS = ["classic", "banner", "split"] as const;
+export const ORNAMENTS = ["none", "floral", "geometric", "sparkle"] as const;
+
 export interface DesignTokens {
-  palette: "warm" | "elegant" | "playful" | "minimal" | "festive" | "romantic";
-  typography: "serif" | "sans" | "script";
-  layout: "classic" | "banner" | "split";
-  ornament: "none" | "floral" | "geometric" | "sparkle";
+  palette: (typeof PALETTES)[number];
+  typography: (typeof TYPOGRAPHIES)[number];
+  layout: (typeof LAYOUTS)[number];
+  ornament: (typeof ORNAMENTS)[number];
 }
 
 export interface Invitation {
