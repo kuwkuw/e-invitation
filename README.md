@@ -1,6 +1,6 @@
 # Invitation App
 
-E-invitation web app: describe your event in one sentence → get an AI-generated, editable invitation. Bilingual (Ukrainian/English). Planned: share link + RSVP page, no guest registration.
+E-invitation web app: describe your event in one sentence → get an AI-generated, editable invitation, then publish it as a share link (with OG preview image) and collect RSVPs — no guest registration. Bilingual (Ukrainian/English).
 
 ## Docs
 

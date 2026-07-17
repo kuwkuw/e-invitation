@@ -33,6 +33,8 @@ LLM gateway (`server/src/llm/`):
 
 Rendering: **no full-image generation.** The model only picks design tokens — closed enums in `schemas.ts` (`palette`/`typography`/`layout`/`ornament`). `web/src/components/InvitationPreview.tsx` maps tokens 1:1 to CSS classes in `web/src/styles.css`; model output is never interpreted as markup or styles. Keep tokens enums-only.
 
+OG images (`server/src/og/render.ts`): satori + resvg render the share-link preview (1200×630 PNG) server-side from the same tokens — the token→style maps there mirror `web/src/styles.css` by hand and `test/og.test.ts` enforces enum coverage. Fonts are vendored TTFs in `server/assets/fonts/` (the runtime Google-Fonts `@import` can't feed satori). `GET /i/:id` serves the SPA shell (`web/dist`, when built) with `og:*` meta injected so messenger crawlers see them; `?v=<version>` on the image URL busts messenger caches on republish.
+
 Regeneration is **per-field, never whole-invitation**: `POST /api/invitations/regenerate-field` takes the brief + field + current value and returns one rewritten field.
 
 Metrics: `server/src/metrics.ts` counts generations and per-field regenerations; `GET /api/metrics` exposes the regenerate-rate (the main copy-quality signal). Per-request LLM logs come from the gateway.
@@ -43,4 +45,4 @@ Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input 
 
 ## Status
 
-Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link) + guest RSVP page; LiteLLM Proxy with Gemini fallbacks (local dev). Not yet built: OG image for share links, BYOK/user-level keys, hosted proxy deployment.
+Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; LiteLLM Proxy with Gemini fallbacks (local dev). Not yet built: BYOK/user-level keys, hosted proxy deployment.
