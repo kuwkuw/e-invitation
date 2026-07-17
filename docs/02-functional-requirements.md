@@ -51,7 +51,10 @@ implementation.
   reload.
 - FR-3.4 A fresh generation in the editor detaches from any previously
   published link (new event → new link).
-- FR-3.5 Planned, not built: OG image for messenger link unfurling.
+- FR-3.5 OG image for messenger link unfurling: `GET
+  /api/invitations/:id/og.png` renders a 1200×630 PNG server-side from the
+  design tokens ([render.ts](../server/src/og/render.ts)); `GET /i/:id` serves
+  the SPA shell with `og:*` meta injected for crawlers.
 
 ## FR-4 Guest page & RSVP
 
@@ -103,7 +106,11 @@ implementation.
 
 ## Not yet built (backlog)
 
-- OG image generation on publish (FR-3.5).
+- **Language switcher on public pages — next iteration.** The landing page and
+  guest page have no UK/EN toggle (only the editor does, FR-6.1); flagged
+  during the Claude Design template work on "E-invitation DS". Guest-page copy
+  follows the invitation language (FR-1.5 analogue for GUEST strings), so the
+  switcher must not fight that default.
 - BYOK / user-level API keys via LiteLLM Proxy
   ([adr-002](decisions/adr-002-llm-gateway.md)).
 - Optional AI background image layer (no text in image) — allowed by
