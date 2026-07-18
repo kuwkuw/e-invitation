@@ -241,49 +241,100 @@ export const UI: Record<Language, UiStrings> = {
 // independent of the host's UI toggle.
 interface GuestStrings {
   loading: string;
-  notFound: string;
+  notFoundTitle: string;
+  notFoundBody: string;
+  notFoundHint: string;
   error: string;
-  formTitle: string;
+  replyKicker: string;
   yourName: string;
+  namePlaceholder: string;
   attendingQuestion: string;
   yes: string;
   no: string;
   guestsCount: string;
   noteLabel: string;
+  noteOptional: string;
+  notePlaceholder: string;
   send: string;
   sending: string;
-  thanks: string;
+  thanksTitle: string;
+  thanksSent: string;
+  thanksGlad: string;
+  declinedTitle: string;
+  declinedSorry: string;
+  attendingPill: string;
+  declinedPill: string;
+  guestForms: [string, string, string];
+  changeAnswer: string;
+  directions: string;
+  share: string;
+  shareHint: string;
+  linkCopied: string;
 }
 
 export const GUEST: Record<Language, GuestStrings> = {
   en: {
     loading: "Loading…",
-    notFound: "This invitation does not exist or was removed.",
+    notFoundTitle: "Invitation not found",
+    notFoundBody: "The link may be outdated, or the invitation hasn't been published yet.",
+    notFoundHint: "Ask the host to send you a fresh link.",
     error: "Something went wrong. Please try again.",
-    formTitle: "Will you join us?",
+    replyKicker: "Your reply",
     yourName: "Your name",
+    namePlaceholder: "Type your name",
     attendingQuestion: "Will you come?",
     yes: "I'll be there",
     no: "Can't make it",
     guestsCount: "How many of you?",
-    noteLabel: "Message for the hosts (optional)",
+    noteLabel: "A note for the hosts",
+    noteOptional: "(optional)",
+    notePlaceholder: "A few warm words…",
     send: "Send reply",
     sending: "Sending…",
-    thanks: "Thank you! Your reply has been sent.",
+    thanksTitle: "Thank you!",
+    thanksSent: "Your reply has been sent.",
+    thanksGlad: "So glad you'll be with us.",
+    declinedTitle: "Thanks for letting us know",
+    declinedSorry: "Sorry it won't work out this time.",
+    attendingPill: "You're coming",
+    declinedPill: "You can't make it",
+    guestForms: ["guest", "guests", "guests"],
+    changeAnswer: "Change your reply",
+    directions: "How to get there",
+    share: "Share the invitation",
+    shareHint: "Viber · Telegram · link",
+    linkCopied: "Link copied!",
   },
   uk: {
     loading: "Завантаження…",
-    notFound: "Такого запрошення не існує або його видалили.",
+    notFoundTitle: "Запрошення не знайдено",
+    notFoundBody: "Можливо, посилання застаріло або запрошення ще не опубліковане.",
+    notFoundHint: "Попросіть господаря надіслати актуальне посилання.",
     error: "Щось пішло не так. Спробуйте ще раз.",
-    formTitle: "Приєднаєтесь до нас?",
+    replyKicker: "Ваша відповідь",
     yourName: "Ваше ім'я",
+    namePlaceholder: "Напишіть ім'я",
     attendingQuestion: "Чи прийдете?",
     yes: "Я буду",
     no: "Не зможу",
     guestsCount: "Скільки вас буде?",
-    noteLabel: "Повідомлення для господарів (необов'язково)",
+    noteLabel: "Побажання господарям",
+    noteOptional: "(необов'язково)",
+    notePlaceholder: "Кілька теплих слів…",
     send: "Надіслати відповідь",
     sending: "Надсилаємо…",
-    thanks: "Дякуємо! Вашу відповідь надіслано.",
+    thanksTitle: "Дякуємо!",
+    thanksSent: "Вашу відповідь надіслано.",
+    thanksGlad: "Раді, що ви будете з нами.",
+    declinedTitle: "Дякуємо, що дали знати",
+    declinedSorry: "Шкода, що не вийде цього разу.",
+    attendingPill: "Ви йдете",
+    declinedPill: "Ви не зможете прийти",
+    guestForms: ["гість", "гості", "гостей"],
+    changeAnswer: "Змінити відповідь",
+    directions: "Як дістатися",
+    share: "Поділитися запрошенням",
+    shareHint: "Viber · Telegram · посилання",
+    linkCopied: "Посилання скопійовано!",
   },
 };
