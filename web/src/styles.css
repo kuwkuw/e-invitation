@@ -17,15 +17,41 @@ body {
 .header { display: flex; align-items: center; justify-content: space-between; }
 .header h1 { font-size: 1.4rem; margin: 0; }
 
-.lang-toggle button {
-  border: 1px solid #c8c4bb;
-  background: #fff;
-  padding: 4px 10px;
-  cursor: pointer;
+/* Language switcher — canonical chrome pill from the "lang-switcher"
+   template: white tongue on a warm track, no accent color. */
+.ls-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #efece6;
+  border: 1px solid #e4ddd0;
+  border-radius: 999px;
+  padding: 3px;
 }
-.lang-toggle button:first-child { border-radius: 6px 0 0 6px; }
-.lang-toggle button:last-child { border-radius: 0 6px 6px 0; }
-.lang-toggle button.active { background: #23211d; color: #fff; border-color: #23211d; }
+.ls-seg {
+  min-width: 46px;
+  height: 40px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #8f887a;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.14s, background 0.14s;
+}
+.ls-seg:hover { color: #23211d; background: rgba(255, 255, 255, 0.55); }
+.ls-seg.active {
+  background: #ffffff;
+  color: #23211d;
+  box-shadow: 0 1px 3px rgba(20, 18, 14, 0.15);
+}
+.ls-globe-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.ls-globe { color: #a89f8e; display: flex; }
+.lp-nav-right { display: flex; align-items: center; gap: 12px; }
 
 .tagline { color: #6b6659; margin: 12px 0 20px; }
 
@@ -414,6 +440,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .gr-layout { max-width: 430px; margin: 0 auto; }
 .gr-inv { margin-bottom: 20px; }
+.gr-lang { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 
 .gr-card {
   background: #ffffff;

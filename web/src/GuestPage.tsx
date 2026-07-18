@@ -2,7 +2,18 @@ import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { fetchInvitation, submitRsvp } from "./api";
 import { GUEST } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
-import type { PublishedInvitation } from "./types";
+import { LangSwitcher } from "./components/LangSwitcher";
+import type { Language, PublishedInvitation } from "./types";
+
+// Guest-side chrome-language override. The page follows the invitation's
+// language by default; a guest who can't read it may switch the CHROME only
+// (form labels, buttons, thanks copy) — never the invitation text itself.
+const GUEST_LANG_KEY = "inv-guest-lang";
+
+function loadGuestLang(): Language | null {
+  const stored = localStorage.getItem(GUEST_LANG_KEY);
+  return stored === "en" || stored === "uk" ? stored : null;
+}
 
 interface Props {
   id: string;
@@ -40,6 +51,7 @@ const Twinkle = ({ className, style, size }: { className: string; style?: CSSPro
 export function GuestPage({ id }: Props) {
   const [published, setPublished] = useState<PublishedInvitation | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "not_found" | "error">("loading");
+  const [langOverride, setLangOverride] = useState<Language | null>(loadGuestLang);
 
   const [name, setName] = useState("");
   const [attending, setAttending] = useState<boolean | null>(null);
@@ -63,7 +75,13 @@ export function GuestPage({ id }: Props) {
 
   // Until the invitation loads we don't know its language; default to uk
   // (the app's primary audience) for the loading/error shell.
-  const t = GUEST[published?.invitation.brief.language ?? "uk"];
+  const chromeLang = langOverride ?? published?.invitation.brief.language ?? "uk";
+  const t = GUEST[chromeLang];
+
+  function handleLang(lang: Language) {
+    setLangOverride(lang);
+    localStorage.setItem(GUEST_LANG_KEY, lang);
+  }
 
   if (status === "loading") {
     return (
@@ -139,6 +157,9 @@ export function GuestPage({ id }: Props) {
         </div>
 
         <div className="gr-side">
+          <div className="gr-lang">
+            <LangSwitcher globe value={chromeLang} onChange={handleLang} />
+          </div>
           {sent ? (
             <>
               <section className="gr-card gr-thanks">
