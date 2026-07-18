@@ -10,6 +10,7 @@ architecture (arc42-inspired), and architecture decision records (ADRs).
 | [02-functional-requirements.md](02-functional-requirements.md) | What the system does, mapped to endpoints and UI |
 | [03-non-functional-requirements.md](03-non-functional-requirements.md) | Latency, cost, security, i18n, observability constraints |
 | [04-architecture.md](04-architecture.md) | System context, containers, pipeline, data model |
+| [05-deployment.md](05-deployment.md) | Northflank deployment: one container, volume, env |
 | [decisions/](decisions/) | ADRs — settled decisions and their rationale |
 
 Conventions:

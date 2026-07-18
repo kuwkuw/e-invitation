@@ -45,4 +45,4 @@ Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input 
 
 ## Status
 
-Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; LiteLLM Proxy with Gemini fallbacks (local dev). Not yet built: BYOK/user-level keys, hosted proxy deployment.
+Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; LiteLLM Proxy with Gemini/OpenAI/Ollama fallbacks (local dev); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup). Not yet built: BYOK/user-level keys, hosted LiteLLM proxy.

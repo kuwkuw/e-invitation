@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+**/dist
+server/data
+.env
+**/.env
+.git
+.claude
+.design-sync
+.ds-sync
+ds-bundle
+docs
+litellm
+scripts
+*.md
