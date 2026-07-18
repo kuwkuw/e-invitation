@@ -237,6 +237,79 @@ export const UI: Record<Language, UiStrings> = {
   },
 };
 
+// Host UI language is shared between the landing page and the editor.
+const UI_LANG_KEY = "inv-ui-lang";
+
+export function loadUiLang(): Language {
+  const stored = localStorage.getItem(UI_LANG_KEY);
+  return stored === "en" || stored === "uk" ? stored : "uk";
+}
+
+export function saveUiLang(lang: Language): void {
+  localStorage.setItem(UI_LANG_KEY, lang);
+}
+
+// Landing-page marketing copy. The sample invitations in the hero stay
+// Ukrainian on purpose — they're showcased content, not chrome.
+export interface LandingStrings {
+  brand: string;
+  cta: string;
+  heroTitle: string;
+  heroText: string;
+  howTitle: string;
+  steps: { title: string; text: string }[];
+  chips: string[];
+  rsvpTitle: string;
+  rsvpText: string;
+  rsvpSummary: string;
+  responseLabels: { yes: string; no: string; wait: string };
+  finalTitle: string;
+  footer: string;
+}
+
+export const LANDING: Record<Language, LandingStrings> = {
+  en: {
+    brand: "Zaproshennya",
+    cta: "Create an invitation",
+    heroTitle: "An invitation from one sentence",
+    heroText: "Describe your event in words — get a beautiful invitation in a minute.",
+    howTitle: "How it works",
+    steps: [
+      { title: "Describe the event", text: "In your own words — what, when and where." },
+      { title: "Get a design", text: "We pick the style, colors and layout." },
+      { title: "Share the link", text: "Send it to guests — and collect replies." },
+    ],
+    chips: ["wedding", "birthday", "kids party", "team event", "christening"],
+    rsvpTitle: "Know who's coming",
+    rsvpText:
+      "Guests confirm by the link — you see the replies right away, no calls or reminders.",
+    rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
+    responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
+    finalTitle: "Ready to send your first invitation?",
+    footer: "Zaproshennya — simple, and Ukrainian at heart.",
+  },
+  uk: {
+    brand: "Запрошення",
+    cta: "Створити запрошення",
+    heroTitle: "Запрошення за одне речення",
+    heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
+    howTitle: "Як це працює",
+    steps: [
+      { title: "Опишіть подію", text: "Своїми словами — що святкуєте, коли і де." },
+      { title: "Отримайте дизайн", text: "Ми підберемо стиль, кольори та оформлення." },
+      { title: "Поділіться посиланням", text: "Надішліть гостям — і збирайте відповіді." },
+    ],
+    chips: ["весілля", "день народження", "дитяче свято", "корпоратив", "хрестини"],
+    rsvpTitle: "Знайте, хто прийде",
+    rsvpText:
+      "Гості підтверджують участь за посиланням — ви бачите відповіді одразу, без дзвінків і нагадувань.",
+    rsvpSummary: "18 прийдуть · 3 не прийдуть · 5 ще не відповіли",
+    responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
+    finalTitle: "Готові надіслати перше запрошення?",
+    footer: "Запрошення — просто і по-українськи.",
+  },
+};
+
 // Guest-facing strings follow the invitation's language (brief.language),
 // independent of the host's UI toggle.
 interface GuestStrings {

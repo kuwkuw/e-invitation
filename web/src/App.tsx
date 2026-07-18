@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { generateInvitation, publishInvitation, regenerateField, fetchRsvps } from "./api";
-import { UI } from "./i18n";
+import { UI, loadUiLang, saveUiLang } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { DesignControls } from "./components/DesignControls";
+import { LangSwitcher } from "./components/LangSwitcher";
 import {
   type CopyField,
   type DesignTokens,
@@ -21,7 +22,7 @@ interface ChatMsg {
 }
 
 export default function App() {
-  const [uiLang, setUiLang] = useState<Language>("uk");
+  const [uiLang, setUiLang] = useState<Language>(loadUiLang);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [phase, setPhase] = useState<Phase>("empty");
@@ -181,13 +182,13 @@ export default function App() {
         </button>
         <div className="cc-title">{invitation?.copy.title ?? t.chat.newInvitation}</div>
         <div className="cc-header-right">
-          <div className="lang-toggle" role="group" aria-label="Interface language">
-            {(["uk", "en"] as const).map((lang) => (
-              <button key={lang} className={uiLang === lang ? "active" : ""} onClick={() => setUiLang(lang)}>
-                {lang.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          <LangSwitcher
+            value={uiLang}
+            onChange={(lang) => {
+              setUiLang(lang);
+              saveUiLang(lang);
+            }}
+          />
           <button
             className={`cc-share${hasInvitation ? " ready" : ""}`}
             disabled={!hasInvitation || publishing}
