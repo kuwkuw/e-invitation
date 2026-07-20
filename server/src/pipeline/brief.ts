@@ -1,4 +1,4 @@
-import { completeJson } from "../llm/gateway.js";
+import { completeJson, type ByokKey } from "../llm/gateway.js";
 import { EventBrief } from "../schemas.js";
 
 const SYSTEM = `You extract a structured event brief from a single free-form sentence describing an event.
@@ -10,10 +10,14 @@ Rules:
 - "tone" is a short mood descriptor you infer from the wording (e.g. "warm and familial", "formal", "playful").
 - "extra_details" collects anything else the user mentioned: dress code, gifts, theme, who the event is for.`;
 
-export async function extractBrief(text: string): Promise<EventBrief> {
-  return completeJson("brief_extraction", {
-    system: SYSTEM,
-    user: text,
-    schema: EventBrief,
-  });
+export async function extractBrief(text: string, byok?: ByokKey): Promise<EventBrief> {
+  return completeJson(
+    "brief_extraction",
+    {
+      system: SYSTEM,
+      user: text,
+      schema: EventBrief,
+    },
+    byok,
+  );
 }

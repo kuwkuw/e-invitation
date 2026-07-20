@@ -7,6 +7,7 @@ import type {
   RsvpInput,
   RsvpSummary,
 } from "./types";
+import { loadByok } from "./byok";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
@@ -25,8 +26,23 @@ function post<T>(path: string, body: unknown): Promise<T> {
   });
 }
 
+// BYOK (ADR-006): if the host saved their own key, the two LLM-backed
+// endpoints — and only those — carry it as headers.
+function byokHeaders(): Record<string, string> {
+  const byok = loadByok();
+  return byok ? { "x-llm-provider": byok.provider, "x-llm-key": byok.key } : {};
+}
+
+function postLlm<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...byokHeaders() },
+    body: JSON.stringify(body),
+  });
+}
+
 export function generateInvitation(text: string): Promise<Invitation> {
-  return post<Invitation>("/api/invitations/generate", { text });
+  return postLlm<Invitation>("/api/invitations/generate", { text });
 }
 
 export async function regenerateField(
@@ -34,7 +50,7 @@ export async function regenerateField(
   field: CopyField,
   currentValue: string,
 ): Promise<string> {
-  const result = await post<{ value: string }>("/api/invitations/regenerate-field", {
+  const result = await postLlm<{ value: string }>("/api/invitations/regenerate-field", {
     brief,
     field,
     current_value: currentValue,

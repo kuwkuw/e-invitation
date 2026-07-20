@@ -38,6 +38,18 @@ export interface ChatStrings {
   send: string;
 }
 
+export interface ByokStrings {
+  button: string;
+  title: string;
+  intro: string;
+  provider: string;
+  keyLabel: string;
+  keyPlaceholder: string;
+  save: string;
+  clear: string;
+  active: string;
+}
+
 interface UiStrings {
   appTitle: string;
   tagline: string;
@@ -51,6 +63,7 @@ interface UiStrings {
   fields: Record<CopyField, string>;
   design: DesignStrings;
   chat: ChatStrings;
+  byok: ByokStrings;
   publish: string;
   publishing: string;
   republish: string;
@@ -137,6 +150,18 @@ export const UI: Record<Language, UiStrings> = {
       save: "Save",
       send: "Send",
     },
+    byok: {
+      button: "AI key",
+      title: "Your AI key",
+      intro:
+        "Generation can run on your own AI key. It stays in this browser only and is sent just with your requests — the server never stores it. Tip: use a separate free-tier key, not one linked to billing.",
+      provider: "Provider",
+      keyLabel: "API key",
+      keyPlaceholder: "Paste your key…",
+      save: "Save key",
+      clear: "Remove",
+      active: "Using your key",
+    },
     publish: "Publish & get link",
     publishing: "Publishing…",
     republish: "Publish changes",
@@ -220,6 +245,18 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Варіанти",
       save: "Зберегти",
       send: "Надіслати",
+    },
+    byok: {
+      button: "Ключ AI",
+      title: "Ваш ключ AI",
+      intro:
+        "Генерація може працювати на вашому власному ключі AI. Він зберігається лише в цьому браузері й надсилається тільки з вашими запитами — сервер його не зберігає. Порада: використовуйте окремий безкоштовний ключ, не прив'язаний до платіжних даних.",
+      provider: "Провайдер",
+      keyLabel: "API-ключ",
+      keyPlaceholder: "Вставте ваш ключ…",
+      save: "Зберегти ключ",
+      clear: "Видалити",
+      active: "Використовується ваш ключ",
     },
     publish: "Опублікувати й отримати лінк",
     publishing: "Публікуємо…",

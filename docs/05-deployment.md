@@ -59,6 +59,14 @@ the free tier and one generation costs 3 calls (brief + copy + design), so
 expect roughly 6 generations/day before 429s. `gemini-2.5-pro` has zero
 free-tier quota; its config entry only matters with a paid key.
 
+**BYOK** ([adr-006](decisions/adr-006-byok-passthrough.md)) needs no extra
+deployment config beyond the proxy being up to date: the per-request key
+override rides on `configurable_clientside_auth_params` entries in
+`litellm/config.yaml`, and the config is baked into the proxy image — a
+config change without a proxy-service rebuild silently breaks BYOK for
+Gemini/OpenAI keys. Hosts with their own keys spend their own quota, so the
+operator-key limits above stop being the ceiling.
+
 ## What the server does differently in production
 
 - `trustProxy` is enabled, so `og:image` URLs honor `x-forwarded-proto`

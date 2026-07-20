@@ -1,12 +1,14 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import {
+  ByokProvider,
   GenerateRequest,
   InvitationId,
   PublishRequest,
   RegenerateFieldRequest,
   RsvpRequest,
 } from "../schemas.js";
+import type { ByokKey } from "../llm/gateway.js";
 import { generateInvitation } from "../pipeline/generate.js";
 import { regenerateField } from "../pipeline/copy.js";
 import {
@@ -26,8 +28,14 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: describeZodError(error) });
     }
+    let byok: ByokKey | undefined;
     try {
-      const invitation = await generateInvitation(body.text);
+      byok = byokFromHeaders(request);
+    } catch (error) {
+      return reply.code(400).send({ error: (error as Error).message });
+    }
+    try {
+      const invitation = await generateInvitation(body.text, byok);
       recordGeneration();
       return invitation;
     } catch (error) {
@@ -43,8 +51,14 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: describeZodError(error) });
     }
+    let byok: ByokKey | undefined;
     try {
-      const value = await regenerateField(body.brief, body.field, body.current_value);
+      byok = byokFromHeaders(request);
+    } catch (error) {
+      return reply.code(400).send({ error: (error as Error).message });
+    }
+    try {
+      const value = await regenerateField(body.brief, body.field, body.current_value, byok);
       recordFieldRegeneration(body.field);
       return { value };
     } catch (error) {
@@ -122,6 +136,23 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
   });
 
   app.get("/api/metrics", async () => metricsSnapshot());
+}
+
+// BYOK headers (ADR-006). The key is transient request context: parsed
+// here, passed down, never persisted or logged. Absent headers mean the
+// operator-key routing applies unchanged.
+function byokFromHeaders(request: FastifyRequest): ByokKey | undefined {
+  const key = request.headers["x-llm-key"];
+  const provider = request.headers["x-llm-provider"];
+  if (key === undefined && provider === undefined) return undefined;
+  if (typeof key !== "string" || key.length === 0 || key.length > 256) {
+    throw new Error("x-llm-key must be a non-empty API key (with x-llm-provider).");
+  }
+  const parsed = ByokProvider.safeParse(provider);
+  if (!parsed.success) {
+    throw new Error(`x-llm-provider must be one of: ${ByokProvider.options.join(", ")}.`);
+  }
+  return { provider: parsed.data, key };
 }
 
 function lookup(params: unknown) {

@@ -37,6 +37,8 @@ OG images (`server/src/og/render.ts`): satori + resvg render the share-link prev
 
 Regeneration is **per-field, never whole-invitation**: `POST /api/invitations/regenerate-field` takes the brief + field + current value and returns one rewritten field.
 
+BYOK (adr-006): the host's own provider key rides generate/regenerate requests as `x-llm-provider`/`x-llm-key` headers (browser localStorage only, editor "AI key" panel). The gateway then walks **only that provider's models** — never operator-key fallbacks — and passes the key per request: Anthropic keys via a per-request direct client, Gemini/OpenAI keys as a client-side `api_key` body override through the proxy (`configurable_clientside_auth_params` in `litellm/config.yaml`). Keys are never stored or logged (`byok: true` is the only log trace; fastify redacts the header).
+
 Metrics: `server/src/metrics.ts` counts generations and per-field regenerations; `GET /api/metrics` exposes the regenerate-rate (the main copy-quality signal). Per-request LLM logs come from the gateway.
 
 Schemas: `server/src/schemas.ts` (zod, v4) is the source of truth; `web/src/types.ts` mirrors it and must be updated in sync by hand.
@@ -45,4 +47,4 @@ Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input 
 
 ## Status
 
-Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; LiteLLM Proxy with Gemini/OpenAI/Ollama fallbacks (local dev); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup). Not yet built: BYOK/user-level keys, hosted LiteLLM proxy.
+Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; LiteLLM Proxy with Gemini/OpenAI/Ollama fallbacks (local via docker compose, hosted as an internal Northflank service); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup); BYOK per-request user keys (adr-006). Not yet built: per-key metering/budgets (LiteLLM virtual keys), custom domain.

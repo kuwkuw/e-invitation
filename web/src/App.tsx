@@ -4,6 +4,7 @@ import { UI, loadUiLang, saveUiLang } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { DesignControls } from "./components/DesignControls";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { ByokSettings } from "./components/ByokSettings";
 import {
   type CopyField,
   type DesignTokens,
@@ -182,6 +183,7 @@ export default function App() {
         </button>
         <div className="cc-title">{invitation?.copy.title ?? t.chat.newInvitation}</div>
         <div className="cc-header-right">
+          <ByokSettings labels={t.byok} />
           <LangSwitcher
             value={uiLang}
             onChange={(lang) => {
