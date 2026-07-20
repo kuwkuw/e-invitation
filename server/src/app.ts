@@ -9,7 +9,15 @@ import { registerOgRoutes } from "./routes/og.js";
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
   // come from x-forwarded-proto, or og:image URLs would be built as http.
-  const app = Fastify({ logger: options.logger ?? true, trustProxy: true });
+  // BYOK keys (ADR-006) must never reach logs: fastify's default serializers
+  // don't log headers, but redact defensively for any hook that might.
+  const app = Fastify({
+    logger:
+      (options.logger ?? true)
+        ? { redact: { paths: ['req.headers["x-llm-key"]'], censor: "[redacted]" } }
+        : false,
+    trustProxy: true,
+  });
   await app.register(cors, { origin: true });
   app.get("/healthz", async () => ({ ok: true }));
   registerInvitationRoutes(app);

@@ -1,6 +1,6 @@
 # ADR-006 — BYOK as stateless per-request key pass-through
 
-**Status:** proposed · **Date:** 2026-07
+**Status:** accepted · **Date:** 2026-07
 
 ## Context
 
@@ -56,10 +56,11 @@ Two constraints shape the design:
 - The key transits our server on each request (HTTPS end-to-end; stateless —
   no at-rest exposure). The trust statement for hosts is honest and simple:
   "your key is used for your request and forgotten."
-- **Spike before implementation**: verify the Anthropic-format proxy
-  endpoint accepts per-request client-side `api_key`. If it does not, the
-  gateway calls the proxy's endpoint directly via `fetch` for BYOK requests
-  — the `completeJson()` interface hides either transport.
+- **Spike resolved (2026-07-20)**: the Anthropic-format proxy endpoint does
+  honor per-request client-side `api_key` (verified against the local proxy:
+  a fake override key produced Gemini's `API_KEY_INVALID` while the control
+  request succeeded on the env key), so the gateway keeps a single SDK
+  transport for both modes.
 - The editor gains a small settings surface (key entry + provider picker +
   "stored only in this browser" copy) — UI work in the E-invitation DS
   design system, unlike the rest of this iteration.

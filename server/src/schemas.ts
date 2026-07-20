@@ -65,6 +65,12 @@ export const GenerateRequest = z.object({
 });
 export type GenerateRequest = z.infer<typeof GenerateRequest>;
 
+// BYOK (ADR-006): the host's own provider key rides generate/regenerate
+// requests as x-llm-provider / x-llm-key headers — transient request
+// context, never part of a stored payload.
+export const ByokProvider = z.enum(["anthropic", "gemini", "openai"]);
+export type ByokProvider = z.infer<typeof ByokProvider>;
+
 export const RegenerateFieldRequest = z.object({
   brief: EventBrief,
   field: CopyField,

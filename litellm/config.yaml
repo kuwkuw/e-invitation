@@ -25,6 +25,9 @@ model_list:
       # Gemini 2.5 thinks by default and reasoning eats the small per-task
       # maxTokens caps (design_resolution: 256) before any JSON is emitted.
       reasoning_effort: "disable"
+      # BYOK (ADR-006): allow requests to override the key with the host's
+      # own Gemini key; without the override the env key applies as before.
+      configurable_clientside_auth_params: ["api_key"]
 
   - model_name: gpt-5.1
     litellm_params:
@@ -33,6 +36,7 @@ model_list:
       # Same reasoning-vs-maxTokens concern as Gemini: keep reasoning off
       # so small output caps go to JSON, not thinking.
       reasoning_effort: "none"
+      configurable_clientside_auth_params: ["api_key"]
 
   - model_name: gpt-5-mini
     litellm_params:
@@ -40,6 +44,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
       # gpt-5-mini has no "none" tier; minimal is its floor.
       reasoning_effort: "minimal"
+      configurable_clientside_auth_params: ["api_key"]
 
   # Local Ollama on the host — free offline fallback for dev; the proxy
   # runs in Docker, so the host is host.docker.internal, not localhost.
@@ -54,6 +59,7 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
+      configurable_clientside_auth_params: ["api_key"]
 
 litellm_settings:
   # Drop provider-specific params a target model doesn't support instead of

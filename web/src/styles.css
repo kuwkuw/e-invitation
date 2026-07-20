@@ -162,6 +162,31 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-share-panel .publish-status { margin-top: 0; }
 
+/* BYOK key panel (ADR-006) — shares the share-panel dropdown shell. */
+.cc-key-on { color: #b3592e; }
+.cc-key-panel { width: min(340px, calc(100vw - 28px)); }
+.cc-key-title { margin: 0 0 6px; font-size: 0.95rem; }
+.cc-key-intro { margin: 0 0 10px; font-size: 0.82rem; color: #6b6659; line-height: 1.45; }
+.cc-key-active { margin: 0 0 10px; font-size: 0.82rem; color: #2f7d4f; font-weight: 600; }
+.cc-key-label { display: block; font-size: 0.78rem; font-weight: 600; color: #6b6659; margin-bottom: 10px; }
+.cc-key-label select {
+  display: block; width: 100%; margin-top: 4px;
+  border: 1px solid #c8c4bb; border-radius: 6px;
+  padding: 6px 10px; font: inherit; font-size: 0.9rem; background: #fff;
+}
+.cc-key-label .share-row { margin-top: 4px; }
+.cc-key-actions { display: flex; gap: 8px; }
+.cc-key-save {
+  border: none; border-radius: 999px; padding: 8px 16px;
+  font-size: 0.85rem; font-weight: 700; background: #b3592e; color: #fff; cursor: pointer;
+}
+.cc-key-save:disabled { background: #efece6; color: #a89f8e; cursor: default; }
+.cc-key-save:not(:disabled):hover { background: #a04e27; }
+.cc-key-clear {
+  border: 1px solid #c8c4bb; background: #fff; border-radius: 999px;
+  padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: #6b6659;
+}
+
 .cc-main { flex: 1; display: flex; min-height: 0; }
 
 .cc-chat {

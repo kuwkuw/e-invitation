@@ -73,3 +73,11 @@ export interface RsvpSummary {
   rsvps: RsvpEntry[];
   counts: { yes: number; no: number; guests: number };
 }
+
+// BYOK (ADR-006): the host's own provider key, kept in this browser only.
+export type ByokProvider = "anthropic" | "gemini" | "openai";
+
+export interface ByokKey {
+  provider: ByokProvider;
+  key: string;
+}

@@ -36,7 +36,7 @@ const canned: Record<Task, unknown> = {
 const completeJson = vi.fn(async (task: Task) => canned[task]);
 
 vi.mock("../src/llm/gateway.js", () => ({
-  completeJson: (task: Task, spec: unknown) => completeJson(task, spec),
+  completeJson: (task: Task, spec: unknown, byok?: unknown) => completeJson(task, spec, byok),
 }));
 
 describe("generateInvitation", () => {
@@ -56,5 +56,16 @@ describe("generateInvitation", () => {
     const { regenerateField } = await import("../src/pipeline/copy.js");
     const value = await regenerateField(brief, "greeting", "Дорогі друзі!");
     expect(value).toBe("Любі гості!");
+  });
+
+  it("threads the BYOK key to every LLM call in the request (ADR-006)", async () => {
+    completeJson.mockClear();
+    const byok = { provider: "gemini", key: "user-key" };
+    const { generateInvitation } = await import("../src/pipeline/generate.js");
+    await generateInvitation("Свято!", byok as never);
+    expect(completeJson.mock.calls).toHaveLength(3);
+    for (const call of completeJson.mock.calls) {
+      expect(call[2]).toBe(byok);
+    }
   });
 });

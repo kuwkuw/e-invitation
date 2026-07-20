@@ -101,6 +101,20 @@ implementation.
 - FR-7.2 Counters are in-process (reset on restart) — acceptable at current
   scale; see NFR-7.
 
+## FR-8 BYOK — host's own AI key
+
+**Status: built** — [adr-006](decisions/adr-006-byok-passthrough.md),
+`x-llm-provider`/`x-llm-key` headers on the two LLM-backed endpoints
+
+- FR-8.1 A host can save their own provider API key (Gemini, Anthropic, or
+  OpenAI) in the editor; it is stored in the browser only and sent as
+  headers on generate/regenerate requests.
+- FR-8.2 The server uses the key transiently for that request's LLM calls:
+  never persisted, never logged (log lines carry only `byok: true`).
+- FR-8.3 A BYOK request's model walk is restricted to the key's provider —
+  it never falls back onto operator keys.
+- FR-8.4 Without the headers, operator-key routing applies unchanged.
+
 ## Routing map (web)
 
 | Path | Page | Audience |
@@ -111,10 +125,11 @@ implementation.
 
 ## Not yet built (backlog)
 
-- **BYOK / user-level API keys — next iteration.** Host brings their own
-  provider key (target: free-tier Gemini), passed through statelessly per
-  request — no accounts, no server-side key storage. See
-  [adr-006](decisions/adr-006-byok-passthrough.md) (proposed) and
-  [adr-002](decisions/adr-002-llm-gateway.md).
+- **Consumer cost model — open question.** BYOK (FR-8) serves power users;
+  real hosts won't bring API keys. The consumer-scale options, deliberately
+  undecided: operator-paid key + per-IP rate limits (~$0.0007/generation on
+  paid-tier `gemini-2.5-flash`, measured 2026-07-20), or per-key
+  metering/credits via LiteLLM virtual keys (Postgres; rejected-for-now in
+  [adr-006](decisions/adr-006-byok-passthrough.md)).
 - Optional AI background image layer (no text in image) — allowed by
   [adr-003](decisions/adr-003-no-image-generation.md), not started.

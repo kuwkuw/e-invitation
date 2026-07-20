@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { completeJson } from "../llm/gateway.js";
+import { completeJson, type ByokKey } from "../llm/gateway.js";
 import { InvitationCopy, type CopyField, type EventBrief } from "../schemas.js";
 
 const COPY_SYSTEM = `You write the text of an event invitation from a structured event brief.
@@ -11,12 +11,16 @@ Rules:
 - details_line contains only facts from the brief (date, time, venue, city) formatted for reading — no invented specifics.
 - Keep it short and warm: this is a card, not a letter.`;
 
-export async function generateCopy(brief: EventBrief): Promise<InvitationCopy> {
-  return completeJson("copy_generation", {
-    system: COPY_SYSTEM,
-    user: JSON.stringify(brief),
-    schema: InvitationCopy,
-  });
+export async function generateCopy(brief: EventBrief, byok?: ByokKey): Promise<InvitationCopy> {
+  return completeJson(
+    "copy_generation",
+    {
+      system: COPY_SYSTEM,
+      user: JSON.stringify(brief),
+      schema: InvitationCopy,
+    },
+    byok,
+  );
 }
 
 const REGEN_SYSTEM = `You rewrite exactly one field of an event invitation.
@@ -34,11 +38,16 @@ export async function regenerateField(
   brief: EventBrief,
   field: CopyField,
   currentValue: string,
+  byok?: ByokKey,
 ): Promise<string> {
-  const result = await completeJson("field_regeneration", {
-    system: REGEN_SYSTEM,
-    user: JSON.stringify({ brief, field, current_value: currentValue }),
-    schema: FieldValue,
-  });
+  const result = await completeJson(
+    "field_regeneration",
+    {
+      system: REGEN_SYSTEM,
+      user: JSON.stringify({ brief, field, current_value: currentValue }),
+      schema: FieldValue,
+    },
+    byok,
+  );
   return result.value;
 }
