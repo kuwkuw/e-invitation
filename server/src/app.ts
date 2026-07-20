@@ -5,6 +5,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
+import { TASK_ROUTES } from "./llm/routing.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -19,7 +20,17 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     trustProxy: true,
   });
   await app.register(cors, { origin: true });
-  app.get("/healthz", async () => ({ ok: true }));
+  // Effective LLM routing, declared once for operators: transport mode and
+  // the model walk per task. There is no capability probing (keys may live
+  // on the proxy, and probing would spend quota) — this reports what the
+  // server *will try*, not what will succeed.
+  const llmInfo = {
+    mode: process.env.LLM_BASE_URL ? "proxy" : "direct",
+    tasks: Object.fromEntries(
+      Object.entries(TASK_ROUTES).map(([task, route]) => [task, [route.primary, ...route.fallbacks]]),
+    ),
+  };
+  app.get("/healthz", async () => ({ ok: true, llm: llmInfo }));
   registerInvitationRoutes(app);
   registerOgRoutes(app);
 

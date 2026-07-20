@@ -8,7 +8,7 @@ import {
   RegenerateFieldRequest,
   RsvpRequest,
 } from "../schemas.js";
-import type { ByokKey } from "../llm/gateway.js";
+import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
 import { generateInvitation } from "../pipeline/generate.js";
 import { regenerateField } from "../pipeline/copy.js";
 import {
@@ -40,7 +40,9 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       return invitation;
     } catch (error) {
       request.log.error(error);
-      return reply.code(502).send({ error: "Generation failed on all routed models." });
+      return reply
+        .code(502)
+        .send({ error: "Generation failed on all routed models.", causes: llmCauses(error) });
     }
   });
 
@@ -63,7 +65,9 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       return { value };
     } catch (error) {
       request.log.error(error);
-      return reply.code(502).send({ error: "Regeneration failed on all routed models." });
+      return reply
+        .code(502)
+        .send({ error: "Regeneration failed on all routed models.", causes: llmCauses(error) });
     }
   });
 
@@ -136,6 +140,14 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
   });
 
   app.get("/api/metrics", async () => metricsSnapshot());
+}
+
+// Per-model failure classes for the 502 body: which models were tried and
+// why each failed (auth/quota/connectivity/...). Raw provider messages stay
+// in the llm_request log lines — the API surface gets only the class.
+function llmCauses(error: unknown): { model: string; class: string }[] | undefined {
+  if (!(error instanceof AllModelsFailedError)) return undefined;
+  return error.causes.map(({ model, class: cls }) => ({ model, class: cls }));
 }
 
 // BYOK headers (ADR-006). The key is transient request context: parsed

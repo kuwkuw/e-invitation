@@ -9,11 +9,34 @@ import type {
 } from "./types";
 import { loadByok } from "./byok";
 
+// 502s from the LLM endpoints carry per-model failure classes (mirrors the
+// server's ModelFailure, message stripped) so the UI can say *why*.
+export interface LlmCause {
+  model: string;
+  class: string;
+}
+
+export class ApiError extends Error {
+  causes?: LlmCause[];
+}
+
+/** Reduce a failed generation to what the host can act on: exhausted quota,
+ *  a bad/unauthorized key, or generic failure. */
+export function llmFailureKind(error: unknown): "quota" | "auth" | "generic" {
+  if (error instanceof ApiError && error.causes && error.causes.length > 0) {
+    if (error.causes.some((c) => c.class === "quota")) return "quota";
+    if (error.causes.every((c) => c.class === "auth")) return "auth";
+  }
+  return "generic";
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
-    throw new Error(detail?.error ?? `Request failed (${response.status})`);
+    const error = new ApiError(detail?.error ?? `Request failed (${response.status})`);
+    if (Array.isArray(detail?.causes)) error.causes = detail.causes;
+    throw error;
   }
   return response.json() as Promise<T>;
 }
