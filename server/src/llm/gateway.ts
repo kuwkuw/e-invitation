@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import type { ZodType } from "zod";
+import { ZodError, type ZodType } from "zod";
 import { TASK_ROUTES, type Task } from "./routing.js";
 import { estimateCostUsd } from "./pricing.js";
 import type { ByokProvider } from "../schemas.js";
@@ -37,6 +37,50 @@ export interface ByokKey {
   key: string;
 }
 
+// Terminal-error classes: carried per model in logs and in the 502 body so a
+// failed generation is diagnosable from the API response alone (quota vs bad
+// key vs provider outage vs unusable output). Born of a prod incident where
+// three identical 502s had three different causes.
+export type FailureClass = "auth" | "quota" | "connectivity" | "output-invalid" | "other";
+
+export interface ModelFailure {
+  model: string;
+  class: FailureClass;
+  message: string;
+}
+
+export class AllModelsFailedError extends Error {
+  constructor(
+    public readonly task: Task,
+    public readonly causes: ModelFailure[],
+  ) {
+    super(
+      `All models failed for task "${task}": ${causes
+        .map((c) => `${c.model} (${c.class})`)
+        .join(", ")}`,
+    );
+    this.name = "AllModelsFailedError";
+  }
+}
+
+export function classifyError(error: unknown): FailureClass {
+  if (error instanceof Anthropic.APIConnectionError) return "connectivity";
+  if (error instanceof Anthropic.APIError) {
+    if (error.status === 401 || error.status === 403) return "auth";
+    if (error.status === 429) return "quota";
+    return "other";
+  }
+  // The model answered but its output was unusable: zod rejection, broken
+  // JSON, or the gateway's own empty-output / no-JSON errors below.
+  if (error instanceof ZodError || error instanceof SyntaxError) return "output-invalid";
+  if (error instanceof Error) {
+    if (/^(empty output|no JSON object)/.test(error.message)) return "output-invalid";
+    // Missing key: the SDK throws at client construction, before any request.
+    if (/api key|apiKey|authentication/i.test(error.message)) return "auth";
+  }
+  return "other";
+}
+
 // Routed model ids encode their provider by prefix; "gemma3-4b" (local
 // Ollama) maps to none of them and is never part of a BYOK walk.
 export function providerOf(model: string): ByokProvider | null {
@@ -68,6 +112,7 @@ interface LlmLogLine {
   output_tokens?: number;
   cost_usd?: number | null;
   error?: string;
+  error_class?: FailureClass;
 }
 
 function logLlm(line: LlmLogLine): void {
@@ -126,7 +171,7 @@ export async function completeJson<T>(
   if (models.length === 0) {
     throw new Error(`No routed models for BYOK provider "${byok?.provider}" on task "${task}".`);
   }
-  let lastError: unknown;
+  const causes: ModelFailure[] = [];
 
   for (const model of models) {
     const startedAt = performance.now();
@@ -167,19 +212,18 @@ export async function completeJson<T>(
       });
       return parsed;
     } catch (error) {
+      const error_class = classifyError(error);
+      const message = error instanceof Error ? error.message : String(error);
       logLlm({
         ...base,
         ok: false,
         latency_ms: Math.round(performance.now() - startedAt),
-        error: error instanceof Error ? error.message : String(error),
+        error: message,
+        error_class,
       });
-      lastError = error;
+      causes.push({ model, class: error_class, message });
     }
   }
 
-  throw new Error(
-    `All models failed for task "${task}" (tried: ${models.join(", ")}): ${
-      lastError instanceof Error ? lastError.message : String(lastError)
-    }`,
-  );
+  throw new AllModelsFailedError(task, causes);
 }

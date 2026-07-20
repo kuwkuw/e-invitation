@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { generateInvitation, publishInvitation, regenerateField, fetchRsvps } from "./api";
+import { generateInvitation, publishInvitation, regenerateField, fetchRsvps, llmFailureKind } from "./api";
 import { UI, loadUiLang, saveUiLang } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { DesignControls } from "./components/DesignControls";
@@ -67,8 +67,11 @@ export default function App() {
       // Edits invalidate the published snapshot's freshness, not the link.
       setMessages((m) => [...m, { role: "assistant", text: t.chat.doneMsg }]);
       setPhase("active");
-    } catch {
-      setMessages((m) => [...m, { role: "assistant", text: t.chat.failMsg }]);
+    } catch (error) {
+      const kind = llmFailureKind(error);
+      const text =
+        kind === "quota" ? t.chat.quotaMsg : kind === "auth" ? t.chat.keyMsg : t.chat.failMsg;
+      setMessages((m) => [...m, { role: "assistant", text }]);
       setPhase(invitation ? "active" : "empty");
     }
   }

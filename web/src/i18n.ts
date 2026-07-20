@@ -36,6 +36,8 @@ export interface ChatStrings {
   variantsTitle: string;
   save: string;
   send: string;
+  quotaMsg: string;
+  keyMsg: string;
 }
 
 export interface ByokStrings {
@@ -149,6 +151,8 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Variants",
       save: "Save",
       send: "Send",
+      quotaMsg: "The AI's free daily limit is used up. Try again tomorrow — or add your own key via the AI key button above.",
+      keyMsg: "The AI key didn't work — check it in the AI key panel above.",
     },
     byok: {
       button: "AI key",
@@ -245,6 +249,8 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Варіанти",
       save: "Зберегти",
       send: "Надіслати",
+      quotaMsg: "Безкоштовний денний ліміт AI вичерпано. Спробуйте завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
+      keyMsg: "Ключ AI не спрацював — перевірте його в панелі «Ключ AI» вгорі.",
     },
     byok: {
       button: "Ключ AI",
