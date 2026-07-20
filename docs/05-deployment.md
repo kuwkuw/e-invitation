@@ -43,6 +43,11 @@ Non-Anthropic models resolve only through LiteLLM. In prod that's a
 2. **Networking**: port **4000** (HTTP), **internal only — do not enable the
    public endpoint.** The proxy has no auth (`master_key` unset); anyone who
    can reach it can spend the API keys.
+   - **Memory: allocate ≥1 GB** (LiteLLM idles at ~1 GiB). Undersized plans
+     OOM-kill the container **silently** — the telltale is a restart loop
+     with "Process terminated" and zero LiteLLM output (verified: 512 MB →
+     exit 137, no logs). Health check: `GET /health/liveliness`, ~60 s
+     initial delay (boot takes ~40 s).
 3. **Environment**: only the keys for providers you use — `GEMINI_API_KEY`,
    `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. Missing keys are fine: those
    models error at the proxy and the gateway's walker moves on. (The
