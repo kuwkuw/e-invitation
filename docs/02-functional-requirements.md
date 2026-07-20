@@ -83,9 +83,14 @@ implementation.
 
 **Status: built** — [i18n.ts](../web/src/i18n.ts)
 
-- FR-6.1 The editor UI toggles between Ukrainian and English.
+- FR-6.1 The landing page, editor, and guest page each toggle between
+  Ukrainian and English (`LangSwitcher`; host surfaces share the persisted
+  choice).
 - FR-6.2 UI language is independent of invitation copy language (FR-1.5): a
   host can drive an English UI while producing a Ukrainian invitation.
+- FR-6.3 On the guest page the toggle switches chrome only and defaults to
+  the invitation's language; invitation text is host content and is never
+  translated by the switcher.
 
 ## FR-7 Operational metrics
 
@@ -106,12 +111,10 @@ implementation.
 
 ## Not yet built (backlog)
 
-- **Language switcher on public pages — next iteration.** The landing page and
-  guest page have no UK/EN toggle (only the editor does, FR-6.1); flagged
-  during the Claude Design template work on "E-invitation DS". Guest-page copy
-  follows the invitation language (FR-1.5 analogue for GUEST strings), so the
-  switcher must not fight that default.
-- BYOK / user-level API keys via LiteLLM Proxy
-  ([adr-002](decisions/adr-002-llm-gateway.md)).
+- **BYOK / user-level API keys — next iteration.** Host brings their own
+  provider key (target: free-tier Gemini), passed through statelessly per
+  request — no accounts, no server-side key storage. See
+  [adr-006](decisions/adr-006-byok-passthrough.md) (proposed) and
+  [adr-002](decisions/adr-002-llm-gateway.md).
 - Optional AI background image layer (no text in image) — allowed by
   [adr-003](decisions/adr-003-no-image-generation.md), not started.
