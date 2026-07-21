@@ -76,8 +76,11 @@ Field regeneration is a single completion over (brief, field, current value).
   per request (task, model, fallback, latency, tokens, cost).
 - [pricing.ts](../server/src/llm/pricing.ts) — per-model token prices;
   `test/routing.test.ts` fails if a routed model lacks an entry.
-- Future: point the client at a LiteLLM Proxy via `LLM_BASE_URL` for
-  multi-provider/BYOK — the routing-table interface is the stability contract
+- Multi-provider/BYOK is in-process
+  ([adr-007](decisions/adr-007-in-process-providers.md)):
+  [openaiCompat.ts](../server/src/llm/openaiCompat.ts) calls
+  Gemini/OpenAI/Groq/Ollama through their OpenAI-compatible endpoints; the
+  routing-table interface remains the stability contract
   ([adr-002](decisions/adr-002-llm-gateway.md)).
 
 ## 5. Rendering model

@@ -1,6 +1,10 @@
 # ADR-006 — BYOK as stateless per-request key pass-through
 
-**Status:** accepted · **Date:** 2026-07
+**Status:** accepted · **Date:** 2026-07 · The proxy transport described
+here is superseded by [adr-007](adr-007-in-process-providers.md): the key
+is now used directly by the in-process provider call. The BYOK rules
+(browser-only storage, never logged, provider-restricted walk, no operator
+fallback) stand unchanged.
 
 ## Context
 

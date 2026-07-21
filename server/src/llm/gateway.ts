@@ -1,26 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ZodError, type ZodType } from "zod";
-import { TASK_ROUTES, type Task } from "./routing.js";
+import { BYOK_FALLBACK_MODELS, MODEL_PROVIDERS, TASK_ROUTES, type Task } from "./routing.js";
+import { completeCompat, ProviderHttpError } from "./openaiCompat.js";
 import { estimateCostUsd } from "./pricing.js";
 import type { ByokProvider } from "../schemas.js";
 
-// Single client for the whole process, created lazily so the server can boot
-// (and /healthz respond) without credentials. To route through a LiteLLM Proxy
-// later (multi-provider / BYOK), set LLM_BASE_URL — the routing table and this
-// interface stay unchanged.
+// Anthropic models go through the SDK directly; every other provider through
+// the in-process OpenAI-compat adapter (openaiCompat.ts, adr-007). Created
+// lazily so the server can boot (and /healthz respond) without credentials —
+// a missing ANTHROPIC_API_KEY throws here inside the walk, classifying as a
+// fast local auth failure, and the walker moves on.
 let clientInstance: Anthropic | null = null;
 function client(): Anthropic {
-  // Behind the proxy the SDK still demands an api key; LiteLLM without auth
-  // ignores the value, so a placeholder keeps direct-mode behavior unchanged.
-  clientInstance ??= new Anthropic(
-    process.env.LLM_BASE_URL
-      ? {
-          baseURL: process.env.LLM_BASE_URL,
-          apiKey: process.env.ANTHROPIC_API_KEY || "litellm-local",
-        }
-      : undefined,
-  );
+  clientInstance ??= new Anthropic();
   return clientInstance;
 }
 
@@ -70,34 +63,47 @@ export function classifyError(error: unknown): FailureClass {
     if (error.status === 429) return "quota";
     return "other";
   }
+  // Same mapping for the OpenAI-compat transport's HTTP failures.
+  if (error instanceof ProviderHttpError) {
+    if (error.status === 401 || error.status === 403) return "auth";
+    if (error.status === 429) return "quota";
+    return "other";
+  }
+  // fetch: network failure surfaces as TypeError, timeout as a DOMException
+  // named TimeoutError (AbortSignal.timeout) or AbortError.
+  if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+    return "connectivity";
+  }
+  if (error instanceof TypeError && /fetch/i.test(error.message)) return "connectivity";
   // The model answered but its output was unusable: zod rejection, broken
   // JSON, or the gateway's own empty-output / no-JSON errors below.
   if (error instanceof ZodError || error instanceof SyntaxError) return "output-invalid";
   if (error instanceof Error) {
     if (/^(empty output|no JSON object)/.test(error.message)) return "output-invalid";
-    // Missing key: the SDK throws at client construction, before any request.
+    // Missing key: both transports throw locally, before any request.
     if (/api key|apiKey|authentication/i.test(error.message)) return "auth";
   }
   return "other";
 }
 
-// Routed model ids encode their provider by prefix; "gemma3-4b" (local
-// Ollama) maps to none of them and is never part of a BYOK walk.
+/** The BYOK-able provider of a routed model; null for operator-side-only
+ *  transports (groq, ollama), which are never part of a BYOK walk. */
 export function providerOf(model: string): ByokProvider | null {
-  if (model.startsWith("claude-")) return "anthropic";
-  if (model.startsWith("gemini-")) return "gemini";
-  if (model.startsWith("gpt-")) return "openai";
+  const provider = MODEL_PROVIDERS[model];
+  if (provider === "anthropic" || provider === "gemini" || provider === "openai") return provider;
   return null;
 }
 
 /** The models completeJson will walk for a task: the full route normally; a
  *  BYOK request is restricted to the key's provider so it can never fall
- *  back onto operator keys (ADR-006). */
+ *  back onto operator keys (ADR-006). When the free-first route carries no
+ *  model from that provider, the provider's BYOK fallback list applies. */
 export function modelsForWalk(task: Task, byok?: ByokKey): string[] {
   const route = TASK_ROUTES[task];
   const models = [route.primary, ...route.fallbacks];
   if (!byok) return models;
-  return models.filter((model) => providerOf(model) === byok.provider);
+  const own = models.filter((model) => providerOf(model) === byok.provider);
+  return own.length > 0 ? own : BYOK_FALLBACK_MODELS[byok.provider];
 }
 
 interface LlmLogLine {
@@ -121,9 +127,9 @@ function logLlm(line: LlmLogLine): void {
   console.log(JSON.stringify({ evt: "llm_request", ...line }));
 }
 
-// Anthropic structured outputs return pure JSON, but proxied providers
-// (Gemini via LiteLLM) sometimes wrap it in prose despite the schema.
-// Parse leniently: exact JSON first, then the outermost {...} span.
+// Anthropic structured outputs return pure JSON, but other providers
+// sometimes wrap it in prose despite the schema. Parse leniently: exact JSON
+// first, then the outermost {...} span.
 function extractJson(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -137,29 +143,64 @@ function extractJson(text: string): unknown {
   }
 }
 
-// The transport for one request. Anthropic BYOK keys go direct with a
-// per-request client (no proxy involvement). Gemini/OpenAI BYOK keys ride
-// the proxy client plus a per-request `api_key` body override — LiteLLM's
-// client-side credentials, enabled per model in litellm/config.yaml and
-// verified to pass through the Anthropic-format endpoint (spike 2026-07-20).
-function clientFor(byok?: ByokKey): { client: Anthropic; bodyExtra?: { api_key: string } } {
-  if (!byok) return { client: client() };
-  if (byok.provider === "anthropic") {
-    return { client: new Anthropic({ apiKey: byok.key }) };
+interface AttemptResult {
+  text: string;
+  inputTokens: number;
+  outputTokens: number;
+  stopReason: string | null;
+}
+
+// One request to one model, on whichever transport its provider uses. A BYOK
+// key is spent directly: as a per-request Anthropic client, or as the bearer
+// token of the OpenAI-compat call (the walk already guarantees the model
+// belongs to the key's provider).
+async function attempt<T>(
+  model: string,
+  spec: CompletionSpec<T>,
+  maxTokens: number,
+  byok?: ByokKey,
+): Promise<AttemptResult> {
+  const provider = MODEL_PROVIDERS[model];
+  if (!provider) throw new Error(`no provider mapped for model "${model}"`);
+
+  if (provider === "anthropic") {
+    const llm = byok?.provider === "anthropic" ? new Anthropic({ apiKey: byok.key }) : client();
+    const response = await llm.messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: spec.system,
+      messages: [{ role: "user", content: spec.user }],
+      output_config: { format: zodOutputFormat(spec.schema) },
+    });
+    return {
+      text: response.content
+        .filter((block) => block.type === "text")
+        .map((block) => block.text)
+        .join(""),
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+      stopReason: response.stop_reason,
+    };
   }
-  if (!process.env.LLM_BASE_URL) {
-    throw new Error(`BYOK provider "${byok.provider}" requires the LiteLLM proxy (LLM_BASE_URL).`);
-  }
-  return { client: client(), bodyExtra: { api_key: byok.key } };
+
+  return completeCompat({
+    provider,
+    model,
+    system: spec.system,
+    user: spec.user,
+    maxTokens,
+    schema: spec.schema,
+    apiKey: byok?.provider === provider ? byok.key : undefined,
+  });
 }
 
 /**
  * Run one structured-output completion for a task, walking the routing table
  * (primary, then fallbacks) until a model succeeds. The response is validated
- * against the given zod schema (sent to the model as an Anthropic
- * structured-output format, enforced locally via lenient extraction so
- * prose-wrapping proxied models still parse). A BYOK request walks only the
- * key's provider's models and spends the caller's key, never the operator's.
+ * against the given zod schema (sent to the model as structured-output
+ * format, enforced locally via lenient extraction so prose-wrapping models
+ * still parse). A BYOK request walks only the key's provider's models and
+ * spends the caller's key, never the operator's.
  */
 export async function completeJson<T>(
   task: Task,
@@ -183,32 +224,22 @@ export async function completeJson<T>(
       ...(byok ? { byok: true } : {}),
     };
     try {
-      const { client: llm, bodyExtra } = clientFor(byok);
-      const response = await llm.messages.create({
-        model,
-        max_tokens: route.maxTokens,
-        system: spec.system,
-        messages: [{ role: "user", content: spec.user }],
-        output_config: { format: zodOutputFormat(spec.schema) },
-        // Undocumented body params pass through the SDK to the proxy.
-        ...(bodyExtra as Record<string, never> | undefined),
-      });
+      const result = await attempt(model, spec, route.maxTokens, byok);
       const latency_ms = Math.round(performance.now() - startedAt);
-      const text = response.content
-        .filter((block) => block.type === "text")
-        .map((block) => block.text)
-        .join("");
-      if (!text) {
-        throw new Error(`empty output (stop_reason: ${response.stop_reason})`);
+      if (!result.text) {
+        throw new Error(`empty output (stop_reason: ${result.stopReason})`);
       }
-      const parsed = spec.schema.parse(extractJson(text));
+      const parsed = spec.schema.parse(extractJson(result.text));
       logLlm({
         ...base,
         ok: true,
         latency_ms,
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens,
-        cost_usd: estimateCostUsd(model, response.usage),
+        input_tokens: result.inputTokens,
+        output_tokens: result.outputTokens,
+        cost_usd: estimateCostUsd(model, {
+          input_tokens: result.inputTokens,
+          output_tokens: result.outputTokens,
+        }),
       });
       return parsed;
     } catch (error) {

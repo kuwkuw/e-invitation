@@ -24,53 +24,35 @@ artifacts.
    Health check: `GET /healthz`.
 3. **Volume**: create a persistent volume (1 GB is plenty) and mount it at
    **`/data`** (the image sets `DATA_DIR=/data`).
-4. **Environment** (runtime secrets):
-   - `ANTHROPIC_API_KEY` — required for generation (the primary models).
-   - Optional: `LLM_BASE_URL` — internal address of the hosted LiteLLM proxy
-     (see below). Without it the SDK calls Anthropic directly and
-     non-Anthropic fallbacks in `routing.ts` simply fail over.
+4. **Environment** (runtime secrets) — provider calls are made in-process
+   ([adr-007](decisions/adr-007-in-process-providers.md)); set only the keys
+   for providers you use, missing ones fail instantly and the routing walk
+   moves on:
+   - `GROQ_API_KEY` + `GEMINI_API_KEY` — the free-tier MVP pair; the default
+     routes in `routing.ts` run entirely on these.
+   - Optional: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — paid fallbacks. (The
+     `gemma3-4b` Ollama entry always fails in prod — it points at a
+     dev-machine host — and is skipped the same way.)
 5. Deploy. Northflank rebuilds on every push to `main` (CI is built in).
 
-## Hosted LiteLLM proxy (optional; required for Gemini/OpenAI in prod)
+**Free-tier quotas**: one generation costs 3 calls (brief + copy + design).
+Groq's free tier (~1k requests/day) carries brief extraction and design;
+Gemini's free tier (~20 requests/day observed) is reserved for copy and
+field regeneration, so expect roughly 20 copy calls/day before Gemini 429s
+push copy onto the Groq fallback. `gemini-2.5-pro` has zero free-tier quota;
+it only matters with a paid key.
 
-Non-Anthropic models resolve only through LiteLLM. In prod that's a
-**second Northflank service** in the same project:
-
-1. **Combined service** from the same repo:
-   - Build type: **Dockerfile**, path `/litellm/Dockerfile`, context
-     `/litellm` (the config is baked into the image — rebuild on config
-     changes).
-2. **Networking**: port **4000** (HTTP), **internal only — do not enable the
-   public endpoint.** The proxy has no auth (`master_key` unset); anyone who
-   can reach it can spend the API keys.
-   - **Memory: allocate ≥1 GB** (LiteLLM idles at ~1 GiB). Undersized plans
-     OOM-kill the container **silently** — the telltale is a restart loop
-     with "Process terminated" and zero LiteLLM output (verified: 512 MB →
-     exit 137, no logs). Health check: `GET /health/liveliness`, ~60 s
-     initial delay (boot takes ~40 s).
-3. **Environment**: only the keys for providers you use — `GEMINI_API_KEY`,
-   `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. Missing keys are fine: those
-   models error at the proxy and the gateway's walker moves on. (The
-   `gemma3-4b` Ollama entry always fails in prod — it points at a dev-machine
-   host — and is skipped the same way.)
-4. On the **app service**, set `LLM_BASE_URL` to the proxy's internal
-   address (Northflank internal DNS: `http://<service-name>:4000`) and
-   restart.
-
-**Gemini free-tier testing** (no Anthropic key): this works — every task's
-walker falls through the Claude/OpenAI entries (fast auth errors at the
-proxy) and lands on `gemini-2.5-flash`. Mind the quota: ~20 requests/day on
-the free tier and one generation costs 3 calls (brief + copy + design), so
-expect roughly 6 generations/day before 429s. `gemini-2.5-pro` has zero
-free-tier quota; its config entry only matters with a paid key.
-
-**BYOK** ([adr-006](decisions/adr-006-byok-passthrough.md)) needs no extra
-deployment config beyond the proxy being up to date: the per-request key
-override rides on `configurable_clientside_auth_params` entries in
-`litellm/config.yaml`, and the config is baked into the proxy image — a
-config change without a proxy-service rebuild silently breaks BYOK for
-Gemini/OpenAI keys. Hosts with their own keys spend their own quota, so the
+**BYOK** ([adr-006](decisions/adr-006-byok-passthrough.md)) needs no
+deployment config at all: the per-request key from the `x-llm-key` header is
+used directly as that request's provider credential (Anthropic keys via a
+per-request SDK client, Gemini/OpenAI keys as the bearer token of the
+in-process call). Hosts with their own keys spend their own quota, so the
 operator-key limits above stop being the ceiling.
+
+> History: until adr-007 the non-Anthropic providers resolved through a
+> hosted LiteLLM Proxy sidecar. It idled at ~1 GiB and was OOM-killed on
+> smaller plans (verified: 512 MB → exit 137, silent restart loop), which is
+> why it was replaced with in-process calls.
 
 ## What the server does differently in production
 
@@ -97,7 +79,7 @@ works keyless.
 
 ## Not covered yet
 
-- BYOK / user-level keys through the proxy — see
-  [adr-002](decisions/adr-002-llm-gateway.md).
+- Per-key metering/budgets — deferred (see
+  [adr-006](decisions/adr-006-byok-passthrough.md)).
 - Custom domain: add it in Northflank's DNS settings when ready; nothing in
   the app hardcodes the host (share URLs and OG meta derive from the request).

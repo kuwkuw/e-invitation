@@ -49,9 +49,10 @@ communicate (messenger links).
 
 ## Business model direction (not yet built)
 
-Operator pays for LLM calls today; the settled path is user-level BYOK
-(bring-your-own-key) via a LiteLLM Proxy so power users carry their own model
-costs. See [decisions/adr-002-llm-gateway.md](decisions/adr-002-llm-gateway.md).
+Operator pays for LLM calls today (free-tier providers first); the settled
+path is user-level BYOK (bring-your-own-key) so power users carry their own
+model costs. See [decisions/adr-006-byok-passthrough.md](decisions/adr-006-byok-passthrough.md)
+and [decisions/adr-007-in-process-providers.md](decisions/adr-007-in-process-providers.md).
 
 ## Explicit non-goals
 
