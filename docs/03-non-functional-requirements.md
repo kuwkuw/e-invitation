@@ -77,9 +77,10 @@
 
 - `server/src/schemas.ts` (zod v4) is the single source of truth for shapes;
   `web/src/types.ts` mirrors it **by hand** and must change in the same PR.
-- The routing table interface must stay stable so the planned LiteLLM Proxy
-  swap is a config change, not a refactor
-  ([adr-002](decisions/adr-002-llm-gateway.md)).
+- The routing table interface must stay stable so provider/transport swaps
+  stay local to the LLM gateway
+  ([adr-002](decisions/adr-002-llm-gateway.md),
+  [adr-007](decisions/adr-007-in-process-providers.md)).
 - Design tokens stay closed enums — widening them to free-form strings is a
   breaking architectural change, not a tweak
   ([adr-003](decisions/adr-003-no-image-generation.md)).

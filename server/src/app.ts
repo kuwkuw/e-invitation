@@ -20,12 +20,17 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     trustProxy: true,
   });
   await app.register(cors, { origin: true });
-  // Effective LLM routing, declared once for operators: transport mode and
-  // the model walk per task. There is no capability probing (keys may live
-  // on the proxy, and probing would spend quota) — this reports what the
-  // server *will try*, not what will succeed.
+  // Effective LLM routing, declared once for operators: which provider keys
+  // are configured and the model walk per task. There is no capability
+  // probing (it would spend quota) — this reports what the server *will
+  // try*, not what will succeed.
   const llmInfo = {
-    mode: process.env.LLM_BASE_URL ? "proxy" : "direct",
+    providers: {
+      anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+      gemini: Boolean(process.env.GEMINI_API_KEY),
+      openai: Boolean(process.env.OPENAI_API_KEY),
+      groq: Boolean(process.env.GROQ_API_KEY),
+    },
     tasks: Object.fromEntries(
       Object.entries(TASK_ROUTES).map(([task, route]) => [task, [route.primary, ...route.fallbacks]]),
     ),

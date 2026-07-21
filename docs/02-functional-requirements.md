@@ -129,7 +129,8 @@ implementation.
   real hosts won't bring API keys. The consumer-scale options, deliberately
   undecided: operator-paid key + per-IP rate limits (~$0.0007/generation on
   paid-tier `gemini-2.5-flash`, measured 2026-07-20), or per-key
-  metering/credits via LiteLLM virtual keys (Postgres; rejected-for-now in
-  [adr-006](decisions/adr-006-byok-passthrough.md)).
+  metering/credits (rejected-for-now in
+  [adr-006](decisions/adr-006-byok-passthrough.md); the LiteLLM virtual-keys
+  mechanism went away with [adr-007](decisions/adr-007-in-process-providers.md)).
 - Optional AI background image layer (no text in image) — allowed by
   [adr-003](decisions/adr-003-no-image-generation.md), not started.

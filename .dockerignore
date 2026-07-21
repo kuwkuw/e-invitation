@@ -10,6 +10,5 @@ server/data
 .ds-sync
 ds-bundle
 docs
-litellm
 scripts
 *.md

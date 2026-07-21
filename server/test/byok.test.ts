@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { modelsForWalk, providerOf } from "../src/llm/gateway.js";
-import { TASK_ROUTES, type Task } from "../src/llm/routing.js";
+import { MODEL_PROVIDERS, TASK_ROUTES, type Task } from "../src/llm/routing.js";
 import { buildApp } from "../src/app.js";
 
 describe("BYOK model walk (ADR-006)", () => {
-  it("maps every routed model to a provider or local", () => {
+  it("maps every routed model to a transport provider", () => {
     const models = Object.values(TASK_ROUTES).flatMap((r) => [r.primary, ...r.fallbacks]);
     for (const model of models) {
-      // gemma3-4b is local Ollama — the only routed model outside BYOK.
-      if (model === "gemma3-4b") {
+      expect(MODEL_PROVIDERS[model], `unmapped model ${model}`).toBeDefined();
+      // Groq/Ollama are operator-side transports, never BYOK providers.
+      if (MODEL_PROVIDERS[model] === "groq" || MODEL_PROVIDERS[model] === "ollama") {
         expect(providerOf(model)).toBeNull();
       } else {
-        expect(providerOf(model), `unmapped model ${model}`).not.toBeNull();
+        expect(providerOf(model)).toBe(MODEL_PROVIDERS[model]);
       }
     }
   });

@@ -1,6 +1,8 @@
 # ADR-002 — In-house routing table now, LiteLLM Proxy later
 
-**Status:** accepted · **Date:** 2026-07
+**Status:** accepted · **Date:** 2026-07 · The LiteLLM-Proxy endgame is
+superseded by [adr-007](adr-007-in-process-providers.md) (in-process
+provider calls); the routing-table core stands.
 
 ## Context
 
