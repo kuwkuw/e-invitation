@@ -30,7 +30,10 @@ What that leaves exposed:
 Goal: the share-with-strangers milestone — the app can be given to real hosts
 without an operator-cost incident and with the quality KPI actually observable.
 
-### 1. Abuse guardrails for operator-paid generation (blocker)
+### 1. Abuse guardrails for operator-paid generation (blocker) — ✅ shipped
+
+Shipped as FR-9 / [ADR-008](decisions/adr-008-operator-cost-guardrails.md).
+Original plan for reference:
 
 Settles the open consumer-cost-model question with the simple option:
 **operator-paid free-tier routing + limits** (~$0.0007/generation measured on
@@ -52,7 +55,9 @@ Record the decision as **ADR-008**.
 Acceptance: hammering generate from one IP hits 429; `/healthz` or metrics
 expose remaining daily budget; BYOK requests are never limited.
 
-### 2. Durable metrics
+### 2. Durable metrics — ✅ shipped
+
+Shipped: see FR-7. Original plan for reference:
 
 - Persist the `metrics.ts` counters through the file store (write-then-rename,
   like `store.ts`), loading on boot. Keep the `record*`/`metricsSnapshot`
@@ -62,7 +67,9 @@ expose remaining daily budget; BYOK requests are never limited.
 
 Acceptance: restart the server, `GET /api/metrics` shows pre-restart counts.
 
-### 3. Guest page: add-to-calendar
+### 3. Guest page: add-to-calendar — ✅ shipped
+
+Shipped as FR-4.5. Original plan for reference:
 
 - "Add to calendar" action next to share/maps: a client-side generated `.ics`
   download built from the published brief's date/time/venue (Google Calendar

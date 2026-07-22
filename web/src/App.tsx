@@ -70,7 +70,13 @@ export default function App() {
     } catch (error) {
       const kind = llmFailureKind(error);
       const text =
-        kind === "quota" ? t.chat.quotaMsg : kind === "auth" ? t.chat.keyMsg : t.chat.failMsg;
+        kind === "quota"
+          ? t.chat.quotaMsg
+          : kind === "auth"
+            ? t.chat.keyMsg
+            : kind === "limited"
+              ? t.chat.limitMsg
+              : t.chat.failMsg;
       setMessages((m) => [...m, { role: "assistant", text }]);
       setPhase(invitation ? "active" : "empty");
     }

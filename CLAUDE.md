@@ -37,7 +37,9 @@ Regeneration is **per-field, never whole-invitation**: `POST /api/invitations/re
 
 BYOK (adr-006, transport per adr-007): the host's own provider key rides generate/regenerate requests as `x-llm-provider`/`x-llm-key` headers (browser localStorage only, editor "AI key" panel). The gateway then walks **only that provider's models** — never operator-key fallbacks; if the free-first route has none, `BYOK_FALLBACK_MODELS` applies — and spends the key directly: Anthropic keys via a per-request SDK client, Gemini/OpenAI keys as the bearer token of the in-process call. Groq/Ollama are operator-side only, never BYOK. Keys are never stored or logged (`byok: true` is the only log trace; fastify redacts the header).
 
-Metrics: `server/src/metrics.ts` counts generations and per-field regenerations; `GET /api/metrics` exposes the regenerate-rate (the main copy-quality signal). Per-request LLM logs come from the gateway.
+Metrics: `server/src/metrics.ts` counts generations and per-field regenerations, persisted to `DATA_DIR/metrics.json` (write-then-rename) so counters survive restarts; `GET /api/metrics` exposes the regenerate-rate (the main copy-quality signal) and publish-rate. Per-request LLM logs come from the gateway.
+
+Guardrails (adr-008): `server/src/guardrails.ts` gates the two LLM-backed endpoints for non-BYOK requests — per-IP daily allowances (`LIMIT_GENERATIONS_PER_DAY`/`LIMIT_REGENERATIONS_PER_DAY`, 429 when over) and a daily operator budget breaker (`DAILY_BUDGET_USD`, 503 when exhausted) fed by the gateway's cost estimates. BYOK requests bypass both; `/healthz` reports limits and today's spend; env var 0 disables a guardrail.
 
 Schemas: `server/src/schemas.ts` (zod, v4) is the source of truth; `web/src/types.ts` mirrors it and must be updated in sync by hand.
 
@@ -45,4 +47,4 @@ Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input 
 
 ## Status
 
-Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; in-process multi-provider gateway with free-tier-first routing — Groq/Gemini primaries, Claude/Ollama fallbacks (adr-007, replaced the LiteLLM Proxy sidecar that OOM-killed on small plans); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup); BYOK per-request user keys (adr-006). Not yet built: per-key metering/budgets, custom domain.
+Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; in-process multi-provider gateway with free-tier-first routing — Groq/Gemini primaries, Claude/Ollama fallbacks (adr-007, replaced the LiteLLM Proxy sidecar that OOM-killed on small plans); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup); BYOK per-request user keys (adr-006); operator-cost guardrails — per-IP daily limits + budget breaker (adr-008); durable metrics with publish-rate; guest-page add-to-calendar (.ics). Not yet built: per-key metering, custom domain.

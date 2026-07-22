@@ -4,6 +4,7 @@ import { ZodError, type ZodType } from "zod";
 import { BYOK_FALLBACK_MODELS, MODEL_PROVIDERS, TASK_ROUTES, type Task } from "./routing.js";
 import { completeCompat, ProviderHttpError } from "./openaiCompat.js";
 import { estimateCostUsd } from "./pricing.js";
+import { recordOperatorSpend } from "../guardrails.js";
 import type { ByokProvider } from "../schemas.js";
 
 // Anthropic models go through the SDK directly; every other provider through
@@ -230,16 +231,20 @@ export async function completeJson<T>(
         throw new Error(`empty output (stop_reason: ${result.stopReason})`);
       }
       const parsed = spec.schema.parse(extractJson(result.text));
+      const cost_usd = estimateCostUsd(model, {
+        input_tokens: result.inputTokens,
+        output_tokens: result.outputTokens,
+      });
+      // Only operator-key requests count against the daily budget (ADR-008);
+      // BYOK spend belongs to the caller.
+      if (!byok) recordOperatorSpend(cost_usd);
       logLlm({
         ...base,
         ok: true,
         latency_ms,
         input_tokens: result.inputTokens,
         output_tokens: result.outputTokens,
-        cost_usd: estimateCostUsd(model, {
-          input_tokens: result.inputTokens,
-          output_tokens: result.outputTokens,
-        }),
+        cost_usd,
       });
       return parsed;
     } catch (error) {

@@ -6,6 +6,7 @@ import fastifyStatic from "@fastify/static";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
 import { TASK_ROUTES } from "./llm/routing.js";
+import { guardrailsSnapshot } from "./guardrails.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -35,7 +36,8 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
       Object.entries(TASK_ROUTES).map(([task, route]) => [task, [route.primary, ...route.fallbacks]]),
     ),
   };
-  app.get("/healthz", async () => ({ ok: true, llm: llmInfo }));
+  // guardrails is computed per request (unlike llmInfo): today's spend moves.
+  app.get("/healthz", async () => ({ ok: true, llm: llmInfo, guardrails: guardrailsSnapshot() }));
   registerInvitationRoutes(app);
   registerOgRoutes(app);
 

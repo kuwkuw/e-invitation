@@ -19,6 +19,7 @@ import {
   recordRsvp,
 } from "../metrics.js";
 import { addRsvp, appendVersion, createRecord, getRecord, tokenMatches } from "../store.js";
+import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 
 export function registerInvitationRoutes(app: FastifyInstance): void {
   app.post("/api/invitations/generate", async (request, reply) => {
@@ -34,6 +35,8 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: (error as Error).message });
     }
+    const limited = guardOperatorRequest(request, "generation", byok);
+    if (limited) return reply.code(limited.status).send({ error: limited.error });
     try {
       const invitation = await generateInvitation(body.text, byok);
       recordGeneration();
@@ -59,6 +62,8 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: (error as Error).message });
     }
+    const limited = guardOperatorRequest(request, "regeneration", byok);
+    if (limited) return reply.code(limited.status).send({ error: limited.error });
     try {
       const value = await regenerateField(body.brief, body.field, body.current_value, byok);
       recordFieldRegeneration(body.field);
@@ -140,6 +145,26 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
   });
 
   app.get("/api/metrics", async () => metricsSnapshot());
+}
+
+// Operator-cost guardrails (ADR-008), checked after validation and before
+// any LLM work. BYOK requests spend the caller's key and are exempt. Budget
+// first (global condition → 503), then the per-IP allowance (→ 429); the
+// web client maps both statuses to messages pointing at the BYOK escape
+// hatch, so wording here stays generic.
+function guardOperatorRequest(
+  request: FastifyRequest,
+  task: LimitedTask,
+  byok: ByokKey | undefined,
+): { status: 429 | 503; error: string } | null {
+  if (byok) return null;
+  if (budgetExhausted()) {
+    return { status: 503, error: "The free AI capacity for today is used up. Try again tomorrow or use your own AI key." };
+  }
+  if (!consumeIpAllowance(request.ip, task)) {
+    return { status: 429, error: "Daily limit reached. Try again tomorrow or use your own AI key." };
+  }
+  return null;
 }
 
 // Per-model failure classes for the 502 body: which models were tried and

@@ -17,15 +17,20 @@ export interface LlmCause {
 }
 
 export class ApiError extends Error {
+  status?: number;
   causes?: LlmCause[];
 }
 
 /** Reduce a failed generation to what the host can act on: exhausted quota,
- *  a bad/unauthorized key, or generic failure. */
-export function llmFailureKind(error: unknown): "quota" | "auth" | "generic" {
-  if (error instanceof ApiError && error.causes && error.causes.length > 0) {
-    if (error.causes.some((c) => c.class === "quota")) return "quota";
-    if (error.causes.every((c) => c.class === "auth")) return "auth";
+ *  a bad/unauthorized key, the operator guardrails (per-IP daily limit or
+ *  global budget, both bypassable with a BYOK key), or generic failure. */
+export function llmFailureKind(error: unknown): "quota" | "auth" | "limited" | "generic" {
+  if (error instanceof ApiError) {
+    if (error.status === 429 || error.status === 503) return "limited";
+    if (error.causes && error.causes.length > 0) {
+      if (error.causes.some((c) => c.class === "quota")) return "quota";
+      if (error.causes.every((c) => c.class === "auth")) return "auth";
+    }
   }
   return "generic";
 }
@@ -35,6 +40,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
     const error = new ApiError(detail?.error ?? `Request failed (${response.status})`);
+    error.status = response.status;
     if (Array.isArray(detail?.causes)) error.causes = detail.causes;
     throw error;
   }

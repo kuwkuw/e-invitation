@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { fetchInvitation, submitRsvp } from "./api";
+import { buildIcs, downloadIcs, parseEventStart } from "./calendar";
 import { GUEST } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
@@ -149,6 +150,21 @@ export function GuestPage({ id }: Props) {
   const place = [brief.venue, brief.city].filter(Boolean).join(", ");
   const canSubmit = name.trim().length > 0 && attending !== null && !sending;
 
+  // Hidden when the free-text date doesn't parse — better no button than a
+  // wrong day in someone's calendar.
+  const eventStart = parseEventStart(brief.date, brief.time);
+
+  function handleAddToCalendar() {
+    if (!eventStart) return;
+    const ics = buildIcs({
+      uid: `${id}@invito`,
+      title: copy.title,
+      location: place || undefined,
+      start: eventStart,
+    });
+    downloadIcs("invitation.ics", ics);
+  }
+
   return (
     <div className="gr-page">
       <div className="gr-layout">
@@ -206,6 +222,23 @@ export function GuestPage({ id }: Props) {
 
               {attending && (
                 <div className="gr-rows">
+                  {eventStart && (
+                    <button className="gr-row" onClick={handleAddToCalendar}>
+                      <div className="gr-row-icon">
+                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                          <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="#b3592e" strokeWidth="1.7" />
+                          <path d="M3.5 9.5h17M8 2.8v4M16 2.8v4" stroke="#b3592e" strokeWidth="1.7" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div className="gr-row-text">
+                        <div className="gr-row-title">{t.addToCalendar}</div>
+                        <div className="gr-row-sub">{[brief.date, brief.time].filter(Boolean).join(", ")}</div>
+                      </div>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 6l6 6-6 6" stroke="#c3bbac" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  )}
                   {place && (
                     <a
                       className="gr-row"

@@ -21,6 +21,10 @@
   spend per request.
 - Model choice is an operator decision made in exactly one place — the routing
   table — so cost/quality trade-offs never require code changes elsewhere.
+- Operator spend is bounded end to end (FR-9,
+  [adr-008](decisions/adr-008-operator-cost-guardrails.md)): per-IP daily
+  allowances on the LLM endpoints plus a daily global budget breaker fed by
+  the gateway's cost estimates. BYOK requests are exempt from both.
 
 ## NFR-3 Reliability & degradation
 
@@ -66,8 +70,9 @@
 
 ## NFR-7 Scale assumptions (explicit)
 
-- Single-process deployment. The file-backed store and in-memory metrics are
-  deliberate simplicity choices; both sit behind small function interfaces
+- Single-process deployment. The file-backed store and file-backed metrics
+  counters are deliberate simplicity choices; both sit behind small function
+  interfaces
   (`store.ts`, `metrics.ts`) so a DB / metrics backend can replace them without
   touching routes.
 - No concurrency control on RSVP appends beyond process serialization —
