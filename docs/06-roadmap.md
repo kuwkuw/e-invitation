@@ -114,7 +114,8 @@ card is unchanged.
 ## Deliberately not this iteration (candidate backlog)
 
 - ~~**RSVP CSV export** on the host dashboard~~ — ✅ shipped as FR-5.3.
-- **Custom domain** — deployment work, independent of product code.
+- ~~**Custom domain**~~ — ✅ supported: runbook in
+  [05-deployment.md](05-deployment.md) + optional `CANONICAL_HOST` redirect.
 - **SQLite (or similar) store** — only when multi-instance hosting or RSVP
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
