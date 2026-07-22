@@ -86,7 +86,9 @@ export default function App() {
             ? t.chat.keyMsg
             : kind === "limited"
               ? t.chat.limitMsg
-              : t.chat.failMsg;
+              : kind === "busy"
+                ? t.chat.busyMsg
+                : t.chat.failMsg;
       setMessages((m) => [...m, { role: "assistant", text }]);
       setPhase(invitation ? "active" : "empty");
     }
@@ -120,7 +122,9 @@ export default function App() {
             ? t.chat.keyMsg
             : kind === "limited"
               ? t.chat.limitMsg
-              : t.chat.failMsg;
+              : kind === "busy"
+                ? t.chat.busyMsg
+                : t.chat.failMsg;
       setMessages((m) => [...m, { role: "assistant", text }]);
     } finally {
       setBgBusy(false);

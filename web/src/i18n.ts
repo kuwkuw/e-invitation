@@ -44,6 +44,7 @@ export interface ChatStrings {
   quotaMsg: string;
   keyMsg: string;
   limitMsg: string;
+  busyMsg: string;
 }
 
 export interface ByokStrings {
@@ -171,6 +172,7 @@ export const UI: Record<Language, UiStrings> = {
       quotaMsg: "The AI's free daily limit is used up. Try again tomorrow — or add your own key via the AI key button above.",
       keyMsg: "The AI key didn't work — check it in the AI key panel above.",
       limitMsg: "Today's free generations are used up. Come back tomorrow — or add your own key via the AI key button above.",
+      busyMsg: "The AI is busy right now. Please try again in a moment.",
     },
     byok: {
       button: "AI key",
@@ -281,6 +283,7 @@ export const UI: Record<Language, UiStrings> = {
       quotaMsg: "Безкоштовний денний ліміт AI вичерпано. Спробуйте завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
       keyMsg: "Ключ AI не спрацював — перевірте його в панелі «Ключ AI» вгорі.",
       limitMsg: "Безкоштовні генерації на сьогодні вичерпано. Поверніться завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
+      busyMsg: "AI зараз перевантажений. Спробуйте ще раз за мить.",
     },
     byok: {
       button: "Ключ AI",

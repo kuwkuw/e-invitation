@@ -25,13 +25,17 @@ export class ApiError extends Error {
 
 /** Reduce a failed generation to what the host can act on: exhausted quota,
  *  a bad/unauthorized key, the operator guardrails (per-IP daily limit or
- *  global budget, both bypassable with a BYOK key), or generic failure. */
-export function llmFailureKind(error: unknown): "quota" | "auth" | "limited" | "generic" {
+ *  global budget, both bypassable with a BYOK key), a transient provider
+ *  overload worth retrying, or generic failure. */
+export function llmFailureKind(error: unknown): "quota" | "auth" | "limited" | "busy" | "generic" {
   if (error instanceof ApiError) {
     if (error.status === 429 || error.status === 503) return "limited";
     if (error.causes && error.causes.length > 0) {
       if (error.causes.some((c) => c.class === "quota")) return "quota";
       if (error.causes.every((c) => c.class === "auth")) return "auth";
+      // Every model that answered was down or overloaded (e.g. Gemini 503
+      // "high demand") — a retry in a moment is the right advice.
+      if (error.causes.every((c) => c.class === "connectivity")) return "busy";
     }
   }
   return "generic";
