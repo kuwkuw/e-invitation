@@ -115,6 +115,23 @@ implementation.
   it never falls back onto operator keys.
 - FR-8.4 Without the headers, operator-key routing applies unchanged.
 
+## FR-9 Operator-cost guardrails
+
+**Status: built** — [adr-008](decisions/adr-008-operator-cost-guardrails.md),
+[guardrails.ts](../server/src/guardrails.ts)
+
+- FR-9.1 Non-BYOK requests to the two LLM-backed endpoints are subject to a
+  per-IP daily allowance (defaults: 10 generations, 30 regenerations per UTC
+  day); over-limit requests return `429` with a user-safe message.
+- FR-9.2 A daily global budget (`DAILY_BUDGET_USD`, default 5) caps operator
+  LLM spend using the gateway's per-request cost estimates; once exhausted,
+  operator-key requests return `503` until the next UTC day.
+- FR-9.3 BYOK requests (FR-8) bypass both guardrails — they spend the
+  caller's key. The web client maps `429`/`503` to a bilingual message
+  pointing at the BYOK panel.
+- FR-9.4 `GET /healthz` reports the configured limits and today's estimated
+  spend.
+
 ## Routing map (web)
 
 | Path | Page | Audience |
@@ -125,12 +142,5 @@ implementation.
 
 ## Not yet built (backlog)
 
-- **Consumer cost model — open question.** BYOK (FR-8) serves power users;
-  real hosts won't bring API keys. The consumer-scale options, deliberately
-  undecided: operator-paid key + per-IP rate limits (~$0.0007/generation on
-  paid-tier `gemini-2.5-flash`, measured 2026-07-20), or per-key
-  metering/credits (rejected-for-now in
-  [adr-006](decisions/adr-006-byok-passthrough.md); the LiteLLM virtual-keys
-  mechanism went away with [adr-007](decisions/adr-007-in-process-providers.md)).
 - Optional AI background image layer (no text in image) — allowed by
   [adr-003](decisions/adr-003-no-image-generation.md), not started.

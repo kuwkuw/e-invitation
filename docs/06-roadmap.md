@@ -30,7 +30,10 @@ What that leaves exposed:
 Goal: the share-with-strangers milestone — the app can be given to real hosts
 without an operator-cost incident and with the quality KPI actually observable.
 
-### 1. Abuse guardrails for operator-paid generation (blocker)
+### 1. Abuse guardrails for operator-paid generation (blocker) — ✅ shipped
+
+Shipped as FR-9 / [ADR-008](decisions/adr-008-operator-cost-guardrails.md).
+Original plan for reference:
 
 Settles the open consumer-cost-model question with the simple option:
 **operator-paid free-tier routing + limits** (~$0.0007/generation measured on

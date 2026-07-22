@@ -21,6 +21,10 @@
   spend per request.
 - Model choice is an operator decision made in exactly one place — the routing
   table — so cost/quality trade-offs never require code changes elsewhere.
+- Operator spend is bounded end to end (FR-9,
+  [adr-008](decisions/adr-008-operator-cost-guardrails.md)): per-IP daily
+  allowances on the LLM endpoints plus a daily global budget breaker fed by
+  the gateway's cost estimates. BYOK requests are exempt from both.
 
 ## NFR-3 Reliability & degradation
 
