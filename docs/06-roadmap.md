@@ -87,8 +87,7 @@ small iteration; nothing here touches the pipeline, schemas, or routing table.
 
 ## Deliberately not this iteration (candidate backlog)
 
-- **RSVP CSV export** on the host dashboard — cheap, but waits for evidence
-  hosts want it (RSVP volume first).
+- ~~**RSVP CSV export** on the host dashboard~~ — ✅ shipped as FR-5.3.
 - **Optional AI background image layer** (no text in image; allowed by
   adr-003) — the biggest visual upgrade available, but adds image-generation
   cost/latency and belongs after the cost guardrails exist.

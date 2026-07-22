@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { fetchInvitation, submitRsvp } from "./api";
-import { buildIcs, downloadIcs, parseEventStart } from "./calendar";
+import { buildIcs, parseEventStart } from "./calendar";
+import { downloadFile } from "./download";
 import { GUEST } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
@@ -162,7 +163,7 @@ export function GuestPage({ id }: Props) {
       location: place || undefined,
       start: eventStart,
     });
-    downloadIcs("invitation.ics", ics);
+    downloadFile("invitation.ics", ics, "text/calendar;charset=utf-8");
   }
 
   return (

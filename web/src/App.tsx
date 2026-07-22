@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { generateInvitation, publishInvitation, regenerateField, fetchRsvps, llmFailureKind } from "./api";
+import { buildRsvpCsv } from "./csv";
+import { downloadFile } from "./download";
 import { UI, loadUiLang, saveUiLang } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { DesignControls } from "./components/DesignControls";
@@ -228,6 +230,11 @@ export default function App() {
               <button onClick={handleRefreshRsvps} disabled={rsvpsLoading}>
                 {rsvpsLoading ? "…" : `↻ ${t.refreshResponses}`}
               </button>
+              {rsvps && rsvps.rsvps.length > 0 && (
+                <button onClick={() => downloadFile("rsvps.csv", buildRsvpCsv(rsvps.rsvps, t.csv), "text/csv;charset=utf-8")}>
+                  {`⬇ ${t.exportCsv}`}
+                </button>
+              )}
             </div>
             {rsvps &&
               (rsvps.rsvps.length === 0 ? (
