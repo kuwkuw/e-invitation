@@ -130,7 +130,11 @@ describe("daily budget circuit breaker", () => {
 
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.json().guardrails).toEqual({
-      limits: { generations_per_ip_per_day: 10, regenerations_per_ip_per_day: 30 },
+      limits: {
+        generations_per_ip_per_day: 10,
+        regenerations_per_ip_per_day: 30,
+        backgrounds_per_ip_per_day: 3,
+      },
       budget: { daily_usd: 2, spent_today_usd: 0.5, exhausted: false },
     });
   });

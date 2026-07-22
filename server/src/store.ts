@@ -76,6 +76,30 @@ export function addRsvp(record: PublishedRecord, rsvp: Rsvp): PublishedRecord {
   return updated;
 }
 
+// Background image assets (adr-009): opaque-id PNG files under
+// DATA_DIR/backgrounds. Same write-then-rename discipline; callers validate
+// ids against BackgroundId before touching the filesystem.
+
+function backgroundPath(id: string): string {
+  return join(dataDir(), "backgrounds", `${id}.png`);
+}
+
+export function saveBackground(bytes: Buffer): string {
+  const id = randomBytes(8).toString("base64url");
+  const path = backgroundPath(id);
+  mkdirSync(join(dataDir(), "backgrounds"), { recursive: true });
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, bytes);
+  renameSync(tmp, path);
+  return id;
+}
+
+export function readBackground(id: string): Buffer | null {
+  const path = backgroundPath(id);
+  if (!existsSync(path)) return null;
+  return readFileSync(path);
+}
+
 export function tokenMatches(record: PublishedRecord, token: string): boolean {
   const expected = Buffer.from(record.manage_token);
   const actual = Buffer.from(token);

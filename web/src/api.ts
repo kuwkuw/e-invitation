@@ -1,5 +1,7 @@
 import type {
+  BackgroundRef,
   CopyField,
+  DesignTokens,
   EventBrief,
   Invitation,
   PublishResult,
@@ -85,6 +87,19 @@ export async function regenerateField(
     current_value: currentValue,
   });
   return result.value;
+}
+
+// Background generation (adr-009) is Gemini-only server-side; a saved
+// non-Gemini BYOK key gets a 400 the caller surfaces like other failures.
+export async function generateBackground(
+  brief: EventBrief,
+  design: DesignTokens,
+): Promise<BackgroundRef> {
+  const result = await postLlm<{ background: BackgroundRef }>("/api/invitations/background", {
+    brief,
+    design,
+  });
+  return result.background;
 }
 
 export function publishInvitation(

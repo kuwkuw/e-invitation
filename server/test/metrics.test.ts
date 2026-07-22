@@ -38,6 +38,7 @@ describe("durable metrics", () => {
       generations: 2,
       field_regenerations: { title: 1 },
       regenerate_rate: 0.5,
+      backgrounds: 0,
       publishes: 1,
       publish_rate: 0.5,
       rsvps: 1,

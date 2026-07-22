@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import {
+  BackgroundId,
+  BackgroundRequest,
   ByokProvider,
   GenerateRequest,
   InvitationId,
@@ -11,14 +13,24 @@ import {
 import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
 import { generateInvitation } from "../pipeline/generate.js";
 import { regenerateField } from "../pipeline/copy.js";
+import { BackgroundGenerationError, generateBackgroundImage, IMAGE_MODEL } from "../llm/imageGen.js";
 import {
   metricsSnapshot,
+  recordBackground,
   recordFieldRegeneration,
   recordGeneration,
   recordPublish,
   recordRsvp,
 } from "../metrics.js";
-import { addRsvp, appendVersion, createRecord, getRecord, tokenMatches } from "../store.js";
+import {
+  addRsvp,
+  appendVersion,
+  createRecord,
+  getRecord,
+  readBackground,
+  saveBackground,
+  tokenMatches,
+} from "../store.js";
 import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 
 export function registerInvitationRoutes(app: FastifyInstance): void {
@@ -74,6 +86,58 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
         .code(502)
         .send({ error: "Regeneration failed on all routed models.", causes: llmCauses(error) });
     }
+  });
+
+  // Optional AI background layer (adr-009). Gemini-only, single model, no
+  // fallback: failure degrades to the CSS-only card. The response is an
+  // opaque stored-asset id — image bytes are served by GET /api/backgrounds.
+  app.post("/api/invitations/background", async (request, reply) => {
+    let body: BackgroundRequest;
+    try {
+      body = BackgroundRequest.parse(request.body);
+    } catch (error) {
+      return reply.code(400).send({ error: describeZodError(error) });
+    }
+    if (body.design.palette === "minimal") {
+      return reply.code(400).send({ error: "The minimal palette does not support backgrounds." });
+    }
+    let byok: ByokKey | undefined;
+    try {
+      byok = byokFromHeaders(request);
+    } catch (error) {
+      return reply.code(400).send({ error: (error as Error).message });
+    }
+    if (byok && byok.provider !== "gemini") {
+      return reply
+        .code(400)
+        .send({ error: "Background generation supports Gemini keys only; remove or switch the AI key." });
+    }
+    const limited = guardOperatorRequest(request, "background", byok);
+    if (limited) return reply.code(limited.status).send({ error: limited.error });
+    try {
+      const bytes = await generateBackgroundImage(body.brief, body.design, byok);
+      const id = saveBackground(bytes);
+      recordBackground();
+      return { background: { id } };
+    } catch (error) {
+      request.log.error(error);
+      const cls = error instanceof BackgroundGenerationError ? error.errorClass : "other";
+      return reply
+        .code(502)
+        .send({ error: "Background generation failed.", causes: [{ model: IMAGE_MODEL, class: cls }] });
+    }
+  });
+
+  // Public background bytes. Ids are unguessable and the asset is as public
+  // as the invitation that references it; immutable ids allow long caching.
+  app.get("/api/backgrounds/:id", async (request, reply) => {
+    const id = BackgroundId.safeParse((request.params as { id?: string }).id);
+    const bytes = id.success ? readBackground(id.data) : null;
+    if (!bytes) return reply.code(404).send({ error: "Background not found." });
+    return reply
+      .header("Content-Type", "image/png")
+      .header("Cache-Control", "public, max-age=31536000, immutable")
+      .send(bytes);
   });
 
   // Publish a snapshot. Without id/manage_token creates a new invitation;

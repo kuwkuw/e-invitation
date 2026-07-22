@@ -85,12 +85,35 @@ correct title, date/time, and location; bilingual labels via `i18n.ts`.
 it and of each other — either can ride along. All three together are one
 small iteration; nothing here touches the pipeline, schemas, or routing table.
 
+## AI background image layer — ✅ shipped
+
+Shipped as FR-10 per [ADR-009](decisions/adr-009-ai-background-layer.md)
+(accepted; scrim/split/ornament decisions synced from the E-invitation DS
+`templates/card-background` mockups). Original implementation order for
+reference:
+
+1. **Schema + types** — nullable `background: { id }` on `Invitation`
+   (`schemas.ts` + hand-mirrored `web/src/types.ts`, one PR).
+2. **Image adapter + route entry** — small native-fetch Gemini image call
+   beside `openaiCompat.ts`; routing + pricing entries so the coverage test
+   applies.
+3. **`POST /api/invitations/background`** — brief + tokens in, stored asset
+   reference out; `GET /api/backgrounds/:id` serves bytes with cache
+   headers. New `LIMIT_BACKGROUNDS_PER_DAY` guardrail (default 3), cost into
+   the budget breaker, BYOK bypass per adr-008.
+4. **Editor + preview** — "Add background" / regenerate / remove in the
+   design controls; scrim layer in `InvitationPreview` + `styles.css` per
+   the mockups; guest page composites the same way.
+5. **Docs** — FR-10, ADR-009 → accepted, NFR cost/latency notes.
+
+Acceptance: an invitation with a background stays readable in all
+palette/layout combinations; generation failure leaves the CSS-only card
+untouched; a non-BYOK fourth background request in a day gets 429; OG share
+card is unchanged.
+
 ## Deliberately not this iteration (candidate backlog)
 
 - ~~**RSVP CSV export** on the host dashboard~~ — ✅ shipped as FR-5.3.
-- **Optional AI background image layer** (no text in image; allowed by
-  adr-003) — the biggest visual upgrade available, but adds image-generation
-  cost/latency and belongs after the cost guardrails exist.
 - **Custom domain** — deployment work, independent of product code.
 - **SQLite (or similar) store** — only when multi-instance hosting or RSVP
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
