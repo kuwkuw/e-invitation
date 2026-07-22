@@ -8,16 +8,20 @@
 // call), so failed generations count too — otherwise hammering a failing
 // pipeline would be free.
 
-export type LimitedTask = "generation" | "regeneration";
+export type LimitedTask = "generation" | "regeneration" | "background";
 
 // Read lazily so tests (and operators) can change limits via env without a
-// rebuild. 0 disables a guardrail.
+// rebuild. 0 disables a guardrail. Backgrounds are an order of magnitude
+// pricier than text (adr-009), so their allowance is an order tighter.
+const LIMIT_ENV: Record<LimitedTask, { env: string; fallback: number }> = {
+  generation: { env: "LIMIT_GENERATIONS_PER_DAY", fallback: 10 },
+  regeneration: { env: "LIMIT_REGENERATIONS_PER_DAY", fallback: 30 },
+  background: { env: "LIMIT_BACKGROUNDS_PER_DAY", fallback: 3 },
+};
+
 function limitFor(task: LimitedTask): number {
-  const raw =
-    task === "generation"
-      ? process.env.LIMIT_GENERATIONS_PER_DAY
-      : process.env.LIMIT_REGENERATIONS_PER_DAY;
-  const fallback = task === "generation" ? 10 : 30;
+  const { env, fallback } = LIMIT_ENV[task];
+  const raw = process.env[env];
   const parsed = raw === undefined ? fallback : Number(raw);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
@@ -35,6 +39,7 @@ interface IpUsage {
   day: string;
   generation: number;
   regeneration: number;
+  background: number;
 }
 
 const ipUsage = new Map<string, IpUsage>();
@@ -60,7 +65,7 @@ export function consumeIpAllowance(ip: string, task: LimitedTask): boolean {
   const limit = limitFor(task);
   if (limit === 0) return true;
   rollover();
-  const usage = ipUsage.get(ip) ?? { day: usageDay, generation: 0, regeneration: 0 };
+  const usage = ipUsage.get(ip) ?? { day: usageDay, generation: 0, regeneration: 0, background: 0 };
   if (usage[task] >= limit) return false;
   usage[task] += 1;
   ipUsage.set(ip, usage);
@@ -90,6 +95,7 @@ export function guardrailsSnapshot() {
     limits: {
       generations_per_ip_per_day: limitFor("generation"),
       regenerations_per_ip_per_day: limitFor("regeneration"),
+      backgrounds_per_ip_per_day: limitFor("background"),
     },
     budget: {
       daily_usd: budget,

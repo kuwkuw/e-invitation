@@ -14,6 +14,12 @@ export const MODEL_PRICES_PER_MTOK: Record<string, { input: number; output: numb
   "gemma3-4b": { input: 0, output: 0 },
 };
 
+// Flat per-image prices (adr-009) — image models bill per output image, not
+// per token. Must cover the model referenced in imageGen.ts.
+export const IMAGE_PRICES_PER_IMAGE: Record<string, number> = {
+  "gemini-2.5-flash-image": 0.039,
+};
+
 export interface UsageLike {
   input_tokens: number;
   output_tokens: number;

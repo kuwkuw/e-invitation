@@ -52,10 +52,19 @@ export const DesignTokens = z.object({
 });
 export type DesignTokens = z.infer<typeof DesignTokens>;
 
+// Opaque server-issued asset reference (adr-009). The model never produces
+// this — the server generates/stores the image and hands back the id. The
+// regex doubles as the path guard for the backgrounds file store.
+export const BackgroundId = z.string().regex(/^[A-Za-z0-9_-]{6,32}$/);
+export const BackgroundRef = z.object({ id: BackgroundId });
+export type BackgroundRef = z.infer<typeof BackgroundRef>;
+
 export const Invitation = z.object({
   brief: EventBrief,
   copy: InvitationCopy,
   design: DesignTokens,
+  // Optional AI background layer (adr-009); absent/null = CSS-only card.
+  background: BackgroundRef.nullable().optional(),
 });
 export type Invitation = z.infer<typeof Invitation>;
 
@@ -77,6 +86,14 @@ export const RegenerateFieldRequest = z.object({
   current_value: z.string(),
 });
 export type RegenerateFieldRequest = z.infer<typeof RegenerateFieldRequest>;
+
+// Background generation (adr-009): server builds the image prompt from the
+// brief + tokens; the response is a stored-asset reference, never image data.
+export const BackgroundRequest = z.object({
+  brief: EventBrief,
+  design: DesignTokens,
+});
+export type BackgroundRequest = z.infer<typeof BackgroundRequest>;
 
 // Publish + RSVP -------------------------------------------------------
 

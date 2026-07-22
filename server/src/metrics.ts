@@ -11,6 +11,7 @@ import { dataDir } from "./store.js";
 interface Counters {
   generations: number;
   field_regenerations: Record<string, number>;
+  backgrounds: number;
   publishes: number;
   rsvps: number;
 }
@@ -25,11 +26,12 @@ function metricsPath(): string {
 // corrupt file starts the counters fresh rather than refusing to serve.
 function load(): Counters {
   if (counters) return counters;
-  counters = { generations: 0, field_regenerations: {}, publishes: 0, rsvps: 0 };
+  counters = { generations: 0, field_regenerations: {}, backgrounds: 0, publishes: 0, rsvps: 0 };
   try {
     if (existsSync(metricsPath())) {
       const stored = JSON.parse(readFileSync(metricsPath(), "utf8")) as Partial<Counters>;
       if (typeof stored.generations === "number") counters.generations = stored.generations;
+      if (typeof stored.backgrounds === "number") counters.backgrounds = stored.backgrounds;
       if (typeof stored.publishes === "number") counters.publishes = stored.publishes;
       if (typeof stored.rsvps === "number") counters.rsvps = stored.rsvps;
       for (const [field, count] of Object.entries(stored.field_regenerations ?? {})) {
@@ -62,6 +64,12 @@ export function recordFieldRegeneration(field: string): void {
   save(current);
 }
 
+export function recordBackground(): void {
+  const current = load();
+  current.backgrounds += 1;
+  save(current);
+}
+
 export function recordPublish(): void {
   const current = load();
   current.publishes += 1;
@@ -81,6 +89,7 @@ export function metricsSnapshot() {
     generations: current.generations,
     field_regenerations: { ...current.field_regenerations },
     regenerate_rate: current.generations === 0 ? 0 : totalRegens / current.generations,
+    backgrounds: current.backgrounds,
     publishes: current.publishes,
     publish_rate: current.generations === 0 ? 0 : current.publishes / current.generations,
     rsvps: current.rsvps,
