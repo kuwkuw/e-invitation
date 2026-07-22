@@ -65,6 +65,31 @@ operator-key limits above stop being the ceiling.
 - Without `web/dist` (local dev), behavior is unchanged: Vite serves the SPA
   on 5173 and proxies `/api`.
 
+## Custom domain
+
+Nothing in the app hardcodes the host — share URLs come from
+`window.location.origin` and OG meta/image URLs from the request's
+`Host`/`x-forwarded-proto` (trustProxy) — so a custom domain is pure
+platform config plus one env var:
+
+1. **Northflank**: service → *Networking* → *Domains* → add your domain
+   (e.g. `invito.example.com`) to the port-3001 public endpoint.
+2. **DNS**: at your registrar, create the **CNAME** record Northflank shows
+   for the domain (apex domains need ALIAS/ANAME or the platform's A
+   records). Wait for it to verify; Northflank then provisions and renews
+   the TLS certificate automatically.
+3. **`CANONICAL_HOST=invito.example.com`** (runtime env): requests hitting
+   the service on any other host — the old `*.code.run` endpoint in
+   particular — get a `301` (GET/HEAD; `308` otherwise) to the same path on
+   the canonical domain. Share links published before the switch keep
+   working, and messengers re-unfurl them from one origin. `/healthz` is
+   exempt so platform health checks pass on the internal address. Leave the
+   var unset until DNS + TLS verify — setting it early would redirect onto a
+   domain that doesn't resolve yet.
+4. Verify: `https://invito.example.com/healthz`, publish an invitation and
+   check the share link + `og:image` URL use the new domain, and confirm the
+   old `*.code.run/i/:id` link 301s.
+
 ## Local smoke test
 
 ```sh
@@ -81,5 +106,3 @@ works keyless.
 
 - Per-key metering/budgets — deferred (see
   [adr-006](decisions/adr-006-byok-passthrough.md)).
-- Custom domain: add it in Northflank's DNS settings when ready; nothing in
-  the app hardcodes the host (share URLs and OG meta derive from the request).

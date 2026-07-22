@@ -21,6 +21,21 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     trustProxy: true,
   });
   await app.register(cors, { origin: true });
+
+  // Custom domain: when CANONICAL_HOST is set (e.g. "invito.example.com"),
+  // requests reaching the service on any other host — the platform's
+  // *.code.run domain, typically — are redirected to the canonical one, so
+  // share links published before the switch keep unfurling and resolving on
+  // one domain. /healthz is exempt (platform health checks hit the service
+  // address directly). 301 for GET/HEAD, 308 to preserve the method
+  // otherwise. Unset = no-op.
+  app.addHook("onRequest", async (request, reply) => {
+    const canonical = process.env.CANONICAL_HOST;
+    if (!canonical || request.headers.host === canonical) return;
+    if (request.url === "/healthz") return;
+    const code = request.method === "GET" || request.method === "HEAD" ? 301 : 308;
+    return reply.code(code).redirect(`https://${canonical}${request.url}`);
+  });
   // Effective LLM routing, declared once for operators: which provider keys
   // are configured and the model walk per task. There is no capability
   // probing (it would spend quota) — this reports what the server *will
