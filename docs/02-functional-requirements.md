@@ -82,6 +82,9 @@ implementation.
   (constant-time comparison).
 - FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, and total
   guests among attendees.
+- FR-5.3 The dashboard exports the list as CSV, built client-side from the
+  fetched data ([csv.ts](../web/src/csv.ts)): UTF-8 BOM (so Excel reads
+  Cyrillic), localized headers/answers, guest count blank on declines.
 
 ## FR-6 Bilingual UI
 

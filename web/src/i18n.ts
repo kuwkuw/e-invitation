@@ -80,6 +80,12 @@ interface UiStrings {
   countYes: string;
   countNo: string;
   countGuests: string;
+  exportCsv: string;
+  csv: {
+    headers: [string, string, string, string, string]; // name, answer, guests, note, date
+    yes: string;
+    no: string;
+  };
 }
 
 export const UI: Record<Language, UiStrings> = {
@@ -181,6 +187,12 @@ export const UI: Record<Language, UiStrings> = {
     countYes: "coming",
     countNo: "can't come",
     countGuests: "guests total",
+    exportCsv: "Export CSV",
+    csv: {
+      headers: ["Name", "Answer", "Guests", "Note", "Replied at"],
+      yes: "Yes",
+      no: "No",
+    },
   },
   uk: {
     appTitle: "Студія запрошень",
@@ -280,6 +292,12 @@ export const UI: Record<Language, UiStrings> = {
     countYes: "прийдуть",
     countNo: "не зможуть",
     countGuests: "гостей разом",
+    exportCsv: "Експорт CSV",
+    csv: {
+      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді"],
+      yes: "Так",
+      no: "Ні",
+    },
   },
 };
 
