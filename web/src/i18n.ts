@@ -385,6 +385,7 @@ interface GuestStrings {
   declinedPill: string;
   guestForms: [string, string, string];
   changeAnswer: string;
+  addToCalendar: string;
   directions: string;
   share: string;
   shareHint: string;
@@ -419,6 +420,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     declinedPill: "You can't make it",
     guestForms: ["guest", "guests", "guests"],
     changeAnswer: "Change your reply",
+    addToCalendar: "Add to calendar",
     directions: "How to get there",
     share: "Share the invitation",
     shareHint: "Viber · Telegram · link",
@@ -451,6 +453,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     declinedPill: "Ви не зможете прийти",
     guestForms: ["гість", "гості", "гостей"],
     changeAnswer: "Змінити відповідь",
+    addToCalendar: "Додати в календар",
     directions: "Як дістатися",
     share: "Поділитися запрошенням",
     shareHint: "Viber · Telegram · посилання",

@@ -67,7 +67,9 @@ Shipped: see FR-7. Original plan for reference:
 
 Acceptance: restart the server, `GET /api/metrics` shows pre-restart counts.
 
-### 3. Guest page: add-to-calendar
+### 3. Guest page: add-to-calendar — ✅ shipped
+
+Shipped as FR-4.5. Original plan for reference:
 
 - "Add to calendar" action next to share/maps: a client-side generated `.ics`
   download built from the published brief's date/time/venue (Google Calendar

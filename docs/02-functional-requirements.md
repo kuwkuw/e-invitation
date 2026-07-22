@@ -69,6 +69,10 @@ implementation.
   1–10, optional note (≤500 chars).
 - FR-4.4 RSVPs append to the invitation record; duplicates are not deduplicated
   (a guest may change their mind by submitting again).
+- FR-4.5 After an attending RSVP the guest can download an `.ics` calendar
+  event built client-side from the brief ([calendar.ts](../web/src/calendar.ts)):
+  best-effort bilingual parsing of the free-text date/time (all-day without a
+  time, 2 hours with one); the action is hidden when no date parses.
 
 ## FR-5 Host views responses
 
