@@ -85,12 +85,12 @@ correct title, date/time, and location; bilingual labels via `i18n.ts`.
 it and of each other — either can ride along. All three together are one
 small iteration; nothing here touches the pipeline, schemas, or routing table.
 
-## Next iteration: AI background image layer
+## AI background image layer — ✅ shipped
 
-Planned in [ADR-009](decisions/adr-009-ai-background-layer.md) (status:
-proposed — read it first; it fixes the trust boundary, provider, storage,
-and guardrail shape). Implementation order once its two open questions are
-closed (scrim mockups; verified Gemini image pricing/quota):
+Shipped as FR-10 per [ADR-009](decisions/adr-009-ai-background-layer.md)
+(accepted; scrim/split/ornament decisions synced from the E-invitation DS
+`templates/card-background` mockups). Original implementation order for
+reference:
 
 1. **Schema + types** — nullable `background: { id }` on `Invitation`
    (`schemas.ts` + hand-mirrored `web/src/types.ts`, one PR).

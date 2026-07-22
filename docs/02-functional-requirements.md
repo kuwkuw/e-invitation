@@ -140,6 +140,26 @@ implementation.
 - FR-9.4 `GET /healthz` reports the configured limits and today's estimated
   spend.
 
+## FR-10 Optional AI background layer
+
+**Status: built** — [adr-009](decisions/adr-009-ai-background-layer.md),
+`POST /api/invitations/background`, `GET /api/backgrounds/:id`
+([imageGen.ts](../server/src/llm/imageGen.ts))
+
+- FR-10.1 From the editor, a host can add an AI-generated background image to
+  an existing invitation. The server builds the image prompt from the brief +
+  design tokens (explicit no-text instruction), calls `gemini-2.5-flash-image`
+  (single model, no fallback), and stores the PNG under `DATA_DIR/backgrounds`.
+- FR-10.2 The invitation carries only an opaque `background.id`; the client
+  composites `GET /api/backgrounds/:id` under the deterministically rendered
+  copy with the DS-specified palette-tinted scrim. Text colors never change.
+- FR-10.3 Regenerating replaces the reference; removing reverts to the
+  CSS-only card; failure leaves the invitation untouched. The `minimal`
+  palette rejects backgrounds (server and UI).
+- FR-10.4 Guarded per adr-008: `LIMIT_BACKGROUNDS_PER_DAY` per IP (default 3)
+  and $0.039/image against the daily budget. BYOK: Gemini keys only.
+- FR-10.5 The OG share card stays token-only (v1 decision, adr-009 §7).
+
 ## Routing map (web)
 
 | Path | Page | Audience |
@@ -150,5 +170,5 @@ implementation.
 
 ## Not yet built (backlog)
 
-- Optional AI background image layer (no text in image) — allowed by
-  [adr-003](decisions/adr-003-no-image-generation.md), not started.
+- ~~Optional AI background image layer~~ — ✅ shipped as FR-10
+  ([adr-009](decisions/adr-009-ai-background-layer.md)).

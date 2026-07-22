@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { generateInvitation, publishInvitation, regenerateField, fetchRsvps, llmFailureKind } from "./api";
+import {
+  generateBackground,
+  generateInvitation,
+  publishInvitation,
+  regenerateField,
+  fetchRsvps,
+  llmFailureKind,
+} from "./api";
 import { buildRsvpCsv } from "./csv";
 import { downloadFile } from "./download";
 import { UI, loadUiLang, saveUiLang } from "./i18n";
@@ -46,6 +53,7 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [rsvps, setRsvps] = useState<RsvpSummary | null>(null);
   const [rsvpsLoading, setRsvpsLoading] = useState(false);
+  const [bgBusy, setBgBusy] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const t = UI[uiLang];
@@ -92,6 +100,35 @@ export default function App() {
   function updateDesign(patch: Partial<DesignTokens>) {
     if (!invitation) return;
     setInvitation({ ...invitation, design: { ...invitation.design, ...patch } });
+  }
+
+  // AI background layer (adr-009): add and regenerate are the same request —
+  // the response replaces the reference. Failures reuse the chat's LLM
+  // failure messages (429/503 point at the BYOK escape hatch).
+  async function handleBackgroundAdd() {
+    if (!invitation || bgBusy) return;
+    setBgBusy(true);
+    try {
+      const background = await generateBackground(invitation.brief, invitation.design);
+      setInvitation({ ...invitation, background });
+    } catch (error) {
+      const kind = llmFailureKind(error);
+      const text =
+        kind === "quota"
+          ? t.chat.quotaMsg
+          : kind === "auth"
+            ? t.chat.keyMsg
+            : kind === "limited"
+              ? t.chat.limitMsg
+              : t.chat.failMsg;
+      setMessages((m) => [...m, { role: "assistant", text }]);
+    } finally {
+      setBgBusy(false);
+    }
+  }
+
+  function handleBackgroundRemove() {
+    if (invitation) setInvitation({ ...invitation, background: null });
   }
 
   function openFieldSheet(field: CopyField) {
@@ -335,10 +372,19 @@ export default function App() {
             </div>
           ) : invitation ? (
             <div className="cc-preview-inner">
-              <DesignControls design={invitation.design} labels={t.design} onChange={updateDesign} />
+              <DesignControls
+                design={invitation.design}
+                labels={t.design}
+                onChange={updateDesign}
+                background={invitation.background}
+                backgroundBusy={bgBusy}
+                onBackgroundAdd={handleBackgroundAdd}
+                onBackgroundRemove={handleBackgroundRemove}
+              />
               <InvitationPreview
                 copy={invitation.copy}
                 design={invitation.design}
+                background={invitation.background}
                 activeField={selectedField}
                 onFieldClick={openFieldSheet}
               />

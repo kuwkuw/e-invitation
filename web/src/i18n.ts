@@ -13,6 +13,11 @@ export interface DesignStrings {
   layout: string;
   ornament: string;
   values: Record<DesignValue, string>;
+  background: string;
+  bgAdd: string;
+  bgRegenerate: string;
+  bgRemove: string;
+  bgGenerating: string;
 }
 
 export interface ChatStrings {
@@ -131,6 +136,11 @@ export const UI: Record<Language, UiStrings> = {
         geometric: "Geometric",
         sparkle: "Sparkle",
       },
+      background: "Background",
+      bgAdd: "✦ Add AI background",
+      bgRegenerate: "Try another",
+      bgRemove: "Remove",
+      bgGenerating: "Painting the background…",
     },
     chat: {
       newInvitation: "New invitation",
@@ -236,6 +246,11 @@ export const UI: Record<Language, UiStrings> = {
         geometric: "Геометричний",
         sparkle: "Іскристий",
       },
+      background: "Фон",
+      bgAdd: "✦ Додати AI-фон",
+      bgRegenerate: "Спробувати інший",
+      bgRemove: "Прибрати",
+      bgGenerating: "Малюю фон…",
     },
     chat: {
       newInvitation: "Нове запрошення",

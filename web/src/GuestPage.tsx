@@ -170,7 +170,7 @@ export function GuestPage({ id }: Props) {
     <div className="gr-page">
       <div className="gr-layout">
         <div className="gr-inv">
-          <InvitationPreview copy={copy} design={design} />
+          <InvitationPreview copy={copy} design={design} background={published.invitation.background} />
         </div>
 
         <div className="gr-side">

@@ -38,10 +38,17 @@ export interface DesignTokens {
   ornament: (typeof ORNAMENTS)[number];
 }
 
+// Opaque server-issued asset reference for the optional AI background layer
+// (adr-009); absent/null = CSS-only card.
+export interface BackgroundRef {
+  id: string;
+}
+
 export interface Invitation {
   brief: EventBrief;
   copy: InvitationCopy;
   design: DesignTokens;
+  background?: BackgroundRef | null;
 }
 
 // Publish + RSVP

@@ -3,6 +3,7 @@ import {
   ORNAMENTS,
   PALETTES,
   TYPOGRAPHIES,
+  type BackgroundRef,
   type DesignTokens,
 } from "../types";
 import type { DesignStrings } from "../i18n";
@@ -11,6 +12,12 @@ interface Props {
   design: DesignTokens;
   labels: DesignStrings;
   onChange: (patch: Partial<DesignTokens>) => void;
+  /** AI background layer (adr-009); the group is hidden without a handler
+   *  and for the minimal palette (excluded from backgrounds). */
+  background?: BackgroundRef | null;
+  backgroundBusy?: boolean;
+  onBackgroundAdd?: () => void;
+  onBackgroundRemove?: () => void;
 }
 
 // Preview glyphs for ornament options; mirrors the ::before content in styles.css.
@@ -23,7 +30,15 @@ const ORNAMENT_GLYPHS: Record<DesignTokens["ornament"], string> = {
 
 // Inline design picker: every control swaps one token and the deterministic
 // renderer re-applies instantly — no LLM round-trip.
-export function DesignControls({ design, labels, onChange }: Props) {
+export function DesignControls({
+  design,
+  labels,
+  onChange,
+  background,
+  backgroundBusy,
+  onBackgroundAdd,
+  onBackgroundRemove,
+}: Props) {
   return (
     <div className="design-controls">
       <div className="design-group" role="group" aria-label={labels.palette}>
@@ -95,6 +110,32 @@ export function DesignControls({ design, labels, onChange }: Props) {
           ))}
         </div>
       </div>
+
+      {onBackgroundAdd && design.palette !== "minimal" && (
+        <div className="design-group" role="group" aria-label={labels.background}>
+          <span className="design-label">{labels.background}</span>
+          <div className="design-options">
+            {backgroundBusy ? (
+              <button className="design-option" disabled>
+                {labels.bgGenerating}
+              </button>
+            ) : background ? (
+              <>
+                <button className="design-option" onClick={onBackgroundAdd}>
+                  {labels.bgRegenerate}
+                </button>
+                <button className="design-option" onClick={onBackgroundRemove}>
+                  {labels.bgRemove}
+                </button>
+              </>
+            ) : (
+              <button className="design-option" onClick={onBackgroundAdd}>
+                {labels.bgAdd}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
