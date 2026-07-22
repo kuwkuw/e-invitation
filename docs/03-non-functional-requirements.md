@@ -70,8 +70,9 @@
 
 ## NFR-7 Scale assumptions (explicit)
 
-- Single-process deployment. The file-backed store and in-memory metrics are
-  deliberate simplicity choices; both sit behind small function interfaces
+- Single-process deployment. The file-backed store and file-backed metrics
+  counters are deliberate simplicity choices; both sit behind small function
+  interfaces
   (`store.ts`, `metrics.ts`) so a DB / metrics backend can replace them without
   touching routes.
 - No concurrency control on RSVP appends beyond process serialization —

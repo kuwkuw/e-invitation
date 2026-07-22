@@ -55,7 +55,9 @@ Record the decision as **ADR-008**.
 Acceptance: hammering generate from one IP hits 429; `/healthz` or metrics
 expose remaining daily budget; BYOK requests are never limited.
 
-### 2. Durable metrics
+### 2. Durable metrics — ✅ shipped
+
+Shipped: see FR-7. Original plan for reference:
 
 - Persist the `metrics.ts` counters through the file store (write-then-rename,
   like `store.ts`), loading on boot. Keep the `record*`/`metricsSnapshot`

@@ -18,7 +18,8 @@ export interface PublishedRecord {
 }
 
 // Read lazily so tests can point DATA_DIR at a scratch dir before first use.
-function dataDir(): string {
+// Also used by metrics.ts — one data directory for everything persisted.
+export function dataDir(): string {
   return process.env.DATA_DIR ?? join(process.cwd(), "data");
 }
 

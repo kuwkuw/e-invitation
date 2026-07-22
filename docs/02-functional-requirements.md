@@ -97,9 +97,10 @@ implementation.
 **Status: built** — `GET /api/metrics` ([metrics.ts](../server/src/metrics.ts))
 
 - FR-7.1 Expose counters: generations, per-field regenerations, publishes,
-  RSVPs, and the derived regenerate-rate.
-- FR-7.2 Counters are in-process (reset on restart) — acceptable at current
-  scale; see NFR-7.
+  RSVPs, and the derived regenerate-rate and publish-rate.
+- FR-7.2 Counters persist to `DATA_DIR/metrics.json` (write-then-rename, same
+  discipline as the store) and reload on boot, so the KPIs survive restarts
+  and deploys. A missing or corrupt file starts them fresh.
 
 ## FR-8 BYOK — host's own AI key
 
