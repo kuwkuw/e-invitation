@@ -1,6 +1,6 @@
 # ADR-009 — Optional AI background image layer
 
-**Status:** proposed · **Date:** 2026-07 · Extends
+**Status:** accepted · **Date:** 2026-07 · Extends
 [adr-003](adr-003-no-image-generation.md) (which explicitly allows this
 layer); interacts with [adr-007](adr-007-in-process-providers.md) (transport)
 and [adr-008](adr-008-operator-cost-guardrails.md) (cost guardrails).
@@ -62,13 +62,34 @@ the routing-table entry + pricing entry keep `routing.ts`/`pricing.ts` the
 single switch points, and `test/routing.test.ts`'s pricing-coverage rule
 applies.
 
-### 4. Readability: palette-owned scrim
+### 4. Readability: palette-owned scrim (settled by the E-invitation DS
+### mockups, `templates/card-background`, 2026-07-22)
 
-Palettes keep owning text colors. When a background is present, a
-semi-opaque scrim (palette-tinted gradient) sits between image and text so
-every palette/layout combination stays readable. Exact scrim strength and
-the `split`-layout treatment (whole card vs. one panel) are **open — decide
-from mockups in the E-invitation DS project before implementation.**
+Palettes keep owning text colors; the scrim alone guarantees contrast
+(target WCAG AA for body text). The DS comparison rejected neutral
+white/black scrims (they wash the palette's warmth out) in favor of a
+gradient tinted in the palette's own background hue:
+
+- Each palette (except `minimal`) exposes its background as an RGB triplet
+  (`--bg-rgb`); the scrim overlay is
+  `linear-gradient(180deg, rgba(var(--bg-rgb), .74) 0%, rgba(var(--bg-rgb), .90) 100%)`
+  (festive, the dark palette, starts at `.72`). Triplets: warm `247,239,227`,
+  romantic `251,238,240`, elegant `252,251,248`, playful `255,248,225`,
+  festive `31,42,68`.
+- Default strength is **strong** (the values above) — it survives the DS's
+  deliberately hostile high-contrast test image. A *soft* variant
+  (`.45 → .60`) exists in the DS for photos known to be quiet, but is not
+  exposed in v1.
+- **`split` layout:** the image is confined to a side panel (~38% width,
+  `object-fit: cover`, no scrim); the text panel stays solid `--bg`. Never
+  whole-card — the DS comparison showed the accent details border and
+  left-aligned text muddying over an image.
+- **Ornaments stay**, rendered in the content layer above the scrim (banner
+  already hides its top ornament; unchanged).
+- **`minimal` is excluded** from backgrounds entirely: a scrim strong enough
+  for AA on pure white erases the image, defeating both.
+- With no image the overlay elements are simply not rendered — the card is
+  identical to today's.
 
 ### 5. Storage next to the invitation store
 
@@ -103,9 +124,10 @@ come later if hosts ask.
 - Operator cost is bounded by design: 3/IP/day × $0.039 within the existing
   daily budget cap.
 
-## Blocking open questions (before implementation)
+## Formerly open questions — both closed
 
-1. Scrim strength + `split` layout treatment — mockups (host side).
-2. ~~Verified pricing~~ — done ($0.039/image paid tier, 2026-07-22); only the
-   operator key's current free-tier image quota remains to check in AI
-   Studio.
+1. ~~Scrim strength + `split` layout treatment~~ — settled by the
+   E-invitation DS `templates/card-background` mockups (see §4).
+2. ~~Verified pricing~~ — done ($0.039/image paid tier, 2026-07-22); the
+   operator key's current free-tier image quota is still worth a glance in
+   AI Studio, but the budget breaker treats every image as paid regardless.
