@@ -62,12 +62,16 @@ export function classifyError(error: unknown): FailureClass {
   if (error instanceof Anthropic.APIError) {
     if (error.status === 401 || error.status === 403) return "auth";
     if (error.status === 429) return "quota";
+    if ((error.status ?? 0) >= 500) return "connectivity";
     return "other";
   }
-  // Same mapping for the OpenAI-compat transport's HTTP failures.
+  // Same mapping for the OpenAI-compat transport's HTTP failures. 5xx is the
+  // provider down or overloaded (e.g. Gemini 503 UNAVAILABLE "high demand"),
+  // which is the same operational condition connectivity already names.
   if (error instanceof ProviderHttpError) {
     if (error.status === 401 || error.status === 403) return "auth";
     if (error.status === 429) return "quota";
+    if (error.status >= 500) return "connectivity";
     return "other";
   }
   // fetch: network failure surfaces as TypeError, timeout as a DOMException
@@ -86,6 +90,22 @@ export function classifyError(error: unknown): FailureClass {
   }
   return "other";
 }
+
+/** Provider answered with a 5xx: up enough to respond, but erroring or
+ *  overloaded ("spikes in demand are usually temporary"). These fail fast,
+ *  so one short-delay same-model retry is cheap — unlike timeouts and
+ *  network failures, which are excluded because a retry would double the
+ *  30s worst case. */
+function isTransientProviderError(error: unknown): boolean {
+  if (error instanceof ProviderHttpError) return error.status >= 500;
+  if (error instanceof Anthropic.APIConnectionError) return false;
+  if (error instanceof Anthropic.APIError) return (error.status ?? 0) >= 500;
+  return false;
+}
+
+const TRANSIENT_RETRY_DELAY_MS = 400;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** The BYOK-able provider of a routed model; null for operator-side-only
  *  transports (groq, ollama), which are never part of a BYOK walk. */
@@ -120,6 +140,9 @@ interface LlmLogLine {
   cost_usd?: number | null;
   error?: string;
   error_class?: FailureClass;
+  /** This failure triggered a same-model retry; the next line for this
+   *  model is the retry's outcome. */
+  retried?: boolean;
 }
 
 function logLlm(line: LlmLogLine): void {
@@ -225,7 +248,22 @@ export async function completeJson<T>(
       ...(byok ? { byok: true } : {}),
     };
     try {
-      const result = await attempt(model, spec, route.maxTokens, byok);
+      let result: AttemptResult;
+      try {
+        result = await attempt(model, spec, route.maxTokens, byok);
+      } catch (error) {
+        if (!isTransientProviderError(error)) throw error;
+        logLlm({
+          ...base,
+          ok: false,
+          latency_ms: Math.round(performance.now() - startedAt),
+          error: error instanceof Error ? error.message : String(error),
+          error_class: classifyError(error),
+          retried: true,
+        });
+        await sleep(TRANSIENT_RETRY_DELAY_MS);
+        result = await attempt(model, spec, route.maxTokens, byok);
+      }
       const latency_ms = Math.round(performance.now() - startedAt);
       if (!result.text) {
         throw new Error(`empty output (stop_reason: ${result.stopReason})`);
