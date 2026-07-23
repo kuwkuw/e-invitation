@@ -59,7 +59,7 @@ export interface ByokStrings {
   active: string;
 }
 
-interface UiStrings {
+export interface UiStrings {
   appTitle: string;
   tagline: string;
   placeholder: string;
@@ -401,7 +401,7 @@ export const LANDING: Record<Language, LandingStrings> = {
 
 // Guest-facing strings follow the invitation's language (brief.language),
 // independent of the host's UI toggle.
-interface GuestStrings {
+export interface GuestStrings {
   loading: string;
   notFoundTitle: string;
   notFoundBody: string;
