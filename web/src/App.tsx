@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  fetchRsvps,
   generateBackground,
   generateInvitation,
+  llmFailureKind,
   publishInvitation,
   regenerateField,
-  fetchRsvps,
-  llmFailureKind,
 } from "./api";
+import { ByokSettings } from "./components/ByokSettings";
+import { DesignControls } from "./components/DesignControls";
+import { InvitationPreview } from "./components/InvitationPreview";
+import { LangSwitcher } from "./components/LangSwitcher";
 import { buildRsvpCsv } from "./csv";
 import { downloadFile } from "./download";
-import { UI, loadUiLang, saveUiLang } from "./i18n";
-import { InvitationPreview } from "./components/InvitationPreview";
-import { DesignControls } from "./components/DesignControls";
-import { LangSwitcher } from "./components/LangSwitcher";
-import { ByokSettings } from "./components/ByokSettings";
-import {
-  type CopyField,
-  type DesignTokens,
-  type Invitation,
-  type Language,
-  type PublishResult,
-  type RsvpSummary,
+import { type ChatStrings, loadUiLang, saveUiLang, UI } from "./i18n";
+import type {
+  CopyField,
+  DesignTokens,
+  Invitation,
+  Language,
+  PublishResult,
+  RsvpSummary,
 } from "./types";
 
 type Phase = "empty" | "generating" | "active";
@@ -58,6 +58,10 @@ export default function App() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const t = UI[uiLang];
 
+  // A new message, or the generating spinner appearing, is what should scroll
+  // the chat to the bottom — messages/phase are the intended triggers here,
+  // not values the effect body reads.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deps are triggers, not reads
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, phase]);
@@ -78,18 +82,7 @@ export default function App() {
       setMessages((m) => [...m, { role: "assistant", text: t.chat.doneMsg }]);
       setPhase("active");
     } catch (error) {
-      const kind = llmFailureKind(error);
-      const text =
-        kind === "quota"
-          ? t.chat.quotaMsg
-          : kind === "auth"
-            ? t.chat.keyMsg
-            : kind === "limited"
-              ? t.chat.limitMsg
-              : kind === "busy"
-                ? t.chat.busyMsg
-                : t.chat.failMsg;
-      setMessages((m) => [...m, { role: "assistant", text }]);
+      setMessages((m) => [...m, { role: "assistant", text: failureMessage(error, t.chat) }]);
       setPhase(invitation ? "active" : "empty");
     }
   }
@@ -114,18 +107,7 @@ export default function App() {
       const background = await generateBackground(invitation.brief, invitation.design);
       setInvitation({ ...invitation, background });
     } catch (error) {
-      const kind = llmFailureKind(error);
-      const text =
-        kind === "quota"
-          ? t.chat.quotaMsg
-          : kind === "auth"
-            ? t.chat.keyMsg
-            : kind === "limited"
-              ? t.chat.limitMsg
-              : kind === "busy"
-                ? t.chat.busyMsg
-                : t.chat.failMsg;
-      setMessages((m) => [...m, { role: "assistant", text }]);
+      setMessages((m) => [...m, { role: "assistant", text: failureMessage(error, t.chat) }]);
     } finally {
       setBgBusy(false);
     }
@@ -228,9 +210,20 @@ export default function App() {
   return (
     <div className="cc-shell">
       <header className="cc-header">
-        <button className="cc-back" aria-label={t.chat.back} onClick={() => (window.location.href = "/")}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <button
+          type="button"
+          className="cc-back"
+          aria-label={t.chat.back}
+          onClick={() => (window.location.href = "/")}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M15 5l-7 7 7 7"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
         <div className="cc-title">{invitation?.copy.title ?? t.chat.newInvitation}</div>
@@ -244,13 +237,26 @@ export default function App() {
             }}
           />
           <button
+            type="button"
             className={`cc-share${hasInvitation ? " ready" : ""}`}
             disabled={!hasInvitation || publishing}
             onClick={handleShare}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 15V4M8 8l4-4 4 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 15V4M8 8l4-4 4 4"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             {publishing ? "…" : t.chat.share}
           </button>
@@ -259,20 +265,33 @@ export default function App() {
 
       {shareOpen && published && (
         <div className="cc-share-panel">
-          <p className="publish-status">{t.publishedVersion.replace("{n}", String(published.version))}</p>
+          <p className="publish-status">
+            {t.publishedVersion.replace("{n}", String(published.version))}
+          </p>
           <p className="share-hint">{t.shareHint}</p>
           <div className="share-row">
             <input readOnly value={shareUrl(published.id)} onFocus={(e) => e.target.select()} />
-            <button onClick={handleCopyLink}>{copied ? t.copied : t.copyLink}</button>
+            <button type="button" onClick={handleCopyLink}>
+              {copied ? t.copied : t.copyLink}
+            </button>
           </div>
           <div className="responses">
             <div className="responses-head">
               <h3>{t.responsesTitle}</h3>
-              <button onClick={handleRefreshRsvps} disabled={rsvpsLoading}>
+              <button type="button" onClick={handleRefreshRsvps} disabled={rsvpsLoading}>
                 {rsvpsLoading ? "…" : `↻ ${t.refreshResponses}`}
               </button>
               {rsvps && rsvps.rsvps.length > 0 && (
-                <button onClick={() => downloadFile("rsvps.csv", buildRsvpCsv(rsvps.rsvps, t.csv), "text/csv;charset=utf-8")}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadFile(
+                      "rsvps.csv",
+                      buildRsvpCsv(rsvps.rsvps, t.csv),
+                      "text/csv;charset=utf-8",
+                    )
+                  }
+                >
                   {`⬇ ${t.exportCsv}`}
                 </button>
               )}
@@ -283,13 +302,15 @@ export default function App() {
               ) : (
                 <>
                   <p className="responses-counts">
-                    ✓ {rsvps.counts.yes} {t.countYes} · ✗ {rsvps.counts.no} {t.countNo} · {rsvps.counts.guests}{" "}
-                    {t.countGuests}
+                    ✓ {rsvps.counts.yes} {t.countYes} · ✗ {rsvps.counts.no} {t.countNo} ·{" "}
+                    {rsvps.counts.guests} {t.countGuests}
                   </p>
                   <ul className="responses-list">
-                    {rsvps.rsvps.map((r, i) => (
-                      <li key={i}>
-                        <span className={r.attending ? "rsvp-yes" : "rsvp-no"}>{r.attending ? "✓" : "✗"}</span>{" "}
+                    {rsvps.rsvps.map((r) => (
+                      <li key={`${r.created_at}:${r.name}`}>
+                        <span className={r.attending ? "rsvp-yes" : "rsvp-no"}>
+                          {r.attending ? "✓" : "✗"}
+                        </span>{" "}
                         <strong>{r.name}</strong>
                         {r.attending && r.guests_count > 1 && ` ×${r.guests_count}`}
                         {r.note && <span className="rsvp-note"> — {r.note}</span>}
@@ -312,7 +333,12 @@ export default function App() {
                 <div className="cc-start-examples">{t.chat.tryExamples}</div>
                 <div className="cc-chips">
                   {t.chat.examples.map((example) => (
-                    <button key={example} className="cc-chip" onClick={() => setInput(example.replace(/…$/, ""))}>
+                    <button
+                      type="button"
+                      key={example}
+                      className="cc-chip"
+                      onClick={() => setInput(example.replace(/…$/, ""))}
+                    >
                       {example}
                     </button>
                   ))}
@@ -321,14 +347,20 @@ export default function App() {
             ) : (
               <>
                 {messages.map((msg, i) => (
+                  // The chat log is append-only: entries are never reordered,
+                  // removed or edited, so the index is a stable identity.
+                  // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat log
                   <div key={i} className={`cc-msg ${msg.role}`}>
                     <div className="cc-bubble">{msg.text}</div>
                   </div>
                 ))}
                 {phase === "generating" && (
                   <div className="cc-status">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 3l1.7 5L19 9.6l-4.4 3.1L16 18l-4-3-4 3 1.4-5.3L5 9.6 10.3 8 12 3z" fill="currentColor" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 3l1.7 5L19 9.6l-4.4 3.1L16 18l-4-3-4 3 1.4-5.3L5 9.6 10.3 8 12 3z"
+                        fill="currentColor"
+                      />
                     </svg>
                     <span>{t.chat.creating}</span>
                     <span className="cc-dots">
@@ -351,13 +383,20 @@ export default function App() {
               maxLength={500}
             />
             <button
+              type="button"
               className={`cc-send${input.trim() && phase !== "generating" ? " ready" : ""}`}
               aria-label={t.chat.send}
               disabled={!input.trim() || phase === "generating"}
               onClick={handleSend}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 19V6M6 12l6-6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 19V6M6 12l6-6 6 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
@@ -365,7 +404,7 @@ export default function App() {
 
         <section className="cc-preview">
           {phase === "generating" ? (
-            <div className="cc-skeleton" aria-label={t.chat.creating}>
+            <div className="cc-skeleton" role="status" aria-label={t.chat.creating}>
               <div className="cc-sk cc-sk-badge" />
               <div className="cc-sk" style={{ width: "72%", height: 22 }} />
               <div className="cc-sk" style={{ width: "46%", height: 12 }} />
@@ -395,8 +434,11 @@ export default function App() {
             </div>
           ) : (
             <div className="cc-placeholder">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3l1.7 5L19 9.6l-4.4 3.1L16 18l-4-3-4 3 1.4-5.3L5 9.6 10.3 8 12 3z" fill="currentColor" />
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 3l1.7 5L19 9.6l-4.4 3.1L16 18l-4-3-4 3 1.4-5.3L5 9.6 10.3 8 12 3z"
+                  fill="currentColor"
+                />
               </svg>
               <div>{t.chat.previewPlaceholder}</div>
             </div>
@@ -411,37 +453,84 @@ export default function App() {
               <div className="cc-sheet-kicker">{t.chat.editingLabel}</div>
               <div className="cc-sheet-title">{t.fields[selectedField]}</div>
             </div>
-            <button className="cc-sheet-close" aria-label="Close" onClick={closeFieldSheet}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <button
+              type="button"
+              className="cc-sheet-close"
+              aria-label="Close"
+              onClick={closeFieldSheet}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
           <div className="cc-actions">
-            <button className="cc-act" disabled={fieldBusy} onClick={handleFieldRegenerate}>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12a8 8 0 0114-5.3M20 4v4h-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M20 12a8 8 0 01-14 5.3M4 20v-4h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            <button
+              type="button"
+              className="cc-act"
+              disabled={fieldBusy}
+              onClick={handleFieldRegenerate}
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M4 12a8 8 0 0114-5.3M20 4v4h-4"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 12a8 8 0 01-14 5.3M4 20v-4h4"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {fieldBusy && fieldMode === "actions" ? "…" : t.chat.actionRegenerate}
             </button>
             <button
+              type="button"
               className={`cc-act${fieldMode === "manual" ? " cc-act-on" : ""}`}
               onClick={() => setFieldMode("manual")}
             >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M4 20h4L18 10l-4-4L4 16v4z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {t.chat.actionManual}
             </button>
             <button
+              type="button"
               className={`cc-act${fieldMode === "variants" ? " cc-act-on" : ""}`}
               disabled={fieldBusy}
               onClick={handleLoadVariants}
             >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3l9 5-9 5-9-5 9-5z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3 13l9 5 9-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 3l9 5-9 5-9-5 9-5z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3 13l9 5 9-5"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {t.chat.actionVariants}
             </button>
@@ -454,6 +543,7 @@ export default function App() {
                 rows={selectedField === "body" ? 3 : 2}
               />
               <button
+                type="button"
                 className="primary"
                 onClick={() => {
                   updateField(selectedField, manualValue);
@@ -481,6 +571,7 @@ export default function App() {
               ) : (
                 variants.map((variant) => (
                   <button
+                    type="button"
                     key={variant}
                     className="cc-var"
                     onClick={() => {
@@ -502,4 +593,23 @@ export default function App() {
 
 function shareUrl(id: string): string {
   return `${window.location.origin}/i/${id}`;
+}
+
+// Both LLM-backed editor actions (chat generate, background add) report
+// failures the same way: the gateway's failure class picked out of the 502
+// body decides which chat message the host sees. Quota/limit wording points
+// at the BYOK escape hatch, so keep the two paths on one mapping.
+function failureMessage(error: unknown, chat: ChatStrings): string {
+  switch (llmFailureKind(error)) {
+    case "quota":
+      return chat.quotaMsg;
+    case "auth":
+      return chat.keyMsg;
+    case "limited":
+      return chat.limitMsg;
+    case "busy":
+      return chat.busyMsg;
+    default:
+      return chat.failMsg;
+  }
 }

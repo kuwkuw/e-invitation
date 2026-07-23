@@ -1,4 +1,4 @@
-import { completeJson, type ByokKey } from "../llm/gateway.js";
+import { type ByokKey, completeJson } from "../llm/gateway.js";
 import { DesignTokens, type EventBrief } from "../schemas.js";
 
 const SYSTEM = `You choose design tokens for an event invitation based on its brief. Output only the allowed enum values — rendering is deterministic HTML/CSS on the client.

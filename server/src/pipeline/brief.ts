@@ -1,4 +1,4 @@
-import { completeJson, type ByokKey } from "../llm/gateway.js";
+import { type ByokKey, completeJson } from "../llm/gateway.js";
 import { EventBrief } from "../schemas.js";
 
 const SYSTEM = `You extract a structured event brief from a single free-form sentence describing an event.

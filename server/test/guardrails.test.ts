@@ -1,12 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { buildApp } from "../src/app.js";
 import {
   budgetExhausted,
   consumeIpAllowance,
   recordOperatorSpend,
   resetGuardrails,
 } from "../src/guardrails.js";
-import { buildApp } from "../src/app.js";
 
 // Keep the walk offline: every provider call fails fast with a 401, so an
 // admitted request ends as a 502 and a guarded one as 429/503.

@@ -18,14 +18,30 @@ describe("parseEventStart", () => {
   });
 
   it("parses English month names in either order", () => {
-    expect(parseEventStart("August 12", null, now)).toMatchObject({ year: 2026, month: 8, day: 12 });
-    expect(parseEventStart("12 Aug 2027", null, now)).toMatchObject({ year: 2027, month: 8, day: 12 });
+    expect(parseEventStart("August 12", null, now)).toMatchObject({
+      year: 2026,
+      month: 8,
+      day: 12,
+    });
+    expect(parseEventStart("12 Aug 2027", null, now)).toMatchObject({
+      year: 2027,
+      month: 8,
+      day: 12,
+    });
   });
 
   it("parses numeric and ISO dates, day-first for dotted", () => {
     expect(parseEventStart("12.08", null, now)).toMatchObject({ year: 2026, month: 8, day: 12 });
-    expect(parseEventStart("12.08.2027", null, now)).toMatchObject({ year: 2027, month: 8, day: 12 });
-    expect(parseEventStart("2026-08-12", null, now)).toMatchObject({ year: 2026, month: 8, day: 12 });
+    expect(parseEventStart("12.08.2027", null, now)).toMatchObject({
+      year: 2027,
+      month: 8,
+      day: 12,
+    });
+    expect(parseEventStart("2026-08-12", null, now)).toMatchObject({
+      year: 2026,
+      month: 8,
+      day: 12,
+    });
   });
 
   it("rolls a passed month-day into next year when no year is given", () => {

@@ -1,12 +1,12 @@
+import type { DesignStrings } from "../i18n";
 import {
+  type BackgroundRef,
+  type DesignTokens,
   LAYOUTS,
   ORNAMENTS,
   PALETTES,
   TYPOGRAPHIES,
-  type BackgroundRef,
-  type DesignTokens,
 } from "../types";
-import type { DesignStrings } from "../i18n";
 
 interface Props {
   design: DesignTokens;
@@ -47,6 +47,7 @@ export function DesignControls({
           {PALETTES.map((palette) => (
             <button
               key={palette}
+              type="button"
               // palette-* classes define --bg/--accent, so the swatch colors
               // always track styles.css without duplicating any values here.
               className={`swatch palette-${palette}${design.palette === palette ? " active" : ""}`}
@@ -67,6 +68,7 @@ export function DesignControls({
           {TYPOGRAPHIES.map((typography) => (
             <button
               key={typography}
+              type="button"
               className={`design-option type-${typography} font-sample${design.typography === typography ? " active" : ""}`}
               title={labels.values[typography]}
               aria-pressed={design.typography === typography}
@@ -84,6 +86,7 @@ export function DesignControls({
           {LAYOUTS.map((layout) => (
             <button
               key={layout}
+              type="button"
               className={`design-option${design.layout === layout ? " active" : ""}`}
               aria-pressed={design.layout === layout}
               onClick={() => onChange({ layout })}
@@ -100,6 +103,7 @@ export function DesignControls({
           {ORNAMENTS.map((ornament) => (
             <button
               key={ornament}
+              type="button"
               className={`design-option${design.ornament === ornament ? " active" : ""}`}
               title={labels.values[ornament]}
               aria-pressed={design.ornament === ornament}
@@ -116,20 +120,20 @@ export function DesignControls({
           <span className="design-label">{labels.background}</span>
           <div className="design-options">
             {backgroundBusy ? (
-              <button className="design-option" disabled>
+              <button type="button" className="design-option" disabled>
                 {labels.bgGenerating}
               </button>
             ) : background ? (
               <>
-                <button className="design-option" onClick={onBackgroundAdd}>
+                <button type="button" className="design-option" onClick={onBackgroundAdd}>
                   {labels.bgRegenerate}
                 </button>
-                <button className="design-option" onClick={onBackgroundRemove}>
+                <button type="button" className="design-option" onClick={onBackgroundRemove}>
                   {labels.bgRemove}
                 </button>
               </>
             ) : (
-              <button className="design-option" onClick={onBackgroundAdd}>
+              <button type="button" className="design-option" onClick={onBackgroundAdd}>
                 {labels.bgAdd}
               </button>
             )}

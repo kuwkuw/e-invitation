@@ -13,8 +13,34 @@ export interface EventStart {
 
 // Month prefixes; Ukrainian ones cover both nominative and genitive forms
 // (серпень / серпня → "серп"). Order = month number - 1.
-const UK_MONTHS = ["січ", "лют", "бер", "кві", "тра", "чер", "лип", "серп", "вер", "жов", "лис", "гру"];
-const EN_MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const UK_MONTHS = [
+  "січ",
+  "лют",
+  "бер",
+  "кві",
+  "тра",
+  "чер",
+  "лип",
+  "серп",
+  "вер",
+  "жов",
+  "лис",
+  "гру",
+];
+const EN_MONTHS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
 
 function monthFromWord(word: string): number | null {
   for (const [i, prefix] of UK_MONTHS.entries()) {
@@ -40,7 +66,10 @@ function pickYear(month: number, day: number, now: Date): number {
     : now.getFullYear() + 1;
 }
 
-function parseDateText(text: string, now: Date): { year: number; month: number; day: number } | null {
+function parseDateText(
+  text: string,
+  now: Date,
+): { year: number; month: number; day: number } | null {
   const lower = text.toLowerCase();
 
   const iso = lower.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -103,7 +132,11 @@ export function parseEventStart(
 
 // RFC 5545 text escaping: backslash, semicolon, comma, newline.
 function escapeIcsText(text: string): string {
-  return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -128,7 +161,10 @@ export function buildIcs(options: {
     "PRODID:-//INVITO//e-invitation//EN",
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`,
+    `DTSTAMP:${new Date()
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "")}`,
   ];
   if (start.hour === null) {
     const dayAfter = new Date(start.year, start.month - 1, start.day + 1);
@@ -145,6 +181,5 @@ export function buildIcs(options: {
   lines.push(`SUMMARY:${escapeIcsText(title)}`);
   if (location) lines.push(`LOCATION:${escapeIcsText(location)}`);
   lines.push("END:VEVENT", "END:VCALENDAR");
-  return lines.join("\r\n") + "\r\n";
+  return `${lines.join("\r\n")}\r\n`;
 }
-

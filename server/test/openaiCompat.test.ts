@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { completeCompat, ProviderHttpError } from "../src/llm/openaiCompat.js";
+import { completeCompat } from "../src/llm/openaiCompat.js";
 
 const schema = z.object({ greeting: z.string() });
 
@@ -20,7 +20,11 @@ function stubFetch(response: Response = okResponse()) {
   return spy;
 }
 
-function requestOf(spy: ReturnType<typeof vi.fn>): { url: string; headers: Record<string, string>; body: Record<string, any> } {
+function requestOf(spy: ReturnType<typeof vi.fn>): {
+  url: string;
+  headers: Record<string, string>;
+  body: Record<string, any>;
+} {
   const [url, init] = spy.mock.calls[0] as [string, RequestInit];
   return {
     url,

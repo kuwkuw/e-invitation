@@ -1,0 +1,83 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!ds-bundle",
+      "!.ds-sync",
+      "!.design-sync",
+      "!pnpm-lock.yaml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "trailingCommas": "all", "semicolons": "always" }
+  },
+  "css": {
+    "formatter": { "enabled": false }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        // The design uses styled toggle buttons with explicit ARIA
+        // (role=radiogroup/group + aria-checked/aria-pressed) rather than
+        // native inputs, so the rule's <fieldset>/<input type="radio">
+        // suggestions would replace working semantics with wrong ones.
+        "useSemanticElements": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": { "maxAllowedComplexity": 20 }
+        }
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noConsole": { "level": "warn", "options": { "allow": ["error", "warn"] } }
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "warn",
+        "useImportType": "error"
+      }
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+  "overrides": [
+    {
+      // The gateway's one-JSON-line-per-request log and the image path's
+      // copy of it are the observability contract, not stray debugging;
+      // scripts/ are CLI tools whose output is the point.
+      "includes": ["server/src/llm/gateway.ts", "server/src/llm/imageGen.ts", "scripts/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    },
+    {
+      // Tests reach past nullability and shape on purpose when asserting.
+      "includes": ["**/test/**"],
+      "linter": {
+        "rules": {
+          "style": { "noNonNullAssertion": "off" },
+          "suspicious": { "noExplicitAny": "off" }
+        }
+      }
+    }
+  ]
+}

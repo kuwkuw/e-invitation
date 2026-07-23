@@ -1,10 +1,10 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
 import { fetchInvitation, submitRsvp } from "./api";
 import { buildIcs, parseEventStart } from "./calendar";
-import { downloadFile } from "./download";
-import { GUEST } from "./i18n";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { downloadFile } from "./download";
+import { GUEST } from "./i18n";
 import type { Language, PublishedInvitation } from "./types";
 
 // Guest-side chrome-language override. The page follows the invitation's
@@ -29,19 +29,41 @@ function guestWord(n: number, forms: [string, string, string]): string {
 }
 
 const CheckIcon = ({ size = 18, color = "currentColor", width = 2.2 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M5 13l4 4L19 7" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M5 13l4 4L19 7"
+      stroke={color}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const CrossIcon = ({ size = 16, color = "currentColor" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M7 7l10 10M17 7L7 17" stroke={color} strokeWidth="2.1" strokeLinecap="round" />
   </svg>
 );
 
-const Twinkle = ({ className, style, size }: { className: string; style?: CSSProperties; size: number }) => (
-  <svg className={className} style={style} width={size} height={size} viewBox="0 0 24 24" fill="none">
+const Twinkle = ({
+  className,
+  style,
+  size,
+}: {
+  className: string;
+  style?: CSSProperties;
+  size: number;
+}) => (
+  <svg
+    className={className}
+    style={style}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
     <path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z" fill="currentColor" />
   </svg>
 );
@@ -98,9 +120,24 @@ export function GuestPage({ id }: Props) {
     return (
       <div className="gr-page gr-notfound">
         <div className="gr-notfound-icon" aria-hidden="true">
-          <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="6" width="18" height="13" rx="2.5" stroke="#b7ae9e" strokeWidth="1.6" strokeDasharray="3 2.4" />
-            <path d="M4 8l8 6 8-6" stroke="#b7ae9e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect
+              x="3"
+              y="6"
+              width="18"
+              height="13"
+              rx="2.5"
+              stroke="#b7ae9e"
+              strokeWidth="1.6"
+              strokeDasharray="3 2.4"
+            />
+            <path
+              d="M4 8l8 6 8-6"
+              stroke="#b7ae9e"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
         <h1 className="gr-notfound-title">{t.notFoundTitle}</h1>
@@ -170,7 +207,11 @@ export function GuestPage({ id }: Props) {
     <div className="gr-page">
       <div className="gr-layout">
         <div className="gr-inv">
-          <InvitationPreview copy={copy} design={design} background={published.invitation.background} />
+          <InvitationPreview
+            copy={copy}
+            design={design}
+            background={published.invitation.background}
+          />
         </div>
 
         <div className="gr-side">
@@ -186,14 +227,32 @@ export function GuestPage({ id }: Props) {
                     <div className="gr-badge">
                       <CheckIcon size={34} color="#ffffff" width={2.6} />
                     </div>
-                    <Twinkle className="gr-tw" style={{ top: -4, right: 2, color: "#d98a4f" }} size={16} />
-                    <Twinkle className="gr-tw" style={{ bottom: 2, left: -6, color: "#c98a3e", animationDelay: "0.6s" }} size={12} />
-                    <Twinkle className="gr-tw" style={{ top: 14, left: -10, color: "#b3592e", animationDelay: "1.1s" }} size={9} />
+                    <Twinkle
+                      className="gr-tw"
+                      style={{ top: -4, right: 2, color: "#d98a4f" }}
+                      size={16}
+                    />
+                    <Twinkle
+                      className="gr-tw"
+                      style={{ bottom: 2, left: -6, color: "#c98a3e", animationDelay: "0.6s" }}
+                      size={12}
+                    />
+                    <Twinkle
+                      className="gr-tw"
+                      style={{ top: 14, left: -10, color: "#b3592e", animationDelay: "1.1s" }}
+                      size={9}
+                    />
                   </div>
                 ) : (
                   <div className="gr-badge-wrap" aria-hidden="true">
                     <div className="gr-badge gr-badge-muted">
-                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                      <svg
+                        width="34"
+                        height="34"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
                         <path
                           d="M12 20s-6.5-4.35-9-8.5C1.4 8.5 3 5.5 6 5.5c1.9 0 3.2 1.1 4 2.3.8-1.2 2.1-2.3 4-2.3 3 0 4.6 3 3 6-2.5 4.15-9 8.5-9 8.5z"
                           stroke="#9a9384"
@@ -216,7 +275,7 @@ export function GuestPage({ id }: Props) {
                     ? `${t.attendingPill} · ${guestsCount} ${guestWord(guestsCount, t.guestForms)}`
                     : t.declinedPill}
                 </div>
-                <button className="gr-change" onClick={() => setSent(false)}>
+                <button type="button" className="gr-change" onClick={() => setSent(false)}>
                   {t.changeAnswer}
                 </button>
               </section>
@@ -224,19 +283,51 @@ export function GuestPage({ id }: Props) {
               {attending && (
                 <div className="gr-rows">
                   {eventStart && (
-                    <button className="gr-row" onClick={handleAddToCalendar}>
+                    <button type="button" className="gr-row" onClick={handleAddToCalendar}>
                       <div className="gr-row-icon">
-                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
-                          <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="#b3592e" strokeWidth="1.7" />
-                          <path d="M3.5 9.5h17M8 2.8v4M16 2.8v4" stroke="#b3592e" strokeWidth="1.7" strokeLinecap="round" />
+                        <svg
+                          width="21"
+                          height="21"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <rect
+                            x="3.5"
+                            y="5"
+                            width="17"
+                            height="15.5"
+                            rx="2.5"
+                            stroke="#b3592e"
+                            strokeWidth="1.7"
+                          />
+                          <path
+                            d="M3.5 9.5h17M8 2.8v4M16 2.8v4"
+                            stroke="#b3592e"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       </div>
                       <div className="gr-row-text">
                         <div className="gr-row-title">{t.addToCalendar}</div>
-                        <div className="gr-row-sub">{[brief.date, brief.time].filter(Boolean).join(", ")}</div>
+                        <div className="gr-row-sub">
+                          {[brief.date, brief.time].filter(Boolean).join(", ")}
+                        </div>
                       </div>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 6l6 6-6 6" stroke="#c3bbac" strokeWidth="2" strokeLinecap="round" />
+                      <svg
+                        width="17"
+                        height="17"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M9 6l6 6-6 6"
+                          stroke="#c3bbac"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </button>
                   )}
@@ -248,8 +339,19 @@ export function GuestPage({ id }: Props) {
                       rel="noopener noreferrer"
                     >
                       <div className="gr-row-icon">
-                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
-                          <path d="M12 21s-7-6.3-7-11a7 7 0 1114 0c0 4.7-7 11-7 11z" stroke="#b3592e" strokeWidth="1.7" strokeLinejoin="round" />
+                        <svg
+                          width="21"
+                          height="21"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M12 21s-7-6.3-7-11a7 7 0 1114 0c0 4.7-7 11-7 11z"
+                            stroke="#b3592e"
+                            strokeWidth="1.7"
+                            strokeLinejoin="round"
+                          />
                           <circle cx="12" cy="10" r="2.4" stroke="#b3592e" strokeWidth="1.7" />
                         </svg>
                       </div>
@@ -257,14 +359,31 @@ export function GuestPage({ id }: Props) {
                         <div className="gr-row-title">{t.directions}</div>
                         <div className="gr-row-sub">{place}</div>
                       </div>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 6l6 6-6 6" stroke="#c3bbac" strokeWidth="2" strokeLinecap="round" />
+                      <svg
+                        width="17"
+                        height="17"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M9 6l6 6-6 6"
+                          stroke="#c3bbac"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </a>
                   )}
-                  <button className="gr-row" onClick={handleShare}>
+                  <button type="button" className="gr-row" onClick={handleShare}>
                     <div className="gr-row-icon">
-                      <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                      <svg
+                        width="21"
+                        height="21"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
                         <path
                           d="M9 15l6-6M11 6.5l1-1a3.5 3.5 0 015 5l-2 2M13 17.5l-1 1a3.5 3.5 0 01-5-5l2-2"
                           stroke="#b3592e"
@@ -277,8 +396,13 @@ export function GuestPage({ id }: Props) {
                       <div className="gr-row-title">{t.share}</div>
                       <div className="gr-row-sub">{copied ? t.linkCopied : t.shareHint}</div>
                     </div>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 6l6 6-6 6" stroke="#c3bbac" strokeWidth="2" strokeLinecap="round" />
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M9 6l6 6-6 6"
+                        stroke="#c3bbac"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -312,7 +436,11 @@ export function GuestPage({ id }: Props) {
                       aria-checked={attending === true}
                       onClick={() => setAttending(true)}
                     >
-                      <CheckIcon size={18} color={attending === true ? "#ffffff" : "#b3592e"} width={attending === true ? 2.4 : 2.2} />
+                      <CheckIcon
+                        size={18}
+                        color={attending === true ? "#ffffff" : "#b3592e"}
+                        width={attending === true ? 2.4 : 2.2}
+                      />
                       {t.yes}
                     </button>
                     <button
@@ -339,8 +467,19 @@ export function GuestPage({ id }: Props) {
                             disabled={guestsCount <= 1}
                             onClick={() => setGuestsCount((n) => Math.max(1, n - 1))}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M5 12h14"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                              />
                             </svg>
                           </button>
                           <div className="gr-count">{guestsCount}</div>
@@ -351,8 +490,19 @@ export function GuestPage({ id }: Props) {
                             disabled={guestsCount >= 10}
                             onClick={() => setGuestsCount((n) => Math.min(10, n + 1))}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M12 5v14M5 12h14"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -378,9 +528,27 @@ export function GuestPage({ id }: Props) {
 
                 <button className="gr-submit" type="submit" disabled={!canSubmit}>
                   {sending && (
-                    <svg className="gr-spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="2.6" />
-                      <path d="M21 12a9 9 0 00-9-9" stroke="#ffffff" strokeWidth="2.6" strokeLinecap="round" />
+                    <svg
+                      className="gr-spin"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth="2.6"
+                      />
+                      <path
+                        d="M21 12a9 9 0 00-9-9"
+                        stroke="#ffffff"
+                        strokeWidth="2.6"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   )}
                   {sending ? t.sending : t.send}

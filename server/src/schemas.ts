@@ -15,9 +15,16 @@ export const EventBrief = z.object({
   time: z.string().nullable().describe("Event time as written by the user, or null"),
   venue: z.string().nullable().describe("Venue name or address, or null"),
   city: z.string().nullable().describe("City, or null"),
-  tone: z.string().describe("Short mood descriptor inferred from the wording, e.g. 'warm and familial', 'formal', 'playful'"),
+  tone: z
+    .string()
+    .describe(
+      "Short mood descriptor inferred from the wording, e.g. 'warm and familial', 'formal', 'playful'",
+    ),
   language: Language.describe("Language of the user's input: 'uk' or 'en'"),
-  extra_details: z.string().nullable().describe("Anything else the user mentioned (dress code, gifts, theme), or null"),
+  extra_details: z
+    .string()
+    .nullable()
+    .describe("Anything else the user mentioned (dress code, gifts, theme), or null"),
 });
 export type EventBrief = z.infer<typeof EventBrief>;
 
@@ -36,7 +43,9 @@ export const InvitationCopy = z.object({
   title: z.string().describe("Short festive headline"),
   greeting: z.string().describe("Opening address to the guest"),
   body: z.string().describe("2-3 sentences inviting the guest to the event"),
-  details_line: z.string().describe("Date / time / venue on one or two lines; omit unknown details gracefully"),
+  details_line: z
+    .string()
+    .describe("Date / time / venue on one or two lines; omit unknown details gracefully"),
   rsvp_prompt: z.string().describe("One sentence asking the guest to confirm attendance"),
   closing: z.string().describe("Warm sign-off from the hosts"),
 });

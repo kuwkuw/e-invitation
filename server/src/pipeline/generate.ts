@@ -1,5 +1,5 @@
-import type { Invitation } from "../schemas.js";
 import type { ByokKey } from "../llm/gateway.js";
+import type { Invitation } from "../schemas.js";
 import { extractBrief } from "./brief.js";
 import { generateCopy } from "./copy.js";
 import { resolveDesign } from "./design.js";
@@ -11,9 +11,6 @@ import { resolveDesign } from "./design.js";
  */
 export async function generateInvitation(text: string, byok?: ByokKey): Promise<Invitation> {
   const brief = await extractBrief(text, byok);
-  const [copy, design] = await Promise.all([
-    generateCopy(brief, byok),
-    resolveDesign(brief, byok),
-  ]);
+  const [copy, design] = await Promise.all([generateCopy(brief, byok), resolveDesign(brief, byok)]);
   return { brief, copy, design };
 }

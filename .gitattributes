@@ -1,0 +1,11 @@
+# The repo stores LF; check out LF everywhere so the formatter sees the same
+# bytes on Windows, in CI, and in the Docker build (core.autocrlf otherwise
+# hands Biome CRLF locally and LF on Linux).
+* text=auto eol=lf
+
+*.ttf binary
+*.png binary
+*.jpg binary
+*.ico binary
+
+pnpm-lock.yaml linguist-generated=true -diff

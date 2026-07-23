@@ -115,8 +115,11 @@ const gallery = page(
   "Gallery",
   "Invitation design tokens — gallery",
   cards
-    .map((c) => `<h3 style="font-family: system-ui; color: #6b6659;">${c.title}</h3>\n${invCard(c.tokens)}`)
-    .join("\n<div style=\"height: 32px\"></div>\n"),
+    .map(
+      (c) =>
+        `<h3 style="font-family: system-ui; color: #6b6659;">${c.title}</h3>\n${invCard(c.tokens)}`,
+    )
+    .join('\n<div style="height: 32px"></div>\n'),
 );
 await writeFile(join(outDir, "_gallery.html"), gallery, "utf8");
 

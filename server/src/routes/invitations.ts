@@ -1,5 +1,22 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
+import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
+import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
+import {
+  BackgroundGenerationError,
+  generateBackgroundImage,
+  IMAGE_MODEL,
+} from "../llm/imageGen.js";
+import {
+  metricsSnapshot,
+  recordBackground,
+  recordFieldRegeneration,
+  recordGeneration,
+  recordPublish,
+  recordRsvp,
+} from "../metrics.js";
+import { regenerateField } from "../pipeline/copy.js";
+import { generateInvitation } from "../pipeline/generate.js";
 import {
   BackgroundId,
   BackgroundRequest,
@@ -10,18 +27,6 @@ import {
   RegenerateFieldRequest,
   RsvpRequest,
 } from "../schemas.js";
-import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
-import { generateInvitation } from "../pipeline/generate.js";
-import { regenerateField } from "../pipeline/copy.js";
-import { BackgroundGenerationError, generateBackgroundImage, IMAGE_MODEL } from "../llm/imageGen.js";
-import {
-  metricsSnapshot,
-  recordBackground,
-  recordFieldRegeneration,
-  recordGeneration,
-  recordPublish,
-  recordRsvp,
-} from "../metrics.js";
 import {
   addRsvp,
   appendVersion,
@@ -31,7 +36,6 @@ import {
   saveBackground,
   tokenMatches,
 } from "../store.js";
-import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 
 export function registerInvitationRoutes(app: FastifyInstance): void {
   app.post("/api/invitations/generate", async (request, reply) => {
@@ -108,9 +112,9 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       return reply.code(400).send({ error: (error as Error).message });
     }
     if (byok && byok.provider !== "gemini") {
-      return reply
-        .code(400)
-        .send({ error: "Background generation supports Gemini keys only; remove or switch the AI key." });
+      return reply.code(400).send({
+        error: "Background generation supports Gemini keys only; remove or switch the AI key.",
+      });
     }
     const limited = guardOperatorRequest(request, "background", byok);
     if (limited) return reply.code(limited.status).send({ error: limited.error });
@@ -122,9 +126,10 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       request.log.error(error);
       const cls = error instanceof BackgroundGenerationError ? error.errorClass : "other";
-      return reply
-        .code(502)
-        .send({ error: "Background generation failed.", causes: [{ model: IMAGE_MODEL, class: cls }] });
+      return reply.code(502).send({
+        error: "Background generation failed.",
+        causes: [{ model: IMAGE_MODEL, class: cls }],
+      });
     }
   });
 
@@ -157,7 +162,11 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       }
       const updated = appendVersion(record, body.invitation);
       recordPublish();
-      return { id: updated.id, version: updated.versions.length, manage_token: updated.manage_token };
+      return {
+        id: updated.id,
+        version: updated.versions.length,
+        manage_token: updated.manage_token,
+      };
     }
     const record = createRecord(body.invitation);
     recordPublish();
@@ -223,10 +232,17 @@ function guardOperatorRequest(
 ): { status: 429 | 503; error: string } | null {
   if (byok) return null;
   if (budgetExhausted()) {
-    return { status: 503, error: "The free AI capacity for today is used up. Try again tomorrow or use your own AI key." };
+    return {
+      status: 503,
+      error:
+        "The free AI capacity for today is used up. Try again tomorrow or use your own AI key.",
+    };
   }
   if (!consumeIpAllowance(request.ip, task)) {
-    return { status: 429, error: "Daily limit reached. Try again tomorrow or use your own AI key." };
+    return {
+      status: 429,
+      error: "Daily limit reached. Try again tomorrow or use your own AI key.",
+    };
   }
   return null;
 }

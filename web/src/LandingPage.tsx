@@ -73,7 +73,7 @@ export function LandingPage({ onStart }: Props) {
         <span className="lp-brand">{t.brand}</span>
         <div className="lp-nav-right">
           <LangSwitcher value={lang} onChange={handleLang} />
-          <button className="lp-cta lp-cta-sm" onClick={onStart}>
+          <button type="button" className="lp-cta lp-cta-sm" onClick={onStart}>
             {t.cta}
           </button>
         </div>
@@ -83,13 +83,13 @@ export function LandingPage({ onStart }: Props) {
         <div className="lp-hero-copy">
           <h1>{t.heroTitle}</h1>
           <p>{t.heroText}</p>
-          <button className="lp-cta" onClick={onStart}>
+          <button type="button" className="lp-cta" onClick={onStart}>
             {t.cta}
           </button>
         </div>
         <div className="lp-fan" aria-hidden="true">
           {samples.map((s, i) => (
-            <div key={i} className={`lp-fan-card lp-fan-${i}`}>
+            <div key={s.copy.title} className={`lp-fan-card lp-fan-${i}`}>
               <InvitationPreview copy={s.copy} design={s.design} />
             </div>
           ))}
@@ -139,7 +139,7 @@ export function LandingPage({ onStart }: Props) {
 
       <section className="lp-final">
         <h2>{t.finalTitle}</h2>
-        <button className="lp-cta" onClick={onStart}>
+        <button type="button" className="lp-cta" onClick={onStart}>
           {t.cta}
         </button>
       </section>
@@ -147,7 +147,7 @@ export function LandingPage({ onStart }: Props) {
       <footer className="lp-footer">{t.footer}</footer>
 
       <div className="lp-sticky-cta">
-        <button className="lp-cta" onClick={onStart}>
+        <button type="button" className="lp-cta" onClick={onStart}>
           {t.cta}
         </button>
       </div>

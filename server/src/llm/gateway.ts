@@ -1,11 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ZodError, type ZodType } from "zod";
-import { BYOK_FALLBACK_MODELS, MODEL_PROVIDERS, TASK_ROUTES, type Task } from "./routing.js";
-import { completeCompat, ProviderHttpError } from "./openaiCompat.js";
-import { estimateCostUsd } from "./pricing.js";
 import { recordOperatorSpend } from "../guardrails.js";
 import type { ByokProvider } from "../schemas.js";
+import { completeCompat, ProviderHttpError } from "./openaiCompat.js";
+import { estimateCostUsd } from "./pricing.js";
+import { BYOK_FALLBACK_MODELS, MODEL_PROVIDERS, TASK_ROUTES, type Task } from "./routing.js";
 
 // Anthropic models go through the SDK directly; every other provider through
 // the in-process OpenAI-compat adapter (openaiCompat.ts, adr-007). Created
@@ -76,7 +76,10 @@ export function classifyError(error: unknown): FailureClass {
   }
   // fetch: network failure surfaces as TypeError, timeout as a DOMException
   // named TimeoutError (AbortSignal.timeout) or AbortError.
-  if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+  if (
+    error instanceof DOMException &&
+    (error.name === "TimeoutError" || error.name === "AbortError")
+  ) {
     return "connectivity";
   }
   if (error instanceof TypeError && /fetch/i.test(error.message)) return "connectivity";

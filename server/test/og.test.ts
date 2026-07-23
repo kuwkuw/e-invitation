@@ -1,10 +1,10 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { DesignTokens, type Invitation } from "../src/schemas.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OG_PALETTES, OG_TYPOGRAPHY, renderOgPng } from "../src/og/render.js";
+import { DesignTokens, type Invitation } from "../src/schemas.js";
 
 const invitation: Invitation = {
   brief: {
