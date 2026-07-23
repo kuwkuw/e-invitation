@@ -12,6 +12,20 @@ body {
   color: #23211d;
 }
 
+/* Status tokens (RSVP yes / no), settled by the E-invitation DS host-manage
+   template (adr-010 §9): warm, muted, AA on white (6.2:1 / 6.1:1), and --rsvp-no
+   deliberately distinct from accent terracotta #b3592e so it reads as a status,
+   not an alert. One pair everywhere — status text, pills, count tiles — in place
+   of the old scattered #2f7d4f/#a4262c literals. */
+:root {
+  --rsvp-yes: #3d6b47;
+  --rsvp-yes-bg: #eef3ee;
+  --rsvp-yes-edge: #cfe0d1;
+  --rsvp-no: #a83f3f;
+  --rsvp-no-bg: #f6ebe9;
+  --rsvp-no-edge: #e6cfc9;
+}
+
 .page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
 
 .header { display: flex; align-items: center; justify-content: space-between; }
@@ -451,8 +465,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .responses-empty, .responses-counts { font-size: 0.9rem; color: #6b6659; }
 .responses-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.95rem; }
 .responses-list li { padding: 4px 0; border-bottom: 1px solid #e8e5de; }
-.rsvp-yes { color: #2f7d4f; }
-.rsvp-no { color: #a4262c; }
+.rsvp-yes { color: var(--rsvp-yes); }
+.rsvp-no { color: var(--rsvp-no); }
 .rsvp-note { color: #6b6659; }
 
 /* Guest page ------------------------------------------------------------ */
@@ -981,8 +995,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .lp-rsvp-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--lp-border); font-size: 1rem; }
 .lp-rsvp-row:last-child { border-bottom: none; }
 .lp-rsvp-status { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.lp-rsvp-yes { color: #2f7d4f; }
-.lp-rsvp-no { color: #a4262c; }
+.lp-rsvp-yes { color: var(--rsvp-yes); }
+.lp-rsvp-no { color: var(--rsvp-no); }
 .lp-rsvp-wait { color: var(--lp-muted); }
 
 .lp-final { padding: clamp(56px, 7vw, 88px) clamp(22px, 5vw, 64px); text-align: center; }
