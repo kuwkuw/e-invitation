@@ -1,8 +1,8 @@
 # 06 — Roadmap: next iteration
 
-Written 2026-07-22, after the in-process provider gateway (adr-007) landed.
-This doc plans the **next** iteration; when an item ships it moves into
-[02-functional-requirements.md](02-functional-requirements.md) /
+Written 2026-07-23, after the AI background layer (adr-009) and the editor
+decomposition landed. This doc plans the **next** iteration; when an item
+ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
 
@@ -11,111 +11,157 @@ stable ID, per the docs conventions.
 The MVP loop is complete end to end: one-sentence generate → per-field
 edit/regenerate → publish (versioned snapshot, share link, OG image) → guest
 RSVP → host dashboard. Free-tier-first routing (Groq/Gemini) with paid
-fallbacks, BYOK for power users, single-container production deploy.
+fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
+add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
+on a custom domain.
+
+The previous iteration ("safe to open to real hosts") shipped in full:
+guardrails as FR-9 / [adr-008](decisions/adr-008-operator-cost-guardrails.md),
+durable metrics as FR-7, guest add-to-calendar as FR-4.5, plus FR-10 /
+[adr-009](decisions/adr-009-ai-background-layer.md) for backgrounds.
 
 What that leaves exposed:
 
-1. **The LLM endpoints are unprotected.** Anyone with the URL can spend the
-   operator's quota/keys; the "consumer cost model" question in the FR backlog
-   is still open. This is the blocker to sharing the app with real hosts.
-2. **The primary KPI is volatile.** Regenerate-rate (and all counters) live in
-   process memory and reset on every deploy — we cannot actually watch the
-   quality signal the vision doc says we steer by.
-3. **Guest-side conversion is unfinished.** The guest page has share and a
-   maps link, but no add-to-calendar — the one action that turns an RSVP into
-   attendance.
+1. **The host dashboard is session-bound.** The manage token is written to
+   `localStorage` at publish and never read back; there is no host route in
+   `main.tsx`. Close the tab and the RSVP list is unreachable — the only way
+   back is re-publishing, which mints a new share link and orphans the one
+   guests already have. Checking responses is a come-back-later action, so
+   this is the feature not working, not a rough edge.
+2. **The headcount can be wrong.** RSVPs are append-only by design (FR-4.4),
+   but the counts sum every attending row, so a guest who answers no→yes is
+   counted twice — in the one number the host caters on.
+3. **Response fetch failures are invisible.** `refreshRsvps` has no `catch`;
+   a stale-token `403` stops the spinner and says nothing. And the panel
+   renders no content at all — not even the empty state — until the host
+   clicks Refresh.
 
-## Iteration theme: safe to open to real hosts
+## Iteration theme: the host can come back
 
-Goal: the share-with-strangers milestone — the app can be given to real hosts
-without an operator-cost incident and with the quality KPI actually observable.
+Goal: publishing an invitation and checking its responses are two separate
+visits, days apart, possibly on two different devices — and both work.
 
-### 1. Abuse guardrails for operator-paid generation (blocker) — ✅ shipped
+Settled in [ADR-010](decisions/adr-010-host-manage-link.md) (proposed → accept
+before implementation).
 
-Shipped as FR-9 / [ADR-008](decisions/adr-008-operator-cost-guardrails.md).
-Original plan for reference:
+### 1. `/manage/:id` — the durable response dashboard (blocker)
 
-Settles the open consumer-cost-model question with the simple option:
-**operator-paid free-tier routing + limits** (~$0.0007/generation measured on
-paid-tier `gemini-2.5-flash`); per-key metering stays rejected-for-now.
-Record the decision as **ADR-008**.
+A read-only host screen composed from two endpoints that already exist: the
+public `GET /api/invitations/:id` for the event, the token-gated
+`GET /api/invitations/:id/rsvps` for the responses. No new host-facing server
+route.
 
-- Per-IP rate limit on the two LLM-backed endpoints (generate,
-  regenerate-field). Suggested start: 10 generations + 30 regenerations per
-  IP per day; over-limit returns `429` with a bilingual, user-safe message
-  the web chat surfaces (same pattern as the 502 cause mapping).
-- BYOK requests (valid `x-llm-provider`/`x-llm-key`) bypass the limit — they
-  spend the user's key, and this makes BYOK the documented escape hatch.
-- Daily global spend circuit breaker fed by the gateway's per-request cost
-  estimates: past a configured USD cap, operator-key generation returns `503`
-  (BYOK still works). Protects against distributed abuse that per-IP misses.
-- In-process counters are fine (same NFR-7 single-process assumption as the
-  store); no new infrastructure.
+- Token resolution in order: `#t=<token>` fragment → `localStorage`
+  (`inv-manage:<id>`, the key publish already writes) → an empty state with a
+  paste-your-link field. A fragment token is persisted and then stripped from
+  the URL with `history.replaceState`.
+- Fragment, never query string — the credential stays out of server logs and
+  referrer headers (adr-010 §2).
+- Route added to `main.tsx` beside `/i/:id`, same strict id regex.
 
-Acceptance: hammering generate from one IP hits 429; `/healthz` or metrics
-expose remaining daily budget; BYOK requests are never limited.
+Acceptance: publish, close the tab, open the manage link on another device →
+the response list loads. Clearing site data without the link → the empty
+state, not a crash.
 
-### 2. Durable metrics — ✅ shipped
+### 2. Manage link + "your invitations" index
 
-Shipped: see FR-7. Original plan for reference:
+- The share panel gains a **second, explicitly-labelled** copy action for the
+  manage link, visually subordinate to the share link, with a one-line "keep
+  this private" warning (adr-010 §3).
+- Publish also maintains a browser-local `inv-invitations` index
+  (`{ id, title, published_at }`) so the landing page can show "Your
+  invitations" with recognizable titles instead of opaque ids (adr-010 §4).
 
-- Persist the `metrics.ts` counters through the file store (write-then-rename,
-  like `store.ts`), loading on boot. Keep the `record*`/`metricsSnapshot`
-  function interface unchanged so routes don't move.
-- Add derived `publish_rate` (publishes ÷ generations) to the snapshot — the
-  second success signal from the vision doc, currently only derivable by hand.
+Acceptance: after publishing twice from one browser, `/` lists both by title
+and each row opens its manage view.
 
-Acceptance: restart the server, `GET /api/metrics` shows pre-restart counts.
+### 3. Correct counts + honest failures
 
-### 3. Guest page: add-to-calendar — ✅ shipped
+- `GET /api/invitations/:id/rsvps` groups entries by normalized name, flags
+  earlier ones `superseded: true`, and computes `counts` over the
+  non-superseded set (adr-010 §5). The full list stays in the response; CSV
+  keeps every row and gains a column. Schema change → `web/src/types.ts`
+  mirrors it in the same PR (NFR-8).
+- Fetch on mount and on `visibilitychange → visible`; "N new since your last
+  visit" from a local last-seen timestamp (adr-010 §6). No polling.
+- `403` / `404` / network failures get real messages in both the manage view
+  and the in-editor panel; the panel renders its empty state without needing
+  a manual refresh first (adr-010 §7).
 
-Shipped as FR-4.5. Original plan for reference:
+Acceptance: one guest answering no then yes yields yes=1, no=0, and one
+superseded row; a tampered token shows the invalid-link message instead of a
+silent stall.
 
-- "Add to calendar" action next to share/maps: a client-side generated `.ics`
-  download built from the published brief's date/time/venue (Google Calendar
-  URL as a second option). No server work, no LLM cost.
-- Degrade gracefully when the brief has no date (hide the action).
+### 0. Design first: three DS templates (adr-010 §9) — ✅ done
 
-Acceptance: an invitation with a date yields a valid `.ics` that imports with
-correct title, date/time, and location; bilingual labels via `i18n.ts`.
+The host dashboard was the only screen in the app with no `templates/*` mockup
+in the E-invitation DS project — every other host/guest surface got one before
+it got code, and adr-009 §4 settled the scrim spec that way. Now landed in the
+E-invitation DS project:
+
+- `templates/host-manage` (HostMain/HostStates/HostSpec) — five states,
+  mobile-primary, with the superseded-row and "N new" treatments.
+- `templates/share-panel` (ShareMain/ShareStates/ShareSpec) — the manage-link
+  action's visual subordination (adr-010 §3), plus an anti-pattern card.
+- `templates/landing-page` returning-host variant (…Returning).
+
+Settled tokens `--rsvp-yes: #3d6b47` / `--rsvp-no: #a83f3f` (both AA on white)
+and the visual treatments are recorded in adr-010 §9 for implementation.
+
+The `.design-sync` **component** pipeline needs nothing — no token, copy-field,
+or `InvitationPreview` prop changes, so `dtsPropsFor`/`conventions.md` stay as
+they are and no re-sync runs (NOTES.md re-sync triggers don't fire).
 
 ### Sequencing
 
-1 is the blocker and lands first (with ADR-008). 2 and 3 are independent of
-it and of each other — either can ride along. All three together are one
-small iteration; nothing here touches the pipeline, schemas, or routing table.
+0 comes first and unblocks all the UI work. 1 is the blocker and carries the
+route + token plumbing. 3's server half (counts) is independent of the design
+entirely and can land first as a small PR; 3's UI half wants 0 and 1 in place.
+2 is the smallest and can ride with either. Nothing here touches the pipeline,
+the routing table, the invitation schema, or the store.
 
-## AI background image layer — ✅ shipped
+### Implementation plan (PR breakdown)
 
-Shipped as FR-10 per [ADR-009](decisions/adr-009-ai-background-layer.md)
-(accepted; scrim/split/ornament decisions synced from the E-invitation DS
-`templates/card-background` mockups). Original implementation order for
-reference:
+The plan of record. The three iteration items above (1/2/3) decompose into
+these discrete PRs — **one PR per task**, merged in dependency order. This
+supersedes the prose sequencing above at finer grain.
 
-1. **Schema + types** — nullable `background: { id }` on `Invitation`
-   (`schemas.ts` + hand-mirrored `web/src/types.ts`, one PR).
-2. **Image adapter + route entry** — small native-fetch Gemini image call
-   beside `openaiCompat.ts`; routing + pricing entries so the coverage test
-   applies.
-3. **`POST /api/invitations/background`** — brief + tokens in, stored asset
-   reference out; `GET /api/backgrounds/:id` serves bytes with cache
-   headers. New `LIMIT_BACKGROUNDS_PER_DAY` guardrail (default 3), cost into
-   the budget breaker, BYOK bypass per adr-008.
-4. **Editor + preview** — "Add background" / regenerate / remove in the
-   design controls; scrim layer in `InvitationPreview` + `styles.css` per
-   the mockups; guest page composites the same way.
-5. **Docs** — FR-10, ADR-009 → accepted, NFR cost/latency notes.
+**Base branch.** This work builds on `refactor/decompose-web-screens`, **not
+`main`** — the decomposed hooks (`web/src/hooks/`) and editor components
+(`web/src/components/editor/SharePanel.tsx`) that tasks C–F edit exist only on
+that branch; `main` does not have them yet. So the feature branch bases on the
+decompose tip and its PRs target that branch (or `main` once the decompose PR
+merges). The committed `styles.css` on the decompose branch is identical to
+`main`, so nothing else is entangled.
 
-Acceptance: an invitation with a background stays readable in all
-palette/layout combinations; generation failure leaves the CSS-only card
-untouched; a non-BYOK fourth background request in a day gets 429; OG share
-card is unchanged.
+| # | PR | Depends on | Maps to | Notes |
+|---|----|-----------|--------|------|
+| A | Base branch + land docs and `--rsvp-*` tokens | — | §9 | bookkeeping; docs + token commits |
+| B | Server: dedupe-aware RSVP summary | A | item 3 (server) | design-free; superseded flag + collapsed counts; `schemas.ts` + `types.ts` same PR; tests in `publish.test.ts` |
+| C | Web: `/manage/:id` route + token plumbing | B | item 1 | fragment→localStorage→paste; strip fragment; 403/404/network states; no UI yet |
+| D | Web: host-manage dashboard UI | C | item 1 + 3 (UI) | HostMain/HostStates mockups; headcount, pills, superseded rows, "N new", auto-fetch on mount + `visibilitychange` |
+| E | Web: share-panel rebuild | C | item 2 (link) | ShareMain/ShareStates; public dominant / manage subordinate+masked+warned; `#t=` link; folds in the in-editor panel fixes |
+| F | Web: landing "your invitations" list | A | item 2 (index) | `inv-invitations` index on publish; returning-host landing variant |
+| G | Docs: flip to shipped | D, E, F | — | FR-5.4/5.5, adr-010 → accepted, roadmap items → shipped |
+
+Critical path **A → B → C → D**. F needs only A (independent of server/UI); E
+needs C but not D. B fixes a correctness bug (double-counted re-submissions)
+that is live today, so it is the best standalone first PR after the branch.
+
+**Progress:** the `--rsvp-yes`/`--rsvp-no` tokens (task A's token half) are
+already applied to `styles.css` and verified live; task A's remaining piece is
+committing docs + tokens onto the feature branch. Everything else is pending.
 
 ## Deliberately not this iteration (candidate backlog)
 
-- ~~**RSVP CSV export** on the host dashboard~~ — ✅ shipped as FR-5.3.
-- ~~**Custom domain**~~ — ✅ supported: runbook in
-  [05-deployment.md](05-deployment.md) + optional `CANONICAL_HOST` redirect.
+- **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
+  endpoint; adr-010 §5's superseding covers the common case. Wait for a host
+  to ask.
+- **Notify the host on a new RSVP** — the honest version needs an email
+  channel (and an address, which the accounts-free model doesn't collect).
+  Revisit with any account-adjacent work.
+- **Per-guest edit tokens** so a guest can amend their own answer instead of
+  re-submitting — real infrastructure for a rare case (adr-010 §5).
 - **SQLite (or similar) store** — only when multi-instance hosting or RSVP
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit

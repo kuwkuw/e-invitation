@@ -47,8 +47,11 @@ implementation.
   **version**; the guest page always serves the latest version. Old versions
   are retained.
 - FR-3.3 The `manage_token` is the only host credential (capability token — no
-  accounts). The web client keeps it in `localStorage` so the host survives a
-  reload.
+  accounts). The web client writes it to `localStorage` at publish, but does
+  **not** yet read it back: host access to an invitation currently lasts only
+  as long as the editor session that published it (planned fix:
+  [adr-010](decisions/adr-010-host-manage-link.md), roadmap iteration "the host
+  can come back").
 - FR-3.4 A fresh generation in the editor detaches from any previously
   published link (new event → new link).
 - FR-3.5 OG image for messenger link unfurling: `GET
@@ -81,7 +84,9 @@ implementation.
 - FR-5.1 Requires the `x-manage-token` header matching the record's token
   (constant-time comparison).
 - FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, and total
-  guests among attendees.
+  guests among attendees. Re-submissions (FR-4.4) are currently counted twice —
+  collapsing them per guest is planned in
+  [adr-010](decisions/adr-010-host-manage-link.md) §5.
 - FR-5.3 The dashboard exports the list as CSV, built client-side from the
   fetched data ([csv.ts](../web/src/csv.ts)): UTF-8 BOM (so Excel reads
   Cyrillic), localized headers/answers, guest count blank on declines.
