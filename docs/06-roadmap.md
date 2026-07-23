@@ -126,13 +126,11 @@ The plan of record. The three iteration items above (1/2/3) decompose into
 these discrete PRs — **one PR per task**, merged in dependency order. This
 supersedes the prose sequencing above at finer grain.
 
-**Base branch.** This work builds on `refactor/decompose-web-screens`, **not
-`main`** — the decomposed hooks (`web/src/hooks/`) and editor components
-(`web/src/components/editor/SharePanel.tsx`) that tasks C–F edit exist only on
-that branch; `main` does not have them yet. So the feature branch bases on the
-decompose tip and its PRs target that branch (or `main` once the decompose PR
-merges). The committed `styles.css` on the decompose branch is identical to
-`main`, so nothing else is entangled.
+**Base branch.** `feat/host-manage-view`, based on `main`. The decomposed
+hooks (`web/src/hooks/`) and editor components
+(`web/src/components/editor/SharePanel.tsx`) that tasks C–F edit landed on
+`main` with the decompose work (PR #17), so `main` is the correct base and
+each task's PR targets it.
 
 | # | PR | Depends on | Maps to | Notes |
 |---|----|-----------|--------|------|
