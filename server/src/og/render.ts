@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
+import satori from "satori";
 import type { DesignTokens, Invitation } from "../schemas.js";
 
 // 1200x630 is the standard OG canvas (WhatsApp/Telegram/Viber all crop to ~1.91:1).
@@ -118,9 +118,24 @@ function loadFonts() {
   const dir = new URL("../../assets/fonts/", import.meta.url);
   const load = (file: string) => readFileSync(new URL(file, dir));
   fontsCache = [
-    { name: "Playfair Display", data: load("playfair-display-700.ttf"), weight: 700, style: "normal" },
-    { name: "Cormorant Garamond", data: load("cormorant-garamond-400.ttf"), weight: 400, style: "normal" },
-    { name: "Cormorant Garamond", data: load("cormorant-garamond-600.ttf"), weight: 600, style: "normal" },
+    {
+      name: "Playfair Display",
+      data: load("playfair-display-700.ttf"),
+      weight: 700,
+      style: "normal",
+    },
+    {
+      name: "Cormorant Garamond",
+      data: load("cormorant-garamond-400.ttf"),
+      weight: 400,
+      style: "normal",
+    },
+    {
+      name: "Cormorant Garamond",
+      data: load("cormorant-garamond-600.ttf"),
+      weight: 600,
+      style: "normal",
+    },
     { name: "Manrope", data: load("manrope-400.ttf"), weight: 400, style: "normal" },
     { name: "Manrope", data: load("manrope-700.ttf"), weight: 700, style: "normal" },
     { name: "Marck Script", data: load("marck-script-400.ttf"), weight: 400, style: "normal" },
@@ -196,9 +211,7 @@ export async function renderOgPng(invitation: Invitation): Promise<Buffer> {
       fontWeight: 600,
       fontSize: 38,
       textAlign: isSplit ? "left" : "center",
-      ...(isSplit
-        ? { borderLeft: `6px solid ${palette.accent}`, paddingLeft: 26 }
-        : {}),
+      ...(isSplit ? { borderLeft: `6px solid ${palette.accent}`, paddingLeft: 26 } : {}),
     },
     details,
   );
@@ -217,7 +230,7 @@ export async function renderOgPng(invitation: Invitation): Promise<Buffer> {
       color: palette.ink,
       padding: isBanner ? "48px 0" : isSplit ? "48px 110px" : "48px 90px",
     },
-    ...(isBanner ? [] : [ornamentRow(design.ornament, palette.accent)].filter(Boolean) as Node[]),
+    ...(isBanner ? [] : ([ornamentRow(design.ornament, palette.accent)].filter(Boolean) as Node[])),
     title,
     greeting,
     detailsNode,

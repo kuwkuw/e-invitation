@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { InvitationId, type Invitation } from "../schemas.js";
+import { OG_HEIGHT, OG_WIDTH, renderOgPng } from "../og/render.js";
+import { type Invitation, InvitationId } from "../schemas.js";
 import { getRecord, type PublishedRecord } from "../store.js";
-import { renderOgPng, OG_WIDTH, OG_HEIGHT } from "../og/render.js";
 
 // versions is non-empty by construction (createRecord seeds version 1).
 function latestVersion(record: PublishedRecord): Invitation {

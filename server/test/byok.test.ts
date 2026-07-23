@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { buildApp } from "../src/app.js";
 import { modelsForWalk, providerOf } from "../src/llm/gateway.js";
 import { MODEL_PROVIDERS, TASK_ROUTES, type Task } from "../src/llm/routing.js";
-import { buildApp } from "../src/app.js";
 
 describe("BYOK model walk (ADR-006)", () => {
   it("maps every routed model to a transport provider", () => {

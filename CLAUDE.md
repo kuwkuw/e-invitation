@@ -13,6 +13,7 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 - `pnpm install` — all workspaces (new native deps needing postinstall scripts must be added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`)
 - `pnpm dev` — both dev servers in parallel
 - `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces
+- `pnpm lint` (Biome, root `biome.jsonc`) / `pnpm lint:fix` / `pnpm format` — one config for both workspaces. CSS formatting is off on purpose: `styles.css` keeps its compact one-line token rules so they stay scannable against the OG renderer's maps. `.gitattributes` pins LF so the formatter sees the same bytes on Windows and in CI.
 - `pnpm --filter inv-app-server <script>` — one workspace (`inv-app-web` for web)
 
 **server/** (Fastify API, port 3001): dev server reloads via tsx watch. Provider keys live in `server/.env` (see `.env.example`): `GROQ_API_KEY` + `GEMINI_API_KEY` are the free-tier MVP pair the default routes run on; `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are optional paid fallbacks. The server boots keyless but generation then fails. Tests mock the LLM boundary — no keys needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.

@@ -5,7 +5,7 @@
 // PROVIDERS; the gateway's routing walk, lenient JSON extraction and zod
 // validation are unchanged and remain the enforcement layer.
 
-import { z, type ZodType } from "zod";
+import { type ZodType, z } from "zod";
 import type { Provider } from "./routing.js";
 
 export type CompatProvider = Exclude<Provider, "anthropic">;
@@ -104,11 +104,19 @@ export async function completeCompat(req: CompatRequest): Promise<CompatResult> 
       // The schema also rides in the system prompt: providers with weak
       // json_schema support (Groq's json_object mode, Ollama) still see it,
       // and the gateway's zod validation enforces it either way.
-      { role: "system", content: `${req.system}\n\nRespond with a single JSON object matching this JSON schema, and nothing else:\n${JSON.stringify(jsonSchema)}` },
+      {
+        role: "system",
+        content: `${req.system}\n\nRespond with a single JSON object matching this JSON schema, and nothing else:\n${JSON.stringify(jsonSchema)}`,
+      },
       { role: "user", content: req.user },
     ],
     ...(req.provider === "gemini" || req.provider === "openai"
-      ? { response_format: { type: "json_schema", json_schema: { name: "result", schema: jsonSchema } } }
+      ? {
+          response_format: {
+            type: "json_schema",
+            json_schema: { name: "result", schema: jsonSchema },
+          },
+        }
       : req.provider === "groq"
         ? { response_format: { type: "json_object" } }
         : {}), // Ollama: response_format support is spotty; prompt + zod suffice.

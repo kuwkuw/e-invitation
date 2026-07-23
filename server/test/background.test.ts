@@ -1,10 +1,10 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
-import type { DesignTokens, EventBrief } from "../src/schemas.js";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetGuardrails } from "../src/guardrails.js";
+import type { DesignTokens, EventBrief } from "../src/schemas.js";
 
 const brief: EventBrief = {
   event_type: "birthday",
@@ -18,7 +18,12 @@ const brief: EventBrief = {
   extra_details: null,
 };
 
-const design: DesignTokens = { palette: "warm", typography: "serif", layout: "classic", ornament: "floral" };
+const design: DesignTokens = {
+  palette: "warm",
+  typography: "serif",
+  layout: "classic",
+  ornament: "floral",
+};
 
 // 1×1 transparent PNG.
 const PNG_BASE64 =
@@ -31,7 +36,9 @@ function stubGeminiImage(): void {
       async () =>
         new Response(
           JSON.stringify({
-            candidates: [{ content: { parts: [{ inlineData: { mimeType: "image/png", data: PNG_BASE64 } }] } }],
+            candidates: [
+              { content: { parts: [{ inlineData: { mimeType: "image/png", data: PNG_BASE64 } }] } },
+            ],
           }),
           { status: 200 },
         ),
@@ -118,13 +125,17 @@ describe("background generation (adr-009)", () => {
 
     expect((await hit()).statusCode).toBe(200);
     expect((await hit()).statusCode).toBe(429);
-    expect((await hit({ "x-llm-provider": "gemini", "x-llm-key": "user-key" })).statusCode).toBe(200);
+    expect((await hit({ "x-llm-provider": "gemini", "x-llm-key": "user-key" })).statusCode).toBe(
+      200,
+    );
   });
 
   it("maps a provider failure to 502 with a cause class", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response(JSON.stringify({ error: { message: "quota" } }), { status: 429 })),
+      vi.fn(
+        async () => new Response(JSON.stringify({ error: { message: "quota" } }), { status: 429 }),
+      ),
     );
     const res = await app.inject({
       method: "POST",
@@ -144,7 +155,11 @@ describe("background generation (adr-009)", () => {
   it("publish accepts an invitation carrying a background reference", async () => {
     stubGeminiImage();
     const bg = (
-      await app.inject({ method: "POST", url: "/api/invitations/background", payload: { brief, design } })
+      await app.inject({
+        method: "POST",
+        url: "/api/invitations/background",
+        payload: { brief, design },
+      })
     ).json().background;
 
     const invitation = {
@@ -160,7 +175,11 @@ describe("background generation (adr-009)", () => {
         closing: "Олена",
       },
     };
-    const published = await app.inject({ method: "POST", url: "/api/invitations/publish", payload: { invitation } });
+    const published = await app.inject({
+      method: "POST",
+      url: "/api/invitations/publish",
+      payload: { invitation },
+    });
     expect(published.statusCode).toBe(200);
     const { id } = published.json();
     const publicView = await app.inject({ method: "GET", url: `/api/invitations/${id}` });

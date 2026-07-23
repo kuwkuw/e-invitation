@@ -27,7 +27,8 @@ function limitFor(task: LimitedTask): number {
 }
 
 function dailyBudgetUsd(): number {
-  const parsed = process.env.DAILY_BUDGET_USD === undefined ? 5 : Number(process.env.DAILY_BUDGET_USD);
+  const parsed =
+    process.env.DAILY_BUDGET_USD === undefined ? 5 : Number(process.env.DAILY_BUDGET_USD);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 5;
 }
 

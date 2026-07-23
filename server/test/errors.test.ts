@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import Anthropic from "@anthropic-ai/sdk";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { buildApp } from "../src/app.js";
 import { AllModelsFailedError, classifyError, completeJson } from "../src/llm/gateway.js";
 import { ProviderHttpError } from "../src/llm/openaiCompat.js";
-import { buildApp } from "../src/app.js";
 
 describe("classifyError (ADR-006 failure classes)", () => {
   it("maps Anthropic HTTP errors to auth/quota/connectivity/other", () => {
@@ -77,7 +77,11 @@ describe("transient provider errors (5xx)", () => {
   const overloaded = () =>
     new Response(
       JSON.stringify({
-        error: { code: 503, message: "This model is currently experiencing high demand.", status: "UNAVAILABLE" },
+        error: {
+          code: 503,
+          message: "This model is currently experiencing high demand.",
+          status: "UNAVAILABLE",
+        },
       }),
       { status: 503 },
     );
@@ -91,10 +95,7 @@ describe("transient provider errors (5xx)", () => {
     );
 
   it("retries the same model once after a 503 and succeeds", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(overloaded())
-      .mockResolvedValueOnce(success());
+    const fetchMock = vi.fn().mockResolvedValueOnce(overloaded()).mockResolvedValueOnce(success());
     vi.stubGlobal("fetch", fetchMock);
     const result = await completeJson("copy_generation", spec, byok);
     expect(result).toEqual({ a: "hi" });
@@ -153,7 +154,12 @@ describe("failure surfaces", () => {
     const res = await app.inject({ method: "GET", url: "/healthz" });
     const body = res.json();
     expect(body.ok).toBe(true);
-    expect(Object.keys(body.llm.providers).sort()).toEqual(["anthropic", "gemini", "groq", "openai"]);
+    expect(Object.keys(body.llm.providers).sort()).toEqual([
+      "anthropic",
+      "gemini",
+      "groq",
+      "openai",
+    ]);
     for (const configured of Object.values(body.llm.providers)) {
       expect(typeof configured).toBe("boolean");
     }

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { completeJson, type ByokKey } from "../llm/gateway.js";
-import { InvitationCopy, type CopyField, type EventBrief } from "../schemas.js";
+import { type ByokKey, completeJson } from "../llm/gateway.js";
+import { type CopyField, type EventBrief, InvitationCopy } from "../schemas.js";
 
 const COPY_SYSTEM = `You write the text of an event invitation from a structured event brief.
 

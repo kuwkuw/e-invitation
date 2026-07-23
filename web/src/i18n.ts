@@ -98,7 +98,8 @@ export const UI: Record<Language, UiStrings> = {
   en: {
     appTitle: "Invitation Studio",
     tagline: "Describe your event in one sentence — get an invitation you can edit and share.",
-    placeholder: "e.g. Olena invites friends to her birthday dinner on August 12 at 6pm, Zatyshok cafe, Lviv",
+    placeholder:
+      "e.g. Olena invites friends to her birthday dinner on August 12 at 6pm, Zatyshok cafe, Lviv",
     generate: "Create invitation",
     generating: "Creating…",
     regenerate: "Regenerate",
@@ -169,9 +170,11 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Variants",
       save: "Save",
       send: "Send",
-      quotaMsg: "The AI's free daily limit is used up. Try again tomorrow — or add your own key via the AI key button above.",
+      quotaMsg:
+        "The AI's free daily limit is used up. Try again tomorrow — or add your own key via the AI key button above.",
       keyMsg: "The AI key didn't work — check it in the AI key panel above.",
-      limitMsg: "Today's free generations are used up. Come back tomorrow — or add your own key via the AI key button above.",
+      limitMsg:
+        "Today's free generations are used up. Come back tomorrow — or add your own key via the AI key button above.",
       busyMsg: "The AI is busy right now. Please try again in a moment.",
     },
     byok: {
@@ -208,8 +211,10 @@ export const UI: Record<Language, UiStrings> = {
   },
   uk: {
     appTitle: "Студія запрошень",
-    tagline: "Опишіть подію одним реченням — отримайте запрошення, яке можна редагувати та надсилати.",
-    placeholder: "напр. Олена запрошує друзів на день народження 12 серпня о 18:00, кафе «Затишок», Львів",
+    tagline:
+      "Опишіть подію одним реченням — отримайте запрошення, яке можна редагувати та надсилати.",
+    placeholder:
+      "напр. Олена запрошує друзів на день народження 12 серпня о 18:00, кафе «Затишок», Львів",
     generate: "Створити запрошення",
     generating: "Створюємо…",
     regenerate: "Оновити",
@@ -259,7 +264,8 @@ export const UI: Record<Language, UiStrings> = {
       back: "Назад",
       share: "Поділитися",
       startTitle: "З чого почнемо?",
-      startHint: "Опишіть вашу подію одним реченням — я підберу стиль, кольори й оформлення запрошення.",
+      startHint:
+        "Опишіть вашу подію одним реченням — я підберу стиль, кольори й оформлення запрошення.",
       tryExamples: "Спробуйте, наприклад",
       examples: [
         "Весілля у вересні на 80 гостей…",
@@ -280,9 +286,11 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Варіанти",
       save: "Зберегти",
       send: "Надіслати",
-      quotaMsg: "Безкоштовний денний ліміт AI вичерпано. Спробуйте завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
+      quotaMsg:
+        "Безкоштовний денний ліміт AI вичерпано. Спробуйте завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
       keyMsg: "Ключ AI не спрацював — перевірте його в панелі «Ключ AI» вгорі.",
-      limitMsg: "Безкоштовні генерації на сьогодні вичерпано. Поверніться завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
+      limitMsg:
+        "Безкоштовні генерації на сьогодні вичерпано. Поверніться завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
       busyMsg: "AI зараз перевантажений. Спробуйте ще раз за мить.",
     },
     byok: {
@@ -363,8 +371,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     ],
     chips: ["wedding", "birthday", "kids party", "team event", "christening"],
     rsvpTitle: "Know who's coming",
-    rsvpText:
-      "Guests confirm by the link — you see the replies right away, no calls or reminders.",
+    rsvpText: "Guests confirm by the link — you see the replies right away, no calls or reminders.",
     rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
     finalTitle: "Ready to send your first invitation?",

@@ -27,5 +27,5 @@ export function buildRsvpCsv(rsvps: RsvpEntry[], strings: RsvpCsvStrings): strin
       .map(escapeCsvField)
       .join(","),
   );
-  return "\uFEFF" + [strings.headers.join(","), ...rows].join("\r\n") + "\r\n";
+  return `\uFEFF${[strings.headers.join(","), ...rows].join("\r\n")}\r\n`;
 }

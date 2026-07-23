@@ -4,12 +4,12 @@
 // free host text) and receives raw bytes; the model never returns URLs or
 // markup. Gemini-only: operator GEMINI_API_KEY, or a BYOK gemini key.
 
+import { recordOperatorSpend } from "../guardrails.js";
 import type { DesignTokens, EventBrief } from "../schemas.js";
 import type { ByokKey, FailureClass } from "./gateway.js";
 import { classifyError } from "./gateway.js";
 import { ProviderHttpError } from "./openaiCompat.js";
 import { IMAGE_PRICES_PER_IMAGE } from "./pricing.js";
-import { recordOperatorSpend } from "../guardrails.js";
 
 export const IMAGE_MODEL = "gemini-2.5-flash-image";
 
@@ -76,12 +76,19 @@ export async function generateBackgroundImage(
       signal: AbortSignal.timeout(45_000),
     });
     if (!response.ok) {
-      throw new ProviderHttpError(response.status, `gemini ${response.status}: ${await response.text()}`);
+      throw new ProviderHttpError(
+        response.status,
+        `gemini ${response.status}: ${await response.text()}`,
+      );
     }
     const body = (await response.json()) as {
-      candidates?: { content?: { parts?: { inlineData?: { mimeType?: string; data?: string } }[] } }[];
+      candidates?: {
+        content?: { parts?: { inlineData?: { mimeType?: string; data?: string } }[] };
+      }[];
     };
-    const inline = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
+    const inline = body.candidates?.[0]?.content?.parts?.find(
+      (p) => p.inlineData?.data,
+    )?.inlineData;
     if (!inline?.data) throw new Error("empty output (no inline image in response)");
     const cost_usd = IMAGE_PRICES_PER_IMAGE[IMAGE_MODEL] ?? null;
     if (!byok) recordOperatorSpend(cost_usd);

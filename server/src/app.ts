@@ -1,12 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
+import Fastify, { type FastifyInstance } from "fastify";
+import { guardrailsSnapshot } from "./guardrails.js";
+import { TASK_ROUTES } from "./llm/routing.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
-import { TASK_ROUTES } from "./llm/routing.js";
-import { guardrailsSnapshot } from "./guardrails.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -48,7 +48,10 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
       groq: Boolean(process.env.GROQ_API_KEY),
     },
     tasks: Object.fromEntries(
-      Object.entries(TASK_ROUTES).map(([task, route]) => [task, [route.primary, ...route.fallbacks]]),
+      Object.entries(TASK_ROUTES).map(([task, route]) => [
+        task,
+        [route.primary, ...route.fallbacks],
+      ]),
     ),
   };
   // guardrails is computed per request (unlike llmInfo): today's spend moves.

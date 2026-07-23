@@ -37,12 +37,13 @@ export function ByokSettings({ labels }: { labels: ByokStrings }) {
   return (
     <>
       <button
+        type="button"
         className={`cc-back cc-key${stored ? " cc-key-on" : ""}`}
         aria-label={labels.button}
         title={labels.button}
         onClick={() => setOpen((v) => !v)}
       >
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="8" cy="14" r="4.2" stroke="currentColor" strokeWidth="1.7" />
           <path
             d="M11.4 11L19 4M16 6.5l2.5 2.5M13.8 8.7l2 2"
@@ -56,7 +57,11 @@ export function ByokSettings({ labels }: { labels: ByokStrings }) {
         <div className="cc-share-panel cc-key-panel">
           <h3 className="cc-key-title">{labels.title}</h3>
           <p className="cc-key-intro">{labels.intro}</p>
-          {stored && <p className="cc-key-active">✓ {labels.active} · {PROVIDER_LABELS[stored.provider]}</p>}
+          {stored && (
+            <p className="cc-key-active">
+              ✓ {labels.active} · {PROVIDER_LABELS[stored.provider]}
+            </p>
+          )}
           <label className="cc-key-label">
             {labels.provider}
             <select value={provider} onChange={(e) => setProvider(e.target.value as ByokProvider)}>
@@ -80,11 +85,16 @@ export function ByokSettings({ labels }: { labels: ByokStrings }) {
             </div>
           </label>
           <div className="cc-key-actions">
-            <button className="cc-key-save" disabled={!key.trim()} onClick={handleSave}>
+            <button
+              type="button"
+              className="cc-key-save"
+              disabled={!key.trim()}
+              onClick={handleSave}
+            >
               {labels.save}
             </button>
             {stored && (
-              <button className="cc-key-clear" onClick={handleClear}>
+              <button type="button" className="cc-key-clear" onClick={handleClear}>
                 {labels.clear}
               </button>
             )}
