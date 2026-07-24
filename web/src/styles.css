@@ -162,6 +162,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-share.ready { background: #b3592e; color: #fff; cursor: pointer; }
 .cc-share.ready:hover { background: #a04e27; }
+/* Under ~480px the header wants 457px of content: back + title + AI key +
+   language + Share. The title loses that fight first and collapsed to a single
+   letter ("Н…") — and it is not decorative, it carries the invitation's own
+   name once one exists. Dropping the Share *label* (the button keeps its icon
+   and its aria-label) buys the title back ~55px, enough to read. */
+@media (max-width: 480px) {
+  .cc-share { padding: 0; width: 38px; height: 38px; justify-content: center; }
+  .cc-share-label { display: none; }
+}
 
 .cc-share-panel {
   position: absolute;
@@ -1071,15 +1080,31 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Sticky bottom CTA: mobile only. */
 .lp-sticky-cta { display: none; }
 
-@media (max-width: 800px) {
-  .lp-nav .lp-cta { display: none; } /* mobile uses the sticky bottom bar instead */
+/* Hero layout collapses at 1000px, not at the 800px chrome breakpoint below.
+   The fan is three fixed-width cards (623px together), and a grid item's
+   default min-width:auto lets that beat `1fr 1fr`: between 800 and ~1100 the
+   text column was being squeezed to as little as 153px, wrapping the headline
+   over four lines and the CTA over two. Layout and chrome want different
+   breakpoints, so they get separate blocks. */
+@media (max-width: 1000px) {
   .lp-hero { grid-template-columns: 1fr; text-align: center; }
   .lp-hero-copy h1 { max-width: none; }
   .lp-hero-copy p { max-width: none; margin-left: auto; margin-right: auto; }
-  .lp-fan { margin-top: 12px; }
+  /* min-width:0 lets the track ignore the fan's intrinsic width, so the copy
+     column is the full viewport and its centred text is actually centred —
+     without it the 440px fan widened the track and pushed the headline 55px
+     off centre at 375px. overflow-x:clip then keeps the deliberate bleed from
+     scrolling the page; `clip` rather than `hidden` because hidden would make
+     this a scroll container and turn overflow-y into auto. */
+  .lp-hero { overflow-x: clip; }
+  .lp-fan { margin-top: 12px; min-width: 0; }
   .lp-fan-0 { width: 175px; margin-right: -50px; }
   .lp-fan-1 { width: 190px; }
   .lp-fan-2 { width: 175px; margin-left: -50px; }
+}
+
+@media (max-width: 800px) {
+  .lp-nav .lp-cta { display: none; } /* mobile uses the sticky bottom bar instead */
   .lp-steps-grid { grid-template-columns: 1fr; gap: 22px; }
   .lp-step { display: flex; gap: 16px; text-align: left; align-items: flex-start; }
   .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }

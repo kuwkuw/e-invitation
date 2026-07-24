@@ -62,9 +62,12 @@ export default function App() {
             className={`cc-share${hasInvitation ? " ready" : ""}`}
             disabled={!hasInvitation || publishing.publishing}
             onClick={() => editor.invitation && publishing.share(editor.invitation)}
+            // The label is hidden on narrow screens to leave the title room to
+            // be readable, so the button carries its name here regardless.
+            aria-label={t.chat.share}
           >
             <ShareIcon />
-            {publishing.publishing ? "…" : t.chat.share}
+            <span className="cc-share-label">{publishing.publishing ? "…" : t.chat.share}</span>
           </button>
         </div>
       </header>

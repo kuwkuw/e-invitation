@@ -49,6 +49,18 @@ describe("navigation", () => {
     expect(screen.queryByText(LANDING.uk.heroTitle)).toBeNull();
   });
 
+  it("names the editor's share button even when its label is hidden", () => {
+    // Under 480px the header has more controls than room, so `.cc-share-label`
+    // is hidden by CSS and the button renders icon-only. jsdom applies no media
+    // query, so querying by accessible name would pass on the visible text
+    // alone and prove nothing — the attribute is what survives the label being
+    // hidden, so the attribute is what this asserts.
+    renderAt("/create");
+
+    const share = document.querySelector(".cc-share");
+    expect(share?.getAttribute("aria-label")).toBe(UI.uk.chat.share);
+  });
+
   it("opens an invitations row in the manage view", () => {
     recordHostInvitation({
       id: "abc123",
