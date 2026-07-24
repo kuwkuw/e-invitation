@@ -70,11 +70,10 @@ export default function App() {
       {publishing.shareOpen && publishing.published && (
         <SharePanel
           published={publishing.published}
-          rsvps={publishing.rsvps}
-          rsvpsLoading={publishing.rsvpsLoading}
           onCopyLink={publishing.copyLink}
           copied={publishing.copied}
-          onRefreshRsvps={publishing.refreshRsvps}
+          onCopyManageLink={publishing.copyManageLink}
+          manageCopied={publishing.manageCopied}
           t={t}
         />
       )}

@@ -78,18 +78,21 @@ export interface UiStrings {
   publish: string;
   publishing: string;
   republish: string;
+  publishedTitle: string;
   publishedVersion: string;
+  publishedSubtitle: string;
+  guestLinkLabel: string;
+  guestLinkBadge: string;
   shareHint: string;
   copyLink: string;
   copied: string;
-  responsesTitle: string;
-  refreshResponses: string;
-  responsesEmpty: string;
-  countYes: string;
-  countNo: string;
-  countGuests: string;
-  exportCsv: string;
-  csv: RsvpCsvStrings;
+  manageLinkLabel: string;
+  manageLinkWarning: string;
+  manageLinkMasked: string;
+  revealManageLink: string;
+  copyManageLink: string;
+  manageLinkCopied: string;
+  viewResponses: string;
 }
 
 export const UI: Record<Language, UiStrings> = {
@@ -190,23 +193,22 @@ export const UI: Record<Language, UiStrings> = {
     publish: "Publish & get link",
     publishing: "Publishing…",
     republish: "Publish changes",
-    publishedVersion: "Published (version {n})",
-    shareHint: "Send this link in Viber, Telegram or WhatsApp:",
-    copyLink: "Copy link",
+    publishedTitle: "Published!",
+    publishedVersion: "Version {n}",
+    publishedSubtitle: "Send the link to your guests — then wait for replies.",
+    guestLinkLabel: "Link for guests",
+    guestLinkBadge: "public",
+    shareHint: "Paste it into Viber, Telegram or WhatsApp",
+    copyLink: "Copy the link",
     copied: "Copied!",
-    responsesTitle: "Responses",
-    refreshResponses: "Refresh",
-    responsesEmpty: "No responses yet.",
-    countYes: "coming",
-    countNo: "can't come",
-    countGuests: "guests total",
-    exportCsv: "Export CSV",
-    csv: {
-      headers: ["Name", "Answer", "Guests", "Note", "Replied at", "Status"],
-      yes: "Yes",
-      no: "No",
-      superseded: "superseded",
-    },
+    manageLinkLabel: "Manage link",
+    manageLinkWarning:
+      "For you only — don't send it to a chat. Anyone who opens it sees every response.",
+    manageLinkMasked: "••••••••",
+    revealManageLink: "Show the full link",
+    copyManageLink: "Copy",
+    manageLinkCopied: "Copied — keep it private",
+    viewResponses: "View responses →",
   },
   uk: {
     appTitle: "Студія запрошень",
@@ -307,23 +309,22 @@ export const UI: Record<Language, UiStrings> = {
     publish: "Опублікувати й отримати лінк",
     publishing: "Публікуємо…",
     republish: "Опублікувати зміни",
-    publishedVersion: "Опубліковано (версія {n})",
-    shareHint: "Надішліть це посилання у Viber, Telegram або WhatsApp:",
-    copyLink: "Скопіювати лінк",
+    publishedTitle: "Опубліковано!",
+    publishedVersion: "Версія {n}",
+    publishedSubtitle: "Надішліть посилання гостям — і чекайте відповіді.",
+    guestLinkLabel: "Посилання для гостей",
+    guestLinkBadge: "публічне",
+    shareHint: "Вставте у Viber, Telegram або WhatsApp",
+    copyLink: "Скопіювати посилання",
     copied: "Скопійовано!",
-    responsesTitle: "Відповіді",
-    refreshResponses: "Оновити",
-    responsesEmpty: "Поки що немає відповідей.",
-    countYes: "прийдуть",
-    countNo: "не зможуть",
-    countGuests: "гостей разом",
-    exportCsv: "Експорт CSV",
-    csv: {
-      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
-      yes: "Так",
-      no: "Ні",
-      superseded: "замінена",
-    },
+    manageLinkLabel: "Посилання для керування",
+    manageLinkWarning:
+      "Лише для вас — не надсилайте його в чат. Хто відкриє, побачить усі відповіді.",
+    manageLinkMasked: "••••••••",
+    revealManageLink: "Показати повне посилання",
+    copyManageLink: "Копіювати",
+    manageLinkCopied: "Скопійовано — тримайте при собі",
+    viewResponses: "Переглянути відповіді →",
   },
 };
 
