@@ -140,10 +140,59 @@ export const RsvpSummaryEntry = Rsvp.extend({
 });
 export type RsvpSummaryEntry = z.infer<typeof RsvpSummaryEntry>;
 
+// Over the live (non-superseded) answers only — `guests` is the headcount the
+// host caters on, so double-counting a changed mind would be a real bug. Named
+// separately because the batch endpoint returns the same shape and the two
+// must never drift (adr-012 §3).
+export const RsvpCounts = z.object({ yes: z.number(), no: z.number(), guests: z.number() });
+export type RsvpCounts = z.infer<typeof RsvpCounts>;
+
 export const RsvpSummary = z.object({
   rsvps: z.array(RsvpSummaryEntry),
-  // Over the live (non-superseded) answers only — `guests` is the headcount
-  // the host caters on, so double-counting a changed mind would be a real bug.
-  counts: z.object({ yes: z.number(), no: z.number(), guests: z.number() }),
+  counts: RsvpCounts,
 });
 export type RsvpSummary = z.infer<typeof RsvpSummary>;
+
+// Batch response counts for the returning-host landing list (adr-012). One
+// item per invitation the browser holds a manage token for; each pair
+// authorizes exactly its own id, so this is many capability checks in one
+// request rather than one authenticated request.
+//
+// A POST that reads nothing and mutates nothing, deliberately: a GET would
+// have to carry the tokens in the query string, undoing the one property
+// adr-010 §2 put the manage token in the URL fragment to get.
+export const RsvpCountsRequestItem = z.object({
+  id: InvitationId,
+  // Manage tokens are 32 hex chars today; the cap is loose enough to survive a
+  // format change and tight enough to bound the body.
+  token: z.string().min(1).max(128),
+  // This browser's last-seen marker for this invitation (`inv-manage-seen:<id>`),
+  // which drives `new_since`. Absent on an invitation never opened — and then
+  // nothing is "new", because "everything is new" tells a host nothing.
+  seen_at: z.string().optional(),
+});
+export type RsvpCountsRequestItem = z.infer<typeof RsvpCountsRequestItem>;
+
+export const RsvpCountsRequest = z.object({
+  // Capped per adr-012 §5: the local index holds at most 20, and a bounded
+  // batch is what keeps this from being a bulk token oracle. Over-cap is a
+  // 400 rather than a silent truncation, which would show a host some of
+  // their events with counts and some without for no visible reason.
+  items: z.array(RsvpCountsRequestItem).min(1).max(25),
+});
+export type RsvpCountsRequest = z.infer<typeof RsvpCountsRequest>;
+
+// Per item, never whole-batch: one stale token must not blank the other rows.
+// Statuses only, no error prose — the client owns the wording, the same way
+// the 502 body carries `causes` as classes.
+export const RsvpCountsResult = z.object({
+  id: z.string(),
+  status: z.enum(["ok", "forbidden", "not_found"]),
+  // Both present exactly when `status` is "ok".
+  counts: RsvpCounts.optional(),
+  new_since: z.number().optional(),
+});
+export type RsvpCountsResult = z.infer<typeof RsvpCountsResult>;
+
+export const RsvpCountsResponse = z.object({ results: z.array(RsvpCountsResult) });
+export type RsvpCountsResponse = z.infer<typeof RsvpCountsResponse>;

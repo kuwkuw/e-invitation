@@ -80,9 +80,39 @@ export interface RsvpEntry extends RsvpInput {
   superseded: boolean;
 }
 
+export interface RsvpCounts {
+  yes: number;
+  no: number;
+  guests: number;
+}
+
 export interface RsvpSummary {
   rsvps: RsvpEntry[];
-  counts: { yes: number; no: number; guests: number };
+  counts: RsvpCounts;
+}
+
+// Batch response counts for the landing list (adr-012). One item per
+// invitation this browser holds a manage token for; each pair authorizes only
+// its own id, so a refused token is a per-item status inside a 200 rather than
+// a failed request.
+export interface RsvpCountsRequestItem {
+  id: string;
+  token: string;
+  /** This browser's `inv-manage-seen:<id>` marker; omitted when it has none,
+   *  and then `new_since` comes back 0 rather than "all of them". */
+  seen_at?: string;
+}
+
+export interface RsvpCountsResult {
+  id: string;
+  status: "ok" | "forbidden" | "not_found";
+  /** Both present exactly when `status` is "ok". */
+  counts?: RsvpCounts;
+  new_since?: number;
+}
+
+export interface RsvpCountsResponse {
+  results: RsvpCountsResult[];
 }
 
 // BYOK (ADR-006): the host's own provider key, kept in this browser only.

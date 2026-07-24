@@ -42,6 +42,24 @@ export function summarizeRsvps(rsvps: Rsvp[]): RsvpSummary {
   };
 }
 
+/**
+ * Live answers that arrived after `seenAt` — the "N new since your last visit"
+ * number, computed here for the batch endpoint because the browser sends only
+ * a baseline and gets back a count (adr-012 §4).
+ *
+ * Superseded answers never count: a guest amending an answer is news, their
+ * replaced original is not. No baseline means zero, not everything — on a
+ * first visit "all of them are new" tells a host nothing.
+ *
+ * The dashboard applies the same rule client-side in `useHostManage`, where it
+ * already holds the full list and the `/rsvps` response carries no count.
+ * Two implementations of one rule; keep them saying the same thing.
+ */
+export function countNewSince(summary: RsvpSummary, seenAt: string | undefined): number {
+  if (!seenAt) return 0;
+  return summary.rsvps.filter((rsvp) => !rsvp.superseded && rsvp.created_at > seenAt).length;
+}
+
 // Grouping key for re-submissions. Deliberately conservative: only an exact
 // name match (ignoring case and stray whitespace) collapses, and both rows
 // stay in the list, so two real guests sharing a name is visible to the host
