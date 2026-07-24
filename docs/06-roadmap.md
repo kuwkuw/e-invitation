@@ -1,8 +1,9 @@
 # 06 — Roadmap: next iteration
 
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
-decomposition landed; updated 2026-07-24 when the manage-view iteration
-shipped. This doc plans the **next** iteration; when an item ships it moves
+decomposition landed; updated 2026-07-24 when the manage-view and
+client-routing iterations shipped and batch response counts (adr-012) were
+taken as the next one. This doc plans the **next** iteration; when an item ships it moves
 into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -100,10 +101,47 @@ Deliberately not done: data routers and loaders, nested layouts, route-level
 code splitting. The ADR §1 keeps the declined evaluation's revisit triggers as
 the conditions for widening that scope — nesting is the real one.
 
-## Next iteration
+## Next iteration: batch response counts
 
-Not yet chosen. The backlog below is the candidate pool; nothing in it is
-committed.
+Settled in [ADR-012](decisions/adr-012-batch-response-counts.md) (proposed),
+to ship as **FR-5.7**, extending FR-5.6.
+
+The returning-host list shipped as three-quarters of its mockup. The
+`templates/landing-page` Returning variant gives each row a response count and
+a "new since your last visit" marker; what
+[YourInvitations.tsx](../web/src/components/YourInvitations.tsx) renders is a
+monogram, a title and a relative publish time. adr-010's implementation notes
+say why — the browser-local index holds no counts by design, and the only way
+to get them was one token-authenticated request per invitation from the page
+that has to be fastest — and closed with "revisit with a batch endpoint if
+hosts ask."
+
+**No host has asked.** It is being taken because it is the only backlog item
+with nothing in front of it, and because closing the gap between a shipped
+screen and the mockup it was built from is a better reason than adr-011's
+groundwork turned out to be. Small, entirely inside the existing architecture,
+no new dependency.
+
+What makes it worth a decision record is not the endpoint but the shape:
+`POST /api/invitations/counts` is the **first request in the app carrying more
+than one capability token**, and the first place where a partial authorization
+failure is a normal outcome rather than an error. So the ADR settles:
+
+1. **POST, though it only reads** — a GET would put manage tokens in the query
+   string, undoing the exact property adr-010 §2 chose the URL fragment for.
+2. **Per-item authorization, `200` on partial success** — one stale token must
+   never blank the other four rows.
+3. **One counting implementation** — `summarizeRsvps` moves out of the route
+   file so the row and the dashboard it links to cannot disagree.
+4. **A 25-item cap**, which is also what bounds the multi-token oracle adr-010
+   declined to rate-limit.
+5. **The landing page never waits** — no spinner, no layout shift, failure is
+   silence, and reading the list does not mark responses seen.
+
+Four PRs (extract, endpoint, hook, rows) plus a docs pass. Out of scope: any
+design work (the mockups already specify it), counts anywhere but the landing
+list, and anything that would teach the server which invitations belong to one
+host — that is the accounts model adr-005 rejected.
 
 ## Candidate backlog
 
@@ -115,8 +153,6 @@ committed.
   Revisit with any account-adjacent work.
 - **Per-guest edit tokens** so a guest can amend their own answer instead of
   re-submitting — real infrastructure for a rare case (adr-010 §5).
-- **Batch response counts** so the landing list can show activity per
-  invitation without N authenticated requests (adr-010, implementation notes).
 - **SQLite (or similar) store** — only when multi-instance hosting or RSVP
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
