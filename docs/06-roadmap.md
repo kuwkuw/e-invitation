@@ -121,6 +121,12 @@ committed.
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
+- **Share-loop instrumentation** — unique `/i/:id` views plus a guest-page
+  "create your own" call to action with referral attribution in
+  `recordGeneration`. Small, but it is the prerequisite for every option in
+  [07-monetization.md](07-monetization.md) §5: new hosts per published
+  invitation is currently unmeasurable, and it decides whether the product
+  can pay for itself at all.
 - ~~**React Router in `web/`**~~ — shipped; see
   [adr-011](decisions/adr-011-client-router.md), which records the original
   declining evaluation, the fact that none of its revisit triggers had fired,

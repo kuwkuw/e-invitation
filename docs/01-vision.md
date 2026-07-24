@@ -54,6 +54,11 @@ path is user-level BYOK (bring-your-own-key) so power users carry their own
 model costs. See [decisions/adr-006-byok-passthrough.md](decisions/adr-006-byok-passthrough.md)
 and [decisions/adr-007-in-process-providers.md](decisions/adr-007-in-process-providers.md).
 
+Revenue is a separate, still-open question: [07-monetization.md](07-monetization.md)
+records the unit economics (~$0.002 per text-only event, $0.039 per AI
+background), why host frequency rules out consumer subscriptions, and why the
+guest-page share loop — currently uninstrumented — gates every option.
+
 ## Explicit non-goals
 
 - No full-image (diffusion) invitation generation — see
