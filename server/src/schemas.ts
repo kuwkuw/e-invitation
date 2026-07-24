@@ -130,3 +130,20 @@ export const Rsvp = RsvpRequest.extend({
   created_at: z.string(),
 });
 export type Rsvp = z.infer<typeof Rsvp>;
+
+// Host-facing view of a stored RSVP. `superseded` is computed at read time,
+// never stored: a guest who changes their mind submits again (FR-4.4), so a
+// later answer under the same name replaces this one. Superseded entries stay
+// in the list as history but are excluded from the counts (adr-010 §5).
+export const RsvpSummaryEntry = Rsvp.extend({
+  superseded: z.boolean(),
+});
+export type RsvpSummaryEntry = z.infer<typeof RsvpSummaryEntry>;
+
+export const RsvpSummary = z.object({
+  rsvps: z.array(RsvpSummaryEntry),
+  // Over the live (non-superseded) answers only — `guests` is the headcount
+  // the host caters on, so double-counting a changed mind would be a real bug.
+  counts: z.object({ yes: z.number(), no: z.number(), guests: z.number() }),
+});
+export type RsvpSummary = z.infer<typeof RsvpSummary>;

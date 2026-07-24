@@ -17,6 +17,7 @@ describe("buildRsvpCsv", () => {
           guests_count: 2,
           note: null,
           created_at: "2026-08-01T18:04:00.000Z",
+          superseded: false,
         },
         {
           name: "Марко",
@@ -24,6 +25,7 @@ describe("buildRsvpCsv", () => {
           guests_count: 1,
           note: null,
           created_at: "2026-08-02T09:30:00.000Z",
+          superseded: false,
         },
       ],
       uk,
@@ -46,6 +48,7 @@ describe("buildRsvpCsv", () => {
           guests_count: 1,
           note: "Буду пізніше,\nдесь о 19:00",
           created_at: "2026-08-01T10:00:00.000Z",
+          superseded: false,
         },
       ],
       uk,
