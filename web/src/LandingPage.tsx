@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { YourInvitations } from "./components/YourInvitations";
+import { loadHostInvitations } from "./hostInvitations";
 import { LANDING, loadUiLang, saveUiLang } from "./i18n";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
 
@@ -61,6 +63,8 @@ const responses = [
 export function LandingPage({ onStart }: Props) {
   const [lang, setLang] = useState<Language>(loadUiLang);
   const t = LANDING[lang];
+  // Read once: the list only changes by publishing, which happens elsewhere.
+  const [mine] = useState(loadHostInvitations);
 
   function handleLang(next: Language) {
     setLang(next);
@@ -78,6 +82,11 @@ export function LandingPage({ onStart }: Props) {
           </button>
         </div>
       </header>
+
+      {/* Reading order per the DS Returning template: header → your events →
+          pitch. A first-time visitor has an empty list and sees the page
+          exactly as before. */}
+      <YourInvitations invitations={mine} t={t} />
 
       <section className="lp-hero">
         <div className="lp-hero-copy">
