@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, fetchInvitation, fetchRsvps } from "../api";
+import { isInvitationId } from "../invitationId";
 import type { PublishedInvitation, RsvpSummary } from "../types";
 
 /** Every outcome the host can land in. Access failures are deliberately three
@@ -70,16 +71,22 @@ function classify(error: unknown): ManageStatus {
  * one pass.
  */
 export function useHostManage(id: string) {
+  // An id the server could never have minted gets no token work at all: no
+  // fragment adopted, nothing written under a garbage key (adr-011 §3).
+  const valid = isInvitationId(id);
   // Wrapped in an object so a retry can hand the effect a fresh identity:
   // re-submitting the *same* token has to re-run the load, and a bare string
   // compares equal and would sit there doing nothing.
   const [session, setSession] = useState<{ token: string | null }>(() => ({
-    token: resolveManageToken(id),
+    token: valid ? resolveManageToken(id) : null,
   }));
   const token = session.token;
   const [published, setPublished] = useState<PublishedInvitation | null>(null);
   const [summary, setSummary] = useState<RsvpSummary | null>(null);
-  const [status, setStatus] = useState<ManageStatus>(() => (token ? "loading" : "no_token"));
+  const [status, setStatus] = useState<ManageStatus>(() => {
+    if (!valid) return "not_found";
+    return token ? "loading" : "no_token";
+  });
   const [refreshing, setRefreshing] = useState(false);
   // Mirrors `refreshing` for the guard, so `refresh` keeps a stable identity
   // and the visibility listener below doesn't churn on every toggle.
@@ -94,10 +101,15 @@ export function useHostManage(id: string) {
   }
 
   useEffect(() => {
+    if (!valid) return;
     localStorage.setItem(manageSeenKey(id), new Date().toISOString());
-  }, [id]);
+  }, [id, valid]);
 
   useEffect(() => {
+    if (!valid) {
+      setStatus("not_found");
+      return;
+    }
     if (!session.token) {
       setStatus("no_token");
       return;
@@ -121,7 +133,7 @@ export function useHostManage(id: string) {
     return () => {
       active = false;
     };
-  }, [id, session]);
+  }, [id, session, valid]);
 
   /** Re-read the responses only; the invitation rarely changes under a host
    *  who is watching replies arrive. Failures surface — the old silent
@@ -157,12 +169,12 @@ export function useHostManage(id: string) {
   const applyManageLink = useCallback(
     (input: string): boolean => {
       const parsed = tokenFromManageLink(input);
-      if (!parsed) return false;
+      if (!parsed || !valid) return false;
       localStorage.setItem(manageTokenKey(id), parsed);
       setSession({ token: parsed });
       return true;
     },
-    [id],
+    [id, valid],
   );
 
   const retry = useCallback(() => setSession((current) => ({ token: current.token })), []);

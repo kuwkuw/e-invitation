@@ -33,15 +33,6 @@ function expectScreenAt(path: string, text: string) {
   cleanup();
 }
 
-/** The id guard's whole job: the landing page, and no screen that would have
- *  taken the id straight to the API (adr-011 §3). */
-function expectRefusedId(path: string) {
-  renderAt(path);
-  expect(screen.getByText("landing screen")).toBeDefined();
-  expect(screen.queryByText(/guest screen|manage screen/)).toBeNull();
-  cleanup();
-}
-
 describe("AppRoutes", () => {
   it("resolves the four screens", () => {
     expectScreenAt("/", "landing screen");
@@ -55,16 +46,13 @@ describe("AppRoutes", () => {
     expectScreenAt("/i", "landing screen");
   });
 
-  it("refuses a malformed id instead of passing it to the screen", () => {
-    // `:id` matches any segment, so without the guard these would reach
-    // fetchInvitation with whatever was in the URL.
-    expectRefusedId("/i/abc");
-    expectRefusedId("/i/abc.123");
-    expectRefusedId(`/i/${"a".repeat(33)}`);
-    expectRefusedId("/manage/abc");
-  });
-
-  it("refuses a percent-encoded traversal in the id position", () => {
-    expectRefusedId("/i/%2e%2e%2f%2e%2e%2fetc");
+  it("routes a malformed id to the screen, which reports it as a dead link", () => {
+    // The route no longer diverts these to the marketing page: someone
+    // following a broken share link needs to be told the link is broken. The
+    // screens' hooks refuse to spend a malformed id on the API — covered in
+    // usePublishedInvitation.test.ts and useHostManage.test.ts.
+    expectScreenAt("/i/abc", "guest screen abc");
+    expectScreenAt("/i/%2e%2e%2f%2e%2e%2fetc", "guest screen ../../etc");
+    expectScreenAt("/manage/abc", "manage screen abc");
   });
 });

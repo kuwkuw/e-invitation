@@ -143,4 +143,42 @@ describe("useHostManage", () => {
 
     expect(result.current.status).toBe("invalid_token");
   });
+
+  it("treats a malformed id as a dead link without asking the server", () => {
+    const fetchInvitation = vi.spyOn(api, "fetchInvitation");
+    const fetchRsvps = vi.spyOn(api, "fetchRsvps");
+
+    for (const id of ["", "abc", "../../etc/passwd"]) {
+      const { result } = renderHook(() => useHostManage(id));
+      expect(result.current.status).toBe("not_found");
+    }
+    expect(fetchInvitation).not.toHaveBeenCalled();
+    expect(fetchRsvps).not.toHaveBeenCalled();
+  });
+
+  it("stores nothing under a malformed id, fragment token or not", () => {
+    window.history.replaceState(null, "", `/manage/abc#t=${TOKEN}`);
+
+    const { result } = renderHook(() => useHostManage("abc"));
+
+    expect(result.current.status).toBe("not_found");
+    // Neither the token nor the last-seen marker may be written under a key
+    // the server could never have minted (adr-011 §3).
+    expect(localStorage.length).toBe(0);
+    // And the fragment is left alone rather than stripped, because nothing
+    // adopted it.
+    expect(window.location.hash).toBe(`#t=${TOKEN}`);
+  });
+
+  it("refuses a pasted manage link when the id itself is malformed", () => {
+    const { result } = renderHook(() => useHostManage("abc"));
+
+    let accepted = true;
+    act(() => {
+      accepted = result.current.applyManageLink(TOKEN);
+    });
+
+    expect(accepted).toBe(false);
+    expect(localStorage.length).toBe(0);
+  });
 });
