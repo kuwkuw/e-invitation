@@ -4,9 +4,13 @@
 import type { RsvpEntry } from "./types";
 
 export interface RsvpCsvStrings {
-  headers: readonly [string, string, string, string, string]; // name, answer, guests, note, date
+  // name, answer, guests, note, date, status
+  headers: readonly [string, string, string, string, string, string];
   yes: string;
   no: string;
+  /** Marks an answer a later one replaced (adr-010 §5). Every row is
+   *  exported, superseded ones included, so the file stays a full record. */
+  superseded: string;
 }
 
 function escapeCsvField(value: string): string {
@@ -23,6 +27,9 @@ export function buildRsvpCsv(rsvps: RsvpEntry[], strings: RsvpCsvStrings): strin
       r.attending ? String(r.guests_count) : "",
       r.note ?? "",
       r.created_at.slice(0, 16).replace("T", " "),
+      // Blank for live answers — a status column that shouts on every row
+      // would bury the handful that actually changed.
+      r.superseded ? strings.superseded : "",
     ]
       .map(escapeCsvField)
       .join(","),

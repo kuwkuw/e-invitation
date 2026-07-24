@@ -1033,3 +1033,187 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   }
   .lp-sticky-cta .lp-cta { width: 100%; max-width: 320px; padding: 13px 0; }
 }
+
+/* Host manage dashboard --------------------------------------------------- */
+/* From the "host-manage" template in the E-invitation DS project. Mobile is
+   the primary case — a host checks the headcount on a phone — with a two-column
+   desktop layout above 960px. The chrome stays quiet; the only colour is the
+   yes/no status pair, and the accent marks what is new. */
+
+.hm-page { min-height: 100dvh; background: #f6f5f2; padding: 18px 16px 28px; }
+.hm-shell { max-width: 430px; margin: 0 auto; }
+.hm-topbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+
+.hm-card {
+  background: #fff;
+  border: 1px solid #e4ddd0;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(20, 18, 14, 0.05);
+  padding: 22px;
+}
+
+.hm-header { padding: 4px 4px 0; }
+.hm-kicker {
+  margin: 0 0 8px;
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: #b3592e;
+}
+.hm-title { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.5rem; line-height: 1.15; font-weight: 700; color: #23211d; }
+.hm-details { margin: 6px 0 0; font-size: 0.9rem; color: #6b6659; }
+
+.hm-actions { display: flex; align-items: center; gap: 8px; padding: 16px 4px 0; }
+.hm-updated { flex: 1; font-size: 0.76rem; color: #a29a8b; }
+.hm-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 46px; padding: 0 12px;
+  border: 1px solid #e4ddd0; border-radius: 12px;
+  background: #fff; color: #6b6659;
+  font: inherit; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.hm-btn:hover:not(:disabled) { border-color: #b3592e; color: #23211d; }
+.hm-btn:disabled { opacity: 0.5; cursor: default; }
+
+.hm-body { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+
+/* Headcount — the number the host came for. */
+.hm-headcount-top { display: flex; align-items: baseline; gap: 12px; }
+.hm-bignum { font-family: "Playfair Display", Georgia, serif; font-size: 3.1rem; line-height: 0.9; color: var(--rsvp-yes); }
+.hm-bigunit { font-size: 1.05rem; font-weight: 700; color: #23211d; }
+.hm-breakdown { margin: 8px 0 0; font-size: 0.82rem; color: #8d8577; }
+
+.hm-tiles { display: flex; gap: 10px; margin-top: 18px; }
+.hm-tile { flex: 1; border-radius: 14px; padding: 12px 14px; border: 1px solid; }
+.hm-tile-num { display: block; font-size: 1.4rem; font-weight: 800; }
+.hm-tile-label { display: block; margin-top: 2px; font-size: 0.76rem; font-weight: 600; }
+.hm-tile-yes { background: var(--rsvp-yes-bg); border-color: var(--rsvp-yes-edge); }
+.hm-tile-yes .hm-tile-num { color: var(--rsvp-yes); }
+.hm-tile-yes .hm-tile-label { color: #5f7a63; }
+.hm-tile-no { background: var(--rsvp-no-bg); border-color: var(--rsvp-no-edge); }
+.hm-tile-no .hm-tile-num { color: var(--rsvp-no); }
+.hm-tile-no .hm-tile-label { color: #8a5a54; }
+.hm-tile-replied { background: #f7f5f1; border-color: #e4ddd0; }
+.hm-tile-replied .hm-tile-num { color: #23211d; }
+.hm-tile-replied .hm-tile-label { color: #8d8577; }
+
+/* "N new since your last visit" — one dot language shared with the list. */
+.hm-new-line { display: flex; align-items: center; gap: 9px; margin: 14px 4px 0; font-size: 0.85rem; color: #8a6b57; }
+.hm-new-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #b3592e; }
+
+.hm-responses { padding: 6px 16px 8px; }
+.hm-section-title {
+  margin: 0; padding: 12px 0 4px;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: #a29a8b;
+}
+.hm-list { list-style: none; margin: 0; padding: 0; }
+.hm-item { border-bottom: 1px solid #efe9dd; }
+.hm-item:last-child { border-bottom: none; }
+
+.hm-row { display: flex; gap: 12px; padding: 14px 4px; align-items: flex-start; }
+.hm-avatar {
+  flex: 0 0 auto;
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #efece6; color: #8d8577; font-weight: 700; font-size: 0.95rem;
+}
+.hm-row-main { flex: 1; min-width: 0; }
+.hm-name { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 0.98rem; font-weight: 700; color: #23211d; }
+.hm-plus { font-size: 0.72rem; font-weight: 700; color: #8d8577; background: #f1ede4; border-radius: 6px; padding: 2px 7px; }
+.hm-note { margin: 5px 0 0; font-size: 0.86rem; line-height: 1.45; color: #6b6659; }
+.hm-when { margin: 3px 0 0; font-size: 0.76rem; color: #b0a996; }
+
+.hm-pill {
+  flex: 0 0 auto;
+  border-radius: 999px; padding: 6px 13px;
+  font-size: 0.78rem; font-weight: 700;
+  border: 1px solid;
+}
+.hm-pill-yes { background: var(--rsvp-yes-bg); border-color: var(--rsvp-yes-edge); color: var(--rsvp-yes); }
+.hm-pill-no { background: var(--rsvp-no-bg); border-color: var(--rsvp-no-edge); color: var(--rsvp-no); }
+
+/* A replaced answer: present, legible, visibly not counted. Neutral grey on
+   purpose — it must not compete with the live status, and it is not an error. */
+.hm-previous {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 0 52px; padding: 2px 0 14px;
+  font-size: 0.8rem; color: #a29a8b;
+}
+.hm-previous-icon { display: flex; color: #b0a996; }
+.hm-previous-when { color: #c3bbac; font-size: 0.76rem; }
+
+/* Empty, access and error states — all calm, none styled as a failure. */
+.hm-empty, .hm-prompt { margin-top: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.hm-empty-icon, .hm-state-icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: #f1ede4; color: #c2a98d;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: "Playfair Display", Georgia, serif; font-size: 1.4rem; font-weight: 700; color: #23211d; }
+.hm-empty-body, .hm-state-body { margin: 0; max-width: 280px; font-size: 0.95rem; line-height: 1.55; color: #6b6659; }
+.hm-empty-reassure, .hm-state-hint { margin: 14px 0 0; max-width: 270px; font-size: 0.85rem; line-height: 1.5; color: #a29a8b; }
+
+.hm-share-again { margin: 26px 0 8px; align-self: flex-start; font-size: 0.76rem; font-weight: 600; color: #8d8577; }
+.hm-share-row { display: flex; gap: 8px; width: 100%; }
+.hm-share-row input {
+  flex: 1; min-width: 0; height: 46px;
+  border: 1px solid #e4ddd0; border-radius: 12px;
+  padding: 0 13px; font: inherit; font-size: 0.85rem; color: #8d8577; background: #fff;
+}
+.hm-share-row button {
+  flex: 0 0 auto; height: 46px; padding: 0 16px;
+  border: 1px solid #e4ddd0; border-radius: 12px; background: #fff;
+  font: inherit; font-size: 0.85rem; font-weight: 700; color: #6b6659; cursor: pointer;
+}
+
+.hm-paste {
+  width: 100%; height: 52px; margin-top: 24px;
+  border: 1px solid #e4ddd0; border-radius: 14px;
+  padding: 0 15px; font: inherit; font-size: 0.9rem; background: #fff;
+}
+.hm-paste[aria-invalid="true"] { border-color: var(--rsvp-no); }
+.hm-reject { margin: 8px 0 0; font-size: 0.82rem; color: var(--rsvp-no); }
+.hm-primary {
+  width: 100%; height: 52px; margin-top: 12px;
+  border: none; border-radius: 14px;
+  background: #b3592e; color: #fff;
+  font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(179, 89, 46, 0.26);
+}
+.hm-primary:hover { background: #a04e27; }
+
+.hm-brand { margin: 22px 0 0; text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
+
+/* Loading: hold the shape rather than spin. */
+.hm-skeleton { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
+.hm-sk { background: #e7e2d8; border-radius: 8px; animation: hm-shimmer 1.4s ease-in-out infinite; }
+.hm-sk-kicker { width: 120px; height: 11px; }
+.hm-sk-title { width: 70%; height: 26px; }
+.hm-sk-sub { width: 55%; height: 13px; }
+.hm-sk-bignum { width: 90px; height: 44px; }
+.hm-sk-tile { flex: 1; height: 58px; border-radius: 14px; }
+.hm-sk-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.hm-sk-avatar { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; }
+.hm-sk-line { flex: 1; height: 12px; }
+.hm-sk-pill { width: 48px; height: 26px; border-radius: 999px; flex: 0 0 auto; }
+@keyframes hm-shimmer { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hm-sk { animation: none; } }
+
+@media (min-width: 960px) {
+  .hm-page { padding: 40px 32px; }
+  .hm-shell { max-width: 1080px; }
+  .hm-header { border-bottom: 1px solid #e4ddd0; padding-bottom: 22px; }
+  .hm-title { font-size: 2.1rem; }
+  .hm-details { font-size: 1rem; }
+  .hm-actions { padding-top: 22px; }
+  /* Summary and its "N new" line hold the left rail; the list takes the rest. */
+  .hm-body { flex-direction: row; align-items: flex-start; gap: 32px; margin-top: 24px; }
+  .hm-summary-col { width: 320px; flex: 0 0 auto; }
+  .hm-list-col { flex: 1; min-width: 0; }
+  .hm-bignum { font-size: 3.6rem; }
+  .hm-empty, .hm-prompt { max-width: 480px; margin-left: auto; margin-right: auto; }
+}

@@ -1,3 +1,5 @@
+import type { RsvpCsvStrings } from "./csv";
+import type { RelativeTimeStrings } from "./relativeTime";
 import type { CopyField, DesignTokens, Language } from "./types";
 
 type DesignValue =
@@ -87,11 +89,7 @@ export interface UiStrings {
   countNo: string;
   countGuests: string;
   exportCsv: string;
-  csv: {
-    headers: [string, string, string, string, string]; // name, answer, guests, note, date
-    yes: string;
-    no: string;
-  };
+  csv: RsvpCsvStrings;
 }
 
 export const UI: Record<Language, UiStrings> = {
@@ -204,9 +202,10 @@ export const UI: Record<Language, UiStrings> = {
     countGuests: "guests total",
     exportCsv: "Export CSV",
     csv: {
-      headers: ["Name", "Answer", "Guests", "Note", "Replied at"],
+      headers: ["Name", "Answer", "Guests", "Note", "Replied at", "Status"],
       yes: "Yes",
       no: "No",
+      superseded: "superseded",
     },
   },
   uk: {
@@ -320,9 +319,10 @@ export const UI: Record<Language, UiStrings> = {
     countGuests: "гостей разом",
     exportCsv: "Експорт CSV",
     csv: {
-      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді"],
+      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
       yes: "Так",
       no: "Ні",
+      superseded: "замінена",
     },
   },
 };
@@ -511,6 +511,26 @@ export const GUEST: Record<Language, GuestStrings> = {
 export interface ManageStrings {
   kicker: string;
   loading: string;
+  updatedJustNow: string;
+  guestsComing: string;
+  comingBreakdown: string;
+  tileYes: string;
+  tileNo: string;
+  tileReplied: string;
+  newSinceVisit: string;
+  responsesTitle: string;
+  previousAnswer: string;
+  emptyTitle: string;
+  emptyBody: string;
+  emptyReassure: string;
+  shareAgain: string;
+  copyLink: string;
+  copied: string;
+  exportCsv: string;
+  yes: string;
+  no: string;
+  time: RelativeTimeStrings;
+  csv: RsvpCsvStrings;
   noTokenTitle: string;
   noTokenBody: string;
   noTokenHint: string;
@@ -532,6 +552,39 @@ export const MANAGE: Record<Language, ManageStrings> = {
   en: {
     kicker: "Host dashboard",
     loading: "Loading responses…",
+    updatedJustNow: "updated just now",
+    guestsComing: "guests coming",
+    comingBreakdown: "{yes} said yes · +{extra} with companions",
+    tileYes: "Yes",
+    tileNo: "No",
+    tileReplied: "Replied",
+    newSinceVisit: "{n} new since your last visit",
+    responsesTitle: "Responses · {n}",
+    previousAnswer: "previous answer",
+    emptyTitle: "No one has replied yet",
+    emptyBody:
+      "The invitation is published and ready. As soon as someone answers, it shows up here.",
+    emptyReassure: "That's normal — guests usually reply over a few days.",
+    shareAgain: "Share the link again",
+    copyLink: "Copy",
+    copied: "Copied!",
+    exportCsv: "Export CSV",
+    yes: "Yes",
+    no: "No",
+    time: {
+      justNow: "just now",
+      minutesAgo: "{n} min ago",
+      hoursAgo: "{n} h ago",
+      yesterday: "yesterday",
+      daysAgo: "{n} {form} ago",
+      dayForms: ["day", "days", "days"],
+    },
+    csv: {
+      headers: ["Name", "Answer", "Guests", "Note", "Replied at", "Status"],
+      yes: "Yes",
+      no: "No",
+      superseded: "superseded",
+    },
     noTokenTitle: "Your link is needed",
     noTokenBody:
       "This dashboard opens only with the personal link you got when you created the invitation. Paste it below.",
@@ -553,6 +606,38 @@ export const MANAGE: Record<Language, ManageStrings> = {
   uk: {
     kicker: "Панель господаря",
     loading: "Завантаження відповідей…",
+    updatedJustNow: "оновлено щойно",
+    guestsComing: "гостей прийдуть",
+    comingBreakdown: "{yes} відповіли «так» · +{extra} із супутниками",
+    tileYes: "Так",
+    tileNo: "Ні",
+    tileReplied: "Відповіли",
+    newSinceVisit: "{n} нових від вашого останнього візиту",
+    responsesTitle: "Відповіді · {n}",
+    previousAnswer: "попередня відповідь",
+    emptyTitle: "Ще ніхто не відповів",
+    emptyBody: "Запрошення опубліковане й готове. Щойно хтось відповість — усе з'явиться тут.",
+    emptyReassure: "Це нормально — зазвичай гості відповідають протягом кількох днів.",
+    shareAgain: "Поділіться посиланням ще раз",
+    copyLink: "Копіювати",
+    copied: "Скопійовано!",
+    exportCsv: "Експорт CSV",
+    yes: "Так",
+    no: "Ні",
+    time: {
+      justNow: "щойно",
+      minutesAgo: "{n} хв тому",
+      hoursAgo: "{n} год тому",
+      yesterday: "вчора",
+      daysAgo: "{n} {form} тому",
+      dayForms: ["день", "дні", "днів"],
+    },
+    csv: {
+      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
+      yes: "Так",
+      no: "Ні",
+      superseded: "замінена",
+    },
     noTokenTitle: "Потрібне ваше посилання",
     noTokenBody:
       "Ця панель відкривається лише за особистим посиланням, яке ви отримали при створенні запрошення. Вставте його нижче.",
