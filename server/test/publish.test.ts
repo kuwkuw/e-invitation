@@ -125,6 +125,41 @@ describe("publish + RSVP", () => {
     expect(summary.rsvps).toHaveLength(3);
     expect(summary.rsvps[1].note).toBe("Буду трохи пізніше");
     expect(summary.rsvps[2].guests_count).toBe(1);
+    // Distinct guests: nothing collapses, so nothing is superseded.
+    expect(summary.rsvps.every((r: { superseded: boolean }) => !r.superseded)).toBe(true);
+  });
+
+  // adr-010 §5: storage stays append-only, but the host's headcount must count
+  // a guest who changed their mind once, not twice.
+  it("supersedes a guest's earlier answer and counts only the latest", async () => {
+    const { id, manage_token } = (
+      await app.inject({ method: "POST", url: "/api/invitations/publish", payload: { invitation } })
+    ).json();
+
+    for (const rsvp of [
+      { name: "Оксана Литвин", attending: false },
+      { name: "Богдан", attending: true, guests_count: 1 },
+      // Same guest: different capitalisation and a doubled inner space.
+      { name: "оксана  литвин", attending: true, guests_count: 3 },
+    ]) {
+      await app.inject({ method: "POST", url: `/api/invitations/${id}/rsvp`, payload: rsvp });
+    }
+
+    const summary = (
+      await app.inject({
+        method: "GET",
+        url: `/api/invitations/${id}/rsvps`,
+        headers: { "x-manage-token": manage_token },
+      })
+    ).json();
+
+    // Оксана's "no" is history; her "yes" with 3 guests is the live answer.
+    expect(summary.counts).toEqual({ yes: 2, no: 0, guests: 4 });
+    // The full record is preserved — nothing is dropped from the list.
+    expect(summary.rsvps).toHaveLength(3);
+    expect(summary.rsvps[0]).toMatchObject({ name: "Оксана Литвин", superseded: true });
+    expect(summary.rsvps[1]).toMatchObject({ name: "Богдан", superseded: false });
+    expect(summary.rsvps[2]).toMatchObject({ name: "оксана  литвин", superseded: false });
   });
 
   it("returns 404 for unknown or malformed ids", async () => {

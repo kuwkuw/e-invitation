@@ -74,6 +74,10 @@ export interface RsvpInput {
 
 export interface RsvpEntry extends RsvpInput {
   created_at: string;
+  /** Computed server-side, never stored: a later answer from the same guest
+   *  replaced this one (adr-010 §5). Superseded entries stay in the list as
+   *  history but are excluded from `RsvpSummary.counts`. */
+  superseded: boolean;
 }
 
 export interface RsvpSummary {
