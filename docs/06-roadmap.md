@@ -56,10 +56,52 @@ edit tokens (§5), and the mockups' per-row response counts on the landing list
 (one authenticated request per invitation on a static page — wants a batch
 endpoint first).
 
-## Next iteration
+## Next iteration: client-side routing
 
-Not yet chosen. The backlog below is the candidate pool; nothing in it is
-committed.
+Adopt React Router in `web/`, settled in
+[ADR-011](decisions/adr-011-client-router.md) (proposed → accept before
+implementation).
+
+This one is **groundwork, not a response to pressure** — the 2026-07-24
+evaluation declined a router, and none of the revisit triggers it recorded has
+fired since. Two things make now the moment anyway: the manage view left
+`useHostManage` doing raw `history.replaceState` surgery to strip the `#t=`
+token, which is precisely a router's job done by hand; and at four routes and
+ten call sites the migration is as cheap as it will ever be.
+
+Scope is a **parity translation**: same four routes, same URLs, same
+components. What changes is who owns history — and three navigation points
+(the editor back button, the landing CTA, the invitations list) become real
+transitions instead of full reloads, which drops the `onStart` prop threaded
+through four buttons in `LandingPage`.
+
+The risk worth naming: the strict id regexes in `main.tsx` are also the
+path-traversal guard mirroring the server's `InvitationId`. A router's `:id`
+param is permissive, so that check has to move rather than vanish (adr-011 §3).
+
+No server, schema, store, or DS work — nothing here needs a `templates/*`
+mockup, and the `.design-sync` pipeline stays untouched.
+
+### Implementation plan (PR breakdown)
+
+One PR per task, merged in order, each against `main` — **not stacked on each
+other** (the last iteration's stack tail sat unlanded because three PRs
+targeted their predecessor instead of `main`).
+
+| # | PR | Depends on | Maps to | Notes |
+|---|----|-----------|--------|------|
+| A | Adopt the router at parity | — | adr-011 §1–3 | dependency, `main.tsx` route table, id validator at the route boundary, `MemoryRouter` test wrapper; **no behaviour change** |
+| B | Real transitions | A | adr-011 §4 | editor back button, landing CTA (`onStart` prop dropped), `YourInvitations` → `<Link>` |
+| C | Fragment token onto router history | A | adr-011 §5 | `useHostManage` drops `replaceState`/`location.hash` for `useLocation` + `navigate(replace)`; the four token states must stay intact |
+| D | Docs: flip to shipped | A, B, C | — | adr-011 → accepted, roadmap → shipped, measured bundle delta recorded against NFR-1 |
+
+A is the whole risk surface (§3) and everything else waits on it. B and C are
+independent of each other and can land in either order.
+
+Acceptance: all four routes reachable by deep link and by reload; a malformed
+id renders not-found rather than reaching `fetchInvitation`; a manage link with
+`#t=` still lands, persists, and strips the fragment; the editor's in-memory
+state still resets when the host leaves.
 
 ## Candidate backlog
 
@@ -77,22 +119,8 @@ committed.
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
-- **React Router in `web/`** — evaluated 2026-07-24, **not yet justified**.
-  The SPA has four routes (`/`, `/create`, `/i/:id`, `/manage/:id`), all
-  mutually exclusive top-level screens with no nesting and no shared chrome —
-  which is precisely the value a router adds. There are two navigation points
-  in the whole app, both deliberate full reloads between screens with unrelated
-  state models (the editor's in-memory state *should* reset on the way out).
-  Against that, `main.tsx`'s resolver is ~8 lines with zero dependencies,
-  `web/` ships only react + react-dom, and react-router-dom is ~12–20 kB
-  gzipped against the NFR-1 latency budget for a mobile-first audience. The
-  path regexes also double as validation — they mirror the server's
-  `InvitationId` and its path-traversal guard — where a router's `:id` param is
-  permissive and would need re-validating anyway.
-
-  Revisit when any of these becomes true (**nesting is the real trigger, not
-  route count**): a screen grows sub-routes (`/manage/:id/guests`,
-  `/manage/:id/settings`); a route needs query-param state synced to the URL
-  (filters, sort); transitions need to preserve state instead of reloading; or
-  the count passes ~6–8. Route-level code splitting is *not* a reason — Vite
-  does that with dynamic imports, no router required.
+- **React Router in `web/`** — evaluated 2026-07-24 and declined, then picked
+  up anyway as the iteration above; see
+  [adr-011](decisions/adr-011-client-router.md), which records both the
+  original reasoning and the fact that none of its revisit triggers had fired.
+  Retired from the backlog.
