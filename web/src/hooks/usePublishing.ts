@@ -1,24 +1,33 @@
 import { useState } from "react";
-import { fetchRsvps, publishInvitation } from "../api";
-import type { Invitation, PublishResult, RsvpSummary } from "../types";
+import { publishInvitation } from "../api";
+import type { Invitation, PublishResult } from "../types";
 
 export function shareUrl(id: string): string {
   return `${window.location.origin}/i/${id}`;
 }
 
+/** The host's own way back in (adr-010 §2-3). The token rides the fragment, so
+ *  it never reaches the server in a request line — and this link is a bearer
+ *  secret: whoever holds it can read every response and republish. The UI
+ *  treats it accordingly. */
+export function manageUrl(id: string, manageToken: string): string {
+  return `${window.location.origin}/manage/${id}#t=${manageToken}`;
+}
+
 /**
- * Publishing and everything gated behind it: the share link, the copy-link
- * confirmation, and the host's RSVP list. Republishing an already-published
- * invitation appends a version rather than minting a new link, so the
- * manage token is kept for the lifetime of the editor session.
+ * Publishing and the two links it produces. Reading responses is no longer
+ * here: that lives at `/manage/:id`, which survives this tab closing, and the
+ * panel links to it rather than duplicating the list.
+ *
+ * Republishing an already-published invitation appends a version rather than
+ * minting a new link, so the manage token is kept for the editor session.
  */
 export function usePublishing(onError: () => void) {
   const [published, setPublished] = useState<PublishResult | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [rsvps, setRsvps] = useState<RsvpSummary | null>(null);
-  const [rsvpsLoading, setRsvpsLoading] = useState(false);
+  const [manageCopied, setManageCopied] = useState(false);
 
   /** Publish (or republish) and open the share panel; a second call while the
    *  panel is open just closes it, so the header button toggles. */
@@ -35,8 +44,8 @@ export function usePublishing(onError: () => void) {
         published ? { id: published.id, manage_token: published.manage_token } : undefined,
       );
       setPublished(result);
-      // Survives a reload of the editor, which otherwise loses the token and
-      // with it the ability to republish or read responses.
+      // Read back by /manage/:id, so the host keeps access after this tab is
+      // gone — the manage link covers the case where this browser is too.
       localStorage.setItem(`inv-manage:${result.id}`, result.manage_token);
       setShareOpen(true);
     } catch {
@@ -53,14 +62,13 @@ export function usePublishing(onError: () => void) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function refreshRsvps() {
-    if (!published || rsvpsLoading) return;
-    setRsvpsLoading(true);
-    try {
-      setRsvps(await fetchRsvps(published.id, published.manage_token));
-    } finally {
-      setRsvpsLoading(false);
-    }
+  /** Separate from `copyLink` on purpose: separate action, separate
+   *  confirmation, and the confirmation repeats the warning. */
+  async function copyManageLink() {
+    if (!published) return;
+    await navigator.clipboard.writeText(manageUrl(published.id, published.manage_token));
+    setManageCopied(true);
+    setTimeout(() => setManageCopied(false), 3000);
   }
 
   return {
@@ -68,10 +76,9 @@ export function usePublishing(onError: () => void) {
     publishing,
     shareOpen,
     copied,
-    rsvps,
-    rsvpsLoading,
+    manageCopied,
     share,
     copyLink,
-    refreshRsvps,
+    copyManageLink,
   };
 }
