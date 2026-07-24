@@ -7,6 +7,8 @@ import type {
   Invitation,
   PublishedInvitation,
   PublishResult,
+  RsvpCountsRequestItem,
+  RsvpCountsResponse,
   RsvpInput,
   RsvpSummary,
 } from "./types";
@@ -125,4 +127,11 @@ export function fetchRsvps(id: string, manageToken: string): Promise<RsvpSummary
   return request<RsvpSummary>(`/api/invitations/${id}/rsvps`, {
     headers: { "x-manage-token": manageToken },
   });
+}
+
+/** Counts for several invitations at once, for the landing list (adr-012).
+ *  A POST because the tokens travel in the body — a query string would put
+ *  them in logs and referrer headers, which the manage link exists to avoid. */
+export function fetchRsvpCounts(items: RsvpCountsRequestItem[]): Promise<RsvpCountsResponse> {
+  return post<RsvpCountsResponse>("/api/invitations/counts", { items });
 }

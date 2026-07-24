@@ -17,7 +17,7 @@ import {
 } from "../metrics.js";
 import { regenerateField } from "../pipeline/copy.js";
 import { generateInvitation } from "../pipeline/generate.js";
-import { summarizeRsvps } from "../rsvpSummary.js";
+import { countNewSince, summarizeRsvps } from "../rsvpSummary.js";
 import {
   BackgroundId,
   BackgroundRequest,
@@ -26,6 +26,8 @@ import {
   InvitationId,
   PublishRequest,
   RegenerateFieldRequest,
+  RsvpCountsRequest,
+  type RsvpCountsResult,
   RsvpRequest,
 } from "../schemas.js";
 import {
@@ -197,6 +199,44 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     addRsvp(record, { ...body, created_at: new Date().toISOString() });
     recordRsvp();
     return { ok: true };
+  });
+
+  // Batch response counts for the returning-host landing list (adr-012).
+  //
+  // A POST that reads nothing: the tokens ride the body because a GET would
+  // put them in the query string, and adr-010 §2 chose the URL fragment
+  // precisely so a manage token stays out of logs and referrer headers.
+  //
+  // Authorization is per item — there is no "this batch is authorized" state,
+  // because there is no such thing as a host, only bearers of individual
+  // tokens (adr-005). So a refused or unknown id is a per-item status inside a
+  // 200, never a whole-batch error: one stale token must not blank the rows
+  // beside it. Whole-batch statuses are for whole-batch problems only.
+  app.post("/api/invitations/counts", async (request, reply) => {
+    let body: RsvpCountsRequest;
+    try {
+      body = RsvpCountsRequest.parse(request.body);
+    } catch (error) {
+      return reply.code(400).send({ error: describeZodError(error) });
+    }
+    const results: RsvpCountsResult[] = body.items.map((item) => {
+      const record = getRecord(item.id);
+      if (!record) return { id: item.id, status: "not_found" as const };
+      if (!tokenMatches(record, item.token)) return { id: item.id, status: "forbidden" as const };
+      // The same summary the dashboard renders, so a row cannot disagree with
+      // the screen it links to. Counts only — guest names have no business on
+      // the landing page, and a batch of full lists would disclose meaningfully
+      // more from one request than the per-invitation endpoint does.
+      const summary = summarizeRsvps(record.rsvps);
+      return {
+        id: item.id,
+        status: "ok" as const,
+        counts: summary.counts,
+        new_since: countNewSince(summary, item.seen_at),
+      };
+    });
+    // Per-host data keyed by secrets: nothing in between should retain it.
+    return reply.header("Cache-Control", "no-store").send({ results });
   });
 
   // Host-only RSVP list, authenticated by the manage token from publish.
