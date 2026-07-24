@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { YourInvitations } from "./components/YourInvitations";
@@ -10,10 +11,6 @@ import type { DesignTokens, InvitationCopy, Language } from "./types";
 // Chrome copy is bilingual (LANDING strings); the hero composes the real
 // InvitationPreview component with three sample events whose content stays
 // Ukrainian on purpose — invitations are showcased content, not chrome.
-
-interface Props {
-  onStart: () => void;
-}
 
 const samples: { copy: InvitationCopy; design: DesignTokens }[] = [
   {
@@ -60,11 +57,16 @@ const responses = [
   { name: "Родина Шевченків", status: "wait" },
 ] as const;
 
-export function LandingPage({ onStart }: Props) {
+export function LandingPage() {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Language>(loadUiLang);
   const t = LANDING[lang];
   // Read once: the list only changes by publishing, which happens elsewhere.
   const [mine] = useState(loadHostInvitations);
+
+  // Every call to action on the page goes to the same place; the editor starts
+  // empty either way, so there is nothing to carry across.
+  const startEditing = () => navigate("/create");
 
   function handleLang(next: Language) {
     setLang(next);
@@ -77,7 +79,7 @@ export function LandingPage({ onStart }: Props) {
         <span className="lp-brand">{t.brand}</span>
         <div className="lp-nav-right">
           <LangSwitcher value={lang} onChange={handleLang} />
-          <button type="button" className="lp-cta lp-cta-sm" onClick={onStart}>
+          <button type="button" className="lp-cta lp-cta-sm" onClick={startEditing}>
             {t.cta}
           </button>
         </div>
@@ -92,7 +94,7 @@ export function LandingPage({ onStart }: Props) {
         <div className="lp-hero-copy">
           <h1>{t.heroTitle}</h1>
           <p>{t.heroText}</p>
-          <button type="button" className="lp-cta" onClick={onStart}>
+          <button type="button" className="lp-cta" onClick={startEditing}>
             {t.cta}
           </button>
         </div>
@@ -148,7 +150,7 @@ export function LandingPage({ onStart }: Props) {
 
       <section className="lp-final">
         <h2>{t.finalTitle}</h2>
-        <button type="button" className="lp-cta" onClick={onStart}>
+        <button type="button" className="lp-cta" onClick={startEditing}>
           {t.cta}
         </button>
       </section>
@@ -156,7 +158,7 @@ export function LandingPage({ onStart }: Props) {
       <footer className="lp-footer">{t.footer}</footer>
 
       <div className="lp-sticky-cta">
-        <button type="button" className="lp-cta" onClick={onStart}>
+        <button type="button" className="lp-cta" onClick={startEditing}>
           {t.cta}
         </button>
       </div>

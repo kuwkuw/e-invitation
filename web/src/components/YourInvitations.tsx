@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { HostInvitation } from "../hostInvitations";
 import type { LandingStrings } from "../i18n";
 import { formatRelativeTime } from "../relativeTime";
@@ -42,10 +43,10 @@ export function YourInvitations({
 
       <div className="lp-yours-card">
         {capped.map((invitation) => (
-          <a
+          <Link
             key={invitation.id}
             className="lp-yours-row"
-            href={`/manage/${invitation.id}`}
+            to={`/manage/${invitation.id}`}
             // The row opens the host dashboard with the token this browser
             // already holds — no password, no sign-in (adr-010 §2).
           >
@@ -70,7 +71,7 @@ export function YourInvitations({
                 strokeLinejoin="round"
               />
             </svg>
-          </a>
+          </Link>
         ))}
 
         {!expanded && invitations.length > VISIBLE && (
