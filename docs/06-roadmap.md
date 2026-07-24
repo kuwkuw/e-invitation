@@ -164,3 +164,22 @@ committing docs + tokens onto the feature branch. Everything else is pending.
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
+- **React Router in `web/`** — evaluated 2026-07-24, **not yet justified**.
+  After this iteration the SPA has four routes (`/`, `/create`, `/i/:id`,
+  `/manage/:id`), all mutually exclusive top-level screens with no nesting and
+  no shared chrome — which is precisely the value a router adds. There are two
+  navigation points in the whole app, both deliberate full reloads between
+  screens with unrelated state models (the editor's in-memory state *should*
+  reset on the way out). Against that, `main.tsx`'s resolver is ~6 lines with
+  zero dependencies, `web/` currently ships only react + react-dom, and
+  react-router-dom is ~12–20 kB gzipped against the NFR-1 latency budget for a
+  mobile-first audience. The path regexes also double as validation — they
+  mirror the server's `InvitationId` and its path-traversal guard — where a
+  router's `:id` param is permissive and would need re-validating anyway.
+
+  Revisit when any of these becomes true (**nesting is the real trigger, not
+  route count**): a screen grows sub-routes (`/manage/:id/guests`,
+  `/manage/:id/settings`); a route needs query-param state synced to the URL
+  (filters, sort); transitions need to preserve state instead of reloading; or
+  the count passes ~6–8. Route-level code splitting is *not* a reason — Vite
+  does that with dynamic imports, no router required.
