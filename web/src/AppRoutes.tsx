@@ -1,7 +1,6 @@
 import { Route, Routes, useParams } from "react-router-dom";
 import App from "./App";
 import { GuestPage } from "./GuestPage";
-import { isInvitationId } from "./invitationId";
 import { LandingPage } from "./LandingPage";
 import { ManagePage } from "./ManagePage";
 
@@ -14,18 +13,19 @@ import { ManagePage } from "./ManagePage";
  *    /           → marketing landing page
  */
 
-/** `:id` matches any non-empty segment, so the id is validated here instead of
- *  by the route pattern (adr-011 §3). An id that doesn't fit the server's shape
- *  renders the landing page without ever reaching `fetchInvitation` — the same
- *  place the old regex resolver sent it. */
+/** `:id` matches any non-empty segment, so an id that doesn't fit the server's
+ *  shape still arrives here. The screens handle it: their hooks treat it as a
+ *  dead link and never call the API with it (adr-011 §3), which is a better
+ *  answer than the marketing page — someone following a broken share link
+ *  needs to be told the link is broken. */
 function GuestRoute() {
   const { id } = useParams();
-  return isInvitationId(id) ? <GuestPage id={id} /> : <LandingPage />;
+  return <GuestPage id={id ?? ""} />;
 }
 
 function ManageRoute() {
   const { id } = useParams();
-  return isInvitationId(id) ? <ManagePage id={id} /> : <LandingPage />;
+  return <ManagePage id={id ?? ""} />;
 }
 
 export function AppRoutes() {

@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { AppRoutes } from "../src/AppRoutes";
 import { recordHostInvitation } from "../src/hostInvitations";
-import { LANDING, MANAGE, UI } from "../src/i18n";
+import { GUEST, LANDING, MANAGE, UI } from "../src/i18n";
 
 // globals:false in vite.config.ts means RTL never auto-cleans.
 afterEach(() => {
@@ -38,6 +38,15 @@ describe("navigation", () => {
     fireEvent.click(screen.getByLabelText(UI.uk.chat.back));
 
     expect(screen.getByText(LANDING.uk.heroTitle)).toBeTruthy();
+  });
+
+  it("tells a guest their link is dead rather than showing them the pitch", () => {
+    // A broken share link used to land on the marketing page, which answers a
+    // question the guest did not ask.
+    renderAt("/i/not-a-real-id-!!");
+
+    expect(screen.getByText(GUEST.uk.notFoundTitle)).toBeTruthy();
+    expect(screen.queryByText(LANDING.uk.heroTitle)).toBeNull();
   });
 
   it("opens an invitations row in the manage view", () => {

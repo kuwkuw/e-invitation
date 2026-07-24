@@ -93,10 +93,17 @@ targeted their predecessor instead of `main`).
 | A | Adopt the router at parity | — | adr-011 §1–3 | dependency, `main.tsx` route table, id validator at the route boundary, `MemoryRouter` test wrapper; **no behaviour change** |
 | B | Real transitions | A | adr-011 §4 | editor back button, landing CTA (`onStart` prop dropped), `YourInvitations` → `<Link>` |
 | C | Fragment token onto router history | A | adr-011 §5 | `useHostManage` drops `replaceState`/`location.hash` for `useLocation` + `navigate(replace)`; the four token states must stay intact |
-| D | Docs: flip to shipped | A, B, C | — | adr-011 → accepted, roadmap → shipped, measured bundle delta recorded against NFR-1 |
+| E | Malformed ids render not-found | A, B | adr-011 §3 | added after A shipped; `/i/<bad>` showed the marketing page, which answers a question the guest never asked |
+| D | Docs: flip to shipped | A, B, C, E | — | adr-011 → accepted, roadmap → shipped, measured bundle delta recorded against NFR-1 |
 
 A is the whole risk surface (§3) and everything else waits on it. B and C are
 independent of each other and can land in either order.
+
+E was not in the original plan. A preserved the old resolver's behaviour of
+sending a malformed id to the landing page, which is right for a parity PR and
+wrong on its own merits — a guest following a broken share link should be told
+the link is broken. It also moves the id guard from the route boundary to the
+hooks that own the fetch, so no caller can spend a malformed id on the API.
 
 Acceptance: all four routes reachable by deep link and by reload; a malformed
 id renders not-found rather than reaching `fetchInvitation`; a manage link with
