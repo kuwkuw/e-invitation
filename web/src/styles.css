@@ -167,14 +167,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   position: absolute;
   top: 62px; right: 14px;
   z-index: 30;
-  width: min(380px, calc(100vw - 28px));
+  width: min(400px, calc(100vw - 28px));
   background: #fff;
   border: 1px solid #e4ddd0;
-  border-radius: 16px;
-  box-shadow: 0 24px 54px rgba(20, 18, 14, 0.24);
-  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 26px 60px rgba(20, 18, 14, 0.24);
+  padding: 22px;
 }
-.cc-share-panel .publish-status { margin-top: 0; }
 
 /* BYOK key panel (ADR-006) — shares the share-panel dropdown shell. */
 .cc-key-on { color: #b3592e; }
@@ -433,11 +432,14 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .swatch.active { border-color: #23211d; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #23211d; }
 .swatch-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 
-/* Publish panel --------------------------------------------------------- */
+/* Share panel ----------------------------------------------------------- */
+/* From the "share-panel" template in the E-invitation DS project. Two links
+   that must never be confused: the public one is the single filled accent,
+   first; the manage link sits below a divider in its own warm "sensitive"
+   block, masked, with a quiet outline button. Nothing server-side stops a
+   host pasting the wrong one into a group chat — this hierarchy is the
+   safeguard (adr-010 §3). */
 
-.publish-panel { margin-top: 20px; }
-.publish-status { color: #6b6659; font-size: 0.85rem; margin: 10px 0 0; }
-.share-hint { font-size: 0.9rem; margin: 12px 0 6px; }
 .share-row { display: flex; gap: 8px; }
 .share-row input {
   flex: 1;
@@ -448,7 +450,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-size: 0.9rem;
   background: #fff;
 }
-.share-row button, .responses-head button {
+.share-row button {
   border: 1px solid #c8c4bb;
   background: #fff;
   border-radius: 6px;
@@ -457,17 +459,79 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   cursor: pointer;
   white-space: nowrap;
 }
-.share-row button:disabled, .responses-head button:disabled { opacity: 0.5; cursor: default; }
+.share-row button:disabled { opacity: 0.5; cursor: default; }
 
-.responses { margin-top: 20px; }
-.responses-head { display: flex; align-items: baseline; gap: 12px; }
-.responses-head h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b6659; margin: 0; }
-.responses-empty, .responses-counts { font-size: 0.9rem; color: #6b6659; }
-.responses-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.95rem; }
-.responses-list li { padding: 4px 0; border-bottom: 1px solid #e8e5de; }
-.rsvp-yes { color: var(--rsvp-yes); }
-.rsvp-no { color: var(--rsvp-no); }
-.rsvp-note { color: #6b6659; }
+.sp-head { display: flex; align-items: center; gap: 10px; }
+.sp-check {
+  flex: 0 0 auto;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
+}
+.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: #23211d; }
+.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: #8d8577; background: #f1ede4; border: 1px solid #e4ddd0; border-radius: 999px; padding: 4px 10px; }
+.sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: #6b6659; }
+
+.sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: #23211d; }
+.sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: 6px; padding: 2px 7px; }
+.sp-link {
+  display: flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 14px; margin-bottom: 12px;
+  border: 1px solid #e4ddd0; border-radius: 14px; background: #f7f5f1;
+  color: #a89f8e;
+}
+.sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: #23211d; }
+
+/* The one filled accent in the panel. Nothing else competes with it. */
+.sp-primary {
+  width: 100%; height: 52px;
+  border: none; border-radius: 16px;
+  background: #b3592e; color: #fff;
+  font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.sp-primary:hover { background: #9f4d26; box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
+.sp-hint { margin: 10px 0 0; text-align: center; font-size: 0.8rem; color: #8d8577; }
+
+.sp-divider { height: 1px; background: #ece7dd; margin: 18px 0; }
+
+/* Sensitive block: warm tint distinct from the clean chrome, so the eye reads
+   "different kind of thing" before it reads any words. */
+.sp-manage { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px 15px; }
+.sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
+.sp-manage-warning { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.45; color: var(--rsvp-no); }
+.sp-manage-row { display: flex; align-items: center; gap: 8px; }
+.sp-manage-value {
+  flex: 1; min-width: 0;
+  height: 46px; display: flex; align-items: center; padding: 0 12px;
+  border: 1px solid #e4d4c0; border-radius: 12px; background: #fffdfa;
+  font-size: 0.88rem; color: #9a8f7d;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Outline only — never filled, so it can't be mistaken for the primary. */
+.sp-ghost {
+  flex: 0 0 auto; height: 46px; padding: 0 14px;
+  border: 1px solid #dcccb6; border-radius: 12px; background: transparent;
+  color: #7a5638; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.sp-ghost:hover { border-color: #b3592e; color: #23211d; }
+.sp-reveal, .sp-manage-copied {
+  display: block; width: 100%; margin: 9px 0 0;
+  border: none; background: none; padding: 0;
+  text-align: center; font: inherit; font-size: 0.76rem; color: #a89478;
+}
+.sp-reveal { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.sp-reveal:hover { color: #b3592e; }
+.sp-manage-copied { color: #7a5638; font-weight: 600; }
+
+.sp-responses-link {
+  display: block; margin-top: 16px;
+  text-align: center; font-size: 0.9rem; font-weight: 600;
+  color: #6b6659; text-decoration: none;
+}
+.sp-responses-link:hover { color: #b3592e; }
 
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the
@@ -1216,4 +1280,69 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   .hm-list-col { flex: 1; min-width: 0; }
   .hm-bignum { font-size: 3.6rem; }
   .hm-empty, .hm-prompt { max-width: 480px; margin-left: auto; margin-right: auto; }
+}
+
+/* Landing: returning-host block ------------------------------------------ */
+/* From the "landing-page" Returning template. A utility surface above the
+   pitch: modest heading, no accent button, nothing that competes with
+   "Create an invitation" — which stays the only accent on the page. */
+
+.lp-yours {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 8px clamp(22px, 5vw, 64px) 0;
+}
+.lp-yours-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.lp-yours-head h2 {
+  margin: 0;
+  font-family: var(--lp-display);
+  font-size: 1.25rem; font-weight: 700; color: #4a3728;
+}
+/* Says where the list comes from, instead of implying an account. */
+.lp-yours-sub { font-size: 0.8rem; color: #8d8577; }
+
+.lp-yours-card { background: #fff; border: 1px solid #e4ddd0; border-radius: 14px; overflow: hidden; }
+
+.lp-yours-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  text-decoration: none; color: inherit;
+  border-bottom: 1px solid #f0eadf;
+  transition: background 0.12s;
+}
+.lp-yours-row:last-child { border-bottom: none; }
+.lp-yours-row:hover { background: #faf8f4; }
+.lp-yours-row svg { flex: 0 0 auto; color: #b0a99a; }
+
+/* Monogram tinted by the invitation's own palette — the row reads as that
+   event, without re-rendering the card or inventing an avatar for a person. */
+.lp-yours-mono {
+  flex: 0 0 auto;
+  width: 42px; height: 42px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--lp-display); font-size: 1.3rem;
+  background: var(--bg, #f1ede4); color: var(--accent, #b3592e);
+}
+
+.lp-yours-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lp-yours-title {
+  font-size: 1rem; font-weight: 700; color: #4a3728;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: #8d8577; }
+
+.lp-yours-more {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 13px;
+  border: none; border-top: 1px solid #f0eadf; background: #fcfaf6;
+  font: inherit; font-size: 0.88rem; font-weight: 700; color: #b3592e;
+  cursor: pointer;
+}
+.lp-yours-more:hover { background: #f7f2e9; }
+
+@media (max-width: 800px) {
+  .lp-yours { padding-top: 4px; }
+  .lp-yours-head h2 { font-size: 1.1rem; }
+  .lp-yours-mono { width: 38px; height: 38px; font-size: 1.15rem; }
+  .lp-yours-title { font-size: 0.95rem; }
 }

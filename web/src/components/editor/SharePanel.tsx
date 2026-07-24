@@ -1,89 +1,99 @@
-import { buildRsvpCsv } from "../../csv";
-import { downloadFile } from "../../download";
-import { shareUrl } from "../../hooks/usePublishing";
+import { useState } from "react";
+import { manageUrl, shareUrl } from "../../hooks/usePublishing";
 import type { UiStrings } from "../../i18n";
-import type { PublishResult, RsvpSummary } from "../../types";
+import type { PublishResult } from "../../types";
+import { CheckIcon, LinkIcon, LockIcon } from "./icons";
 
 interface Props {
   published: PublishResult;
-  rsvps: RsvpSummary | null;
-  rsvpsLoading: boolean;
   onCopyLink: () => void;
   copied: boolean;
-  onRefreshRsvps: () => void;
+  onCopyManageLink: () => void;
+  manageCopied: boolean;
   t: UiStrings;
 }
 
-/** Post-publish panel: the share link plus the host's response list. Opened
- *  by the header's share button; the RSVP list is fetched on demand rather
- *  than polled, so the host sees a refresh control instead of live counts. */
+/**
+ * Post-publish panel: two links that must never be confused for each other.
+ *
+ * The public `/i/:id` link is the reason the panel exists — first, with the
+ * one filled accent button. The manage link is the host's only credential:
+ * below a divider, in its own warm "sensitive" block, masked by default, with
+ * a quiet outline button and an explicit warning. There is no server-side
+ * protection against a host pasting the wrong one into a group chat, so this
+ * hierarchy is the safeguard (adr-010 §3, "share-panel" DS template).
+ */
 export function SharePanel({
   published,
-  rsvps,
-  rsvpsLoading,
   onCopyLink,
   copied,
-  onRefreshRsvps,
+  onCopyManageLink,
+  manageCopied,
   t,
 }: Props) {
-  const url = shareUrl(published.id);
+  const [revealed, setRevealed] = useState(false);
+  const guestUrl = shareUrl(published.id);
+
   return (
     <div className="cc-share-panel">
-      <p className="publish-status">
-        {t.publishedVersion.replace("{n}", String(published.version))}
+      <div className="sp-head">
+        <span className="sp-check">
+          <CheckIcon />
+        </span>
+        <h2 className="sp-title">{t.publishedTitle}</h2>
+        <span className="sp-version">
+          {t.publishedVersion.replace("{n}", String(published.version))}
+        </span>
+      </div>
+      <p className="sp-subtitle">{t.publishedSubtitle}</p>
+
+      <p className="sp-label">
+        {t.guestLinkLabel}
+        <span className="sp-badge">{t.guestLinkBadge}</span>
       </p>
-      <p className="share-hint">{t.shareHint}</p>
-      <div className="share-row">
-        <input readOnly value={url} onFocus={(e) => e.target.select()} />
-        <button type="button" onClick={onCopyLink}>
-          {copied ? t.copied : t.copyLink}
-        </button>
+      <div className="sp-link">
+        <LinkIcon />
+        <span className="sp-link-value">{guestUrl}</span>
       </div>
-      <div className="responses">
-        <div className="responses-head">
-          <h3>{t.responsesTitle}</h3>
-          <button type="button" onClick={onRefreshRsvps} disabled={rsvpsLoading}>
-            {rsvpsLoading ? "…" : `↻ ${t.refreshResponses}`}
+      <button type="button" className="sp-primary" onClick={onCopyLink}>
+        {copied ? t.copied : t.copyLink}
+      </button>
+      <p className="sp-hint">{t.shareHint}</p>
+
+      <div className="sp-divider" />
+
+      <section className="sp-manage">
+        <p className="sp-manage-label">
+          <LockIcon />
+          {t.manageLinkLabel}
+        </p>
+        <p className="sp-manage-warning">{t.manageLinkWarning}</p>
+        <div className="sp-manage-row">
+          {/* Masked by default so it can't be swept up by a stray select-all
+              or an absent-minded copy. Revealing is a deliberate act. */}
+          <span className="sp-manage-value">
+            {revealed
+              ? manageUrl(published.id, published.manage_token)
+              : `${window.location.host}/manage/${t.manageLinkMasked}`}
+          </span>
+          <button type="button" className="sp-ghost" onClick={onCopyManageLink}>
+            {t.copyManageLink}
           </button>
-          {rsvps && rsvps.rsvps.length > 0 && (
-            <button
-              type="button"
-              onClick={() =>
-                downloadFile(
-                  "rsvps.csv",
-                  buildRsvpCsv(rsvps.rsvps, t.csv),
-                  "text/csv;charset=utf-8",
-                )
-              }
-            >
-              {`⬇ ${t.exportCsv}`}
-            </button>
-          )}
         </div>
-        {rsvps &&
-          (rsvps.rsvps.length === 0 ? (
-            <p className="responses-empty">{t.responsesEmpty}</p>
-          ) : (
-            <>
-              <p className="responses-counts">
-                ✓ {rsvps.counts.yes} {t.countYes} · ✗ {rsvps.counts.no} {t.countNo} ·{" "}
-                {rsvps.counts.guests} {t.countGuests}
-              </p>
-              <ul className="responses-list">
-                {rsvps.rsvps.map((r) => (
-                  <li key={`${r.created_at}:${r.name}`}>
-                    <span className={r.attending ? "rsvp-yes" : "rsvp-no"}>
-                      {r.attending ? "✓" : "✗"}
-                    </span>{" "}
-                    <strong>{r.name}</strong>
-                    {r.attending && r.guests_count > 1 && ` ×${r.guests_count}`}
-                    {r.note && <span className="rsvp-note"> — {r.note}</span>}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ))}
-      </div>
+        {manageCopied ? (
+          <p className="sp-manage-copied">{t.manageLinkCopied}</p>
+        ) : (
+          !revealed && (
+            <button type="button" className="sp-reveal" onClick={() => setRevealed(true)}>
+              {t.revealManageLink}
+            </button>
+          )
+        )}
+      </section>
+
+      <a className="sp-responses-link" href={`/manage/${published.id}`}>
+        {t.viewResponses}
+      </a>
     </div>
   );
 }

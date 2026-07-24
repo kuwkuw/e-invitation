@@ -43,6 +43,17 @@
 - Host authority = possession of the `manage_token` (128-bit random hex),
   compared in constant time (`timingSafeEqual`). It is returned only at
   publish time and never included in public payloads.
+- The **manage link** (`/manage/:id#t=…`, FR-5.4) carries that token as a
+  bearer secret so a host can move devices. It rides the URL **fragment**,
+  which browsers never send to the server — so it stays out of access logs,
+  referrer headers and the SPA-shell request path — and is stripped from the
+  address bar once stored. In the UI it is masked, never pre-selected or
+  auto-copied, and visually subordinate to the public share link: with no
+  server-side protection against a host pasting the wrong one into a group
+  chat, that hierarchy is the control ([adr-010](decisions/adr-010-host-manage-link.md) §3).
+- Browser-local host state (`inv-manage:<id>`, `inv-manage-seen:<id>`,
+  `inv-invitations`) never leaves the device. The invitations index holds
+  titles and dates only — no tokens.
 - Invitation IDs are 8 random bytes base64url; the `InvitationId` regex doubles
   as a path-traversal guard for the file store — keep it strict.
 - All request bodies are zod-validated with length caps before any processing;

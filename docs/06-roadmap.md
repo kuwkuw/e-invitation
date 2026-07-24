@@ -1,8 +1,9 @@
 # 06 — Roadmap: next iteration
 
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
-decomposition landed. This doc plans the **next** iteration; when an item
-ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
+decomposition landed; updated 2026-07-24 when the manage-view iteration
+shipped. This doc plans the **next** iteration; when an item ships it moves
+into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
 
@@ -15,142 +16,52 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-The previous iteration ("safe to open to real hosts") shipped in full:
-guardrails as FR-9 / [adr-008](decisions/adr-008-operator-cost-guardrails.md),
-durable metrics as FR-7, guest add-to-calendar as FR-4.5, plus FR-10 /
-[adr-009](decisions/adr-009-ai-background-layer.md) for backgrounds.
+Two iterations have shipped since:
 
-What that leaves exposed:
+- **"Safe to open to real hosts"** — guardrails as FR-9 /
+  [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
+  FR-7, guest add-to-calendar as FR-4.5, plus FR-10 /
+  [adr-009](decisions/adr-009-ai-background-layer.md) for backgrounds.
+- **"The host can come back"** — below.
 
-1. **The host dashboard is session-bound.** The manage token is written to
-   `localStorage` at publish and never read back; there is no host route in
-   `main.tsx`. Close the tab and the RSVP list is unreachable — the only way
-   back is re-publishing, which mints a new share link and orphans the one
-   guests already have. Checking responses is a come-back-later action, so
-   this is the feature not working, not a rough edge.
-2. **The headcount can be wrong.** RSVPs are append-only by design (FR-4.4),
-   but the counts sum every attending row, so a guest who answers no→yes is
-   counted twice — in the one number the host caters on.
-3. **Response fetch failures are invisible.** `refreshRsvps` has no `catch`;
-   a stale-token `403` stops the spinner and says nothing. And the panel
-   renders no content at all — not even the empty state — until the host
-   clicks Refresh.
+## Shipped: the host can come back
 
-## Iteration theme: the host can come back
+Goal was that publishing an invitation and checking its responses are two
+separate visits, days apart, possibly on two different devices — and both
+work. Settled in [ADR-010](decisions/adr-010-host-manage-link.md) (accepted)
+and shipped as **FR-5.4–5.6**, refining FR-3.3 and FR-4.4.
 
-Goal: publishing an invitation and checking its responses are two separate
-visits, days apart, possibly on two different devices — and both work.
+What it fixed, against the three exposures that motivated it:
 
-Settled in [ADR-010](decisions/adr-010-host-manage-link.md) (proposed → accept
-before implementation).
+1. **The host dashboard was session-bound.** The manage token was written to
+   `localStorage` at publish and never read back, and there was no host route
+   at all — closing the tab made responses unreachable except by re-publishing,
+   which orphaned the share link guests already had. Now `/manage/:id` resolves
+   the token from the URL fragment, storage, or a pasted manage link (FR-5.4).
+2. **The headcount could be wrong.** Counts summed every attending row, so a
+   guest who answered no→yes was counted twice in the one number a host caters
+   on. Re-submissions now collapse per guest at read time, with the replaced
+   answer kept as history (FR-5.5).
+3. **Response failures were invisible.** A stale-token `403` stopped the
+   spinner and said nothing. Missing token, refused token, unknown invitation
+   and network failure are now four distinct, recoverable states (FR-5.4).
 
-### 1. `/manage/:id` — the durable response dashboard (blocker)
+Delivered as seven PRs — planning + status tokens, server counts, route and
+token plumbing, the dashboard UI, the share-panel hierarchy, the landing
+"your invitations" list, and this docs pass. Design preceded code: three
+`templates/*` mockups in the E-invitation DS project (adr-010 §9).
 
-A read-only host screen composed from two endpoints that already exist: the
-public `GET /api/invitations/:id` for the event, the token-gated
-`GET /api/invitations/:id/rsvps` for the responses. No new host-facing server
-route.
+Deliberately left out, with reasons in adr-010: RSVP deletion (§8), per-guest
+edit tokens (§5), and the mockups' per-row response counts on the landing list
+(one authenticated request per invitation on a static page — wants a batch
+endpoint first).
 
-- Token resolution in order: `#t=<token>` fragment → `localStorage`
-  (`inv-manage:<id>`, the key publish already writes) → an empty state with a
-  paste-your-link field. A fragment token is persisted and then stripped from
-  the URL with `history.replaceState`.
-- Fragment, never query string — the credential stays out of server logs and
-  referrer headers (adr-010 §2).
-- Route added to `main.tsx` beside `/i/:id`, same strict id regex.
+## Next iteration
 
-Acceptance: publish, close the tab, open the manage link on another device →
-the response list loads. Clearing site data without the link → the empty
-state, not a crash.
+Not yet chosen. The backlog below is the candidate pool; nothing in it is
+committed.
 
-### 2. Manage link + "your invitations" index
-
-- The share panel gains a **second, explicitly-labelled** copy action for the
-  manage link, visually subordinate to the share link, with a one-line "keep
-  this private" warning (adr-010 §3).
-- Publish also maintains a browser-local `inv-invitations` index
-  (`{ id, title, published_at }`) so the landing page can show "Your
-  invitations" with recognizable titles instead of opaque ids (adr-010 §4).
-
-Acceptance: after publishing twice from one browser, `/` lists both by title
-and each row opens its manage view.
-
-### 3. Correct counts + honest failures
-
-- `GET /api/invitations/:id/rsvps` groups entries by normalized name, flags
-  earlier ones `superseded: true`, and computes `counts` over the
-  non-superseded set (adr-010 §5). The full list stays in the response; CSV
-  keeps every row and gains a column. Schema change → `web/src/types.ts`
-  mirrors it in the same PR (NFR-8).
-- Fetch on mount and on `visibilitychange → visible`; "N new since your last
-  visit" from a local last-seen timestamp (adr-010 §6). No polling.
-- `403` / `404` / network failures get real messages in both the manage view
-  and the in-editor panel; the panel renders its empty state without needing
-  a manual refresh first (adr-010 §7).
-
-Acceptance: one guest answering no then yes yields yes=1, no=0, and one
-superseded row; a tampered token shows the invalid-link message instead of a
-silent stall.
-
-### 0. Design first: three DS templates (adr-010 §9) — ✅ done
-
-The host dashboard was the only screen in the app with no `templates/*` mockup
-in the E-invitation DS project — every other host/guest surface got one before
-it got code, and adr-009 §4 settled the scrim spec that way. Now landed in the
-E-invitation DS project:
-
-- `templates/host-manage` (HostMain/HostStates/HostSpec) — five states,
-  mobile-primary, with the superseded-row and "N new" treatments.
-- `templates/share-panel` (ShareMain/ShareStates/ShareSpec) — the manage-link
-  action's visual subordination (adr-010 §3), plus an anti-pattern card.
-- `templates/landing-page` returning-host variant (…Returning).
-
-Settled tokens `--rsvp-yes: #3d6b47` / `--rsvp-no: #a83f3f` (both AA on white)
-and the visual treatments are recorded in adr-010 §9 for implementation.
-
-The `.design-sync` **component** pipeline needs nothing — no token, copy-field,
-or `InvitationPreview` prop changes, so `dtsPropsFor`/`conventions.md` stay as
-they are and no re-sync runs (NOTES.md re-sync triggers don't fire).
-
-### Sequencing
-
-0 comes first and unblocks all the UI work. 1 is the blocker and carries the
-route + token plumbing. 3's server half (counts) is independent of the design
-entirely and can land first as a small PR; 3's UI half wants 0 and 1 in place.
-2 is the smallest and can ride with either. Nothing here touches the pipeline,
-the routing table, the invitation schema, or the store.
-
-### Implementation plan (PR breakdown)
-
-The plan of record. The three iteration items above (1/2/3) decompose into
-these discrete PRs — **one PR per task**, merged in dependency order. This
-supersedes the prose sequencing above at finer grain.
-
-**Base branch.** `feat/host-manage-view`, based on `main`. The decomposed
-hooks (`web/src/hooks/`) and editor components
-(`web/src/components/editor/SharePanel.tsx`) that tasks C–F edit landed on
-`main` with the decompose work (PR #17), so `main` is the correct base and
-each task's PR targets it.
-
-| # | PR | Depends on | Maps to | Notes |
-|---|----|-----------|--------|------|
-| A | Base branch + land docs and `--rsvp-*` tokens | — | §9 | bookkeeping; docs + token commits |
-| B | Server: dedupe-aware RSVP summary | A | item 3 (server) | design-free; superseded flag + collapsed counts; `schemas.ts` + `types.ts` same PR; tests in `publish.test.ts` |
-| C | Web: `/manage/:id` route + token plumbing | B | item 1 | fragment→localStorage→paste; strip fragment; 403/404/network states; no UI yet |
-| D | Web: host-manage dashboard UI | C | item 1 + 3 (UI) | HostMain/HostStates mockups; headcount, pills, superseded rows, "N new", auto-fetch on mount + `visibilitychange` |
-| E | Web: share-panel rebuild | C | item 2 (link) | ShareMain/ShareStates; public dominant / manage subordinate+masked+warned; `#t=` link; folds in the in-editor panel fixes |
-| F | Web: landing "your invitations" list | A | item 2 (index) | `inv-invitations` index on publish; returning-host landing variant |
-| G | Docs: flip to shipped | D, E, F | — | FR-5.4/5.5, adr-010 → accepted, roadmap items → shipped |
-
-Critical path **A → B → C → D**. F needs only A (independent of server/UI); E
-needs C but not D. B fixes a correctness bug (double-counted re-submissions)
-that is live today, so it is the best standalone first PR after the branch.
-
-**Progress:** the `--rsvp-yes`/`--rsvp-no` tokens (task A's token half) are
-already applied to `styles.css` and verified live; task A's remaining piece is
-committing docs + tokens onto the feature branch. Everything else is pending.
-
-## Deliberately not this iteration (candidate backlog)
+## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
@@ -160,22 +71,24 @@ committing docs + tokens onto the feature branch. Everything else is pending.
   Revisit with any account-adjacent work.
 - **Per-guest edit tokens** so a guest can amend their own answer instead of
   re-submitting — real infrastructure for a rare case (adr-010 §5).
+- **Batch response counts** so the landing list can show activity per
+  invitation without N authenticated requests (adr-010, implementation notes).
 - **SQLite (or similar) store** — only when multi-instance hosting or RSVP
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
 - **React Router in `web/`** — evaluated 2026-07-24, **not yet justified**.
-  After this iteration the SPA has four routes (`/`, `/create`, `/i/:id`,
-  `/manage/:id`), all mutually exclusive top-level screens with no nesting and
-  no shared chrome — which is precisely the value a router adds. There are two
-  navigation points in the whole app, both deliberate full reloads between
-  screens with unrelated state models (the editor's in-memory state *should*
-  reset on the way out). Against that, `main.tsx`'s resolver is ~6 lines with
-  zero dependencies, `web/` currently ships only react + react-dom, and
-  react-router-dom is ~12–20 kB gzipped against the NFR-1 latency budget for a
-  mobile-first audience. The path regexes also double as validation — they
-  mirror the server's `InvitationId` and its path-traversal guard — where a
-  router's `:id` param is permissive and would need re-validating anyway.
+  The SPA has four routes (`/`, `/create`, `/i/:id`, `/manage/:id`), all
+  mutually exclusive top-level screens with no nesting and no shared chrome —
+  which is precisely the value a router adds. There are two navigation points
+  in the whole app, both deliberate full reloads between screens with unrelated
+  state models (the editor's in-memory state *should* reset on the way out).
+  Against that, `main.tsx`'s resolver is ~8 lines with zero dependencies,
+  `web/` ships only react + react-dom, and react-router-dom is ~12–20 kB
+  gzipped against the NFR-1 latency budget for a mobile-first audience. The
+  path regexes also double as validation — they mirror the server's
+  `InvitationId` and its path-traversal guard — where a router's `:id` param is
+  permissive and would need re-validating anyway.
 
   Revisit when any of these becomes true (**nesting is the real trigger, not
   route count**): a screen grows sub-routes (`/manage/:id/guests`,

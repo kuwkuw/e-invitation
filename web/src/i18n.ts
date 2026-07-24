@@ -78,18 +78,21 @@ export interface UiStrings {
   publish: string;
   publishing: string;
   republish: string;
+  publishedTitle: string;
   publishedVersion: string;
+  publishedSubtitle: string;
+  guestLinkLabel: string;
+  guestLinkBadge: string;
   shareHint: string;
   copyLink: string;
   copied: string;
-  responsesTitle: string;
-  refreshResponses: string;
-  responsesEmpty: string;
-  countYes: string;
-  countNo: string;
-  countGuests: string;
-  exportCsv: string;
-  csv: RsvpCsvStrings;
+  manageLinkLabel: string;
+  manageLinkWarning: string;
+  manageLinkMasked: string;
+  revealManageLink: string;
+  copyManageLink: string;
+  manageLinkCopied: string;
+  viewResponses: string;
 }
 
 export const UI: Record<Language, UiStrings> = {
@@ -190,23 +193,22 @@ export const UI: Record<Language, UiStrings> = {
     publish: "Publish & get link",
     publishing: "Publishing…",
     republish: "Publish changes",
-    publishedVersion: "Published (version {n})",
-    shareHint: "Send this link in Viber, Telegram or WhatsApp:",
-    copyLink: "Copy link",
+    publishedTitle: "Published!",
+    publishedVersion: "Version {n}",
+    publishedSubtitle: "Send the link to your guests — then wait for replies.",
+    guestLinkLabel: "Link for guests",
+    guestLinkBadge: "public",
+    shareHint: "Paste it into Viber, Telegram or WhatsApp",
+    copyLink: "Copy the link",
     copied: "Copied!",
-    responsesTitle: "Responses",
-    refreshResponses: "Refresh",
-    responsesEmpty: "No responses yet.",
-    countYes: "coming",
-    countNo: "can't come",
-    countGuests: "guests total",
-    exportCsv: "Export CSV",
-    csv: {
-      headers: ["Name", "Answer", "Guests", "Note", "Replied at", "Status"],
-      yes: "Yes",
-      no: "No",
-      superseded: "superseded",
-    },
+    manageLinkLabel: "Manage link",
+    manageLinkWarning:
+      "For you only — don't send it to a chat. Anyone who opens it sees every response.",
+    manageLinkMasked: "••••••••",
+    revealManageLink: "Show the full link",
+    copyManageLink: "Copy",
+    manageLinkCopied: "Copied — keep it private",
+    viewResponses: "View responses →",
   },
   uk: {
     appTitle: "Студія запрошень",
@@ -307,23 +309,22 @@ export const UI: Record<Language, UiStrings> = {
     publish: "Опублікувати й отримати лінк",
     publishing: "Публікуємо…",
     republish: "Опублікувати зміни",
-    publishedVersion: "Опубліковано (версія {n})",
-    shareHint: "Надішліть це посилання у Viber, Telegram або WhatsApp:",
-    copyLink: "Скопіювати лінк",
+    publishedTitle: "Опубліковано!",
+    publishedVersion: "Версія {n}",
+    publishedSubtitle: "Надішліть посилання гостям — і чекайте відповіді.",
+    guestLinkLabel: "Посилання для гостей",
+    guestLinkBadge: "публічне",
+    shareHint: "Вставте у Viber, Telegram або WhatsApp",
+    copyLink: "Скопіювати посилання",
     copied: "Скопійовано!",
-    responsesTitle: "Відповіді",
-    refreshResponses: "Оновити",
-    responsesEmpty: "Поки що немає відповідей.",
-    countYes: "прийдуть",
-    countNo: "не зможуть",
-    countGuests: "гостей разом",
-    exportCsv: "Експорт CSV",
-    csv: {
-      headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
-      yes: "Так",
-      no: "Ні",
-      superseded: "замінена",
-    },
+    manageLinkLabel: "Посилання для керування",
+    manageLinkWarning:
+      "Лише для вас — не надсилайте його в чат. Хто відкриє, побачить усі відповіді.",
+    manageLinkMasked: "••••••••",
+    revealManageLink: "Показати повне посилання",
+    copyManageLink: "Копіювати",
+    manageLinkCopied: "Скопійовано — тримайте при собі",
+    viewResponses: "Переглянути відповіді →",
   },
 };
 
@@ -355,6 +356,15 @@ export interface LandingStrings {
   responseLabels: { yes: string; no: string; wait: string };
   finalTitle: string;
   footer: string;
+  // Returning-host block (adr-010 §4). Ukrainian needs a singular heading, so
+  // the one-invitation case has its own string rather than a naive plural.
+  yoursTitle: string;
+  yoursTitleOne: string;
+  yoursOnThisDevice: string;
+  yoursCountOnThisDevice: string;
+  yoursPublished: string;
+  yoursShowAll: string;
+  time: RelativeTimeStrings;
 }
 
 export const LANDING: Record<Language, LandingStrings> = {
@@ -376,6 +386,20 @@ export const LANDING: Record<Language, LandingStrings> = {
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
     finalTitle: "Ready to send your first invitation?",
     footer: "Zaproshennya — simple, and Ukrainian at heart.",
+    yoursTitle: "Your invitations",
+    yoursTitleOne: "Your invitation",
+    yoursOnThisDevice: "saved on this device",
+    yoursCountOnThisDevice: "{n} on this device",
+    yoursPublished: "Published {when}",
+    yoursShowAll: "Show all {n}",
+    time: {
+      justNow: "just now",
+      minutesAgo: "{n} min ago",
+      hoursAgo: "{n} h ago",
+      yesterday: "yesterday",
+      daysAgo: "{n} {form} ago",
+      dayForms: ["day", "days", "days"],
+    },
   },
   uk: {
     brand: "Запрошення",
@@ -396,6 +420,20 @@ export const LANDING: Record<Language, LandingStrings> = {
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
     finalTitle: "Готові надіслати перше запрошення?",
     footer: "Запрошення — просто і по-українськи.",
+    yoursTitle: "Ваші запрошення",
+    yoursTitleOne: "Ваше запрошення",
+    yoursOnThisDevice: "збережено на цьому пристрої",
+    yoursCountOnThisDevice: "{n} на цьому пристрої",
+    yoursPublished: "Опубліковано {when}",
+    yoursShowAll: "Показати всі {n}",
+    time: {
+      justNow: "щойно",
+      minutesAgo: "{n} хв тому",
+      hoursAgo: "{n} год тому",
+      yesterday: "вчора",
+      daysAgo: "{n} {form} тому",
+      dayForms: ["день", "дні", "днів"],
+    },
   },
 };
 
