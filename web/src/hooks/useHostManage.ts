@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError, fetchInvitation, fetchRsvps } from "../api";
 import { isInvitationId } from "../invitationId";
 import type { PublishedInvitation, RsvpSummary } from "../types";
@@ -25,23 +26,14 @@ export function manageSeenKey(id: string): string {
   return `inv-manage-seen:${id}`;
 }
 
-/** Pulls `#t=<token>` out of the URL, persists it, and strips the fragment
- *  from the address bar so the credential stops trailing the tab around.
+/** Reads `#t=<token>` out of a hash. Pure: persisting the token and stripping
+ *  the fragment are separate steps, done in an effect, because a router
+ *  navigation cannot happen during render.
  *  Fragment and never query string: fragments are not sent to the server, so
  *  the token stays out of access logs and referrer headers (adr-010 §2). */
-function adoptTokenFromFragment(id: string): string | null {
-  const token = window.location.hash.match(/[#&]t=([^&]+)/)?.[1];
-  if (!token) return null;
-  const decoded = decodeURIComponent(token);
-  localStorage.setItem(manageTokenKey(id), decoded);
-  window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  return decoded;
-}
-
-/** Fragment first (the host just followed their manage link), then whatever
- *  this browser already stored from publishing. */
-export function resolveManageToken(id: string): string | null {
-  return adoptTokenFromFragment(id) ?? localStorage.getItem(manageTokenKey(id));
+export function tokenFromHash(hash: string): string | null {
+  const token = hash.match(/[#&]t=([^&]+)/)?.[1];
+  return token ? decodeURIComponent(token) : null;
 }
 
 /** Accepts what a host pastes into the recovery field: a whole manage link, or
@@ -71,14 +63,22 @@ function classify(error: unknown): ManageStatus {
  * one pass.
  */
 export function useHostManage(id: string) {
+  const location = useLocation();
+  const navigate = useNavigate();
   // An id the server could never have minted gets no token work at all: no
   // fragment adopted, nothing written under a garbage key (adr-011 §3).
   const valid = isInvitationId(id);
+  // The token the host arrived with, read from the router's location rather
+  // than window.location — one thing owns the URL now (adr-011 §5). Read
+  // during render, acted on in the effect below.
+  const fragmentToken = valid ? tokenFromHash(location.hash) : null;
   // Wrapped in an object so a retry can hand the effect a fresh identity:
   // re-submitting the *same* token has to re-run the load, and a bare string
   // compares equal and would sit there doing nothing.
   const [session, setSession] = useState<{ token: string | null }>(() => ({
-    token: valid ? resolveManageToken(id) : null,
+    // Fragment first (the host just followed their manage link), then whatever
+    // this browser already stored from publishing.
+    token: valid ? (fragmentToken ?? localStorage.getItem(manageTokenKey(id))) : null,
   }));
   const token = session.token;
   const [published, setPublished] = useState<PublishedInvitation | null>(null);
@@ -104,6 +104,15 @@ export function useHostManage(id: string) {
     if (!valid) return;
     localStorage.setItem(manageSeenKey(id), new Date().toISOString());
   }, [id, valid]);
+
+  // Keep the token, drop it from the address bar so the credential stops
+  // trailing the tab around. `replace` rather than a push: the URL with the
+  // token in it should not be somewhere the back button can return to.
+  useEffect(() => {
+    if (!fragmentToken) return;
+    localStorage.setItem(manageTokenKey(id), fragmentToken);
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true });
+  }, [fragmentToken, id, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     if (!valid) {
