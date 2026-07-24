@@ -503,3 +503,73 @@ export const GUEST: Record<Language, GuestStrings> = {
     linkCopied: "Посилання скопійовано!",
   },
 };
+
+// Host response dashboard at /manage/:id. Copy follows the "host-manage"
+// template in the E-invitation DS project: every access state stays calm —
+// none of them is the host's fault, and all of them have the same one-step
+// recovery (paste your manage link).
+export interface ManageStrings {
+  kicker: string;
+  loading: string;
+  noTokenTitle: string;
+  noTokenBody: string;
+  noTokenHint: string;
+  invalidTitle: string;
+  invalidBody: string;
+  invalidReassure: string;
+  notFoundTitle: string;
+  notFoundBody: string;
+  errorTitle: string;
+  errorBody: string;
+  pastePlaceholder: string;
+  pasteInvalid: string;
+  openDashboard: string;
+  refresh: string;
+  retry: string;
+}
+
+export const MANAGE: Record<Language, ManageStrings> = {
+  en: {
+    kicker: "Host dashboard",
+    loading: "Loading responses…",
+    noTokenTitle: "Your link is needed",
+    noTokenBody:
+      "This dashboard opens only with the personal link you got when you created the invitation. Paste it below.",
+    noTokenHint: "The link is saved in the messenger you shared the invitation from.",
+    invalidTitle: "This link no longer works",
+    invalidBody: "It may have changed or expired. Paste your current manage link to continue.",
+    invalidReassure:
+      "Your responses haven't gone anywhere — as soon as the link is right, you'll see them again.",
+    notFoundTitle: "Invitation not found",
+    notFoundBody: "The link may be outdated, or this invitation was never published.",
+    errorTitle: "Couldn't load the responses",
+    errorBody: "Something went wrong on the way. Try again in a moment.",
+    pastePlaceholder: "Paste your manage link…",
+    pasteInvalid: "That doesn't look like a manage link.",
+    openDashboard: "Open dashboard",
+    refresh: "Refresh",
+    retry: "Try again",
+  },
+  uk: {
+    kicker: "Панель господаря",
+    loading: "Завантаження відповідей…",
+    noTokenTitle: "Потрібне ваше посилання",
+    noTokenBody:
+      "Ця панель відкривається лише за особистим посиланням, яке ви отримали при створенні запрошення. Вставте його нижче.",
+    noTokenHint: "Посилання зберігається у месенджері, звідки ви ділились запрошенням.",
+    invalidTitle: "Посилання вже не дійсне",
+    invalidBody:
+      "Можливо, воно змінилось або застаріло. Вставте актуальне посилання для керування, щоб продовжити.",
+    invalidReassure:
+      "Ваші відповіді нікуди не зникли — щойно посилання буде правильним, ви побачите їх знову.",
+    notFoundTitle: "Запрошення не знайдено",
+    notFoundBody: "Можливо, посилання застаріле або це запрошення не публікували.",
+    errorTitle: "Не вдалося завантажити відповіді",
+    errorBody: "Щось пішло не так дорогою. Спробуйте ще раз за мить.",
+    pastePlaceholder: "Вставте посилання для керування…",
+    pasteInvalid: "Це не схоже на посилання для керування.",
+    openDashboard: "Відкрити панель",
+    refresh: "Оновити",
+    retry: "Спробувати ще раз",
+  },
+};
