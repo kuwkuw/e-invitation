@@ -1,4 +1,5 @@
 import type { RsvpCsvStrings } from "./csv";
+import type { PluralForms } from "./plural";
 import type { RelativeTimeStrings } from "./relativeTime";
 import type { CopyField, DesignTokens, Language } from "./types";
 
@@ -364,6 +365,13 @@ export interface LandingStrings {
   yoursCountOnThisDevice: string;
   yoursPublished: string;
   yoursShowAll: string;
+  // Per-row activity (adr-012). Both counts need Slavic plural forms; English
+  // passes the same string for few and many, so `pluralForm` is a no-op there.
+  yoursComing: string;
+  yoursComingForms: PluralForms;
+  yoursNoReplies: string;
+  yoursNew: string;
+  yoursNewForms: PluralForms;
   time: RelativeTimeStrings;
 }
 
@@ -392,6 +400,11 @@ export const LANDING: Record<Language, LandingStrings> = {
     yoursCountOnThisDevice: "{n} on this device",
     yoursPublished: "Published {when}",
     yoursShowAll: "Show all {n}",
+    yoursComing: "{n} {form} coming",
+    yoursComingForms: ["guest", "guests", "guests"],
+    yoursNoReplies: "No replies yet",
+    yoursNew: "{n} {form}",
+    yoursNewForms: ["new", "new", "new"],
     time: {
       justNow: "just now",
       minutesAgo: "{n} min ago",
@@ -426,6 +439,11 @@ export const LANDING: Record<Language, LandingStrings> = {
     yoursCountOnThisDevice: "{n} на цьому пристрої",
     yoursPublished: "Опубліковано {when}",
     yoursShowAll: "Показати всі {n}",
+    yoursComing: "{n} {form} буде",
+    yoursComingForms: ["гість", "гості", "гостей"],
+    yoursNoReplies: "Ще немає відповідей",
+    yoursNew: "{n} {form}",
+    yoursNewForms: ["нова", "нові", "нових"],
     time: {
       justNow: "щойно",
       minutesAgo: "{n} хв тому",

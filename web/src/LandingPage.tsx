@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { YourInvitations } from "./components/YourInvitations";
+import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
 import { loadHostInvitations } from "./hostInvitations";
 import { LANDING, loadUiLang, saveUiLang } from "./i18n";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
@@ -63,6 +64,9 @@ export function LandingPage() {
   const t = LANDING[lang];
   // Read once: the list only changes by publishing, which happens elsewhere.
   const [mine] = useState(loadHostInvitations);
+  // Counts arrive after the rows are already on screen; the page never waits
+  // on them and renders unchanged if they never come (adr-012 §6).
+  const activity = useHostInvitationCounts(mine);
 
   // Every call to action on the page goes to the same place; the editor starts
   // empty either way, so there is nothing to carry across.
@@ -88,7 +92,7 @@ export function LandingPage() {
       {/* Reading order per the DS Returning template: header → your events →
           pitch. A first-time visitor has an empty list and sees the page
           exactly as before. */}
-      <YourInvitations invitations={mine} t={t} />
+      <YourInvitations invitations={mine} activity={activity} t={t} />
 
       <section className="lp-hero">
         <div className="lp-hero-copy">

@@ -1329,7 +1329,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-size: 1rem; font-weight: 700; color: #4a3728;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: #8d8577; }
+/* One line, always: counts arriving late must not wrap it and push the row
+   taller (adr-012 §6). The publish time is the flexible part and the counts
+   are fixed, so a narrow screen truncates the date rather than the headcount */
+.lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: #8d8577; display: flex; align-items: baseline; min-width: 0; }
+.lp-yours-published { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-yours-activity { flex: 0 0 auto; white-space: nowrap; }
+.lp-yours-sep { margin: 0 5px; }
+.lp-yours-new { margin-left: 7px; color: #8a6b57; }
+/* same accent marker the dashboard uses for new replies (adr-010 §9) */
+.lp-yours-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #b3592e; vertical-align: 1px; }
 
 .lp-yours-more {
   display: flex; align-items: center; justify-content: center;
