@@ -1,6 +1,6 @@
 # ADR-011 — Client-side routing with React Router
 
-**Status:** proposed · **Date:** 2026-07 · Supersedes the "React Router in
+**Status:** accepted · **Date:** 2026-07 · Supersedes the "React Router in
 `web/`" evaluation recorded in [06-roadmap.md](../06-roadmap.md); touches
 FR-3.3 and FR-5.4, adds no requirement of its own.
 
@@ -124,3 +124,41 @@ routing never handles that request.
 - The roadmap's "React Router — not yet justified" backlog entry is retired by
   this ADR. Its revisit triggers remain useful reading for *why* the router
   stays in declarative mode (§1): nesting is what would justify more.
+
+## Notes from implementation
+
+Four things the plan did not get right, recorded so the next reader doesn't
+have to rediscover them.
+
+**The §3 guard ended up at the fetch boundary, not the route boundary.** The
+plan said a shared validator would be applied where the route matches. In
+practice the route has to render *something* for a malformed id, and the only
+honest something is each screen's own dead-link state — which would have meant
+duplicating those screens' shells inside the route table. `isInvitationId` is
+instead applied inside `usePublishedInvitation` and `useHostManage`, the only
+callers of the API. Same property (a malformed id never reaches
+`fetchInvitation`), enforced closer to the thing being protected, and no future
+caller can bypass it.
+
+**Parity was the wrong end state for malformed ids.** The old resolver sent
+`/i/<bad>` to the marketing page, and the parity PR faithfully preserved that.
+It is poor behaviour on its own merits — someone following a broken share link
+gets a sales pitch instead of being told the link is broken — and was fixed in
+a follow-up rather than smuggled into the migration. Preserving behaviour and
+endorsing it are different things; a parity PR should say which it is doing.
+
+**The fragment work was hiding a render-time side effect.** `useHostManage`
+wrote `localStorage` and rewrote the URL from inside a `useState` initializer.
+Moving to the router forced the split the code always needed: a pure
+`tokenFromHash` read during render, side effects in an effect. The router did
+not cause that improvement so much as make it unavoidable.
+
+**A test for the replace-vs-push property passed with the flag inverted.** The
+first version asserted where the Back button landed, which the strip effect
+simply undoes by re-adopting and re-stripping the restored fragment. It asserts
+`useNavigationType() === "REPLACE"` instead. Worth the general lesson: when a
+test covers a property that some other mechanism also enforces, flip the
+implementation and watch it fail before believing it.
+
+**Measured cost:** +13.2 kB gzipped (67.7 → 80.9), against the ~12–20 kB the
+declined evaluation estimated. Recorded under NFR-1.

@@ -76,6 +76,11 @@ implementation.
   event built client-side from the brief ([calendar.ts](../web/src/calendar.ts)):
   best-effort bilingual parsing of the free-text date/time (all-day without a
   time, 2 hours with one); the action is hidden when no date parses.
+- FR-4.6 A share link that cannot resolve — unpublished, deleted, truncated in
+  a chat app, or otherwise malformed — renders the dead-link state, never the
+  marketing page. An id that cannot be one the server minted is answered
+  without a request, since there is nothing to ask about
+  ([adr-011](decisions/adr-011-client-router.md) §3).
 
 ## FR-5 Host views responses
 
