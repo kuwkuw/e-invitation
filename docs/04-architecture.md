@@ -20,12 +20,18 @@ assumed.
 
 ## 2. Containers
 
-**`web/` — Vite + React SPA.** Three routes resolved at load in
-[main.tsx](../web/src/main.tsx): `/` landing, `/create` editor
-([App.tsx](../web/src/App.tsx)), `/i/:id` guest page
-([GuestPage.tsx](../web/src/GuestPage.tsx)). All server communication goes
-through [api.ts](../web/src/api.ts). [types.ts](../web/src/types.ts) hand-mirrors
-the server schemas.
+**`web/` — Vite + React SPA.** Four routes in
+[AppRoutes.tsx](../web/src/AppRoutes.tsx) on react-router-dom, declarative mode
+only ([adr-011](decisions/adr-011-client-router.md)): `/` landing, `/create`
+editor ([App.tsx](../web/src/App.tsx)), `/i/:id` guest page
+([GuestPage.tsx](../web/src/GuestPage.tsx)), `/manage/:id` host dashboard
+([ManagePage.tsx](../web/src/ManagePage.tsx)).
+[main.tsx](../web/src/main.tsx) is the `BrowserRouter` entry point only.
+Route params are permissive, so [invitationId.ts](../web/src/invitationId.ts)
+carries the id shape the old route regexes enforced, checked in the hooks that
+call the API. All server communication goes through
+[api.ts](../web/src/api.ts). [types.ts](../web/src/types.ts) hand-mirrors the
+server schemas.
 
 **`server/` — Fastify API.** Layers:
 

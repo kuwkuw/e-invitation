@@ -11,6 +11,12 @@
   target is missed ([llm/routing.ts](../server/src/llm/routing.ts)).
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
+- The client bundle is part of this budget for a mobile-first audience:
+  **80.9 kB gzipped** (248.9 kB raw) as of the client-router iteration, up
+  13.2 kB from 67.7 kB when react-router-dom was adopted
+  ([adr-011](decisions/adr-011-client-router.md)). Measured with
+  `pnpm --filter inv-app-web build`. There is no automated budget check —
+  measure and record the delta when adding a runtime dependency.
 
 ## NFR-2 Cost
 
