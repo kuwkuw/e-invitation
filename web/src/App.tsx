@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ByokSettings } from "./components/ByokSettings";
 import { ChatPanel } from "./components/editor/ChatPanel";
 import { FieldSheet } from "./components/editor/FieldSheet";
@@ -18,6 +19,9 @@ import type { CopyField, Language } from "./types";
  * the two concerns can be tested apart.
  */
 export default function App() {
+  // Leaving the editor discards its in-memory state on purpose — a fresh App
+  // mounts on the way back in, exactly as the old full reload left things.
+  const navigate = useNavigate();
   const [uiLang, setUiLang] = useState<Language>(loadUiLang);
   const [selectedField, setSelectedField] = useState<CopyField | null>(null);
   const t = UI[uiLang];
@@ -39,9 +43,7 @@ export default function App() {
           type="button"
           className="cc-back"
           aria-label={t.chat.back}
-          onClick={() => {
-            window.location.href = "/";
-          }}
+          onClick={() => navigate("/")}
         >
           <BackIcon />
         </button>
