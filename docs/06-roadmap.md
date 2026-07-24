@@ -2,8 +2,9 @@
 
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
 decomposition landed; updated 2026-07-24 when the manage-view and
-client-routing iterations shipped and batch response counts (adr-012) were
-taken as the next one. This doc plans the **next** iteration; when an item ships it moves
+client-routing iterations shipped, batch response counts (adr-012) were taken
+as the next one, and a review of the shipped surfaces added four gaps and one
+enabler to the backlog. This doc plans the **next** iteration; when an item ships it moves
 into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -145,9 +146,78 @@ host — that is the accounts model adr-005 rejected.
 
 ## Candidate backlog
 
+Grouped by kind, because "wait for a host to ask" is the right answer for a
+feature and the wrong one for a gap. Items in the first two groups came out of
+a review of the shipped surfaces on 2026-07-24; nothing here is committed.
+
+### Gaps in what has shipped
+
+Things the app claims, or implies, that it does not actually do. Ranked.
+
+- **Edit after publish.** The manage-view iteration set out to make publishing
+  and coming back later two separate visits — and delivered that for
+  *responses* only. The invitation itself is still session-bound:
+  [usePublishing.ts](../web/src/hooks/usePublishing.ts) holds the published
+  `{id, manage_token}` in `useState`, `/create` always starts blank, and
+  nothing loads a published invitation back into the editor. A host who
+  publishes on Monday, sends the link to forty people, and spots a wrong venue
+  on Friday **cannot fix it** — the only path is publishing a new invitation,
+  which mints a new id and orphans the link guests already have. That is
+  verbatim the failure adr-010 §Context describes for responses, still open for
+  the invitation.
+
+  The server side is already done: `POST /api/invitations/publish` with `id` +
+  `manage_token` appends a version (FR-3.2), versions are retained, and the
+  token resolves three ways. The missing piece is rehydrating the editor from a
+  published record instead of only from a fresh publish. Worth an ADR for the
+  design questions, not the plumbing: whether editing republishes immediately
+  or on an explicit action, what a guest sees mid-edit (versioning makes this
+  safe), and whether adr-010 §1's read-only manage view still holds once
+  "Edit" belongs somewhere.
+
+- **The RSVP write endpoint is unguarded.** `POST /api/invitations/:id/rsvp`
+  ([routes/invitations.ts](../server/src/routes/invitations.ts)) is the only
+  unauthenticated write in the app and has no limit of any kind — no per-IP
+  allowance, no per-record cap, and no global limiter in
+  [app.ts](../server/src/app.ts). Each append rewrites the whole record file.
+  adr-008's guardrails wrap the LLM endpoints only, and adr-010 kept them off
+  the RSVP endpoint because it costs no LLM spend — sound for the *read* side,
+  but the write side costs disk, and the share link is designed to land in a
+  group chat. Small and contained: a per-IP daily allowance reusing
+  `consumeIpAllowance`, or a cap per record. Needs a note extending adr-008's
+  reasoning, not an ADR of its own.
+
+- **No deletion or retention story.** Guests type names and free-text notes
+  into a record with no removal path — not for the guest, not for the host,
+  not on a timer. NFR-4 says "minimal data" and says nothing about how long it
+  lives; the answer today is forever. Invitation deletion is the natural unit
+  (it takes the RSVPs with it) and is a prerequisite for RSVP deletion below.
+
+- **No accessibility requirement.** [03-non-functional-requirements.md](03-non-functional-requirements.md)
+  has no a11y NFR at all — conspicuous for a mobile-first, bilingual,
+  public-facing app whose core interaction is a form. Deliberately *not*
+  written into the NFR doc yet: stating a requirement the app has not been
+  audited against would make that doc dishonest. Writing it, and the audit
+  behind it, is the work item.
+
+### Enablers
+
+- **Structured event date.** `EventBrief.date` and `.time` are free text, "as
+  written by the user" ([schemas.ts](../server/src/schemas.ts)), so nothing in
+  the system knows when the event is. That single fact is the ceiling on an
+  "event has passed" state for the guest page, an RSVP deadline, sorting the
+  landing list by event date rather than publish date, host reminders, and it
+  is why the `.ics` export is best-effort prose parsing (FR-4.5). Adding
+  `date_iso` alongside the free text is a schema field plus prompt work — the
+  model already extracts the prose — but the timezone question has to be
+  settled deliberately rather than bolted on later. Pays for several features
+  rather than one; do it before something needs it urgently, not during.
+
+### Features waiting on a trigger
+
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
-  to ask.
+  to ask. (See also deletion/retention above, which is the larger question.)
 - **Notify the host on a new RSVP** — the honest version needs an email
   channel (and an address, which the accounts-free model doesn't collect).
   Revisit with any account-adjacent work.
