@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, fetchInvitation, fetchRsvps } from "../api";
 import type { PublishedInvitation, RsvpSummary } from "../types";
 
@@ -16,6 +16,12 @@ export type ManageStatus =
 
 export function manageTokenKey(id: string): string {
   return `inv-manage:${id}`;
+}
+
+/** When this browser last looked at these responses — drives "N new since
+ *  your last visit". Browser-local, like the token itself. */
+export function manageSeenKey(id: string): string {
+  return `inv-manage-seen:${id}`;
 }
 
 /** Pulls `#t=<token>` out of the URL, persists it, and strips the fragment
@@ -75,6 +81,21 @@ export function useHostManage(id: string) {
   const [summary, setSummary] = useState<RsvpSummary | null>(null);
   const [status, setStatus] = useState<ManageStatus>(() => (token ? "loading" : "no_token"));
   const [refreshing, setRefreshing] = useState(false);
+  // Mirrors `refreshing` for the guard, so `refresh` keeps a stable identity
+  // and the visibility listener below doesn't churn on every toggle.
+  const refreshingRef = useRef(false);
+
+  // Captured once, before the effect below moves the marker forward — read
+  // during render precisely so StrictMode's double-invoked effects can't
+  // overwrite the baseline with "now" and report zero new replies.
+  const baselineRef = useRef<string | null | undefined>(undefined);
+  if (baselineRef.current === undefined) {
+    baselineRef.current = localStorage.getItem(manageSeenKey(id));
+  }
+
+  useEffect(() => {
+    localStorage.setItem(manageSeenKey(id), new Date().toISOString());
+  }, [id]);
 
   useEffect(() => {
     if (!session.token) {
@@ -106,7 +127,8 @@ export function useHostManage(id: string) {
    *  who is watching replies arrive. Failures surface — the old silent
    *  `finally`-only path left the spinner stopping with nothing said. */
   const refresh = useCallback(async () => {
-    if (!token || refreshing) return;
+    if (!token || refreshingRef.current) return;
+    refreshingRef.current = true;
     setRefreshing(true);
     try {
       setSummary(await fetchRsvps(id, token));
@@ -114,9 +136,21 @@ export function useHostManage(id: string) {
     } catch (error) {
       setStatus(classify(error));
     } finally {
+      refreshingRef.current = false;
       setRefreshing(false);
     }
-  }, [id, token, refreshing]);
+  }, [id, token]);
+
+  // A host who left the tab open and came back should see current numbers.
+  // Cheaper and calmer than polling: no timers, and it matches how people
+  // actually use this page (check, background it, check again).
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") void refresh();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [refresh]);
 
   /** Recovery for the no-token and invalid-token states. Returns false when
    *  the pasted text carries no token, leaving the current state untouched. */
@@ -133,5 +167,25 @@ export function useHostManage(id: string) {
 
   const retry = useCallback(() => setSession((current) => ({ token: current.token })), []);
 
-  return { status, published, summary, refreshing, refresh, applyManageLink, retry };
+  // Replies that arrived since the last visit. Only live answers count — a
+  // guest amending an old answer is news, their superseded original is not.
+  // Zero on a first-ever visit: "everything is new" tells the host nothing.
+  const baseline = baselineRef.current;
+  const newSinceLastVisit =
+    baseline && summary
+      ? summary.rsvps.filter((rsvp) => !rsvp.superseded && rsvp.created_at > baseline).length
+      : 0;
+
+  return {
+    status,
+    published,
+    summary,
+    refreshing,
+    refresh,
+    applyManageLink,
+    retry,
+    newSinceLastVisit,
+    /** Baseline for "new" markers in the list; null on a first visit. */
+    seenAt: baseline,
+  };
 }
