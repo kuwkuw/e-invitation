@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { publishInvitation } from "../api";
+import { recordHostInvitation } from "../hostInvitations";
 import type { Invitation, PublishResult } from "../types";
 
 export function shareUrl(id: string): string {
@@ -47,6 +48,14 @@ export function usePublishing(onError: () => void) {
       // Read back by /manage/:id, so the host keeps access after this tab is
       // gone — the manage link covers the case where this browser is too.
       localStorage.setItem(`inv-manage:${result.id}`, result.manage_token);
+      // And remember the event itself, so the landing page can offer it back
+      // by name rather than by id (adr-010 §4).
+      recordHostInvitation({
+        id: result.id,
+        title: invitation.copy.title,
+        published_at: new Date().toISOString(),
+        palette: invitation.design.palette,
+      });
       setShareOpen(true);
     } catch {
       onError();

@@ -356,6 +356,15 @@ export interface LandingStrings {
   responseLabels: { yes: string; no: string; wait: string };
   finalTitle: string;
   footer: string;
+  // Returning-host block (adr-010 §4). Ukrainian needs a singular heading, so
+  // the one-invitation case has its own string rather than a naive plural.
+  yoursTitle: string;
+  yoursTitleOne: string;
+  yoursOnThisDevice: string;
+  yoursCountOnThisDevice: string;
+  yoursPublished: string;
+  yoursShowAll: string;
+  time: RelativeTimeStrings;
 }
 
 export const LANDING: Record<Language, LandingStrings> = {
@@ -377,6 +386,20 @@ export const LANDING: Record<Language, LandingStrings> = {
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
     finalTitle: "Ready to send your first invitation?",
     footer: "Zaproshennya — simple, and Ukrainian at heart.",
+    yoursTitle: "Your invitations",
+    yoursTitleOne: "Your invitation",
+    yoursOnThisDevice: "saved on this device",
+    yoursCountOnThisDevice: "{n} on this device",
+    yoursPublished: "Published {when}",
+    yoursShowAll: "Show all {n}",
+    time: {
+      justNow: "just now",
+      minutesAgo: "{n} min ago",
+      hoursAgo: "{n} h ago",
+      yesterday: "yesterday",
+      daysAgo: "{n} {form} ago",
+      dayForms: ["day", "days", "days"],
+    },
   },
   uk: {
     brand: "Запрошення",
@@ -397,6 +420,20 @@ export const LANDING: Record<Language, LandingStrings> = {
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
     finalTitle: "Готові надіслати перше запрошення?",
     footer: "Запрошення — просто і по-українськи.",
+    yoursTitle: "Ваші запрошення",
+    yoursTitleOne: "Ваше запрошення",
+    yoursOnThisDevice: "збережено на цьому пристрої",
+    yoursCountOnThisDevice: "{n} на цьому пристрої",
+    yoursPublished: "Опубліковано {when}",
+    yoursShowAll: "Показати всі {n}",
+    time: {
+      justNow: "щойно",
+      minutesAgo: "{n} хв тому",
+      hoursAgo: "{n} год тому",
+      yesterday: "вчора",
+      daysAgo: "{n} {form} тому",
+      dayForms: ["день", "дні", "днів"],
+    },
   },
 };
 
