@@ -1,8 +1,8 @@
 # ADR-010 — Host manage link: durable access to responses
 
-**Status:** proposed · **Date:** 2026-07 · Extends
+**Status:** accepted · **Date:** 2026-07 · Extends
 [adr-005](adr-005-capability-tokens.md) (capability URLs instead of accounts);
-touches FR-3, FR-4.4 and FR-5.
+shipped as FR-5.4–5.6, refining FR-3.3 and FR-4.4.
 
 ## Context
 
@@ -200,3 +200,23 @@ alerts; `--rsvp-no` is deliberately distinct from accent terracotta `#b3592e`.
   not removed: the manage link is a recovery path only for a host who kept it.
 - No store changes and no schema change to the invitation itself — the
   NFR-7 single-process file store carries this feature unchanged.
+
+## Notes from implementation
+
+Two things the plan did not anticipate, recorded so the next reader doesn't
+rediscover them:
+
+- **The "N new" baseline must be read during render**, behind a ref guard, not
+  in an effect. React StrictMode double-invokes effects in development, so an
+  effect that reads the last-seen marker and then writes "now" reads its own
+  write on the second pass and reports zero new replies every time.
+- **The grouping key is duplicated** — the server groups for `superseded` and
+  `counts`, the client regroups to nest a replaced answer under its live one.
+  They must agree on what "the same guest" means or rows nest under the wrong
+  answer. Kept in sync by hand, like `types.ts` mirrors `schemas.ts` (NFR-8).
+  A server-supplied group id would remove the hazard if this ever bites.
+
+The mockups' per-row response counts and "N new" badges on the landing list
+were **not** built: the browser-local index has no such data, and fetching it
+would mean one token-authenticated request per invitation on an otherwise
+static marketing page. Revisit with a batch endpoint if hosts ask.
