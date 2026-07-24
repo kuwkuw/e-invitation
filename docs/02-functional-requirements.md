@@ -47,11 +47,9 @@ implementation.
   **version**; the guest page always serves the latest version. Old versions
   are retained.
 - FR-3.3 The `manage_token` is the only host credential (capability token — no
-  accounts). The web client writes it to `localStorage` at publish, but does
-  **not** yet read it back: host access to an invitation currently lasts only
-  as long as the editor session that published it (planned fix:
-  [adr-010](decisions/adr-010-host-manage-link.md), roadmap iteration "the host
-  can come back").
+  accounts). The web client stores it at publish under `inv-manage:<id>` and
+  reads it back at `/manage/:id` (FR-5.4), so host access outlives the editor
+  session that published it.
 - FR-3.4 A fresh generation in the editor detaches from any previously
   published link (new event → new link).
 - FR-3.5 OG image for messenger link unfurling: `GET
@@ -70,8 +68,10 @@ implementation.
   the manage token, never other guests' RSVPs.
 - FR-4.3 A guest RSVPs with: name (≤100 chars), attending yes/no, party size
   1–10, optional note (≤500 chars).
-- FR-4.4 RSVPs append to the invitation record; duplicates are not deduplicated
-  (a guest may change their mind by submitting again).
+- FR-4.4 RSVPs append to the invitation record and are never mutated or
+  removed — a guest changes their mind by submitting again. Collapsing those
+  re-submissions is a read-time concern of the host view (FR-5.5), so the
+  stored record stays a full history.
 - FR-4.5 After an attending RSVP the guest can download an `.ics` calendar
   event built client-side from the brief ([calendar.ts](../web/src/calendar.ts)):
   best-effort bilingual parsing of the free-text date/time (all-day without a
@@ -79,17 +79,40 @@ implementation.
 
 ## FR-5 Host views responses
 
-**Status: built** — `GET /api/invitations/:id/rsvps`
+**Status: built** — `GET /api/invitations/:id/rsvps`,
+[adr-010](decisions/adr-010-host-manage-link.md),
+[ManagePage.tsx](../web/src/ManagePage.tsx)
 
 - FR-5.1 Requires the `x-manage-token` header matching the record's token
   (constant-time comparison).
 - FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, and total
-  guests among attendees. Re-submissions (FR-4.4) are currently counted twice —
-  collapsing them per guest is planned in
-  [adr-010](decisions/adr-010-host-manage-link.md) §5.
+  guests among attendees. Counts cover the live answers only (FR-5.5).
 - FR-5.3 The dashboard exports the list as CSV, built client-side from the
   fetched data ([csv.ts](../web/src/csv.ts)): UTF-8 BOM (so Excel reads
-  Cyrillic), localized headers/answers, guest count blank on declines.
+  Cyrillic), localized headers/answers, guest count blank on declines, and a
+  status column marking superseded rows — every row is exported, so the file
+  is a full record.
+- FR-5.4 **Durable host access.** `/manage/:id` is a read-only response
+  dashboard ([useHostManage.ts](../web/src/hooks/useHostManage.ts)), composed
+  from the public invitation endpoint plus the token-gated RSVP one. The token
+  resolves in order: `#t=` URL fragment → `localStorage` → an empty state
+  asking the host to paste their manage link. A fragment token is persisted
+  and then stripped from the URL; it rides the fragment and never the query
+  string, so the credential stays out of server logs and referrer headers.
+  Missing token, refused token (`403`), unknown invitation (`404`) and network
+  failure are four distinct states with their own wording, and the two
+  recoverable ones share one way out.
+- FR-5.5 **Re-submissions collapse per guest.** At read time the server groups
+  entries by normalized name (trimmed, inner whitespace collapsed,
+  case-folded); the latest `created_at` is live, earlier ones are flagged
+  `superseded` and excluded from the counts. The full list is still returned
+  and the dashboard shows a superseded answer as history beneath the live one.
+  Only an exact name match collapses, so two guests sharing a name stay
+  visible as two rows rather than silently merging.
+- FR-5.6 The share panel offers the manage link as an explicitly subordinate,
+  masked action beside the public share link, and the landing page lists the
+  invitations published from this browser (`inv-invitations`, browser-local,
+  no secrets) so a returning host finds their events by name.
 
 ## FR-6 Bilingual UI
 
@@ -169,8 +192,9 @@ implementation.
 
 | Path | Page | Audience |
 | --- | --- | --- |
-| `/` | Landing page | Public |
-| `/create` | Editor (generate → edit → publish → RSVP dashboard) | Host |
+| `/` | Landing page; lists this browser's invitations when it has any (FR-5.6) | Public |
+| `/create` | Editor (generate → edit → publish → share) | Host |
+| `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |
 
 ## Not yet built (backlog)
