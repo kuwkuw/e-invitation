@@ -70,6 +70,17 @@
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     },
     {
+      // styles.css is organized section-by-component: each component's base
+      // rule lives in its own section, so a higher-specificity contextual
+      // override (e.g. `.cc-preview-inner .design-controls`) is often authored
+      // before the base rule (`.design-controls`). Specificity already yields
+      // the correct cascade regardless of source order, so descending
+      // specificity here is deliberate, not a bug (see CLAUDE.md on the
+      // intentionally compact, scannable CSS structure).
+      "includes": ["**/*.css"],
+      "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } }
+    },
+    {
       // Tests reach past nullability and shape on purpose when asserting.
       "includes": ["**/test/**"],
       "linter": {

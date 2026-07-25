@@ -97,10 +97,12 @@ function ornamentShape(kind: DesignTokens["ornament"], accent: string, size: num
 }
 
 function ornamentRow(kind: DesignTokens["ornament"], accent: string): Node | null {
+  // ornamentShape returns null only for kind "none" (size-independent), so the
+  // three shapes share their null-ness — one guard covers all of them.
   const big = ornamentShape(kind, accent, 34);
-  if (!big) return null;
-  const small1 = ornamentShape(kind, accent, 22)!;
-  const small2 = ornamentShape(kind, accent, 22)!;
+  const small1 = ornamentShape(kind, accent, 22);
+  const small2 = ornamentShape(kind, accent, 22);
+  if (!big || !small1 || !small2) return null;
   return h(
     "div",
     { display: "flex", alignItems: "center", gap: 18, marginBottom: 34 },
