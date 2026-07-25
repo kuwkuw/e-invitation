@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { HostInvitation } from "../hostInvitations";
 import type { LandingStrings } from "../i18n";
+import { pluralForm } from "../plural";
 import { formatRelativeTime } from "../relativeTime";
+import type { CountsResult, RsvpCounts } from "../types";
 
 /** How many rows before the list is capped. Enough to be useful, few enough
  *  that the block never pushes the pitch off the screen. */
@@ -19,9 +21,13 @@ const VISIBLE = 3;
  */
 export function YourInvitations({
   invitations,
+  counts,
   t,
 }: {
   invitations: HostInvitation[];
+  /** Per-row counts, keyed by id (adr-012). Absent until the batch resolves —
+   *  and it may never resolve; the rows render fully without it. */
+  counts?: Map<string, CountsResult>;
   t: LandingStrings;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -62,6 +68,11 @@ export function YourInvitations({
                 )}
               </span>
             </span>
+            {/* Always present so the slot is sized from the first render and
+                the chevron never moves when a count fills in (adr-012 §6). */}
+            <span className="lp-yours-stat">
+              <RowStat result={counts?.get(invitation.id)} t={t} />
+            </span>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M9 6l6 6-6 6"
@@ -82,4 +93,36 @@ export function YourInvitations({
       </div>
     </section>
   );
+}
+
+/** One row's response count and "new" badge. Renders nothing until the row's
+ *  own batch result is in and authorized — a row whose token was refused or
+ *  gone stays a plain title/time row (adr-012 §6). The count is the replies
+ *  received (yes + no over the live answers); the "new" badge is hidden at 0,
+ *  since on a first visit "everything is new" tells a host nothing (§4). */
+function RowStat({ result, t }: { result: CountsResult | undefined; t: LandingStrings }) {
+  if (result?.status !== "ok" || !result.counts) return null;
+  const newSince = result.new_since ?? 0;
+  return (
+    <>
+      <span className="lp-yours-count">{repliesLabel(result.counts, t)}</span>
+      {newSince > 0 && (
+        <span
+          className="lp-yours-new"
+          role="img"
+          aria-label={t.yoursNewAria.replace("{n}", String(newSince))}
+        >
+          +{newSince}
+        </span>
+      )}
+    </>
+  );
+}
+
+function repliesLabel(counts: RsvpCounts, t: LandingStrings): string {
+  const replies = counts.yes + counts.no;
+  if (replies === 0) return t.yoursNoReplies;
+  return t.yoursReplies
+    .replace("{n}", String(replies))
+    .replace("{form}", pluralForm(replies, t.yoursReplyForms));
 }

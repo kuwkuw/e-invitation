@@ -85,7 +85,9 @@ implementation.
 ## FR-5 Host views responses
 
 **Status: built** — `GET /api/invitations/:id/rsvps`,
+`POST /api/invitations/counts`,
 [adr-010](decisions/adr-010-host-manage-link.md),
+[adr-012](decisions/adr-012-batch-response-counts.md),
 [ManagePage.tsx](../web/src/ManagePage.tsx)
 
 - FR-5.1 Requires the `x-manage-token` header matching the record's token
@@ -118,6 +120,22 @@ implementation.
   masked action beside the public share link, and the landing page lists the
   invitations published from this browser (`inv-invitations`, browser-local,
   no secrets) so a returning host finds their events by name.
+- FR-5.7 **Per-row response counts on the returning-host list.**
+  `POST /api/invitations/counts` ([adr-012](decisions/adr-012-batch-response-counts.md))
+  answers a batch of `{id, token, seen_at?}` items — the app's first request
+  carrying more than one capability token. Each item is authorized on its own
+  id through the same constant-time compare (FR-5.1), so the response is a
+  per-item `status` (`ok`/`forbidden`/`not_found`) and a stale token blanks
+  only its own row: the batch is a normal `200` even when every item fails,
+  and a `400` is reserved for a malformed or over-cap (>25) body. An `ok`
+  result carries the same live-answer `counts` as FR-5.2 (never the RSVP list)
+  plus `new_since` — live answers newer than the client's `seen_at` baseline,
+  0 when it is absent, computed by the same rule the dashboard uses. Response
+  is `no-store`. The landing list renders synchronously from `localStorage`
+  ([useHostInvitationCounts.ts](../web/src/hooks/useHostInvitationCounts.ts))
+  and fills counts in after: no spinner, no layout shift, and a failed fetch
+  is silent — rows show their reply count and a "new" marker where a token
+  checked out, and stay plain title/time rows where it did not.
 
 ## FR-6 Bilingual UI
 
@@ -197,7 +215,7 @@ implementation.
 
 | Path | Page | Audience |
 | --- | --- | --- |
-| `/` | Landing page; lists this browser's invitations when it has any (FR-5.6) | Public |
+| `/` | Landing page; lists this browser's invitations with response counts when it has any (FR-5.6, FR-5.7) | Public |
 | `/create` | Editor (generate → edit → publish → share) | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |

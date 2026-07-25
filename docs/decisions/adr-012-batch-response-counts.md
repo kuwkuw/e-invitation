@@ -1,6 +1,6 @@
 # ADR-012 — Batch response counts for the returning-host list
 
-**Status:** proposed · **Date:** 2026-07 · Completes
+**Status:** accepted · **Date:** 2026-07 · Completes
 [adr-010](adr-010-host-manage-link.md) §4 (the "your invitations" index) and
 its implementation note; extends FR-5.6 as **FR-5.7**. Token handling follows
 [adr-005](adr-005-capability-tokens.md).
@@ -224,3 +224,24 @@ Four PRs, each independently mergeable, in order:
 A fifth docs PR records the iteration as shipped, moves FR-5.7 into
 `02-functional-requirements.md`, and flips this ADR to accepted — the pattern
 the last three iterations used.
+
+## Notes from implementation
+
+- **Step 1 was already done.** `summarizeRsvps` had been lifted into its own
+  module in the earlier RSVP-summary extraction, so the shared-counting
+  property §3 depends on was in place before this iteration; the work was the
+  endpoint, the hook, and the rows (PRs 2–4) plus this docs pass.
+- **`new_since` counting lives beside `summarizeRsvps`** as `countNewSince` in
+  the same module, not in the route handler — the one place that decides "how
+  many replies" also decides "how many are new", by the same live-answer rule
+  the dashboard applies.
+- **The count the row shows is replies received** — `yes + no` over the live
+  answers — with a muted "no replies" state at zero so the sized slot is never
+  a bare `0`. The ADR left the exact figure to the mockup; replies-received
+  reads as "how much has come back" without leaning on the headcount the
+  dashboard leads with. Ukrainian pluralizes it through the existing
+  `pluralForm` helper.
+- **The "new" badge is a `role="img"` span with an `aria-label`** carrying the
+  full "N new since your last visit" phrase — a bare `+N` beside an accent dot
+  is clear by sight but says nothing to a screen reader, and `aria-label` on a
+  generic `<span>` needs a role to take effect.

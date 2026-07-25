@@ -364,6 +364,14 @@ export interface LandingStrings {
   yoursCountOnThisDevice: string;
   yoursPublished: string;
   yoursShowAll: string;
+  // Per-row response counts (adr-012, FR-5.7). `yoursReplyForms` is the Slavic
+  // one/few/many for "reply"; `yoursNoReplies` is the muted 0-state so the slot
+  // is never a bare "0". The "new" badge shows a number, with the full phrase
+  // read out through `yoursNewAria`.
+  yoursReplies: string;
+  yoursReplyForms: [one: string, few: string, many: string];
+  yoursNoReplies: string;
+  yoursNewAria: string;
   time: RelativeTimeStrings;
 }
 
@@ -392,6 +400,10 @@ export const LANDING: Record<Language, LandingStrings> = {
     yoursCountOnThisDevice: "{n} on this device",
     yoursPublished: "Published {when}",
     yoursShowAll: "Show all {n}",
+    yoursReplies: "{n} {form}",
+    yoursReplyForms: ["reply", "replies", "replies"],
+    yoursNoReplies: "no replies",
+    yoursNewAria: "{n} new since your last visit",
     time: {
       justNow: "just now",
       minutesAgo: "{n} min ago",
@@ -426,6 +438,10 @@ export const LANDING: Record<Language, LandingStrings> = {
     yoursCountOnThisDevice: "{n} на цьому пристрої",
     yoursPublished: "Опубліковано {when}",
     yoursShowAll: "Показати всі {n}",
+    yoursReplies: "{n} {form}",
+    yoursReplyForms: ["відповідь", "відповіді", "відповідей"],
+    yoursNoReplies: "без відповідей",
+    yoursNewAria: "{n} нових з вашого останнього візиту",
     time: {
       justNow: "щойно",
       minutesAgo: "{n} хв тому",
