@@ -17,11 +17,13 @@ import {
 } from "../metrics.js";
 import { regenerateField } from "../pipeline/copy.js";
 import { generateInvitation } from "../pipeline/generate.js";
-import { summarizeRsvps } from "../rsvpSummary.js";
+import { countNewSince, summarizeRsvps } from "../rsvpSummary.js";
 import {
   BackgroundId,
   BackgroundRequest,
   ByokProvider,
+  CountsRequest,
+  type CountsResult,
   GenerateRequest,
   InvitationId,
   PublishRequest,
@@ -210,6 +212,27 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     return summarizeRsvps(record.rsvps);
   });
 
+  // Batch response counts for the returning-host landing list (adr-012,
+  // FR-5.7). The app's first multi-credential request: every item carries its
+  // own manage token, each authorized only against its own id through the same
+  // constant-time compare the single-invitation list uses. A stale or unknown
+  // id yields a per-item status and never blanks the other rows, so the batch
+  // is a normal 200 even when every item fails — the 400s below are for a
+  // malformed or over-cap body only (adr-012 §2, §5). No token spends any LLM
+  // capacity, so the adr-008 guardrails stay off it, as they do for /rsvps.
+  app.post("/api/invitations/counts", async (request, reply) => {
+    let body: CountsRequest;
+    try {
+      body = CountsRequest.parse(request.body);
+    } catch (error) {
+      return reply.code(400).send({ error: describeZodError(error) });
+    }
+    // Per-host data keyed by secrets — nothing between the browser and the
+    // process should retain it (adr-012 §1).
+    reply.header("Cache-Control", "no-store");
+    return { results: body.items.map(countsForItem) };
+  });
+
   app.get("/api/metrics", async () => metricsSnapshot());
 }
 
@@ -263,6 +286,22 @@ function byokFromHeaders(request: FastifyRequest): ByokKey | undefined {
     throw new Error(`x-llm-provider must be one of: ${ByokProvider.options.join(", ")}.`);
   }
   return { provider: parsed.data, key };
+}
+
+// One row of the batch-counts response. Positional and per-item: an unknown
+// or refused id yields a status only, so a stale token blanks its own row and
+// no other (adr-012 §2). Never returns `rsvps` — the landing page gets counts.
+function countsForItem(item: CountsRequest["items"][number]): CountsResult {
+  const record = getRecord(item.id);
+  if (!record) return { id: item.id, status: "not_found" };
+  if (!tokenMatches(record, item.token)) return { id: item.id, status: "forbidden" };
+  const summary = summarizeRsvps(record.rsvps);
+  return {
+    id: item.id,
+    status: "ok",
+    counts: summary.counts,
+    new_since: countNewSince(summary.rsvps, item.seen_at),
+  };
 }
 
 function lookup(params: unknown) {
