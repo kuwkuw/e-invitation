@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { YourInvitations } from "../src/components/YourInvitations";
 import type { HostInvitation } from "../src/hostInvitations";
 import { LANDING } from "../src/i18n";
+import type { CountsResult } from "../src/types";
 
 // globals:false in vite.config.ts means RTL never auto-cleans.
 afterEach(cleanup);
@@ -58,6 +59,55 @@ describe("YourInvitations", () => {
   it("says the list is local rather than implying an account", () => {
     render(<YourInvitations invitations={make(2)} t={t} />, { wrapper });
     expect(screen.getByText("2 на цьому пристрої")).toBeTruthy();
+  });
+
+  it("renders every row fully before any counts arrive, with a sized slot", () => {
+    const { container } = render(<YourInvitations invitations={make(3)} t={t} />, { wrapper });
+    // Titles are present with no counts map at all — the list never waits.
+    expect(screen.getByText("Подія 0")).toBeTruthy();
+    // The count slot exists on every row from the first render, so nothing
+    // shifts when counts fill in later (adr-012 §6).
+    expect(container.querySelectorAll(".lp-yours-stat")).toHaveLength(3);
+    expect(container.querySelector(".lp-yours-count")).toBeNull();
+  });
+
+  it("fills in a row's reply count and 'new' badge without changing the layout", () => {
+    const counts = new Map<string, CountsResult>([
+      ["id0", { id: "id0", status: "ok", counts: { yes: 3, no: 1, guests: 5 }, new_since: 2 }],
+    ]);
+    const { container } = render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, {
+      wrapper,
+    });
+    // 4 replies (3 yes + 1 no), pluralized "відповіді".
+    expect(screen.getByText("4 відповіді")).toBeTruthy();
+    expect(screen.getByText("+2")).toBeTruthy();
+    expect(screen.getByLabelText("2 нових з вашого останнього візиту")).toBeTruthy();
+    // Row structure is unchanged: still one row, one stat slot.
+    expect(container.querySelectorAll(".lp-yours-row")).toHaveLength(1);
+    expect(container.querySelectorAll(".lp-yours-stat")).toHaveLength(1);
+  });
+
+  it("shows the muted 0-state and hides the 'new' badge at zero", () => {
+    const counts = new Map<string, CountsResult>([
+      ["id0", { id: "id0", status: "ok", counts: { yes: 0, no: 0, guests: 0 }, new_since: 0 }],
+    ]);
+    const { container } = render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, {
+      wrapper,
+    });
+    expect(screen.getByText("без відповідей")).toBeTruthy();
+    expect(container.querySelector(".lp-yours-new")).toBeNull();
+  });
+
+  it("leaves a row plain when its token was refused or is missing", () => {
+    const counts = new Map<string, CountsResult>([["id0", { id: "id0", status: "forbidden" }]]);
+    const { container } = render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, {
+      wrapper,
+    });
+    // The slot is still there (sized), but carries no count — a refused token
+    // must not blank the row, only leave it countless (adr-012 §6).
+    expect(container.querySelector(".lp-yours-stat")).toBeTruthy();
+    expect(container.querySelector(".lp-yours-count")).toBeNull();
+    expect(screen.getByText("Подія 0")).toBeTruthy();
   });
 
   it("tints the monogram with the invitation's own palette", () => {
