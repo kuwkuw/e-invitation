@@ -140,10 +140,57 @@ export const RsvpSummaryEntry = Rsvp.extend({
 });
 export type RsvpSummaryEntry = z.infer<typeof RsvpSummaryEntry>;
 
+// Over the live (non-superseded) answers only — `guests` is the headcount the
+// host caters on, so double-counting a changed mind would be a real bug. Named
+// so the batch-counts endpoint reuses this exact shape (adr-012 consequences)
+// rather than defining a second one that could drift.
+export const RsvpCounts = z.object({ yes: z.number(), no: z.number(), guests: z.number() });
+export type RsvpCounts = z.infer<typeof RsvpCounts>;
+
 export const RsvpSummary = z.object({
   rsvps: z.array(RsvpSummaryEntry),
-  // Over the live (non-superseded) answers only — `guests` is the headcount
-  // the host caters on, so double-counting a changed mind would be a real bug.
-  counts: z.object({ yes: z.number(), no: z.number(), guests: z.number() }),
+  counts: RsvpCounts,
 });
 export type RsvpSummary = z.infer<typeof RsvpSummary>;
+
+// Batch response counts for the returning-host landing list (adr-012, FR-5.7).
+// The first request carrying more than one capability token: each item bears
+// its own manage token, authorized on its own id, and a stale token blanks
+// only its own row (a per-item `status`, never a whole-batch failure).
+//
+// `seen_at` is the browser's `inv-manage-seen:<id>` marker, sent back so the
+// server can count live answers newer than it; absent means a first visit,
+// which yields `new_since: 0` rather than "everything is new" (adr-012 §4).
+export const CountsRequest = z.object({
+  // Capped at 25 — `hostInvitations.ts` keeps at most 20, so this is the local
+  // cap plus headroom, and it bounds the multi-token oracle (adr-012 §5). Over
+  // the cap is a 400, never a silent truncation.
+  items: z
+    .array(
+      z.object({
+        id: InvitationId,
+        token: z.string(),
+        seen_at: z.string().optional(),
+      }),
+    )
+    .max(25),
+});
+export type CountsRequest = z.infer<typeof CountsRequest>;
+
+// Item results carry no error prose — only a status the client maps to
+// wording, the way the 502 body carries `causes` as classes (adr-012 §2).
+export const CountsResultStatus = z.enum(["ok", "forbidden", "not_found"]);
+export type CountsResultStatus = z.infer<typeof CountsResultStatus>;
+
+export const CountsResult = z.object({
+  id: InvitationId,
+  status: CountsResultStatus,
+  // Present only when `status` is "ok"; never `rsvps` — guest names have no
+  // business on the landing page (adr-012 §3).
+  counts: RsvpCounts.optional(),
+  new_since: z.number().optional(),
+});
+export type CountsResult = z.infer<typeof CountsResult>;
+
+export const CountsResponse = z.object({ results: z.array(CountsResult) });
+export type CountsResponse = z.infer<typeof CountsResponse>;

@@ -2,6 +2,9 @@ import { loadByok } from "./byok";
 import type {
   BackgroundRef,
   CopyField,
+  CountsRequestItem,
+  CountsResponse,
+  CountsResult,
   DesignTokens,
   EventBrief,
   Invitation,
@@ -125,4 +128,13 @@ export function fetchRsvps(id: string, manageToken: string): Promise<RsvpSummary
   return request<RsvpSummary>(`/api/invitations/${id}/rsvps`, {
     headers: { "x-manage-token": manageToken },
   });
+}
+
+// Batch response counts for the returning-host landing list (adr-012, FR-5.7).
+// One request carries every row's manage token; the server answers per item,
+// so a stale token blanks only its own row. Results come back positionally,
+// one per requested item.
+export async function fetchCounts(items: CountsRequestItem[]): Promise<CountsResult[]> {
+  const result = await post<CountsResponse>("/api/invitations/counts", { items });
+  return result.results;
 }

@@ -11,7 +11,7 @@
 // (adr-012 §3). adr-010's implementation notes already flag `groupKey` as
 // duplicated between server and client — one copy on this side is the limit.
 
-import type { Rsvp, RsvpSummary } from "./schemas.js";
+import type { Rsvp, RsvpSummary, RsvpSummaryEntry } from "./schemas.js";
 
 export function summarizeRsvps(rsvps: Rsvp[]): RsvpSummary {
   const liveByName = new Map<string, { index: number; created_at: string }>();
@@ -40,6 +40,17 @@ export function summarizeRsvps(rsvps: Rsvp[]): RsvpSummary {
       guests: attending.reduce((sum, e) => sum + e.guests_count, 0),
     },
   };
+}
+
+// Replies newer than the host's last visit, for the "N new" marker (adr-012
+// §4). The rule matches the dashboard's `newSinceLastVisit` exactly: only live
+// answers count (a guest amending an answer is news, their superseded original
+// is not), and a missing baseline yields 0 — on a first visit "everything is
+// new" tells a host nothing. Kept here, beside `summarizeRsvps`, so the one
+// place that decides "how many replies" also decides "how many are new".
+export function countNewSince(entries: RsvpSummaryEntry[], seenAt: string | undefined): number {
+  if (!seenAt) return 0;
+  return entries.filter((entry) => !entry.superseded && entry.created_at > seenAt).length;
 }
 
 // Grouping key for re-submissions. Deliberately conservative: only an exact

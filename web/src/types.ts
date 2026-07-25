@@ -80,9 +80,38 @@ export interface RsvpEntry extends RsvpInput {
   superseded: boolean;
 }
 
+export interface RsvpCounts {
+  yes: number;
+  no: number;
+  guests: number;
+}
+
 export interface RsvpSummary {
   rsvps: RsvpEntry[];
-  counts: { yes: number; no: number; guests: number };
+  counts: RsvpCounts;
+}
+
+// Batch response counts for the returning-host landing list (adr-012, FR-5.7).
+// Mirrors the server's CountsRequest/CountsResponse by hand (NFR-8).
+export interface CountsRequestItem {
+  id: string;
+  token: string;
+  /** The browser's `inv-manage-seen:<id>` marker; absent on a first visit. */
+  seen_at?: string;
+}
+
+export type CountsResultStatus = "ok" | "forbidden" | "not_found";
+
+export interface CountsResult {
+  id: string;
+  status: CountsResultStatus;
+  /** Present only when `status` is "ok". */
+  counts?: RsvpCounts;
+  new_since?: number;
+}
+
+export interface CountsResponse {
+  results: CountsResult[];
 }
 
 // BYOK (ADR-006): the host's own provider key, kept in this browser only.
