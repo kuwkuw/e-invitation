@@ -121,6 +121,12 @@ a future DB swap (NFR-7).
 
 - **Auth:** capability tokens only — the share `id` grants read+RSVP, the
   `manage_token` grants republish+RSVP-list. No sessions, no users.
+  `POST /api/invitations/counts` is the one request that carries more than one
+  token — a batch of `{id, token}` for the returning-host list, each
+  authorized on its own id, with a per-item status so one stale token never
+  fails the others ([adr-012](decisions/adr-012-batch-response-counts.md)). The
+  server still learns nothing about which invitations share a host; the client
+  supplies the ids from its browser-local index every time.
 - **Validation:** every boundary shape parses through
   [schemas.ts](../server/src/schemas.ts); route handlers return `400` on parse
   failure, `403` on token mismatch, `502` when all models fail.

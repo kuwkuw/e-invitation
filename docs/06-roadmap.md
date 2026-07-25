@@ -2,9 +2,9 @@
 
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
 decomposition landed; updated 2026-07-24 when the manage-view and
-client-routing iterations shipped and batch response counts (adr-012) were
-taken as the next one. This doc plans the **next** iteration; when an item ships it moves
-into [02-functional-requirements.md](02-functional-requirements.md) /
+client-routing iterations shipped, and 2026-07-25 when batch response counts
+(adr-012) shipped as FR-5.7. This doc plans the **next** iteration; when an item
+ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
 
@@ -17,7 +17,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Three iterations have shipped since:
+Four iterations have shipped since:
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -27,6 +27,8 @@ Three iterations have shipped since:
 - **Client-side routing** — [adr-011](decisions/adr-011-client-router.md),
   below. Internal: no new requirement, no user-visible feature beyond one
   behaviour fix.
+- **Batch response counts** — [adr-012](decisions/adr-012-batch-response-counts.md),
+  below. Shipped as FR-5.7.
 
 ## Shipped: the host can come back
 
@@ -101,47 +103,52 @@ Deliberately not done: data routers and loaders, nested layouts, route-level
 code splitting. The ADR §1 keeps the declined evaluation's revisit triggers as
 the conditions for widening that scope — nesting is the real one.
 
-## Next iteration: batch response counts
+## Shipped: batch response counts
 
-Settled in [ADR-012](decisions/adr-012-batch-response-counts.md) (proposed),
-to ship as **FR-5.7**, extending FR-5.6.
+Settled in [ADR-012](decisions/adr-012-batch-response-counts.md) (accepted),
+shipped as **FR-5.7**, extending FR-5.6.
 
-The returning-host list shipped as three-quarters of its mockup. The
+The returning-host list had shipped as three-quarters of its mockup. The
 `templates/landing-page` Returning variant gives each row a response count and
 a "new since your last visit" marker; what
-[YourInvitations.tsx](../web/src/components/YourInvitations.tsx) renders is a
+[YourInvitations.tsx](../web/src/components/YourInvitations.tsx) rendered was a
 monogram, a title and a relative publish time. adr-010's implementation notes
-say why — the browser-local index holds no counts by design, and the only way
-to get them was one token-authenticated request per invitation from the page
-that has to be fastest — and closed with "revisit with a batch endpoint if
-hosts ask."
+say why it was left out — the browser-local index holds no counts by design,
+and the only way to get them was one token-authenticated request per invitation
+from the page that has to be fastest — and closed with "revisit with a batch
+endpoint if hosts ask."
 
-**No host has asked.** It is being taken because it is the only backlog item
-with nothing in front of it, and because closing the gap between a shipped
-screen and the mockup it was built from is a better reason than adr-011's
-groundwork turned out to be. Small, entirely inside the existing architecture,
-no new dependency.
+**No host asked.** It was taken because it was the only backlog item with
+nothing in front of it, and because closing the gap between a shipped screen and
+the mockup it was built from is a better reason than adr-011's groundwork turned
+out to be. Small, entirely inside the existing architecture, no new dependency.
 
-What makes it worth a decision record is not the endpoint but the shape:
+What made it worth a decision record is not the endpoint but the shape:
 `POST /api/invitations/counts` is the **first request in the app carrying more
 than one capability token**, and the first place where a partial authorization
-failure is a normal outcome rather than an error. So the ADR settles:
+failure is a normal outcome rather than an error. What the ADR settled and the
+implementation delivered:
 
 1. **POST, though it only reads** — a GET would put manage tokens in the query
    string, undoing the exact property adr-010 §2 chose the URL fragment for.
-2. **Per-item authorization, `200` on partial success** — one stale token must
-   never blank the other four rows.
-3. **One counting implementation** — `summarizeRsvps` moves out of the route
-   file so the row and the dashboard it links to cannot disagree.
+2. **Per-item authorization, `200` on partial success** — one stale token never
+   blanks the other rows; it leaves its own row a plain title/time entry.
+3. **One counting implementation** — `summarizeRsvps` (and the `new_since`
+   count beside it) is shared, so the row and the dashboard it links to cannot
+   disagree.
 4. **A 25-item cap**, which is also what bounds the multi-token oracle adr-010
    declined to rate-limit.
 5. **The landing page never waits** — no spinner, no layout shift, failure is
    silence, and reading the list does not mark responses seen.
 
-Four PRs (extract, endpoint, hook, rows) plus a docs pass. Out of scope: any
-design work (the mockups already specify it), counts anywhere but the landing
-list, and anything that would teach the server which invitations belong to one
-host — that is the accounts model adr-005 rejected.
+Four PRs — the `summarizeRsvps` extraction had already landed in the
+RSVP-summary iteration, so the work was the endpoint, the hook
+(`useHostInvitationCounts`) and the rows — plus this docs pass. The row shows
+replies received with a muted zero-state and an accent "new" badge; details in
+the ADR's implementation notes. Out of scope, as planned: any design work (the
+mockups specify it), counts anywhere but the landing list, and anything that
+would teach the server which invitations belong to one host — the accounts
+model adr-005 rejected.
 
 ## Candidate backlog
 
