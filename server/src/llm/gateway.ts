@@ -57,23 +57,20 @@ export class AllModelsFailedError extends Error {
   }
 }
 
+// HTTP status → failure class, shared by both transports. 5xx is the provider
+// down or overloaded (e.g. Gemini 503 UNAVAILABLE "high demand"), the same
+// operational condition connectivity already names.
+function classifyHttpStatus(status: number): FailureClass {
+  if (status === 401 || status === 403) return "auth";
+  if (status === 429) return "quota";
+  if (status >= 500) return "connectivity";
+  return "other";
+}
+
 export function classifyError(error: unknown): FailureClass {
   if (error instanceof Anthropic.APIConnectionError) return "connectivity";
-  if (error instanceof Anthropic.APIError) {
-    if (error.status === 401 || error.status === 403) return "auth";
-    if (error.status === 429) return "quota";
-    if ((error.status ?? 0) >= 500) return "connectivity";
-    return "other";
-  }
-  // Same mapping for the OpenAI-compat transport's HTTP failures. 5xx is the
-  // provider down or overloaded (e.g. Gemini 503 UNAVAILABLE "high demand"),
-  // which is the same operational condition connectivity already names.
-  if (error instanceof ProviderHttpError) {
-    if (error.status === 401 || error.status === 403) return "auth";
-    if (error.status === 429) return "quota";
-    if (error.status >= 500) return "connectivity";
-    return "other";
-  }
+  if (error instanceof Anthropic.APIError) return classifyHttpStatus(error.status ?? 0);
+  if (error instanceof ProviderHttpError) return classifyHttpStatus(error.status);
   // fetch: network failure surfaces as TypeError, timeout as a DOMException
   // named TimeoutError (AbortSignal.timeout) or AbortError.
   if (
