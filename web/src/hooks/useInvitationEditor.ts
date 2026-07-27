@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
+import { parseEventStart } from "../calendar";
 import { failureMessage } from "../failureMessage";
 import type { ChatStrings } from "../i18n";
 import type { CopyField, DesignTokens, GenerateSource, Invitation } from "../types";
@@ -27,6 +28,9 @@ export function useInvitationEditor(chat: ChatStrings, source: GenerateSource = 
   const [description, setDescription] = useState("");
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [bgBusy, setBgBusy] = useState(false);
+  // Asked at most once per editor session — a date the host doesn't have yet
+  // is a legitimate save-the-date, so this nudges and then stays quiet.
+  const datePrompted = useRef(false);
 
   function say(text: string) {
     setMessages((m) => [...m, { role: "assistant", text }]);
@@ -43,6 +47,14 @@ export function useInvitationEditor(chat: ChatStrings, source: GenerateSource = 
       setInvitation(inv);
       // Edits invalidate the published snapshot's freshness, not the link.
       say(chat.doneMsg);
+      // The copy stage writes around a missing date rather than leaving a
+      // placeholder, so the card looks complete and the host is never told.
+      // A date too vague to parse costs the guest the same thing as no date
+      // at all — GuestActions hides add-to-calendar — so both get the nudge.
+      if (!datePrompted.current && !parseEventStart(inv.brief.date, inv.brief.time)) {
+        datePrompted.current = true;
+        say(chat.dateNudge);
+      }
       setPhase("active");
     } catch (error) {
       say(failureMessage(error, chat));

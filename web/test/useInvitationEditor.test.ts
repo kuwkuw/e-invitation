@@ -30,6 +30,11 @@ const invitation: Invitation = {
   design: { palette: "warm", typography: "serif", layout: "classic", ornament: "floral" },
 };
 
+/** The same invitation with a date the calendar parser can't turn into a day. */
+function dated(date: string | null, time: string | null = null): Invitation {
+  return { ...invitation, brief: { ...invitation.brief, date, time } };
+}
+
 function apiError(status: number, causes?: { model: string; class: string }[]) {
   const error = new api.ApiError("failed");
   error.status = status;
@@ -91,6 +96,50 @@ describe("useInvitationEditor", () => {
       { role: "user", text: "Olena's birthday dinner" },
       { role: "assistant", text: chat.doneMsg },
     ]);
+  });
+
+  it("asks for the date when the brief has none", async () => {
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated(null));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner");
+    });
+
+    // After the usual done message, not instead of it — the host still needs
+    // the "tap to tweak" hint.
+    expect(result.current.messages.slice(-2)).toEqual([
+      { role: "assistant", text: chat.doneMsg },
+      { role: "assistant", text: chat.dateNudge },
+    ]);
+  });
+
+  it("asks when the date is too vague to reach a calendar", async () => {
+    // "у вересні" survives extraction as written (brief.ts copies it verbatim)
+    // but yields no day, so the guest page would hide add-to-calendar.
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated("у вересні"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Весілля у вересні на 80 гостей");
+    });
+
+    expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.dateNudge });
+  });
+
+  it("asks only once, even if the date is still missing after a refinement", async () => {
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated(null));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner");
+    });
+    await act(async () => {
+      await result.current.send("make it formal");
+    });
+
+    const nudges = result.current.messages.filter((m) => m.text === chat.dateNudge);
+    expect(nudges).toHaveLength(1);
   });
 
   it("accumulates the description so later turns refine the same event", async () => {
