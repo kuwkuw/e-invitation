@@ -7,6 +7,7 @@ import type {
   CountsResult,
   DesignTokens,
   EventBrief,
+  GenerateSource,
   Invitation,
   PublishedInvitation,
   PublishResult,
@@ -79,8 +80,8 @@ function postLlm<T>(path: string, body: unknown): Promise<T> {
   });
 }
 
-export function generateInvitation(text: string): Promise<Invitation> {
-  return postLlm<Invitation>("/api/invitations/generate", { text });
+export function generateInvitation(text: string, source: GenerateSource): Promise<Invitation> {
+  return postLlm<Invitation>("/api/invitations/generate", { text, source });
 }
 
 export async function regenerateField(
@@ -122,6 +123,14 @@ export function fetchInvitation(id: string): Promise<PublishedInvitation> {
 
 export function submitRsvp(id: string, rsvp: RsvpInput): Promise<{ ok: boolean }> {
   return post<{ ok: boolean }>(`/api/invitations/${id}/rsvp`, rsvp);
+}
+
+// Share-loop instrumentation (adr-013). Deliberately not routed through
+// `request` — the endpoint answers `204` with no body to parse, and there is
+// no error worth raising: a guest must never see anything because a metric
+// failed. Fire-and-forget, failures swallowed.
+export function recordInvitationView(id: string): void {
+  fetch(`/api/invitations/${id}/view`, { method: "POST" }).catch(() => {});
 }
 
 export function fetchRsvps(id: string, manageToken: string): Promise<RsvpSummary> {

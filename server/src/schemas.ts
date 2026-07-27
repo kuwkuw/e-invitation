@@ -77,9 +77,18 @@ export const Invitation = z.object({
 });
 export type Invitation = z.infer<typeof Invitation>;
 
+// Share-loop attribution (adr-013 §3): where the host arrived from. A closed
+// enum and deliberately nothing more — carrying the referring invitation id
+// would make the aggregate decomposable into "this event produced this host",
+// which is the graph adr-012 and adr-005 both refused to let the server build.
+export const GenerateSource = z.enum(["direct", "guest"]);
+export type GenerateSource = z.infer<typeof GenerateSource>;
+
 // API request bodies
 export const GenerateRequest = z.object({
   text: z.string().trim().min(1).max(500),
+  // Absent means direct, so a client that predates this keeps working.
+  source: GenerateSource.default("direct"),
 });
 export type GenerateRequest = z.infer<typeof GenerateRequest>;
 

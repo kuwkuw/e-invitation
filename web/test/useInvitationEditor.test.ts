@@ -42,6 +42,40 @@ describe("useInvitationEditor", () => {
     vi.restoreAllMocks();
   });
 
+  // adr-013 §4: the referral is captured at mount and stripped from the URL
+  // immediately, so the value has to survive to a generation several chat
+  // turns later — which is where it is actually spent.
+  it("carries the referral source into every generation, turns later", async () => {
+    const generate = vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
+    const { result } = renderHook(() => useInvitationEditor(chat, "guest"));
+
+    await act(async () => {
+      await result.current.send("a birthday party");
+    });
+    await act(async () => {
+      await result.current.send("outdoors");
+    });
+    await act(async () => {
+      await result.current.send("bring a dish");
+    });
+
+    expect(generate).toHaveBeenCalledTimes(3);
+    for (const call of generate.mock.calls) {
+      expect(call[1]).toBe("guest");
+    }
+  });
+
+  it("labels a cold visit direct", async () => {
+    const generate = vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("a birthday party");
+    });
+
+    expect(generate).toHaveBeenCalledWith("a birthday party", "direct");
+  });
+
   it("generates from the first message and lands in the active phase", async () => {
     const generate = vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
     const { result } = renderHook(() => useInvitationEditor(chat));
@@ -50,7 +84,7 @@ describe("useInvitationEditor", () => {
       await result.current.send("Olena's birthday dinner");
     });
 
-    expect(generate).toHaveBeenCalledWith("Olena's birthday dinner");
+    expect(generate).toHaveBeenCalledWith("Olena's birthday dinner", "direct");
     expect(result.current.phase).toBe("active");
     expect(result.current.invitation).toEqual(invitation);
     expect(result.current.messages).toEqual([
@@ -72,7 +106,7 @@ describe("useInvitationEditor", () => {
 
     // The second call must carry both turns — the pipeline is stateless and
     // regenerates from the whole description each time.
-    expect(generate).toHaveBeenLastCalledWith("Olena's birthday dinner. make it formal");
+    expect(generate).toHaveBeenLastCalledWith("Olena's birthday dinner. make it formal", "direct");
   });
 
   it("keeps the existing invitation when a refinement fails", async () => {

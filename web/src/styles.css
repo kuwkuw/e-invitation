@@ -789,6 +789,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-weight: 600;
 }
 
+/* gr-cta: the same whisper, now the only link back to the product (adr-013
+   §7, DS templates/guest-rsvp-extras/GuestCta). The mark keeps .gr-brand's
+   exact values; the action is one muted line beneath it, matching .gr-change,
+   so nothing on the page gets louder. Hover moves the line only — the
+   wordmark never changes colour. */
+.gr-cta { display: block; text-align: center; padding: 16px 0 4px; text-decoration: none; }
+.gr-cta-mark { font-size: 0.72rem; color: #c3bbac; letter-spacing: 0.1em; font-weight: 600; }
+.gr-cta-line { display: block; margin-top: 5px; font-size: 0.78rem; color: #8d8577; text-decoration: underline; text-underline-offset: 3px; transition: color 0.14s; }
+.gr-cta:hover .gr-cta-line { color: #6b6659; }
+
 /* Not found */
 .gr-notfound {
   display: flex;

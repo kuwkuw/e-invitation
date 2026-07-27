@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { buildIcs, parseEventStart } from "./calendar";
 import { GuestActions } from "./components/guest/GuestActions";
+import { GuestCta } from "./components/guest/GuestCta";
 import { GuestNotFound } from "./components/guest/GuestNotFound";
 import { RsvpForm } from "./components/guest/RsvpForm";
 import { ThanksCard } from "./components/guest/ThanksCard";
@@ -10,6 +11,7 @@ import { downloadFile } from "./download";
 import { loadGuestLang, saveGuestLang } from "./guestLang";
 import { usePublishedInvitation } from "./hooks/usePublishedInvitation";
 import { useRsvpForm } from "./hooks/useRsvpForm";
+import { useViewBeacon } from "./hooks/useViewBeacon";
 import { GUEST } from "./i18n";
 import type { Language } from "./types";
 
@@ -19,6 +21,9 @@ import type { Language } from "./types";
 // invitation is the hero, the reply is a quiet white card below/beside it.
 export function GuestPage({ id }: { id: string }) {
   const { published, status } = usePublishedInvitation(id);
+  // Share-loop instrumentation (adr-013): counted here, in the client, because
+  // /i/:id is server-rendered for messenger crawlers and would count unfurls.
+  useViewBeacon(id, status);
   const [langOverride, setLangOverride] = useState<Language | null>(loadGuestLang);
   const form = useRsvpForm(id);
   const [copied, setCopied] = useState(false);
@@ -118,7 +123,7 @@ export function GuestPage({ id }: { id: string }) {
             <RsvpForm form={form} t={t} />
           )}
 
-          <div className="gr-brand">INVITO</div>
+          <GuestCta t={t} />
         </div>
       </div>
     </div>
