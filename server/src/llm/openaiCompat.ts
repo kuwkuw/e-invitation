@@ -110,16 +110,25 @@ export async function completeCompat(req: CompatRequest): Promise<CompatResult> 
       },
       { role: "user", content: req.user },
     ],
-    ...(req.provider === "gemini" || req.provider === "openai"
-      ? {
+    // Constrained decoding wherever the provider offers it. Groq only has
+    // json_object mode; everyone else takes a json_schema.
+    //
+    // Ollama used to be excluded here on the grounds that its support was
+    // spotty. On 0.32 it is not, and the exclusion was actively harmful:
+    // without a schema to decode against, gemma3-4b *echoes the schema back*
+    // — `{"palette":{"type":"string","enum":[...]}}` instead of picking a
+    // value — which fails zod on every enum field at once. Measured on the
+    // real design_resolution prompt: 4/10 valid without, 10/10 with, and
+    // ~2x faster (11.5s -> 6.0s avg). An older Ollama that rejects the field
+    // fails the request, and the walk moves on as it does for any fallback.
+    ...(req.provider === "groq"
+      ? { response_format: { type: "json_object" } }
+      : {
           response_format: {
             type: "json_schema",
             json_schema: { name: "result", schema: jsonSchema },
           },
-        }
-      : req.provider === "groq"
-        ? { response_format: { type: "json_object" } }
-        : {}), // Ollama: response_format support is spotty; prompt + zod suffice.
+        }),
     ...MODEL_PARAMS[req.model],
   };
 

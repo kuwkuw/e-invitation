@@ -114,7 +114,7 @@ describe("openaiCompat adapter (adr-007)", () => {
     expect(requestOf(spy).body.reasoning_effort).toBe("none");
   });
 
-  it("ollama: model alias, no key required, no response_format", async () => {
+  it("ollama: model alias, no key required, schema-constrained decoding", async () => {
     const spy = stubFetch();
     await completeCompat({
       provider: "ollama",
@@ -127,7 +127,10 @@ describe("openaiCompat adapter (adr-007)", () => {
     const { url, body } = requestOf(spy);
     expect(url).toBe("http://localhost:11434/v1/chat/completions");
     expect(body.model).toBe("gemma3:4b");
-    expect(body.response_format).toBeUndefined();
+    // Without a schema to decode against, gemma3-4b echoes the schema back
+    // instead of instantiating it, failing every enum field at once.
+    expect(body.response_format.type).toBe("json_schema");
+    expect(body.response_format.json_schema.schema.properties.greeting).toBeDefined();
   });
 
   it("throws before any network call when the operator key is missing", async () => {
