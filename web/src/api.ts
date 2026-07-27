@@ -124,6 +124,14 @@ export function submitRsvp(id: string, rsvp: RsvpInput): Promise<{ ok: boolean }
   return post<{ ok: boolean }>(`/api/invitations/${id}/rsvp`, rsvp);
 }
 
+// Share-loop instrumentation (adr-013). Deliberately not routed through
+// `request` — the endpoint answers `204` with no body to parse, and there is
+// no error worth raising: a guest must never see anything because a metric
+// failed. Fire-and-forget, failures swallowed.
+export function recordInvitationView(id: string): void {
+  fetch(`/api/invitations/${id}/view`, { method: "POST" }).catch(() => {});
+}
+
 export function fetchRsvps(id: string, manageToken: string): Promise<RsvpSummary> {
   return request<RsvpSummary>(`/api/invitations/${id}/rsvps`, {
     headers: { "x-manage-token": manageToken },
