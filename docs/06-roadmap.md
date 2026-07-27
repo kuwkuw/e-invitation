@@ -2,8 +2,9 @@
 
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
 decomposition landed; updated 2026-07-24 when the manage-view and
-client-routing iterations shipped, and 2026-07-25 when batch response counts
-(adr-012) shipped as FR-5.7. This doc plans the **next** iteration; when an item
+client-routing iterations shipped, 2026-07-25 when batch response counts
+(adr-012) shipped as FR-5.7, and 2026-07-27 when share-loop instrumentation
+(adr-013) was planned. This doc plans the **next** iteration; when an item
 ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -150,6 +151,53 @@ mockups specify it), counts anywhere but the landing list, and anything that
 would teach the server which invitations belong to one host — the accounts
 model adr-005 rejected.
 
+## Next iteration: share-loop instrumentation
+
+Settled in [ADR-013](decisions/adr-013-share-loop-instrumentation.md)
+(proposed). Taken because it is the only backlog item that produces an input
+another decision is waiting on:
+[07-monetization.md](07-monetization.md) §5.1 gates every commercial option on
+**new hosts per published invitation**, and that number is not measurable
+today — the guest page has no link back to the product, and `metrics.ts`
+counts nothing about `/i/:id`.
+
+The other reason is the state of the numbers. Production has 9 generations, 4
+publishes, 5 RSVPs and 0 field regenerations lifetime. Three backlog items
+below are gated on a host asking; at this traffic nobody will ask, and the
+regenerate-rate 01-vision calls the primary quality signal has no data to be a
+signal with. Instrumenting the one loop that could bring traffic is worth more
+than another feature for the hosts who aren't here yet.
+
+What the ADR settles:
+
+1. **Views are counted client-side**, because `/i/:id` is server-rendered for
+   messenger crawlers (FR-3.5) — instrumenting there would count unfurls, not
+   guests, and would move with sharing rather than reading. A beacon the SPA
+   fires after load excludes crawlers without a user-agent list to maintain.
+2. **"Unique" means "unique browser"**, via an `inv-viewed:<id>` flag, not a
+   server-side set of hashed IPs. The number floats high, consistently, and a
+   ratio's magnitude is all §5.1 needs — NFR-4 is not worth spending on
+   precision here.
+3. **The referral is an enum, not an id.** `?ref=guest` becomes
+   `source: "direct" | "guest"` on the generate request. Recording *which*
+   invitation converted would build the host graph adr-012 and adr-005 both
+   refused.
+4. **The router strips `?ref`**, as adr-011 §4 made it strip `#t=`.
+5. **Global counters only** — no per-invitation reach on any surface, and no
+   store change.
+6. **One call to action**, replacing the static `gr-brand` wordmark: text-only
+   from existing tokens, a recorded departure from adr-010 §9's
+   design-precedes-code convention because the point is a measurement, not a
+   surface.
+
+Five PRs plus a docs pass. Explicitly not in scope: per-invitation view counts,
+a click counter, cookies or third-party analytics, and any pricing surface —
+07-monetization stays an investigation until the number exists.
+
+The ADR also commits in advance to taking the answer: under ~0.3 new hosts per
+published invitation, §5.1's honest conclusion is that this stays a
+non-commercial project.
+
 ## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
@@ -164,12 +212,9 @@ model adr-005 rejected.
   volume breaks the NFR-7 single-process assumption; interfaces are ready.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
-- **Share-loop instrumentation** — unique `/i/:id` views plus a guest-page
-  "create your own" call to action with referral attribution in
-  `recordGeneration`. Small, but it is the prerequisite for every option in
-  [07-monetization.md](07-monetization.md) §5: new hosts per published
-  invitation is currently unmeasurable, and it decides whether the product
-  can pay for itself at all.
+- ~~**Share-loop instrumentation**~~ — taken as the next iteration; see
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md) and the section
+  above.
 - ~~**React Router in `web/`**~~ — shipped; see
   [adr-011](decisions/adr-011-client-router.md), which records the original
   declining evaluation, the fact that none of its revisit triggers had fired,
