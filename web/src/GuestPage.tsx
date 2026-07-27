@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { buildIcs, parseEventStart } from "./calendar";
 import { GuestActions } from "./components/guest/GuestActions";
+import { GuestCta } from "./components/guest/GuestCta";
 import { GuestNotFound } from "./components/guest/GuestNotFound";
 import { RsvpForm } from "./components/guest/RsvpForm";
 import { ThanksCard } from "./components/guest/ThanksCard";
@@ -122,7 +123,7 @@ export function GuestPage({ id }: { id: string }) {
             <RsvpForm form={form} t={t} />
           )}
 
-          <div className="gr-brand">INVITO</div>
+          <GuestCta t={t} />
         </div>
       </div>
     </div>
