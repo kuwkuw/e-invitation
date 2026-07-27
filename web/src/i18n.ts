@@ -487,6 +487,9 @@ export interface GuestStrings {
   share: string;
   shareHint: string;
   linkCopied: string;
+  /** The guest page's only link back to the product (adr-013 §7). Chrome, so
+   *  the language switcher moves it (FR-6.3) — never host content. */
+  ctaLine: string;
 }
 
 export const GUEST: Record<Language, GuestStrings> = {
@@ -522,6 +525,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     share: "Share the invitation",
     shareHint: "Viber · Telegram · link",
     linkCopied: "Link copied!",
+    ctaLine: "Create your own invitation",
   },
   uk: {
     loading: "Завантаження…",
@@ -555,6 +559,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     share: "Поділитися запрошенням",
     shareHint: "Viber · Telegram · посилання",
     linkCopied: "Посилання скопійовано!",
+    ctaLine: "Створіть власне запрошення",
   },
 };
 
