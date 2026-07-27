@@ -26,9 +26,19 @@ export function loadByok(): ByokKey | null {
 }
 
 export function saveByok(byok: ByokKey): void {
-  localStorage.setItem(BYOK_KEY, JSON.stringify(byok));
+  try {
+    localStorage.setItem(BYOK_KEY, JSON.stringify(byok));
+  } catch {
+    // Blocked or full storage: the key can't be remembered past this page
+    // view, but the panel's own state still carries it through this session.
+  }
 }
 
 export function clearByok(): void {
-  localStorage.removeItem(BYOK_KEY);
+  try {
+    localStorage.removeItem(BYOK_KEY);
+  } catch {
+    // Nothing readable to clear if storage is blocked — `loadByok` already
+    // treats an unreachable store as "no key".
+  }
 }
