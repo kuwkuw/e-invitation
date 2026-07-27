@@ -14,6 +14,8 @@ interface Counters {
   backgrounds: number;
   publishes: number;
   rsvps: number;
+  // Share-loop instrumentation (adr-013): unique-browser guest-page views.
+  invitation_views: number;
 }
 
 let counters: Counters | null = null;
@@ -26,7 +28,14 @@ function metricsPath(): string {
 // corrupt file starts the counters fresh rather than refusing to serve.
 function load(): Counters {
   if (counters) return counters;
-  counters = { generations: 0, field_regenerations: {}, backgrounds: 0, publishes: 0, rsvps: 0 };
+  counters = {
+    generations: 0,
+    field_regenerations: {},
+    backgrounds: 0,
+    publishes: 0,
+    rsvps: 0,
+    invitation_views: 0,
+  };
   try {
     if (existsSync(metricsPath())) {
       const stored = JSON.parse(readFileSync(metricsPath(), "utf8")) as Partial<Counters>;
@@ -34,6 +43,11 @@ function load(): Counters {
       if (typeof stored.backgrounds === "number") counters.backgrounds = stored.backgrounds;
       if (typeof stored.publishes === "number") counters.publishes = stored.publishes;
       if (typeof stored.rsvps === "number") counters.rsvps = stored.rsvps;
+      // Absent in files written before adr-013 — those upgrade in place, with
+      // the counters they already carry intact and this one starting at 0.
+      if (typeof stored.invitation_views === "number") {
+        counters.invitation_views = stored.invitation_views;
+      }
       for (const [field, count] of Object.entries(stored.field_regenerations ?? {})) {
         if (typeof count === "number") counters.field_regenerations[field] = count;
       }
@@ -82,6 +96,14 @@ export function recordRsvp(): void {
   save(current);
 }
 
+/** One unique-browser view of a guest page (adr-013). Called only after the
+ *  route has confirmed the invitation exists and the beacon is not a repeat. */
+export function recordInvitationView(): void {
+  const current = load();
+  current.invitation_views += 1;
+  save(current);
+}
+
 export function metricsSnapshot() {
   const current = load();
   const totalRegens = Object.values(current.field_regenerations).reduce((a, b) => a + b, 0);
@@ -93,5 +115,6 @@ export function metricsSnapshot() {
     publishes: current.publishes,
     publish_rate: current.generations === 0 ? 0 : current.publishes / current.generations,
     rsvps: current.rsvps,
+    invitation_views: current.invitation_views,
   };
 }
