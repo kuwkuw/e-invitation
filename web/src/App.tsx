@@ -9,6 +9,7 @@ import { SharePanel } from "./components/editor/SharePanel";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { useInvitationEditor } from "./hooks/useInvitationEditor";
 import { usePublishing } from "./hooks/usePublishing";
+import { useReferralSource } from "./hooks/useReferralSource";
 import { loadUiLang, saveUiLang, UI } from "./i18n";
 import type { CopyField, Language } from "./types";
 
@@ -26,7 +27,11 @@ export default function App() {
   const [selectedField, setSelectedField] = useState<CopyField | null>(null);
   const t = UI[uiLang];
 
-  const editor = useInvitationEditor(t.chat);
+  // Where this session came from (adr-013). Read and stripped by the router at
+  // mount; held for the whole session so a generation several chat turns later
+  // still carries it.
+  const source = useReferralSource();
+  const editor = useInvitationEditor(t.chat, source);
   const publishing = usePublishing(() => editor.say(t.chat.failMsg));
 
   const hasInvitation = editor.invitation !== null && editor.phase !== "generating";

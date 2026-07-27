@@ -2,6 +2,11 @@
 
 export type Language = "uk" | "en";
 
+// Share-loop attribution (adr-013 §3): where the host arrived from. A closed
+// enum and never the referring invitation id — per-invitation credit would
+// build the host graph adr-012 and adr-005 both refused.
+export type GenerateSource = "direct" | "guest";
+
 export interface EventBrief {
   event_type: string;
   hosts: string[];

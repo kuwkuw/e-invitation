@@ -44,7 +44,40 @@ describe("durable metrics", () => {
       publish_rate: 0.5,
       rsvps: 1,
       invitation_views: 1,
+      referred_generations: 0,
+      views_per_publish: 1,
+      new_hosts_per_publish: 0,
     });
+  });
+
+  // The number 07-monetization §5.1 gates every commercial option on.
+  it("counts a referred generation in both totals and derives the rates", async () => {
+    const m = await freshMetrics();
+    m.recordGeneration("guest");
+    m.recordGeneration("direct");
+    // Absent source = direct, so a client that predates adr-013 keeps working.
+    m.recordGeneration();
+    m.recordInvitationView();
+    m.recordInvitationView();
+    m.recordInvitationView();
+    m.recordPublish();
+    m.recordPublish();
+
+    const snapshot = m.metricsSnapshot();
+    // A referred generation is a generation like any other, and additionally
+    // the share loop having worked once.
+    expect(snapshot.generations).toBe(3);
+    expect(snapshot.referred_generations).toBe(1);
+    expect(snapshot.views_per_publish).toBe(1.5);
+    expect(snapshot.new_hosts_per_publish).toBe(0.5);
+  });
+
+  it("derives the share-loop rates as 0 before anything is published", async () => {
+    const m = await freshMetrics();
+    m.recordGeneration("guest");
+    m.recordInvitationView();
+    expect(m.metricsSnapshot().views_per_publish).toBe(0);
+    expect(m.metricsSnapshot().new_hosts_per_publish).toBe(0);
   });
 
   // The counters this iteration adds have to arrive on top of a file that has
@@ -68,6 +101,7 @@ describe("durable metrics", () => {
     expect(snapshot.publishes).toBe(4);
     expect(snapshot.rsvps).toBe(5);
     expect(snapshot.invitation_views).toBe(0);
+    expect(snapshot.referred_generations).toBe(0);
 
     upgraded.recordInvitationView();
     expect(upgraded.metricsSnapshot().invitation_views).toBe(1);

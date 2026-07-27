@@ -2,7 +2,7 @@ import { useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
 import { failureMessage } from "../failureMessage";
 import type { ChatStrings } from "../i18n";
-import type { CopyField, DesignTokens, Invitation } from "../types";
+import type { CopyField, DesignTokens, GenerateSource, Invitation } from "../types";
 
 export type Phase = "empty" | "generating" | "active";
 
@@ -19,7 +19,7 @@ export interface ChatMsg {
  * the data: everything below depends only on the accumulated description,
  * nothing on a share link.
  */
-export function useInvitationEditor(chat: ChatStrings) {
+export function useInvitationEditor(chat: ChatStrings, source: GenerateSource = "direct") {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [phase, setPhase] = useState<Phase>("empty");
   // Full event description accumulated across chat turns; each new detail
@@ -38,7 +38,7 @@ export function useInvitationEditor(chat: ChatStrings) {
     const full = description ? `${description}. ${text}` : text;
     setPhase("generating");
     try {
-      const inv = await generateInvitation(full);
+      const inv = await generateInvitation(full, source);
       setDescription(full);
       setInvitation(inv);
       // Edits invalidate the published snapshot's freshness, not the link.

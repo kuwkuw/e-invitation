@@ -7,6 +7,7 @@ import type {
   CountsResult,
   DesignTokens,
   EventBrief,
+  GenerateSource,
   Invitation,
   PublishedInvitation,
   PublishResult,
@@ -79,8 +80,8 @@ function postLlm<T>(path: string, body: unknown): Promise<T> {
   });
 }
 
-export function generateInvitation(text: string): Promise<Invitation> {
-  return postLlm<Invitation>("/api/invitations/generate", { text });
+export function generateInvitation(text: string, source: GenerateSource): Promise<Invitation> {
+  return postLlm<Invitation>("/api/invitations/generate", { text, source });
 }
 
 export async function regenerateField(

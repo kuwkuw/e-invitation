@@ -60,7 +60,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     if (limited) return reply.code(limited.status).send({ error: limited.error });
     try {
       const invitation = await generateInvitation(body.text, byok);
-      recordGeneration();
+      recordGeneration(body.source);
       return invitation;
     } catch (error) {
       request.log.error(error);
