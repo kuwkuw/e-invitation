@@ -145,10 +145,39 @@ interface LlmLogLine {
   retried?: boolean;
 }
 
+/** The fields every log line for one model's turn carries, fixed before the
+ *  request goes out. */
+type LogBase = Pick<LlmLogLine, "ts" | "task" | "model" | "fallback" | "byok">;
+
+/** One model's turn on the walk: the log fields it reports under, and the
+ *  clock its latencies are measured against. */
+interface AttemptLog {
+  startedAt: number;
+  base: LogBase;
+}
+
 function logLlm(line: LlmLogLine): void {
   // One JSON line per LLM request — the observability contract from the spec:
   // task, model, cost, latency (regenerate-rate lives in metrics.ts).
   console.log(JSON.stringify({ evt: "llm_request", ...line }));
+}
+
+/** Classify a failed attempt, log its line, and hand back the cause the 502
+ *  body carries — the two always travel together, so they are decided in one
+ *  place. Only the class reaches the client; the message stays in the log.
+ *  `retried` marks the line whose successor is this model's retry. */
+function recordFailure(log: AttemptLog, error: unknown, retried = false): ModelFailure {
+  const error_class = classifyError(error);
+  const message = error instanceof Error ? error.message : String(error);
+  logLlm({
+    ...log.base,
+    ok: false,
+    latency_ms: Math.round(performance.now() - log.startedAt),
+    error: message,
+    error_class,
+    ...(retried ? { retried: true } : {}),
+  });
+  return { model: log.base.model, class: error_class, message };
 }
 
 // Anthropic structured outputs return pure JSON, but other providers
@@ -218,6 +247,27 @@ async function attempt<T>(
   });
 }
 
+/** `attempt`, plus the one same-model retry a transient provider 5xx earns.
+ *  The superseded failure is logged here so the retry's own outcome is the
+ *  next line for this model; a terminal failure is thrown for the walk to
+ *  record. */
+async function attemptWithRetry<T>(
+  model: string,
+  spec: CompletionSpec<T>,
+  maxTokens: number,
+  byok: ByokKey | undefined,
+  log: AttemptLog,
+): Promise<AttemptResult> {
+  try {
+    return await attempt(model, spec, maxTokens, byok);
+  } catch (error) {
+    if (!isTransientProviderError(error)) throw error;
+    recordFailure(log, error, true);
+    await sleep(TRANSIENT_RETRY_DELAY_MS);
+    return attempt(model, spec, maxTokens, byok);
+  }
+}
+
 /**
  * Run one structured-output completion for a task, walking the routing table
  * (primary, then fallbacks) until a model succeeds. The response is validated
@@ -239,32 +289,21 @@ export async function completeJson<T>(
   const causes: ModelFailure[] = [];
 
   for (const model of models) {
-    const startedAt = performance.now();
-    const base = {
-      ts: new Date().toISOString(),
-      task,
-      model,
-      fallback: model !== route.primary,
-      ...(byok ? { byok: true } : {}),
+    const log: AttemptLog = {
+      startedAt: performance.now(),
+      base: {
+        ts: new Date().toISOString(),
+        task,
+        model,
+        fallback: model !== route.primary,
+        ...(byok ? { byok: true } : {}),
+      },
     };
     try {
-      let result: AttemptResult;
-      try {
-        result = await attempt(model, spec, route.maxTokens, byok);
-      } catch (error) {
-        if (!isTransientProviderError(error)) throw error;
-        logLlm({
-          ...base,
-          ok: false,
-          latency_ms: Math.round(performance.now() - startedAt),
-          error: error instanceof Error ? error.message : String(error),
-          error_class: classifyError(error),
-          retried: true,
-        });
-        await sleep(TRANSIENT_RETRY_DELAY_MS);
-        result = await attempt(model, spec, route.maxTokens, byok);
-      }
-      const latency_ms = Math.round(performance.now() - startedAt);
+      const result = await attemptWithRetry(model, spec, route.maxTokens, byok, log);
+      // Read before validating: the reported latency is the model's, not the
+      // gateway's own parse and schema check.
+      const latency_ms = Math.round(performance.now() - log.startedAt);
       if (!result.text) {
         throw new Error(`empty output (stop_reason: ${result.stopReason})`);
       }
@@ -277,7 +316,7 @@ export async function completeJson<T>(
       // BYOK spend belongs to the caller.
       if (!byok) recordOperatorSpend(cost_usd);
       logLlm({
-        ...base,
+        ...log.base,
         ok: true,
         latency_ms,
         input_tokens: result.inputTokens,
@@ -286,16 +325,7 @@ export async function completeJson<T>(
       });
       return parsed;
     } catch (error) {
-      const error_class = classifyError(error);
-      const message = error instanceof Error ? error.message : String(error);
-      logLlm({
-        ...base,
-        ok: false,
-        latency_ms: Math.round(performance.now() - startedAt),
-        error: message,
-        error_class,
-      });
-      causes.push({ model, class: error_class, message });
+      causes.push(recordFailure(log, error));
     }
   }
 
