@@ -29,6 +29,7 @@ describe("durable metrics", () => {
     m1.recordFieldRegeneration("title");
     m1.recordPublish();
     m1.recordRsvp();
+    m1.recordInvitationView();
 
     const stored = JSON.parse(readFileSync(join(dataDir, "metrics.json"), "utf8"));
     expect(stored.generations).toBe(2);
@@ -42,7 +43,36 @@ describe("durable metrics", () => {
       publishes: 1,
       publish_rate: 0.5,
       rsvps: 1,
+      invitation_views: 1,
     });
+  });
+
+  // The counters this iteration adds have to arrive on top of a file that has
+  // been accumulating in production since long before them — the whole value
+  // of the share-loop numbers is a ratio measured over months (adr-013).
+  it("upgrades a metrics file written before invitation_views existed", async () => {
+    writeFileSync(
+      join(dataDir, "metrics.json"),
+      JSON.stringify({
+        generations: 9,
+        field_regenerations: {},
+        backgrounds: 0,
+        publishes: 4,
+        rsvps: 5,
+      }),
+      "utf8",
+    );
+    const upgraded = await freshMetrics();
+    const snapshot = upgraded.metricsSnapshot();
+    expect(snapshot.generations).toBe(9);
+    expect(snapshot.publishes).toBe(4);
+    expect(snapshot.rsvps).toBe(5);
+    expect(snapshot.invitation_views).toBe(0);
+
+    upgraded.recordInvitationView();
+    expect(upgraded.metricsSnapshot().invitation_views).toBe(1);
+    // The pre-existing counters survive the first write of the new shape.
+    expect(JSON.parse(readFileSync(join(dataDir, "metrics.json"), "utf8")).generations).toBe(9);
   });
 
   it("derives publish_rate, with 0 for zero generations", async () => {

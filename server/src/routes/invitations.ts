@@ -12,6 +12,7 @@ import {
   recordBackground,
   recordFieldRegeneration,
   recordGeneration,
+  recordInvitationView,
   recordPublish,
   recordRsvp,
 } from "../metrics.js";
@@ -39,6 +40,7 @@ import {
   saveBackground,
   tokenMatches,
 } from "../store.js";
+import { claimView } from "../views.js";
 
 export function registerInvitationRoutes(app: FastifyInstance): void {
   app.post("/api/invitations/generate", async (request, reply) => {
@@ -199,6 +201,22 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     addRsvp(record, { ...body, created_at: new Date().toISOString() });
     recordRsvp();
     return { ok: true };
+  });
+
+  // Share-loop instrumentation (adr-013 §1). Fired by the guest page once it
+  // has loaded the invitation — never by the server while rendering /i/:id,
+  // which exists for messenger crawlers (FR-3.5) and would count unfurls
+  // instead of guests. Crawlers don't run JS, so they never reach this.
+  //
+  // No body and no credential: the id is the only thing there is to validate,
+  // and an id the server never minted counts nothing. `204` either way — a
+  // repeat is not the caller's business, and a guest must never see anything
+  // because a metric did or didn't record.
+  app.post("/api/invitations/:id/view", async (request, reply) => {
+    const record = lookup(request.params);
+    if (!record) return reply.code(404).send({ error: "Invitation not found." });
+    if (claimView(request.ip, record.id)) recordInvitationView();
+    return reply.code(204).send();
   });
 
   // Host-only RSVP list, authenticated by the manage token from publish.
