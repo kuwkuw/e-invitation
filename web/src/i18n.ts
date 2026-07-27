@@ -35,6 +35,9 @@ export interface ChatStrings {
   placeholderRefine: string;
   creating: string;
   doneMsg: string;
+  /** Asked once when the generated brief carries no date a calendar can read
+   *  — the one missing fact the host gets no other signal about. */
+  dateNudge: string;
   failMsg: string;
   editingLabel: string;
   actionRegenerate: string;
@@ -163,6 +166,8 @@ export const UI: Record<Language, UiStrings> = {
       placeholderRefine: "Add a detail…",
       creating: "Creating your invitation",
       doneMsg: "Done — tap any part of the invitation to tweak it.",
+      dateNudge:
+        "When exactly is it? Add the date and I'll put it on the card — then guests can save the event to their calendar.",
       failMsg: "Something went wrong. Please try again.",
       editingLabel: "Editing",
       actionRegenerate: "Regenerate",
@@ -279,6 +284,8 @@ export const UI: Record<Language, UiStrings> = {
       placeholderRefine: "Додайте деталь…",
       creating: "Створюю запрошення",
       doneMsg: "Готово — торкніться будь-якої частини запрошення, щоб змінити її.",
+      dateNudge:
+        "А коли саме це буде? Додайте дату — я впишу її в запрошення, і гості зможуть зберегти подію в календар.",
       failMsg: "Щось пішло не так. Спробуйте ще раз.",
       editingLabel: "Редагування",
       actionRegenerate: "Перегенерувати",

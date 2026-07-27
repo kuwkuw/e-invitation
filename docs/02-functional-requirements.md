@@ -22,6 +22,15 @@ implementation.
 - FR-1.5 The copy is written in the language of the input sentence
   (`EventBrief.language`, `uk` or `en`).
 - FR-1.6 If all routed models fail, respond `502` with a user-safe error.
+- FR-1.7 When the resulting brief carries no date a calendar can read — absent,
+  or written too vaguely to yield a day ("у вересні") — the editor chat asks the
+  host for one, once, after the invitation appears
+  ([useInvitationEditor.ts](../web/src/hooks/useInvitationEditor.ts)). The test
+  is the same `parseEventStart` the guest page uses, because a date that fails
+  it is exactly the date that hides add-to-calendar there (FR-4.5) — and FR-1.2
+  plus the copy stage's write-around-it rule otherwise leave the host with a
+  card that looks complete. The prompt never blocks generating or publishing: a
+  save-the-date without a day is a valid invitation.
 
 ## FR-2 Edit and regenerate per field
 
