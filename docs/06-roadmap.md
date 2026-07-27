@@ -185,10 +185,13 @@ What the ADR settles:
 4. **The router strips `?ref`**, as adr-011 §4 made it strip `#t=`.
 5. **Global counters only** — no per-invitation reach on any surface, and no
    store change.
-6. **One call to action**, replacing the static `gr-brand` wordmark: text-only
-   from existing tokens, a recorded departure from adr-010 §9's
-   design-precedes-code convention because the point is a measurement, not a
-   surface.
+6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
+   first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
+   project — against the constraint `styles.css` already states in its own
+   words, *"INVITO stays a whisper"*: the wordmark keeps its exact current
+   values and gains one underlined line beneath it, in the same muted grey as
+   "change answer". Four louder treatments were drawn and rejected, three
+   against rules already written down.
 
 Five PRs plus a docs pass. Explicitly not in scope: per-invitation view counts,
 a click counter, cookies or third-party analytics, and any pricing surface —

@@ -164,12 +164,43 @@ The guest experience does not degrade for it (§5.2, and the same reasoning
 adr-010 §3 applied to the share panel): quiet, below the reply card, never a
 modal, never ahead of the answer the guest came to give.
 
-Text-only, from tokens already in `styles.css` — no design-system round trip.
-This is a deliberate departure from adr-010 §9's design-precedes-code
-convention, recorded rather than silent: the DS mockups specify no such
-element, and the point of this iteration is a measurement, not a surface. If
-the number justifies §5.2, that work arrives with a mockup and this component
-is where it lands.
+**Designed before built**, per adr-010 §9. The mockup is
+`templates/guest-rsvp-extras/GuestCta` in the E-invitation DS project — an
+addition to the guest-RSVP template rather than a template of its own, because
+this is one element inside a screen that is already designed, and it has to be
+judged in that screen rather than beside it.
+
+The design problem the mockup exists to settle is narrower than "what should
+the call to action look like". `styles.css` records the guest page's intent in
+its own comment, carried over from the DS `guest-rsvp` template: **"INVITO
+stays a whisper."** That is why the page reads as someone's invitation rather
+than as a product surface, and this iteration has to turn that same whisper
+into the only acquisition channel the economics can afford (§3 of
+07-monetization). The question is therefore how far the whisper can grow before
+the page stops belonging to the host.
+
+The chosen treatment leaves the wordmark at exactly its current values and adds
+one underlined line beneath it in `#8d8577` — the same treatment as "change
+answer", an existing quiet action on the same page. Nothing on the page becomes
+louder; one thing becomes legible as an action. Full spec in the mockup.
+
+Four alternatives were drawn and rejected, three of them against rules already
+written down rather than on taste:
+
+- **A wordmark linked and nothing else** is the safest and cannot be read. A
+  near-zero result would not distinguish a dead loop from an invisible link,
+  which defeats the only purpose of the iteration.
+- **The action given the accent colour**, wordmark demoted to attribution,
+  competes with the RSVP submit button for the same colour and the same
+  attention — against the answer the guest actually came to give.
+- **A row in the calendar/directions/share pattern** reads as native, and those
+  rows exist only after an *attending* RSVP. It cannot satisfy the one-placement
+  rule above, and it would make the product a peer of the guest's own actions
+  rather than a footer beneath them.
+- **A tinted card** measures best and reads as advertising on someone's wedding
+  invitation. §5.2's rule that guest experience must never degrade is what
+  protects the channel, so the loudest option is excluded by the same reasoning
+  that makes the channel worth having.
 
 ## Consequences
 
