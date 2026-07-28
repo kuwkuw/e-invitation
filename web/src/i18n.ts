@@ -736,3 +736,48 @@ export const MANAGE: Record<Language, ManageStrings> = {
     retry: "Спробувати ще раз",
   },
 };
+
+// Last-resort copy behind the route error boundary — the only screen that has
+// to read as calmly as the others while knowing nothing about what broke.
+// Two audiences, because the recovery differs: a host can reload and go on
+// working, while a guest can only reload and, failing that, ask for a fresh
+// link — the same one-step way out as GUEST.notFoundHint.
+export type CrashAudience = "host" | "guest";
+
+export interface CrashStrings {
+  title: string;
+  body: string;
+  hint: string;
+  reload: string;
+}
+
+export const CRASH: Record<Language, Record<CrashAudience, CrashStrings>> = {
+  en: {
+    host: {
+      title: "Something went wrong",
+      body: "This page hit an unexpected error and couldn't finish loading. Reloading usually clears it.",
+      hint: "Published invitations and their responses are safe on the server — nothing you've shared is affected.",
+      reload: "Reload the page",
+    },
+    guest: {
+      title: "The invitation didn't open",
+      body: "Something went wrong while showing this invitation. Reloading the page usually helps.",
+      hint: "If it happens again, ask the host to send you a fresh link.",
+      reload: "Reload the page",
+    },
+  },
+  uk: {
+    host: {
+      title: "Щось пішло не так",
+      body: "Сторінка натрапила на неочікувану помилку й не завантажилась до кінця. Зазвичай допомагає перезавантаження.",
+      hint: "Опубліковані запрошення та відповіді на них у безпеці на сервері — з ними нічого не сталося.",
+      reload: "Перезавантажити сторінку",
+    },
+    guest: {
+      title: "Запрошення не відкрилося",
+      body: "Щось пішло не так під час показу запрошення. Зазвичай допомагає перезавантаження сторінки.",
+      hint: "Якщо це повториться, попросіть господаря надіслати нове посилання.",
+      reload: "Перезавантажити сторінку",
+    },
+  },
+};
