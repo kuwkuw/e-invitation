@@ -19,6 +19,8 @@ Each token maps 1:1 to a CSS class (`palette-warm`, `type-serif`, `layout-banner
 
 The `copy` prop carries the six text slots of an invitation: `title`, `greeting`, `body`, `details_line` (supports `\n` line breaks), `rsvp_prompt`, `closing`. Realistic, human copy — Ukrainian or English.
 
+The optional `background` prop is an **opaque server-issued asset id** (adr-009) that the card resolves to `/api/backgrounds/<id>` and composites under the copy behind a palette-tinted scrim. **Omit it when designing** — there is no server here to serve the asset, and the card without it is exactly the CSS-only design. (`minimal` ignores it by design; `split` confines the image to the side panel.)
+
 ## Where the truth lives
 
 - `styles.css` → imports `_ds_bundle.css`: every `palette-*` / `type-*` / `layout-*` / `ornament-*` class and the `.inv*` card structure. Read it before styling anything yourself.
@@ -41,4 +43,4 @@ The `copy` prop carries the six text slots of an invitation: `title`, `greeting`
 />
 ```
 
-Give the card a constrained column (~520 px max-width) on a neutral page background; it centers itself and carries its own shadow and padding.
+Give the card a constrained column on a neutral page background; it centers itself and carries its own shadow, border, padding and a 380 px min-height. For reference, the app renders it in a ~590 px column (`.page` caps at 1080 px; `.workspace` splits `minmax(280px, 420px) 1fr` with a 28 px gap, collapsing to one column under 800 px).
