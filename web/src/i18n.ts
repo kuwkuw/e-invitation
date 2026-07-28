@@ -339,12 +339,24 @@ export const UI: Record<Language, UiStrings> = {
 const UI_LANG_KEY = "inv-ui-lang";
 
 export function loadUiLang(): Language {
-  const stored = localStorage.getItem(UI_LANG_KEY);
-  return stored === "en" || stored === "uk" ? stored : "uk";
+  try {
+    const stored = localStorage.getItem(UI_LANG_KEY);
+    return stored === "en" || stored === "uk" ? stored : "uk";
+  } catch {
+    // Private-mode Safari and blocked-storage settings throw on access, and
+    // this runs as a `useState` initializer on three of the four routes — an
+    // unguarded throw here is a blank page, not a forgotten preference. Fall
+    // back to the default language, as `loadGuestLang` does on the guest side.
+    return "uk";
+  }
 }
 
 export function saveUiLang(lang: Language): void {
-  localStorage.setItem(UI_LANG_KEY, lang);
+  try {
+    localStorage.setItem(UI_LANG_KEY, lang);
+  } catch {
+    // Non-fatal: the switch still applies for this page view.
+  }
 }
 
 // Landing-page marketing copy. The sample invitations in the hero stay

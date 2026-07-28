@@ -77,6 +77,27 @@ describe("usePublishing", () => {
     expect(result.current.manageCopied).toBe(true);
   });
 
+  it("still opens the panel when storage is blocked", async () => {
+    // Private-mode Safari and blocked-storage settings throw on setItem. The
+    // publish already succeeded server-side by then, so treating the throw as
+    // a publish failure would hide a live invitation from its own host — and
+    // the share panel is where the manage link that survives this browser is.
+    vi.spyOn(api, "publishInvitation").mockResolvedValue(RESULT);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError");
+    });
+    const onError = vi.fn();
+    const { result } = renderHook(() => usePublishing(onError));
+
+    await act(async () => {
+      await result.current.share(invitation);
+    });
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(result.current.shareOpen).toBe(true);
+    expect(result.current.published).toEqual(RESULT);
+  });
+
   it("reports a failed publish instead of opening an empty panel", async () => {
     vi.spyOn(api, "publishInvitation").mockRejectedValue(new Error("boom"));
     const onError = vi.fn();
