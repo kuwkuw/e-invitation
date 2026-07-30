@@ -2,6 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError, fetchInvitation, fetchRsvps } from "../api";
 import { isInvitationId } from "../invitationId";
+import {
+  readManageSeen,
+  readManageToken,
+  writeManageSeen,
+  writeManageToken,
+} from "../manageTokens";
 import type { PublishedInvitation, RsvpSummary } from "../types";
 
 /** Every outcome the host can land in. Access failures are deliberately three
@@ -15,16 +21,6 @@ export type ManageStatus =
   | "invalid_token"
   | "not_found"
   | "error";
-
-export function manageTokenKey(id: string): string {
-  return `inv-manage:${id}`;
-}
-
-/** When this browser last looked at these responses — drives "N new since
- *  your last visit". Browser-local, like the token itself. */
-export function manageSeenKey(id: string): string {
-  return `inv-manage-seen:${id}`;
-}
 
 /** Reads `#t=<token>` out of a hash. Pure: persisting the token and stripping
  *  the fragment are separate steps, done in an effect, because a router
@@ -78,7 +74,7 @@ export function useHostManage(id: string) {
   const [session, setSession] = useState<{ token: string | null }>(() => ({
     // Fragment first (the host just followed their manage link), then whatever
     // this browser already stored from publishing.
-    token: valid ? (fragmentToken ?? localStorage.getItem(manageTokenKey(id))) : null,
+    token: valid ? (fragmentToken ?? readManageToken(id)) : null,
   }));
   const token = session.token;
   const [published, setPublished] = useState<PublishedInvitation | null>(null);
@@ -97,12 +93,12 @@ export function useHostManage(id: string) {
   // overwrite the baseline with "now" and report zero new replies.
   const baselineRef = useRef<string | null | undefined>(undefined);
   if (baselineRef.current === undefined) {
-    baselineRef.current = localStorage.getItem(manageSeenKey(id));
+    baselineRef.current = readManageSeen(id);
   }
 
   useEffect(() => {
     if (!valid) return;
-    localStorage.setItem(manageSeenKey(id), new Date().toISOString());
+    writeManageSeen(id, new Date().toISOString());
   }, [id, valid]);
 
   // Keep the token, drop it from the address bar so the credential stops
@@ -110,7 +106,7 @@ export function useHostManage(id: string) {
   // token in it should not be somewhere the back button can return to.
   useEffect(() => {
     if (!fragmentToken) return;
-    localStorage.setItem(manageTokenKey(id), fragmentToken);
+    writeManageToken(id, fragmentToken);
     navigate({ pathname: location.pathname, search: location.search }, { replace: true });
   }, [fragmentToken, id, location.pathname, location.search, navigate]);
 
@@ -179,7 +175,7 @@ export function useHostManage(id: string) {
     (input: string): boolean => {
       const parsed = tokenFromManageLink(input);
       if (!parsed || !valid) return false;
-      localStorage.setItem(manageTokenKey(id), parsed);
+      writeManageToken(id, parsed);
       setSession({ token: parsed });
       return true;
     },

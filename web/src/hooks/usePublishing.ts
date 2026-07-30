@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { publishInvitation } from "../api";
 import { recordHostInvitation } from "../hostInvitations";
+import { writeManageToken } from "../manageTokens";
 import type { Invitation, PublishResult } from "../types";
-import { manageTokenKey } from "./useHostManage";
 
 export function shareUrl(id: string): string {
   return `${window.location.origin}/i/${id}`;
@@ -48,18 +48,12 @@ export function usePublishing(onError: () => void) {
       setPublished(result);
       // Read back by /manage/:id, so the host keeps access after this tab is
       // gone — the manage link covers the case where this browser is too.
-      // Through `manageTokenKey` rather than the literal, so the write and
-      // every read stay one definition: a key that drifted here would strand
-      // the host's access silently, and the tests read through the helper too.
-      try {
-        localStorage.setItem(manageTokenKey(result.id), result.manage_token);
-      } catch {
-        // Blocked or full storage must not turn a publish that already
-        // succeeded into a failure — the invitation is live and `published`
-        // holds the token for this session. The manage link in the share
-        // panel is what carries access past this tab, which is exactly the
-        // case adr-010 §2 keeps it for.
-      }
+      // Through the shared accessor rather than a literal key, so the write
+      // and every read stay one definition: a key that drifted here would
+      // strand the host's access silently. It swallows a blocked or full
+      // store on its own — a publish that already succeeded server-side must
+      // not fail on a bookkeeping write.
+      writeManageToken(result.id, result.manage_token);
       // And remember the event itself, so the landing page can offer it back
       // by name rather than by id (adr-010 §4).
       recordHostInvitation({

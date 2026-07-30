@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchCounts } from "../api";
+import { readManageSeen, readManageToken } from "../manageTokens";
 import type { CountsRequestItem, CountsResult } from "../types";
-import { manageSeenKey, manageTokenKey } from "./useHostManage";
 
 /**
  * Per-row response counts for the returning-host landing list (adr-012,
@@ -34,9 +34,9 @@ export function useHostInvitationCounts(ids: string[]): Map<string, CountsResult
     // no second round trip (adr-012 §6).
     const items = ids
       .map((id): CountsRequestItem | null => {
-        const token = localStorage.getItem(manageTokenKey(id));
+        const token = readManageToken(id);
         if (!token) return null;
-        const seen = localStorage.getItem(manageSeenKey(id));
+        const seen = readManageSeen(id);
         return seen ? { id, token, seen_at: seen } : { id, token };
       })
       .filter((item): item is CountsRequestItem => item !== null);
