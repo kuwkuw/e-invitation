@@ -1,10 +1,15 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
+import { pruneExpiredSessions } from "./accounts.js";
+import { googleConfig } from "./auth/google.js";
+import { pruneExpiredOauthStates } from "./auth/state.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
+import { registerAuthRoutes } from "./routes/auth.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
 
@@ -21,6 +26,10 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     trustProxy: true,
   });
   await app.register(cors, { origin: true });
+  // Parses and serialises the one cookie the app has (adr-014 §4). No secret
+  // is configured because nothing is signed: the session id is 32 random bytes
+  // whose only meaning is as a row key, so there is no claim to forge.
+  await app.register(cookie);
 
   // Custom domain: when CANONICAL_HOST is set (e.g. "invito.example.com"),
   // requests reaching the service on any other host — the platform's
@@ -54,8 +63,28 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
       ]),
     ),
   };
+  // Host sign-in (adr-014). Unconfigured is a supported mode, not a failure —
+  // the server boots, publish stays anonymous, and local development needs no
+  // OAuth client, the same way NFR-3 lets it boot without provider keys. This
+  // is what /healthz reports and what the client asks before showing any
+  // sign-in affordance.
+  const authConfigured = googleConfig() !== null;
+  if (authConfigured) {
+    // Abandoned sign-ins and expired sessions accumulate slowly and are dead
+    // rows the moment they lapse. Boot is often enough at this size; nothing
+    // reads them, so a lingering row is clutter rather than a risk.
+    pruneExpiredOauthStates();
+    pruneExpiredSessions();
+  }
+
   // guardrails is computed per request (unlike llmInfo): today's spend moves.
-  app.get("/healthz", async () => ({ ok: true, llm: llmInfo, guardrails: guardrailsSnapshot() }));
+  app.get("/healthz", async () => ({
+    ok: true,
+    llm: llmInfo,
+    guardrails: guardrailsSnapshot(),
+    auth: { google: authConfigured },
+  }));
+  registerAuthRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
 

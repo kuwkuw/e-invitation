@@ -303,11 +303,11 @@ and adr-012: no `InvitationPreview` prop changes, no token changes, no
   line about the host graph kept.
 - **01-vision's "no guest accounts" stays literally true**; intent 1 needs a
   caveat naming the publish gate.
-- **New environment variables:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-  `SESSION_SECRET`, and an OAuth redirect URI that must be registered per
-  environment — which interacts with `CANONICAL_HOST`, since Google validates
-  the redirect against a fixed list. `docs/05-deployment.md` gains the runbook;
-  `server/.env.example` gains the keys.
+- **New environment variables:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and
+  `GOOGLE_REDIRECT_URI` — the last because Google validates the redirect
+  against a fixed allowlist, which interacts with `CANONICAL_HOST`.
+  `docs/05-deployment.md` gains the runbook; `server/.env.example` gains the
+  keys. No session secret: see the implementation notes.
 - **`server/src/schemas.ts` gains the keyring and account shapes and
   `web/src/types.ts` mirrors them by hand in the same PR** (NFR-8).
 - **`docs/02-functional-requirements.md`** gains FR-11 and three route-table
@@ -403,6 +403,30 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   keeps raw. Not an inconsistency: a manage token authorizes one invitation and
   already sits in the record it protects, while a session id authorizes every
   invitation an account holds.
+- **There is no session secret** (PR 2). The consequences originally listed
+  one. Nothing is signed: the cookie carries 32 random bytes whose only meaning
+  is as a row key in `sessions`, so there is no claim to forge and a signature
+  would protect nothing. `@fastify/cookie` is registered without a `secret`.
+  One fewer piece of deployment configuration to get wrong.
+- **The in-flight sign-in state lives in SQLite**, per §3's "stored
+  server-side" — including the exact `redirect_uri`, because the token exchange
+  has to repeat it byte-for-byte and re-deriving it at callback time from a
+  different request is how that silently breaks behind a proxy. Reading a state
+  deletes it, so single-use is structural rather than a check.
+- **`GOOGLE_REDIRECT_URI` is optional** (PR 2). Unset, the callback URI is
+  derived from the incoming request, which is what lets localhost development
+  run with no second registration. Google's allowlist is the real control — a
+  forged `Host` header can only produce a URI Google refuses. Production should
+  still set it explicitly, because a deployment behind `CANONICAL_HOST` must
+  send the canonical host rather than the platform one.
+- **The callback returns `?auth=ok|failed|declined`** on the path the host
+  started from. `declined` is separate from `failed` on purpose: pressing
+  cancel on Google's screen is a choice, not a breakage, and must not be
+  rendered as one. The client reads the parameter once and strips it through
+  the router, exactly as adr-011 §4 has it strip `?ref` — PR 5 owes that.
+- **A first publish while signed out is still the open question PR 4 answers.**
+  PR 2 deliberately gates nothing, so the app's behaviour is unchanged whether
+  or not a host signs in.
 
 ## Revisit triggers
 

@@ -65,6 +65,15 @@ const SCHEMA = `
     created_at    TEXT NOT NULL,
     PRIMARY KEY (user_id, invitation_id)
   );
+
+  CREATE TABLE IF NOT EXISTS oauth_states (
+    state         TEXT PRIMARY KEY,
+    nonce         TEXT NOT NULL,
+    code_verifier TEXT NOT NULL,
+    redirect_uri  TEXT NOT NULL,
+    redirect_to   TEXT NOT NULL,
+    expires_at    TEXT NOT NULL
+  );
 `;
 
 let db: DatabaseSync | null = null;
