@@ -30,11 +30,21 @@ export interface GoogleIdentity {
   email: string;
 }
 
+/** Which leg of the handshake broke, as a closed class rather than prose —
+ *  the same shape as the gateway's `FailureClass`, and for the same reason:
+ *  the host sees a stable code they can read out to support, the message stays
+ *  in the log. Three values, deliberately coarse. */
+export type AuthFailureCode = "state" | "exchange" | "identity";
+
 /** Thrown for every failure in the flow. The message is for the log; callers
- *  map it to one generic user-facing failure, because "which part of the
- *  handshake broke" is not a guest-safe distinction — the same instinct that
- *  keeps the gateway's raw provider messages out of the 502 body. */
-export class AuthError extends Error {}
+ *  surface only `code`. */
+export class AuthError extends Error {
+  readonly code: AuthFailureCode;
+  constructor(message: string, code: AuthFailureCode = "identity") {
+    super(message);
+    this.code = code;
+  }
+}
 
 /** null when the operator has not configured OAuth. adr-014 §7 makes that a
  *  supported mode, not an error: the server boots, publish stays anonymous,
@@ -109,10 +119,10 @@ export async function exchangeCode(
     }),
   });
   if (!response.ok) {
-    throw new AuthError(`Token exchange failed with ${response.status}.`);
+    throw new AuthError(`Token exchange failed with ${response.status}.`, "exchange");
   }
   const body = (await response.json()) as { id_token?: string };
-  if (!body.id_token) throw new AuthError("Token response carried no id_token.");
+  if (!body.id_token) throw new AuthError("Token response carried no id_token.", "exchange");
   return body.id_token;
 }
 
@@ -196,7 +206,7 @@ async function signingKey(kid: string): Promise<Jwk> {
 
 async function fetchJwks(): Promise<Jwk[]> {
   const response = await fetch(JWKS_ENDPOINT);
-  if (!response.ok) throw new AuthError(`JWKS fetch failed with ${response.status}.`);
+  if (!response.ok) throw new AuthError(`JWKS fetch failed with ${response.status}.`, "exchange");
   const body = (await response.json()) as { keys?: Jwk[] };
   if (!body.keys?.length) throw new AuthError("JWKS response carried no keys.");
   jwksCache = { keys: body.keys, fetchedAt: Date.now() };

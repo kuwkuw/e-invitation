@@ -1445,3 +1445,52 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cr-action:hover { background: #a04e27; }
 .cr-brand { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
+
+/* Sign-in gate (adr-014 §2). From the "auth-gate" template in the E-invitation
+   DS project. It is the first frame of the share sheet, not a screen: same
+   container, same rounded top edge, and the invitation stays visible behind a
+   scrim because that is what makes interrupting a committed host tolerable.
+   No filled accent lives here until a public link exists — the one exception
+   is the retry in `failed`, where repeating really is the useful action. */
+.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(35, 33, 29, 0.30); display: flex; align-items: flex-end; justify-content: center; }
+.ag-sheet { width: 100%; max-width: 460px; background: #fff; border-radius: 26px 26px 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(20, 18, 14, 0.16); }
+.ag-grab { width: 40px; height: 5px; border-radius: 999px; background: #e4ddd0; margin: 0 auto 18px; }
+.ag-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
+.ag-title-inline { margin: 0; }
+.ag-returning-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.ag-why { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
+.ag-google { width: 100%; height: 56px; border: 1px solid #ddd6c8; border-radius: 16px; background: #fff; color: #23211d; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: 0 4px 12px rgba(20, 18, 14, 0.06); cursor: pointer; }
+.ag-google:hover { border-color: #c9bfab; }
+.ag-waiting { width: 100%; height: 56px; border: 1px solid #ece7dd; border-radius: 16px; background: #faf8f4; display: flex; align-items: center; justify-content: center; gap: 11px; color: #8d8577; font-weight: 700; font-size: 1rem; }
+.ag-retry { width: 100%; height: 56px; border: none; border-radius: 16px; background: #b3592e; color: #fff; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3); cursor: pointer; }
+.ag-retry:hover { background: #9f4d26; }
+.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0eadf; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
+.ag-note svg { flex: 0 0 auto; margin-top: 2px; }
+.ag-back { text-align: center; margin-top: 14px; }
+.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: #8d8577; cursor: pointer; padding: 4px 8px; }
+.ag-textbtn:hover { color: #23211d; }
+.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: #23211d; }
+.ag-textbtn-off { color: #c3bbac; cursor: default; }
+/* Red lives only in this 28px icon — never a border, banner, or body text. */
+.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: #fbf0ef; border: 1px solid #eed3d1; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.ag-draft { display: flex; align-items: center; gap: 9px; background: #f7f5f1; border: 1px solid #eee8dd; border-radius: 12px; padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: #6b6659; }
+.ag-draft svg { flex: 0 0 auto; }
+.ag-code { font-size: 0.74rem; color: #c3bbac; text-align: center; margin: 12px 0 0; }
+.ag-progress { height: 3px; border-radius: 999px; background: #f0eadf; margin-bottom: 20px; overflow: hidden; }
+.ag-progress-fill { width: 72%; height: 100%; background: #b3592e; border-radius: 999px; }
+/* The share panel's own blocks in their final positions, greyed. The host is
+   watching the panel being born, not reading about authentication. */
+.ag-skeleton-label { width: 42%; height: 11px; border-radius: 6px; background: #f0eadf; margin-bottom: 12px; }
+.ag-skeleton-link { height: 50px; border: 1px solid #f0eadf; border-radius: 14px; background: #faf8f4; margin-bottom: 12px; }
+.ag-skeleton-primary { height: 54px; border-radius: 16px; background: #f2e7de; margin-bottom: 12px; }
+.ag-skeleton-divider { height: 1px; background: #f4efe6; margin: 16px 0; }
+.ag-skeleton-manage { height: 70px; border-radius: 14px; background: #faf6f0; border: 1px solid #f4ece1; }
+.ag-spin { animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
+@keyframes agSpin { to { transform: rotate(360deg); } }
+@media (min-width: 800px) {
+  /* Desktop: the same sheet becomes a popover under the Publish button, which
+     is where the share panel already appears. */
+  .ag-scrim { align-items: flex-start; justify-content: flex-end; padding: 64px 16px 0; }
+  .ag-sheet { max-width: 380px; border-radius: 18px; box-shadow: 0 18px 40px rgba(20, 18, 14, 0.18); }
+  .ag-grab { display: none; }
+}

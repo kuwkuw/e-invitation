@@ -31,8 +31,13 @@ export type AuthStatus = "loading" | "unavailable" | "signed_out" | "signed_in";
 export function useAuthSession() {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [email, setEmail] = useState<string | null>(null);
+  // Whether an anonymous first publish will be refused (adr-014 §2). The
+  // editor needs this *before* the host presses Publish, so the gate can be
+  // the first frame of the share sheet rather than a reaction to a 401.
+  const [publishGate, setPublishGate] = useState(false);
 
   const apply = useCallback((session: AuthSession) => {
+    setPublishGate(session.publish_gate);
     if (!session.configured) {
       setStatus("unavailable");
       setEmail(null);
@@ -102,5 +107,5 @@ export function useAuthSession() {
     return result;
   }, []);
 
-  return { status, email, signOut, deleteAccount };
+  return { status, email, publishGate, signOut, deleteAccount };
 }

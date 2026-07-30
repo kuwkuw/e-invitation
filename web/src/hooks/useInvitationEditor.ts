@@ -20,13 +20,22 @@ export interface ChatMsg {
  * the data: everything below depends only on the accumulated description,
  * nothing on a share link.
  */
-export function useInvitationEditor(chat: ChatStrings, source: GenerateSource = "direct") {
+export function useInvitationEditor(
+  chat: ChatStrings,
+  source: GenerateSource = "direct",
+  /** An invitation parked across the sign-in redirect (adr-014 §2). The editor
+   *  comes back mid-session rather than empty, which is the whole reason the
+   *  gate can be one sheet instead of two screens. The chat transcript is not
+   *  restored — it is a log of how we got here, and the host is looking at the
+   *  invitation, not at what they typed. */
+  restored: Invitation | null = null,
+) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [phase, setPhase] = useState<Phase>("empty");
+  const [phase, setPhase] = useState<Phase>(restored ? "active" : "empty");
   // Full event description accumulated across chat turns; each new detail
   // re-runs the whole pipeline on the combined text.
   const [description, setDescription] = useState("");
-  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [invitation, setInvitation] = useState<Invitation | null>(restored);
   const [bgBusy, setBgBusy] = useState(false);
   // Asked at most once per editor session — a date the host doesn't have yet
   // is a legitimate save-the-date, so this nudges and then stays quiet.

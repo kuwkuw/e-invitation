@@ -148,6 +148,10 @@ export interface AccountDeletion {
  *  sign-in affordance when it is false. */
 export interface AuthSession {
   configured: boolean;
+  /** Whether a first publish will be refused without an account (adr-014 §2).
+   *  Read before the host presses Publish, so the gate can be the first frame
+   *  of the share panel rather than a reaction to a 401. */
+  publish_gate: boolean;
   signed_in: boolean;
   email: string | null;
 }

@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ByokSettings } from "./components/ByokSettings";
+import { AuthGate } from "./components/editor/AuthGate";
 import { ChatPanel } from "./components/editor/ChatPanel";
 import { FieldSheet } from "./components/editor/FieldSheet";
 import { BackIcon, ShareIcon } from "./components/editor/icons";
 import { PreviewPanel } from "./components/editor/PreviewPanel";
 import { SharePanel } from "./components/editor/SharePanel";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { loadDraft } from "./draft";
+import { useAuthReturn } from "./hooks/useAuthReturn";
+import { useAuthSession } from "./hooks/useAuthSession";
 import { useInvitationEditor } from "./hooks/useInvitationEditor";
 import { usePublishing } from "./hooks/usePublishing";
 import { useReferralSource } from "./hooks/useReferralSource";
@@ -31,8 +35,33 @@ export default function App() {
   // mount; held for the whole session so a generation several chat turns later
   // still carries it.
   const source = useReferralSource();
-  const editor = useInvitationEditor(t.chat, source);
-  const publishing = usePublishing(() => editor.say(t.chat.failMsg));
+
+  // The sign-in round trip (adr-014 §2). Read once at mount and stripped by
+  // the router; the draft is restored only on a return trip, so an ordinary
+  // visit never resurrects one unasked.
+  const authReturn = useAuthReturn();
+  const [draft] = useState(() => (authReturn.result ? loadDraft() : null));
+  const account = useAuthSession();
+
+  const editor = useInvitationEditor(t.chat, draft?.source ?? source, draft?.invitation ?? null);
+  const publishing = usePublishing(() => editor.say(t.chat.failMsg), {
+    gated: account.publishGate,
+    signedIn: account.status === "signed_in",
+    source: draft?.source ?? source,
+    authReturn: authReturn.result,
+    authCode: authReturn.code,
+  });
+
+  // Finish what the gate interrupted. Guarded by a ref rather than by the
+  // gate state, because the publish flips that state itself and StrictMode
+  // double-invokes effects — without the guard the invitation publishes twice
+  // and the host gets two links for one event.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current || authReturn.result !== "ok" || !draft) return;
+    resumed.current = true;
+    void publishing.resume(draft.invitation, draft.published);
+  }, [authReturn.result, draft, publishing.resume]);
 
   const hasInvitation = editor.invitation !== null && editor.phase !== "generating";
 
@@ -76,6 +105,17 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {publishing.gate && (
+        <AuthGate
+          state={publishing.gate}
+          draftSaved={publishing.draftSaved}
+          errorCode={publishing.authCode}
+          onSignIn={() => editor.invitation && publishing.signInAndPublish(editor.invitation)}
+          onDismiss={publishing.dismissGate}
+          t={t.auth}
+        />
+      )}
 
       {publishing.shareOpen && publishing.published && (
         <SharePanel

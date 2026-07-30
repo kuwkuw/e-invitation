@@ -113,7 +113,12 @@ describe("sign-in unconfigured", () => {
     expect(start.statusCode).toBe(503);
 
     const session = await app.inject({ method: "GET", url: "/api/auth/session" });
-    expect(session.json()).toEqual({ configured: false, signed_in: false, email: null });
+    expect(session.json()).toEqual({
+      configured: false,
+      publish_gate: false,
+      signed_in: false,
+      email: null,
+    });
   });
 });
 
@@ -176,6 +181,7 @@ describe("google sign-in", () => {
     });
     expect(session.json()).toEqual({
       configured: true,
+      publish_gate: true,
       signed_in: true,
       email: "host@example.com",
     });
@@ -198,7 +204,7 @@ describe("google sign-in", () => {
       method: "GET",
       url: `/api/auth/google/callback?code=auth-code&state=${state}`,
     });
-    expect(replay.headers.location).toBe("/create?auth=failed");
+    expect(replay.headers.location).toBe("/create?auth=failed&auth_code=state");
     expect(replay.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
   });
 
@@ -226,7 +232,10 @@ describe("google sign-in", () => {
       method: "GET",
       url: `/api/auth/google/callback?code=auth-code&state=${state}`,
     });
-    expect(res.headers.location).toBe("/create?auth=failed");
+    // Every one of these is the identity leg — the token came back from Google
+    // and failed verification, so the class is the same and only the log says
+    // which claim.
+    expect(res.headers.location).toBe("/create?auth=failed&auth_code=identity");
     expect(res.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
   });
 
@@ -242,7 +251,26 @@ describe("google sign-in", () => {
       method: "GET",
       url: `/api/auth/google/callback?code=auth-code&state=${state}`,
     });
-    expect(res.headers.location).toBe("/create?auth=failed");
+    expect(res.headers.location).toBe("/create?auth=failed&auth_code=identity");
+  });
+
+  // The class is coarse on purpose — three legs, no prose. It exists so a host
+  // can read a stable string out to support; why a token was rejected stays in
+  // the log.
+  it("names the exchange leg when Google's token endpoint refuses", async () => {
+    configureGoogle();
+    app = await buildApp({ logger: false });
+    const { state } = await beginSignIn(app);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("nope", { status: 400 })),
+    );
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
+    });
+    expect(res.headers.location).toBe("/create?auth=failed&auth_code=exchange");
   });
 
   it("treats a cancelled sign-in as declined, not failed", async () => {

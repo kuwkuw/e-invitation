@@ -9,9 +9,11 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { createSession, deleteSession, upsertUser } from "../accounts.js";
 import {
   AuthError,
+  type AuthFailureCode,
   authorizeUrl,
   exchangeCode,
   googleConfig,
+  publishRequiresAccount,
   verifyIdToken,
 } from "../auth/google.js";
 import {
@@ -63,12 +65,14 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     // not read like one.
     if (query.error) return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "declined"), 302);
     if (!query.code || !query.state) {
-      return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed"), 302);
+      return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed", "state"), 302);
     }
 
     // Single-use: reading it deletes it, so a replayed callback finds nothing.
     const pending = consumeOauthState(query.state);
-    if (!pending) return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed"), 302);
+    if (!pending) {
+      return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed", "state"), 302);
+    }
 
     try {
       const idToken = await exchangeCode(config, {
@@ -85,7 +89,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
       // the same rule the gateway applies to raw provider messages.
       request.log.error({ err: error, byok: false }, "google sign-in failed");
       if (!(error instanceof AuthError)) throw error;
-      return reply.redirect(withAuthResult(pending.redirect_to, "failed"), 302);
+      return reply.redirect(withAuthResult(pending.redirect_to, "failed", error.code), 302);
     }
   });
 
@@ -98,6 +102,11 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     const user = currentUser(request);
     return {
       configured: googleConfig() !== null,
+      // Whether a first publish will be refused (§2). The client needs this
+      // *before* the host presses Publish: the gate mounts on the press, not
+      // on a 401, so the sheet is the first frame of the share panel rather
+      // than a screen that appears after a failed request.
+      publish_gate: publishRequiresAccount(),
       signed_in: user !== null,
       email: user?.email ?? null,
     };
@@ -136,10 +145,19 @@ function safeRedirectPath(value: string | undefined): string {
 
 /** The result rides a query parameter, which the client reads once and strips
  *  through the router (adr-011 §4), as it does `?ref`. Nothing secret is in
- *  it — the session is in the cookie. */
-function withAuthResult(path: string, result: "ok" | "failed" | "declined"): string {
+ *  it — the session is in the cookie.
+ *
+ *  A failure additionally carries the coarse class, which the gate renders as
+ *  `auth_<code>_failed` for a host to read out to support. It is a class, never
+ *  prose: which token was rejected and why stays in the log. */
+function withAuthResult(
+  path: string,
+  result: "ok" | "failed" | "declined",
+  code?: AuthFailureCode,
+): string {
   const separator = path.includes("?") ? "&" : "?";
-  return `${path}${separator}auth=${result}`;
+  const suffix = code ? `&auth_code=${code}` : "";
+  return `${path}${separator}auth=${result}${suffix}`;
 }
 
 /** Exported for the routes that will gate on a session (§2, §5). Returns the

@@ -96,6 +96,51 @@ export interface UiStrings {
   copyManageLink: string;
   manageLinkCopied: string;
   viewResponses: string;
+  // Host accounts (adr-014). Copy is verbatim from the DS `AuthGateSpec`,
+  // `ShareSignedIn` and `LandingSignedInStates` boards. The forbidden words
+  // recorded there — sign up / register / create an account / required, and
+  // their Ukrainian equivalents — must not reappear here: the gate says what
+  // the host gets, never what we demand.
+  auth: AuthStrings;
+}
+
+export interface AuthStrings {
+  gateTitle: string;
+  gateWhy: string;
+  continueWithGoogle: string;
+  dataNote: string;
+  backToEditing: string;
+  redirecting: string;
+  redirectingNote: string;
+  returningTitle: string;
+  returningNote: string;
+  declinedTitle: string;
+  declinedBody: string;
+  tryAgain: string;
+  failedTitle: string;
+  failedBody: string;
+  draftSaved: string;
+  errorCode: string;
+  savedToAccount: string;
+  showManage: string;
+  hideManage: string;
+  signOut: string;
+  crossDevice: string;
+  emptySignedIn: string;
+  invitationCount: string;
+  onThisDevice: string;
+  deleteTitle: string;
+  deleteHeadline: string;
+  deleteKeepGuests: string;
+  deleteKeepReplies: string;
+  deleteKeepManage: string;
+  deleteWhatGoes: string;
+  saveKeysTitle: string;
+  saveKeysBody: string;
+  copyAllLinks: string;
+  copyAllLinksDone: string;
+  cancel: string;
+  deleteAccount: string;
 }
 
 export const UI: Record<Language, UiStrings> = {
@@ -213,6 +258,47 @@ export const UI: Record<Language, UiStrings> = {
     revealManageLink: "Show the full link",
     copyManageLink: "Copy",
     manageLinkCopied: "Copied — keep it private",
+    auth: {
+      gateTitle: "Publishing your invitation",
+      gateWhy: "So your guests' replies are still here when you come back.",
+      continueWithGoogle: "Continue with Google",
+      dataNote: "We keep only your email address. Nothing else.",
+      backToEditing: "Back to editing",
+      redirecting: "Opening Google…",
+      redirectingNote: "Your invitation is saved — you'll come back to exactly this.",
+      returningTitle: "Publishing…",
+      returningNote: "One second — your link is on its way.",
+      declinedTitle: "All right, not now",
+      declinedBody:
+        "Your invitation is right where you left it. Keep editing, or publish when you're ready.",
+      tryAgain: "Try again",
+      failedTitle: "Couldn't finish",
+      failedBody: "Something broke on the way back from Google. Not your fault — try again.",
+      draftSaved: "Draft saved in this browser",
+      errorCode: "code: auth_{code}_failed",
+      savedToAccount: "Saved to your account — it'll be there on any device you sign in on.",
+      showManage: "Show",
+      hideManage: "Hide",
+      signOut: "Sign out",
+      crossDevice: "This list opens on any device you sign in on.",
+      emptySignedIn: "Your invitations will appear here — and stay, wherever you sign in.",
+      invitationCount: "{n} invitations",
+      onThisDevice: "on this device",
+      deleteTitle: "Delete your account?",
+      deleteHeadline: "Your {n} invitations stay exactly where they are.",
+      deleteKeepGuests: "Guests can still open their links and reply",
+      deleteKeepReplies: "All {n} replies you've collected are kept",
+      deleteKeepManage: "Your manage links keep working as before",
+      deleteWhatGoes:
+        "Only this list goes away. We'll forget your email address and stop remembering your invitations on other devices.",
+      saveKeysTitle: "Save your keys first",
+      saveKeysBody:
+        "Without the account, a manage link is the only way in. Copy them somewhere safe — notes, or an email to yourself.",
+      copyAllLinks: "Copy all {n} links",
+      copyAllLinksDone: "Copied — keep them private",
+      cancel: "Cancel",
+      deleteAccount: "Delete account",
+    },
     viewResponses: "View responses →",
   },
   uk: {
@@ -331,6 +417,48 @@ export const UI: Record<Language, UiStrings> = {
     revealManageLink: "Показати повне посилання",
     copyManageLink: "Копіювати",
     manageLinkCopied: "Скопійовано — тримайте при собі",
+    auth: {
+      gateTitle: "Публікуємо запрошення",
+      gateWhy: "Щоб відповіді гостей були тут, коли ви повернетесь.",
+      continueWithGoogle: "Продовжити з Google",
+      dataNote: "Зберігаємо лише вашу пошту. Нічого більше.",
+      backToEditing: "Повернутись до редагування",
+      redirecting: "Відкриваємо Google…",
+      redirectingNote: "Ваше запрошення збережено — ви повернетесь точно сюди.",
+      returningTitle: "Публікуємо…",
+      returningNote: "Ще секунда — і посилання буде тут.",
+      declinedTitle: "Гаразд, не зараз",
+      declinedBody:
+        "Запрошення на місці — нічого не втрачено. Можете й далі редагувати або опублікувати, коли будете готові.",
+      tryAgain: "Спробувати ще раз",
+      failedTitle: "Не вдалося завершити",
+      failedBody: "Щось не спрацювало на шляху від Google. Це не через вас — спробуйте ще раз.",
+      draftSaved: "Чернетка збережена в цьому браузері",
+      errorCode: "код: auth_{code}_failed",
+      savedToAccount:
+        "Збережено у вашому акаунті — відкриється на будь-якому пристрої, де ви увійдете.",
+      showManage: "Показати",
+      hideManage: "Сховати",
+      signOut: "Вийти",
+      crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
+      emptySignedIn: "Тут з'являться ваші запрошення — і залишаться, куди б ви не увійшли.",
+      invitationCount: "{n} запрошень",
+      onThisDevice: "на цьому пристрої",
+      deleteTitle: "Видалити акаунт?",
+      deleteHeadline: "Ваші {n} запрошення нікуди не дінуться.",
+      deleteKeepGuests: "Гості й далі відкриють свої посилання й дадуть відповідь",
+      deleteKeepReplies: "Усі {n} відповіді, що вже зібрані, залишаються",
+      deleteKeepManage: "Ваші посилання для керування працюють, як і раніше",
+      deleteWhatGoes:
+        "Зникає лише цей список. Ми забудемо вашу пошту й перестанемо пам'ятати ваші запрошення на інших пристроях.",
+      saveKeysTitle: "Спершу збережіть свої ключі",
+      saveKeysBody:
+        "Без акаунта запрошення відкриває лише посилання для керування. Скопіюйте їх собі — у нотатки чи в листа.",
+      copyAllLinks: "Скопіювати всі {n} посилання",
+      copyAllLinksDone: "Скопійовано — тримайте при собі",
+      cancel: "Скасувати",
+      deleteAccount: "Видалити акаунт",
+    },
     viewResponses: "Переглянути відповіді →",
   },
 };
