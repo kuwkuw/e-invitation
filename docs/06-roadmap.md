@@ -201,18 +201,70 @@ The ADR also commits in advance to taking the answer: under ~0.3 new hosts per
 published invitation, §5.1's honest conclusion is that this stays a
 non-commercial project.
 
+## Proposed next: host accounts
+
+Settled — pending review — in
+[ADR-014](decisions/adr-014-host-accounts.md) (proposed). The first iteration
+to reverse part of [adr-005](decisions/adr-005-capability-tokens.md), which
+four later ADRs re-affirm by name.
+
+Taken because **every remaining backlog item below converges on the same
+missing primitive**: host notification needs an address the accounts-free model
+never collects, a cross-device event list is the "whose is this?" question
+adr-012 refused to teach the server, and the organizer tier
+([07-monetization](07-monetization.md) §5.3) is the one segment §4.3 concedes
+does not fit no-accounts. One primitive unblocks three items and closes
+adr-005's one recorded defect — losing the manage token means losing the
+invitation, with no recovery path.
+
+What the ADR settles:
+
+1. **An account is a keyring, not an owner.** The manage token stays the
+   authority on every endpoint, unchanged; a session's only new power is to
+   read back the tokens it holds. Nothing already published is ever
+   invalidated.
+2. **The gate is at publish** — the 07-monetization §4.2 chokepoint — not at
+   `/create`. Generate, edit, regenerate and the entire guest side stay
+   anonymous.
+3. **Google OAuth**, server-side redirect flow, `openid email` only, no
+   JavaScript SDK (NFR-1). A host without a Google account cannot publish;
+   that is the gate's stated price.
+4. **SQLite (`node:sqlite`) beside the file store**, not replacing it —
+   invitation records stay one JSON file per id, and NFR-7's single process and
+   single volume are unchanged.
+5. **Auth-unconfigured is supported**: with no OAuth credentials the server
+   boots and publish stays anonymous, following NFR-3's keyless-boot
+   precedent.
+
+The risk the ADR takes deliberately: adr-005 argued that signup before
+demonstrated value kills the funnel, and §2 puts one at the most expensive
+point. Hence **PR 0 is a metrics baseline** — publish-rate and adr-013's
+`new_hosts_per_publish` both move for reasons unrelated to what they measure
+once publishes are gated, and §5.1's 0.3/0.7 thresholds were written against an
+ungated denominator. The ADR carries revisit triggers, including the fallback
+(an optional post-publish claim) that needs no new infrastructure.
+
+Seven PRs plus a docs pass. Explicitly not in scope: the RSVP email
+notification itself (needs a transactional sender — its own iteration), any
+entitlement schema or pricing surface, and a second identity provider.
+
 ## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.
-- **Notify the host on a new RSVP** — the honest version needs an email
-  channel (and an address, which the accounts-free model doesn't collect).
-  Revisit with any account-adjacent work.
+- **Notify the host on a new RSVP** — needs a transactional email sender and a
+  verified address. [adr-014](decisions/adr-014-host-accounts.md) §8 supplies
+  the address and leaves the sender to this item, which becomes the natural
+  iteration after it.
 - **Per-guest edit tokens** so a guest can amend their own answer instead of
   re-submitting — real infrastructure for a rare case (adr-010 §5).
-- **SQLite (or similar) store** — only when multi-instance hosting or RSVP
-  volume breaks the NFR-7 single-process assumption; interfaces are ready.
+- **SQLite (or similar) store** for *invitation records* — still only when
+  multi-instance hosting or RSVP volume breaks the NFR-7 single-process
+  assumption; interfaces are ready.
+  [adr-014](decisions/adr-014-host-accounts.md) §6 puts a database in the
+  process for accounts but deliberately leaves records on the file store, so
+  this item narrows rather than disappears.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
 - ~~**Share-loop instrumentation**~~ — taken as the next iteration; see
