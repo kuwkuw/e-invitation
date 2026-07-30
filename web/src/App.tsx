@@ -124,6 +124,9 @@ export default function App() {
           copied={publishing.copied}
           onCopyManageLink={publishing.copyManageLink}
           manageCopied={publishing.manageCopied}
+          signedIn={account.status === "signed_in"}
+          manageShown={publishing.manageShown}
+          onToggleManage={publishing.toggleManageShown}
           t={t}
         />
       )}

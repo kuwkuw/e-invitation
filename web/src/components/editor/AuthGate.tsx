@@ -190,7 +190,14 @@ function Outcome({
 
 function Spinner() {
   return (
-    <svg className="ag-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg
+      className="ag-spin"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="9" stroke="#e0d9cb" strokeWidth="2.6" />
       <path d="M21 12a9 9 0 00-9-9" stroke="#b3592e" strokeWidth="2.6" strokeLinecap="round" />
     </svg>
@@ -201,7 +208,7 @@ function Spinner() {
  *  that is a brand rule, not a design preference. */
 function GoogleMark() {
   return (
-    <svg width="21" height="21" viewBox="0 0 48 48" aria-hidden>
+    <svg width="21" height="21" viewBox="0 0 48 48" aria-hidden="true">
       <path
         fill="#4285F4"
         d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"
@@ -224,7 +231,7 @@ function GoogleMark() {
 
 function MailIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect x="4" y="6" width="16" height="12" rx="2" stroke="#b0a99a" strokeWidth="1.7" />
       <path d="M4.5 8l7.5 5.5L19.5 8" stroke="#b0a99a" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
@@ -233,7 +240,7 @@ function MailIcon() {
 
 function InfoIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 8v5M12 16.2v.1" stroke="#b0a99a" strokeWidth="1.9" strokeLinecap="round" />
       <circle cx="12" cy="12" r="8.6" stroke="#b0a99a" strokeWidth="1.6" />
     </svg>
@@ -242,7 +249,7 @@ function InfoIcon() {
 
 function CheckIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M5 13l4 4L19 7"
         stroke="#3d6b47"
@@ -256,7 +263,7 @@ function CheckIcon() {
 
 function AlertIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 7.5v6M12 16.8v.1" stroke="#a83f3f" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
   );
@@ -264,7 +271,7 @@ function AlertIcon() {
 
 function RetryIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M4 12a8 8 0 0113.7-5.6M20 12a8 8 0 01-13.7 5.6"
         stroke="#fff"
