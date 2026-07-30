@@ -5,10 +5,11 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import { pruneExpiredSessions } from "./accounts.js";
-import { googleConfig } from "./auth/google.js";
+import { signInAvailable } from "./auth/google.js";
 import { pruneExpiredOauthStates } from "./auth/state.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
+import { markBaseline } from "./metrics.js";
 import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
@@ -69,8 +70,16 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   // OAuth client, the same way NFR-3 lets it boot without provider keys. This
   // is what /healthz reports and what the client asks before showing any
   // sign-in affordance.
-  const authConfigured = googleConfig() !== null;
+  const authConfigured = signInAvailable();
   if (authConfigured) {
+    // Configuring an OAuth client is what turns the §2 publish gate on, so it
+    // is also the instant the "before" period ends. Freezing the counters here
+    // is what keeps publish-rate and adr-013's new_hosts_per_publish readable
+    // across the boundary — both move once publishes are gated, for reasons
+    // that have nothing to do with copy quality or the share loop, and
+    // 07-monetization §5.1's thresholds were written against an ungated
+    // denominator. Idempotent, so restarts never move the baseline.
+    markBaseline("auth-gate");
     // Abandoned sign-ins and expired sessions accumulate slowly and are dead
     // rows the moment they lapse. Boot is often enough at this size; nothing
     // reads them, so a lingering row is clutter rather than a risk.

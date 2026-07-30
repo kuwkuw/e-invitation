@@ -424,9 +424,37 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   cancel on Google's screen is a choice, not a breakage, and must not be
   rendered as one. The client reads the parameter once and strips it through
   the router, exactly as adr-011 §4 has it strip `?ref` — PR 5 owes that.
-- **A first publish while signed out is still the open question PR 4 answers.**
-  PR 2 deliberately gates nothing, so the app's behaviour is unchanged whether
-  or not a host signs in.
+- **The gate is on a *first* publish only** (PR 4). Republish stays purely
+  token-authorized and always will: §1 says auth never revokes a capability,
+  and every share link in production was minted before accounts existed. A host
+  holding a valid manage token republishes signed out, forever. A bad token on
+  a republish is still `403`, not `401` — the token is what authorizes there,
+  and being signed out is beside the point.
+- **The baseline is frozen when OAuth is first configured**, not on a separate
+  operator action (PR 4). Configuring a client is what turns the gate on, so it
+  is exactly the instant the "before" period ends. That also softens §2's
+  ordering claim: PR 0 did not strictly have to run first, because
+  `markBaseline` freezes the *lifetime counters at that instant* whenever it is
+  called. What PR 0 shipping first actually bought was a pre-gate period whose
+  counters were already accumulating — which they were.
+- **Three module caches needed a test reset** — `closeDb`, `resetJwksCache`,
+  `resetMetricsCache`. The last one was found by three tests failing: `metrics.ts`
+  caches counters for the process lifetime, so a per-case `DATA_DIR` was reading
+  the previous case's numbers and its frozen baseline. Worth noting as a pattern
+  rather than three accidents: every module in this server that caches across
+  requests now owns an explicit way to drop it, and a new one should ship with
+  the same.
+- **Sign-out does not clear this browser's manage tokens** (PR 3). Ending the
+  account session must not revoke a capability the host had before they ever
+  signed in, and doing so would destroy access on a shared device in a way no
+  host would predict.
+- **`web/src/manageTokens.ts` is where host tokens live now** (PR 3). The
+  keyring made it the third writer of `inv-manage:<id>`, so the accessors moved
+  out of `useHostManage.ts` into one module with a memory layer in front of
+  `localStorage`. Two reads in `useHostManage` were unguarded during render and
+  are now behind the shared try/catch. `localStorage.clear()` cannot reach the
+  memory layer — `forgetHeldManageTokens()` exists so that is stated rather
+  than discovered.
 
 ## Revisit triggers
 

@@ -47,6 +47,14 @@ export function googleConfig(): GoogleConfig | null {
   return { clientId, clientSecret, redirectUri: process.env.GOOGLE_REDIRECT_URI ?? null };
 }
 
+/** Whether this deployment has an identity provider at all. Read on every
+ *  request rather than cached at boot, so a test (and an operator restarting
+ *  with new env) sees the current answer. It is also what decides whether the
+ *  publish gate applies (adr-014 §2, §7): no OAuth client, no gate. */
+export function signInAvailable(): boolean {
+  return googleConfig() !== null;
+}
+
 export function authorizeUrl(
   config: GoogleConfig,
   params: { state: string; nonce: string; codeChallenge: string; redirectUri: string },

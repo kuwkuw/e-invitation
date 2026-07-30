@@ -131,6 +131,14 @@ function readBaseline(value: unknown): Baseline | null {
   return { at, reason, counters: frozen };
 }
 
+/** Drop the cached counters so the next call reloads from disk — what a
+ *  restart does for real. Tests give each case its own DATA_DIR, and a
+ *  process-lifetime cache would otherwise carry one case's numbers, and its
+ *  frozen baseline, into the next. */
+export function resetMetricsCache(): void {
+  counters = null;
+}
+
 function save(current: Counters): void {
   mkdirSync(dataDir(), { recursive: true });
   const path = metricsPath();

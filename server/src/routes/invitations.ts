@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import { linkInvitation } from "../accounts.js";
+import { signInAvailable } from "../auth/google.js";
 import { currentUser } from "../auth/session.js";
 import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
@@ -164,6 +165,10 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     if (body.id) {
       const record = getRecord(body.id);
       if (!record) return reply.code(404).send({ error: "Invitation not found." });
+      // Republish stays purely token-authorized, and must: every share link
+      // already in the wild was minted before accounts existed, and adr-014 §1
+      // is that auth never revokes a capability. A host holding a valid manage
+      // token republishes signed out, forever.
       if (!body.manage_token || !tokenMatches(record, body.manage_token)) {
         return reply.code(403).send({ error: "Invalid manage token." });
       }
@@ -176,9 +181,22 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
         manage_token: updated.manage_token,
       };
     }
+    // The adr-014 §2 gate, and the only one in the app: a *first* publish needs
+    // an account. Generating, editing, regenerating and the entire guest side
+    // stay anonymous — 01-vision intent 1 is that a host types one sentence and
+    // gets an invitation without meeting a login. This is the chokepoint
+    // 07-monetization §4.2 identifies as where value has been demonstrated.
+    //
+    // The accepted cost is stated in the ADR: publish-rate will drop, and the
+    // drop is not separable after the fact from a copy-quality drop. That is
+    // what the baseline frozen at boot exists to make legible.
+    const user = currentUser(request);
+    if (!user && signInAvailable()) {
+      return reply.code(401).send({ error: "Sign in to publish." });
+    }
     const record = createRecord(body.invitation);
     recordPublish();
-    rememberForHost(request, record.id);
+    if (user) linkInvitation(user.id, record.id);
     return { id: record.id, version: 1, manage_token: record.manage_token };
   });
 
