@@ -119,6 +119,31 @@ export interface CountsResponse {
   results: CountsResult[];
 }
 
+// Host accounts (adr-014 §5). Mirrors the server's KeyringEntry by hand
+// (NFR-8). Deliberately field-for-field compatible with `HostInvitation` in
+// `hostInvitations.ts` plus the token: the keyring seeds the browser-local
+// state the app already runs on rather than introducing a second one.
+export interface KeyringEntry {
+  id: string;
+  manage_token: string;
+  title: string;
+  published_at: string;
+  palette: DesignTokens["palette"];
+}
+
+export interface KeyringResponse {
+  invitations: KeyringEntry[];
+}
+
+/** What `/api/auth/session` reports. `configured` is the deployment's answer
+ *  to "is sign-in available at all" (adr-014 §7) — the client must not show a
+ *  sign-in affordance when it is false. */
+export interface AuthSession {
+  configured: boolean;
+  signed_in: boolean;
+  email: string | null;
+}
+
 // BYOK (ADR-006): the host's own provider key, kept in this browser only.
 export type ByokProvider = "anthropic" | "gemini" | "openai";
 

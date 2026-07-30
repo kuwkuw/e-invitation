@@ -1,5 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
+import { linkInvitation } from "../accounts.js";
+import { currentUser } from "../auth/session.js";
 import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
 import {
@@ -167,6 +169,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       }
       const updated = appendVersion(record, body.invitation);
       recordPublish();
+      rememberForHost(request, updated.id);
       return {
         id: updated.id,
         version: updated.versions.length,
@@ -175,6 +178,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     }
     const record = createRecord(body.invitation);
     recordPublish();
+    rememberForHost(request, record.id);
     return { id: record.id, version: 1, manage_token: record.manage_token };
   });
 
@@ -252,6 +256,21 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
   });
 
   app.get("/api/metrics", async () => metricsSnapshot());
+}
+
+/** Add the invitation to the signed-in host's keyring (adr-014 §5), if there
+ *  is one. Publishing is not gated yet and may never be for an unconfigured
+ *  deployment (§7), so this is strictly additive: a signed-out publish behaves
+ *  exactly as it always has, and the manage token in the response is still the
+ *  only thing that authorizes anything.
+ *
+ *  Republish links too. A host who published anonymously, signed in later, and
+ *  republished from a browser that still held the token is telling us the
+ *  invitation is theirs — and `linkInvitation` is idempotent, so the ordinary
+ *  case costs one no-op insert. */
+function rememberForHost(request: FastifyRequest, invitationId: string): void {
+  const user = currentUser(request);
+  if (user) linkInvitation(user.id, invitationId);
 }
 
 // Operator-cost guardrails (ADR-008), checked after validation and before

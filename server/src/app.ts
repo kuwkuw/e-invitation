@@ -9,6 +9,7 @@ import { googleConfig } from "./auth/google.js";
 import { pruneExpiredOauthStates } from "./auth/state.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
+import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
@@ -85,6 +86,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     auth: { google: authConfigured },
   }));
   registerAuthRoutes(app);
+  registerAccountRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
 
