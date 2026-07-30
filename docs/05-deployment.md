@@ -102,11 +102,29 @@ storage is needed.
 1. **Google Cloud console** → *APIs & Services* → *Credentials* → *Create
    credentials* → **OAuth client ID**, type *Web application*.
 2. **Authorized redirect URI**: `https://<your-host>/api/auth/google/callback`.
-   Google matches this against a fixed allowlist, so it must be exact —
-   **including which host**. If you use `CANONICAL_HOST`, register the
-   canonical domain, not the `*.code.run` one; the canonical redirect fires
-   before the callback is reached, and an unregistered host fails at Google
-   with `redirect_uri_mismatch` rather than in the app.
+   Google matches this against a fixed allowlist **character for character**,
+   so it must be exact, including which host. An unregistered host fails at
+   Google with `redirect_uri_mismatch` — nothing reaches the app, so nothing
+   appears in its logs.
+
+   **You do not need a custom domain to start.** The platform hostname works:
+   leave the consent screen in **Testing** mode, add yourself as a test user,
+   and register the `*.code.run` URI. Testing mode needs no domain
+   verification; the cost is an "unverified app" warning on the way through and
+   a 100-user cap. Note the platform hostname embeds a generated service
+   identifier, so recreating the service changes it and breaks sign-in until
+   the new URI is registered.
+
+   **A domain becomes mandatory to publish the app** — leaving Testing is what
+   removes the warning and the cap, and verification requires proving ownership
+   of every redirect URI's domain in Search Console. `code.run` belongs to the
+   platform, so it cannot be verified.
+
+   Google allows several redirect URIs on one client, so when a domain arrives,
+   **add** its URI beside the platform one rather than replacing it, then set
+   `GOOGLE_REDIRECT_URI` and `CANONICAL_HOST` together. The canonical redirect
+   fires before the callback is reached, so from that moment the registered URI
+   must be the canonical host.
 3. **Environment**:
    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
    - `GOOGLE_REDIRECT_URI=https://<your-host>/api/auth/google/callback` —
