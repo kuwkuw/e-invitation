@@ -185,6 +185,102 @@ describe("keyring", () => {
     expect(res.json().invitations.map((e: { id: string }) => e.id)).toEqual([kept.id]);
   });
 
+  // adr-014 §9. The half that matters is what deletion *doesn't* touch.
+  describe("account deletion", () => {
+    it("removes the account and leaves every invitation working", async () => {
+      const { cookies } = signIn();
+      const published = await publish(invitation("Mine", "warm"), cookies);
+      await app.inject({
+        method: "POST",
+        url: `/api/invitations/${published.id}/rsvp`,
+        payload: { name: "Іван", attending: true, party_size: 2 },
+      });
+
+      const res = await app.inject({ method: "DELETE", url: "/api/account", cookies });
+      expect(res.statusCode).toBe(200);
+      // Told the true number, so the UI can say what happened rather than
+      // implying the invitations went with the account.
+      expect(res.json()).toEqual({ deleted: true, invitations_retained: 1 });
+
+      // The session is gone.
+      expect(
+        (await app.inject({ method: "GET", url: "/api/account/keyring", cookies })).statusCode,
+      ).toBe(401);
+
+      // The guest link a host already pasted into a chat still resolves...
+      expect(
+        (await app.inject({ method: "GET", url: `/api/invitations/${published.id}` })).statusCode,
+      ).toBe(200);
+      // ...the RSVPs guests left are still there, being the guests' data...
+      const rsvps = await app.inject({
+        method: "GET",
+        url: `/api/invitations/${published.id}/rsvps`,
+        headers: { "x-manage-token": published.manage_token },
+      });
+      expect(rsvps.statusCode).toBe(200);
+      expect(rsvps.json().counts.yes).toBe(1);
+      // ...and a host who kept their manage link still has access, because the
+      // token survives on the record. Deletion removes the account, not the
+      // event.
+      const republish = await app.inject({
+        method: "POST",
+        url: "/api/invitations/publish",
+        payload: {
+          id: published.id,
+          manage_token: published.manage_token,
+          invitation: invitation("Still mine", "elegant"),
+        },
+      });
+      expect(republish.statusCode).toBe(200);
+    });
+
+    it("refuses without a session and cross-origin", async () => {
+      expect((await app.inject({ method: "DELETE", url: "/api/account" })).statusCode).toBe(401);
+
+      const { cookies } = signIn();
+      const forged = await app.inject({
+        method: "DELETE",
+        url: "/api/account",
+        cookies,
+        headers: { origin: "https://evil.example", host: "localhost:3001" },
+      });
+      expect(forged.statusCode).toBe(403);
+    });
+
+    it("does not take another account down with it", async () => {
+      const host = signIn("google-sub-1");
+      const other = signIn("google-sub-2");
+      await publish(invitation("Mine", "warm"), host.cookies);
+      await publish(invitation("Theirs", "festive"), other.cookies);
+
+      await app.inject({ method: "DELETE", url: "/api/account", cookies: host.cookies });
+
+      const theirs = await app.inject({
+        method: "GET",
+        url: "/api/account/keyring",
+        cookies: other.cookies,
+      });
+      expect(theirs.json().invitations.map((e: { title: string }) => e.title)).toEqual(["Theirs"]);
+    });
+
+    it("lets the same Google account sign in again as a new, empty account", async () => {
+      const { cookies } = signIn("google-sub-1");
+      await publish(invitation("Mine", "warm"), cookies);
+      await app.inject({ method: "DELETE", url: "/api/account", cookies });
+
+      // Signing in again is a fresh account: the keyring is gone, so the
+      // invitation is reachable only by its manage link — exactly what adr-005
+      // says a capability token means.
+      const fresh = signIn("google-sub-1");
+      const res = await app.inject({
+        method: "GET",
+        url: "/api/account/keyring",
+        cookies: fresh.cookies,
+      });
+      expect(res.json().invitations).toEqual([]);
+    });
+  });
+
   it("refuses a session cookie that has been signed out", async () => {
     const { cookies } = signIn();
     await publish(invitation("Mine", "warm"), cookies);

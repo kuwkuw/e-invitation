@@ -135,6 +135,14 @@ export interface KeyringResponse {
   invitations: KeyringEntry[];
 }
 
+/** What deleting an account returns (adr-014 §9). The invitations are
+ *  deliberately retained: guests hold their share links, the RSVPs are the
+ *  guests' data, and the manage token survives on the record. */
+export interface AccountDeletion {
+  deleted: boolean;
+  invitations_retained: number;
+}
+
 /** What `/api/auth/session` reports. `configured` is the deployment's answer
  *  to "is sign-in available at all" (adr-014 §7) — the client must not show a
  *  sign-in affordance when it is false. */

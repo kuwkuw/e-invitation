@@ -107,7 +107,7 @@ describe("sign-in unconfigured", () => {
     app = await buildApp({ logger: false });
 
     const health = await app.inject({ method: "GET", url: "/healthz" });
-    expect(health.json().auth).toEqual({ google: false });
+    expect(health.json().auth).toEqual({ google: false, publish_gate: false });
 
     const start = await app.inject({ method: "GET", url: "/api/auth/google" });
     expect(start.statusCode).toBe(503);

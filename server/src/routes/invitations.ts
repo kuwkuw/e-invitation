@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import { linkInvitation } from "../accounts.js";
-import { signInAvailable } from "../auth/google.js";
+import { publishRequiresAccount } from "../auth/google.js";
 import { currentUser } from "../auth/session.js";
 import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
@@ -191,7 +191,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     // drop is not separable after the fact from a copy-quality drop. That is
     // what the baseline frozen at boot exists to make legible.
     const user = currentUser(request);
-    if (!user && signInAvailable()) {
+    if (!user && publishRequiresAccount()) {
       return reply.code(401).send({ error: "Sign in to publish." });
     }
     const record = createRecord(body.invitation);

@@ -7,8 +7,8 @@
 // paths it already had.
 
 import type { FastifyInstance } from "fastify";
-import { listKeyring } from "../accounts.js";
-import { currentUser } from "../auth/session.js";
+import { deleteUser, listKeyring } from "../accounts.js";
+import { clearSessionCookie, currentUser, originAllowed } from "../auth/session.js";
 import type { KeyringEntry } from "../schemas.js";
 import { getRecord } from "../store.js";
 
@@ -42,5 +42,29 @@ export function registerAccountRoutes(app: FastifyInstance): void {
       });
     }
     return { invitations };
+  });
+
+  // adr-014 §9. Deleting an account removes the user, their sessions and their
+  // keyring — and deliberately **not** the invitations they published or the
+  // RSVPs guests left on them:
+  //
+  //  - the share links guests already hold must not break,
+  //  - the RSVP rows are the guests' data, not the host's, and
+  //  - the manage token survives on the record, so a host who kept their
+  //    manage link still has access.
+  //
+  // Deletion removes the account, not the event. The response says as much, so
+  // the UI can tell the host what actually happened rather than implying their
+  // invitations are gone.
+  app.delete("/api/account", async (request, reply) => {
+    if (!originAllowed(request)) return reply.code(403).send({ error: "Cross-origin request." });
+    const user = currentUser(request);
+    if (!user) return reply.code(401).send({ error: "Sign in to continue." });
+
+    // Counted before the rows go, so the host is told the true number.
+    const retained = listKeyring(user.id).filter((e) => getRecord(e.invitation_id) !== null).length;
+    deleteUser(user.id);
+    clearSessionCookie(request, reply);
+    return { deleted: true, invitations_retained: retained };
   });
 }

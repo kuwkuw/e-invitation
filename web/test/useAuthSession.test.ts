@@ -21,6 +21,9 @@ function stubApi(handlers: { session: unknown; keyring?: unknown; keyringStatus?
       return jsonResponse(handlers.keyring ?? { invitations: [] }, handlers.keyringStatus ?? 200);
     }
     if (url.includes("/api/auth/signout")) return jsonResponse(null, 204);
+    if (url.includes("/api/account") && !url.includes("keyring")) {
+      return jsonResponse({ deleted: true, invitations_retained: 2 });
+    }
     throw new Error(`unexpected fetch: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -127,6 +130,25 @@ describe("useAuthSession", () => {
     await waitFor(() => expect(result.current.status).toBe("signed_out"));
     // Sign-out ends the account session; it does not revoke a capability the
     // host held before they ever signed in (adr-014 §1).
+    expect(readManageToken(entry.id)).toBe(entry.manage_token);
+  });
+
+  it("keeps this browser's invitations after deleting the account", async () => {
+    stubApi({
+      session: { configured: true, signed_in: true, email: "host@example.com" },
+      keyring: { invitations: [entry] },
+    });
+    const { result } = renderHook(() => useAuthSession());
+    await waitFor(() => expect(readManageToken(entry.id)).toBe(entry.manage_token));
+
+    const deletion = await result.current.deleteAccount();
+
+    // The honest answer to "will this delete my events" is no, and the count
+    // is what lets the UI say so (adr-014 §9).
+    expect(deletion.invitations_retained).toBe(2);
+    await waitFor(() => expect(result.current.status).toBe("signed_out"));
+    // Taking the tokens would turn "delete my account" into "lose my
+    // invitations" — they are what the host has left.
     expect(readManageToken(entry.id)).toBe(entry.manage_token);
   });
 });

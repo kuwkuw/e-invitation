@@ -49,10 +49,29 @@ export function googleConfig(): GoogleConfig | null {
 
 /** Whether this deployment has an identity provider at all. Read on every
  *  request rather than cached at boot, so a test (and an operator restarting
- *  with new env) sees the current answer. It is also what decides whether the
- *  publish gate applies (adr-014 §2, §7): no OAuth client, no gate. */
+ *  with new env) sees the current answer. */
 export function signInAvailable(): boolean {
   return googleConfig() !== null;
+}
+
+/** Whether a first publish needs an account (adr-014 §2). Two conditions, and
+ *  they are separate on purpose:
+ *
+ *  - **No OAuth client, no gate** (§7). Nothing else is possible.
+ *  - **`PUBLISH_REQUIRES_ACCOUNT=0` turns it off** while sign-in stays
+ *    available. Following the adr-008 convention that an env var of 0 disables
+ *    a guardrail.
+ *
+ *  The flag exists for two moments. It lets an operator configure OAuth and
+ *  ship the sign-in UI *before* refusing anonymous publishes, instead of the
+ *  two landing in the same deploy — the window where publishing 401s and the
+ *  client has nothing to offer is the worst possible way to learn this
+ *  feature exists. And it is what the ADR's revisit trigger needs: if
+ *  publish-rate drops against the frozen baseline, moving the gate is a config
+ *  change, not a deploy. */
+export function publishRequiresAccount(): boolean {
+  if (!signInAvailable()) return false;
+  return process.env.PUBLISH_REQUIRES_ACCOUNT !== "0";
 }
 
 export function authorizeUrl(

@@ -96,6 +96,35 @@ describe("publish gate (adr-014 §2)", () => {
     expect(res.json().id).toBeUndefined();
   });
 
+  // The staging path: sign-in is available and hosts can create accounts, but
+  // anonymous publishing still works. Without this the gate and the UI that
+  // explains it have to land in the same deploy, and the window between them
+  // is a 401 the client has nothing to say about.
+  it("offers sign-in without gating when PUBLISH_REQUIRES_ACCOUNT=0", async () => {
+    configureGoogle();
+    vi.stubEnv("PUBLISH_REQUIRES_ACCOUNT", "0");
+    const instance = await start();
+
+    const health = (await instance.inject({ method: "GET", url: "/healthz" })).json();
+    expect(health.auth).toEqual({ google: true, publish_gate: false });
+    expect((await publish(instance, { invitation })).statusCode).toBe(200);
+  });
+
+  it("still links an anonymous-capable publish for a host who did sign in", async () => {
+    configureGoogle();
+    vi.stubEnv("PUBLISH_REQUIRES_ACCOUNT", "0");
+    const instance = await start();
+    const { cookies } = signIn();
+
+    const res = await publish(instance, { invitation }, cookies);
+    const keyring = await instance.inject({
+      method: "GET",
+      url: "/api/account/keyring",
+      cookies,
+    });
+    expect(keyring.json().invitations.map((e: { id: string }) => e.id)).toEqual([res.json().id]);
+  });
+
   it("publishes for a signed-in host and links it to the account", async () => {
     configureGoogle();
     const instance = await start();
@@ -197,6 +226,27 @@ describe("publish gate (adr-014 §2)", () => {
       // The publish landed after the gate, and stays counted there.
       expect(metrics.baseline.since.publishes).toBe(1);
       expect(metrics.baseline.before.publishes).toBe(0);
+    });
+
+    // The baseline hangs on the gate closing, not on OAuth being configured —
+    // otherwise staging the rollout would freeze "before" while anonymous
+    // publishes were still landing, and put them on the wrong side of it.
+    it("waits for the gate rather than freezing when sign-in is merely available", async () => {
+      configureGoogle();
+      vi.stubEnv("PUBLISH_REQUIRES_ACCOUNT", "0");
+      const staged = await start();
+      await publish(staged, { invitation });
+      expect(
+        (await staged.inject({ method: "GET", url: "/api/metrics" })).json().baseline,
+      ).toBeNull();
+      await staged.close();
+      app = null;
+
+      vi.stubEnv("PUBLISH_REQUIRES_ACCOUNT", "1");
+      const gated = await start();
+      const metrics = (await gated.inject({ method: "GET", url: "/api/metrics" })).json();
+      expect(metrics.baseline.before.publishes).toBe(1);
+      expect(metrics.baseline.since.publishes).toBe(0);
     });
 
     it("takes no baseline at all on an ungated deployment", async () => {

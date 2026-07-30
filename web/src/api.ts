@@ -1,5 +1,6 @@
 import { loadByok } from "./byok";
 import type {
+  AccountDeletion,
   AuthSession,
   BackgroundRef,
   CopyField,
@@ -171,6 +172,13 @@ export async function fetchKeyring(): Promise<KeyringEntry[]> {
 
 export async function signOut(): Promise<void> {
   await withSession<void>("/api/auth/signout", { method: "POST" });
+}
+
+/** Deletes the account, never the invitations (adr-014 §9). The count comes
+ *  back so the UI can say what was kept rather than leave the host guessing
+ *  whether their events went with it. */
+export function deleteAccount(): Promise<AccountDeletion> {
+  return withSession<AccountDeletion>("/api/account", { method: "DELETE" });
 }
 
 /** A full-page navigation, not a fetch: the browser has to follow Google's

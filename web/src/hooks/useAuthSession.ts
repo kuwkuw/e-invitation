@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchAuthSession, fetchKeyring, signOut as signOutRequest } from "../api";
+import {
+  deleteAccount as deleteAccountRequest,
+  fetchAuthSession,
+  fetchKeyring,
+  signOut as signOutRequest,
+} from "../api";
 import { recordHostInvitation } from "../hostInvitations";
 import { writeManageToken } from "../manageTokens";
 import type { AuthSession } from "../types";
@@ -85,5 +90,17 @@ export function useAuthSession() {
     setEmail(null);
   }, []);
 
-  return { status, email, signOut };
+  /** Delete the account (adr-014 §9). Returns how many invitations were kept,
+   *  because the honest answer to "will this delete my events" is "no" and the
+   *  UI has to be able to say so. Like sign-out, this leaves the tokens in this
+   *  browser: they are what the host has left, and taking them would turn
+   *  "delete my account" into "lose my invitations". */
+  const deleteAccount = useCallback(async () => {
+    const result = await deleteAccountRequest();
+    setStatus("signed_out");
+    setEmail(null);
+    return result;
+  }, []);
+
+  return { status, email, signOut, deleteAccount };
 }
