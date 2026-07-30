@@ -376,6 +376,34 @@ Seven PRs plus a docs pass, in order. PR 0 must ship and run before PR 4.
    deployment runbook, `06-roadmap.md`, and this ADR flipped to accepted —
    the pattern the last four iterations used.
 
+## Notes from implementation
+
+Recorded as the PRs land, so the next reader does not rediscover them.
+
+- **The keyring stores no manage token** (PR 1). §1 called the account "a join,
+  not an exposure" and §5 describes the *response* carrying `manage_token` —
+  which it still does. But the table itself holds only
+  `(user_id, invitation_id, created_at)`, and the read path joins the token
+  from the record that already carries it. One copy of the credential means
+  none to drift, and it makes the account database worthless on its own: an
+  attacker who reads `app.db` and not `DATA_DIR` gets a list of ids and no way
+  to use them.
+- **`node:sqlite` needs `createRequire`, not a plain import** (PR 1). §6
+  claimed the cost of choosing it over `better-sqlite3` was an
+  `ExperimentalWarning`. There is a second cost: `sqlite` is absent from Node
+  22's `module.builtinModules` *because* it is experimental, so Vite — which
+  vitest runs the server through — does not treat `node:sqlite` as a builtin,
+  tries to resolve it as a package, and fails at import time. Neither
+  `test.server.deps.external` nor a `resolveId` plugin fixed it; the module
+  runner still fetched the bare specifier. Loading it through `createRequire`
+  is opaque to that static analysis and behaves identically under `tsx`,
+  `tsc` → node and vitest, with no config file. `import type` keeps the typing
+  free. It comes out when `sqlite` graduates into `builtinModules`.
+- **Session ids are stored hashed**, unlike manage tokens, which the file store
+  keeps raw. Not an inconsistency: a manage token authorizes one invitation and
+  already sits in the record it protects, while a session id authorizes every
+  invitation an account holds.
+
 ## Revisit triggers
 
 Written down now so the decision is falsifiable later:
