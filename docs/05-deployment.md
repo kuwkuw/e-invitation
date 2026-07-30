@@ -107,24 +107,40 @@ storage is needed.
    Google with `redirect_uri_mismatch` — nothing reaches the app, so nothing
    appears in its logs.
 
-   **You do not need a custom domain to start.** The platform hostname works:
-   leave the consent screen in **Testing** mode, add yourself as a test user,
-   and register the `*.code.run` URI. Testing mode needs no domain
-   verification; the cost is an "unverified app" warning on the way through and
-   a 100-user cap. Note the platform hostname embeds a generated service
-   identifier, so recreating the service changes it and breaks sign-in until
-   the new URI is registered.
+   **A registrable domain of your own is required. The Northflank preview
+   hostname cannot be used, in any mode.** Google refuses any redirect URI
+   whose host is not a *top private domain*, and `*.code.run` is on the
+   [Public Suffix List](https://publicsuffix.org/list/), submitted by
+   Northflank. The rule is a wildcard, so
+   `p01--yourapp--xxxxxxxx.code.run` is not a domain *under* a public suffix —
+   it **is** one, with no registrable domain beneath it. The console rejects it
+   at entry with "must use a domain that is a valid top private domain". This
+   is not a Testing-vs-Production distinction and there is no path, subpath or
+   alternate spelling that gets round it. The same is true of every
+   platform-preview domain on that list — `*.vercel.app`, `*.ngrok-free.app`
+   and friends.
 
-   **A domain becomes mandatory to publish the app** — leaving Testing is what
-   removes the warning and the cap, and verification requires proving ownership
-   of every redirect URI's domain in Search Console. `code.run` belongs to the
-   platform, so it cannot be verified.
+   So the order of operations is: **domain first, then sign-in**. Set up the
+   custom domain above, confirm `https://<your-domain>/healthz` answers, and
+   only then create the OAuth client. Until then the deployment runs in the §7
+   unconfigured mode, which is fully functional — publishing simply stays
+   anonymous.
 
-   Google allows several redirect URIs on one client, so when a domain arrives,
-   **add** its URI beside the platform one rather than replacing it, then set
-   `GOOGLE_REDIRECT_URI` and `CANONICAL_HOST` together. The canonical redirect
-   fires before the callback is reached, so from that moment the registered URI
-   must be the canonical host.
+   **Local development needs no domain.** Google exempts `localhost`, from both
+   the HTTPS requirement and this one, so the whole flow can be exercised
+   before any domain exists. Register both dev ports and leave
+   `GOOGLE_REDIRECT_URI` unset so the server derives the URI from the request:
+
+   ```
+   http://localhost:5173/api/auth/google/callback   # what `pnpm dev` uses:
+                                                    # Vite proxies /api and does
+                                                    # not rewrite the Host header
+   http://localhost:3001/api/auth/google/callback   # hitting the API directly
+   ```
+
+   Google allows several redirect URIs on one client, so the production URI is
+   an **addition** later, not a swap — keep the localhost pair for development.
+
 3. **Environment**:
    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
    - `GOOGLE_REDIRECT_URI=https://<your-host>/api/auth/google/callback` —
