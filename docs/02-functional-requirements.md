@@ -222,8 +222,7 @@ implementation.
 
 ## FR-11 Host accounts
 
-**Status: server built, host-facing UI pending** —
-[adr-014](decisions/adr-014-host-accounts.md),
+**Status: built** — [adr-014](decisions/adr-014-host-accounts.md),
 `/api/auth/*`, `/api/account/*` ([accounts.ts](../server/src/accounts.ts),
 [routes/auth.ts](../server/src/routes/auth.ts))
 
@@ -262,6 +261,12 @@ are reading back the tokens it holds and authorizing a first publish.
   invitations were retained.
 - FR-11.8 Sign-out and deletion both leave this browser's manage tokens in
   place — neither revokes a capability the host held before signing in.
+- FR-11.9 The gate is the first frame of the share sheet, not a separate
+  screen: the invitation stays visible, and the editor's draft is parked before
+  the redirect and restored on return, so a host comes back to exactly what
+  they left. Declining at Google is a distinct, non-error state from a failed
+  handshake, which carries a coarse `state`/`exchange`/`identity` class for
+  support.
 
 ## Routing map (web)
 

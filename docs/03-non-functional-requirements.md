@@ -12,14 +12,15 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **82.9 kB gzipped** (254.5 kB raw), measured with
+  **88.2 kB gzipped** (271.8 kB raw), measured with
   `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
-  ([adr-011](decisions/adr-011-client-router.md)); the ~2 kB since is the
-  share-loop client (adr-013) plus +0.1 kB for host accounts
-  ([adr-014](decisions/adr-014-host-accounts.md), whose sign-in is a
-  server-side redirect flow with no Google SDK). There is no automated budget
-  check — measure and record the delta when adding a runtime dependency.
+  ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
+  share-loop client (adr-013) and **+5.4 kB is host accounts**
+  ([adr-014](decisions/adr-014-host-accounts.md)) — the sign-in gate, the
+  signed-in share panel and the account surfaces. No Google SDK: the handshake
+  is a server-side redirect flow, which is what kept that number to five
+  kilobytes. There is no automated budget check — measure and record the delta when adding a runtime dependency.
 
 ## NFR-2 Cost
 

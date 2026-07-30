@@ -201,21 +201,10 @@ The ADR also commits in advance to taking the answer: under ~0.3 new hosts per
 published invitation, §5.1's honest conclusion is that this stays a
 non-commercial project.
 
-## In progress: host accounts
+## Shipped: host accounts
 
-Settled in [ADR-014](decisions/adr-014-host-accounts.md) (proposed). **The
-server is built and shipped as FR-11; the host-facing sign-in UI is not** — it
-waits on the §10 DS mockups (`templates/auth-gate`, the landing signed-in
-variant, the share-panel copy revision), following the adr-009 §4 / adr-010 §9
-precedent that design precedes code. The ADR flips to accepted with that UI and
-its docs pass, not before.
-
-Until then a deployment stays in the §7 unconfigured mode, or configures OAuth
-with `PUBLISH_REQUIRES_ACCOUNT=0` — sign-in available, publishing still
-anonymous. Turning both on at once would mean every publish `401`s while the
-client has no sign-in surface to offer.
-
-The first iteration to reverse part of
+Settled in [ADR-014](decisions/adr-014-host-accounts.md) (accepted) and shipped
+as **FR-11**. The first iteration to reverse part of
 [adr-005](decisions/adr-005-capability-tokens.md), which four later ADRs
 re-affirm by name.
 
@@ -259,15 +248,19 @@ Seven PRs plus a docs pass. Explicitly not in scope: the RSVP email
 notification itself (needs a transactional sender — its own iteration), any
 entitlement schema or pricing surface, and a second identity provider.
 
-**Delivered so far** (server, plus the client plumbing behind it): the metrics
-baseline, the SQLite account store, the Google OAuth handshake and session
-cookie, the keyring endpoint and its browser seed, the publish gate and its
-staging flag, and account deletion. **Outstanding**: the sign-in UI (PR 4b/5,
-blocked on mockups) and the ADR's flip to accepted.
+Delivered as nine PRs: the metrics baseline, the SQLite account store, the
+Google OAuth handshake and session cookie, the keyring endpoint and its browser
+seed, the publish gate and its staging flag, account deletion, the sign-in gate,
+the signed-in share panel and landing surfaces, and two docs passes. Design
+preceded the UI as adr-009 §4 and adr-010 §9 require: three template sets in
+the E-invitation DS project.
 
-One thing the build corrected: the ADR listed a `SESSION_SECRET`. There is
-none — nothing is signed, because the cookie carries 32 random bytes whose only
-meaning is as a row key. The ADR's implementation notes carry that and the rest.
+Two things the build corrected, both in the ADR's implementation notes. There
+is no `SESSION_SECRET` — nothing is signed, because the cookie carries 32
+random bytes whose only meaning is as a row key. And the editor's draft had to
+be persisted before any of the UI worked: sign-in is a full-page navigation and
+the invitation lived only in memory, so a host would have returned from Google
+to an empty editor.
 
 ## Candidate backlog
 

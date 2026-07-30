@@ -1,6 +1,6 @@
 # ADR-014 — Host accounts: Google sign-in, a server-side keyring, SQLite
 
-**Status:** proposed · **Date:** 2026-07-30 · Partially supersedes
+**Status:** accepted · **Date:** 2026-07-30 · Partially supersedes
 [adr-005](adr-005-capability-tokens.md) (capability URLs instead of accounts);
 reverses a scope boundary drawn by [adr-012](adr-012-batch-response-counts.md);
 extends [adr-010](adr-010-host-manage-link.md). Rewrites NFR-4, amends NFR-7,
@@ -352,10 +352,9 @@ and adr-012: no `InvitationPreview` prop changes, no token changes, no
 
 Seven PRs plus a docs pass, in order. PR 0 must ship and run before PR 4.
 
-**Status:** 0, 1, 2, 3, 4 (server), 6 and the docs pass are **done**. PR 4's
-editor sign-in step and PR 5's signed-in UI are **outstanding**, blocked on the
-§10 mockups — so this ADR stays *proposed* until they land, and a deployment
-runs either unconfigured (§7) or with `PUBLISH_REQUIRES_ACCOUNT=0`.
+**Status: all shipped.** The §10 mockups landed in the DS project
+(`templates/auth-gate`, the `landing-page` signed-in variants, `ShareSignedIn`)
+and PRs 4b and 5 were built from them.
 
 0. **Metrics baseline (§2).** Record publishes, generations and the adr-013
    pair against the pre-gate denominator, with the date the gate lands noted in
@@ -470,6 +469,35 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   `invitations_retained` so the UI can say so. "Delete my account" and "lose my
   invitations" are different things and the host has no way to know that unless
   told.
+- **The draft had to be persisted before any of the UI worked** (PR 4b). Sign-in
+  is a full-page navigation and `useInvitationEditor` held the invitation only
+  in memory, so a host would have come back from Google to an empty editor —
+  losing their work at the exact moment they committed to it, which is worse
+  than the gate. `web/src/draft.ts` parks it. It is deliberately not autosave:
+  written when we are about to navigate away, read only on the return trip, so
+  a draft never resurfaces unasked on an ordinary visit. The DS reached the
+  same conclusion independently and recorded it as a precondition of the
+  `returning` state.
+- **The gate opens on the press, not on a 401** (PR 4b). The DS put it as the
+  first frame of the share sheet, which means the client has to know it will be
+  refused *before* it asks — hence `publish_gate` on `/api/auth/session`. The
+  401 path stays for the case it actually covers, a session that lapsed between
+  page load and the press, and falls into the same gate rather than reporting a
+  generic publish failure.
+- **The failure code is a closed three-value class** — `state`, `exchange`,
+  `identity` — rendered as `auth_<code>_failed`. The DS asked for something
+  stable a host can read out to support; §3's instinct was that handshake
+  internals stay in the log. A class satisfies both, and it is the same shape
+  as the gateway's `FailureClass`.
+- **The resume is ref-guarded, not state-guarded** (PR 4b). The publish flips
+  the gate state itself, and StrictMode double-invokes effects, so a state
+  guard mints two links for one event — the same hazard adr-010's notes record
+  for the "N new" baseline.
+- **Collapsing the manage block does not weaken its warning** (PR 5). The
+  objection is obvious — a hidden warning is a weaker warning — and the answer
+  is that the warning exists to stop the *wrong link being copied*. Collapsed,
+  there is nothing to copy: no link text, no button, no selection. The risk
+  appears with the copy button and so does the warning. A test holds the rule.
 - **`web/src/manageTokens.ts` is where host tokens live now** (PR 3). The
   keyring made it the third writer of `inv-manage:<id>`, so the accessors moved
   out of `useHostManage.ts` into one module with a memory layer in front of
