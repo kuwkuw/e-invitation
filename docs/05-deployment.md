@@ -90,6 +90,51 @@ platform config plus one env var:
    check the share link + `og:image` URL use the new domain, and confirm the
    old `*.code.run/i/:id` link 301s.
 
+## Host sign-in with Google (adr-014)
+
+Optional. With `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` unset the server
+boots, sign-in is not offered, and publishing stays anonymous — the supported
+mode for local development and self-hosting
+([adr-014](decisions/adr-014-host-accounts.md) §7). Account state lives in
+`DATA_DIR/app.db`, so the volume in step 3 already carries it and no extra
+storage is needed.
+
+1. **Google Cloud console** → *APIs & Services* → *Credentials* → *Create
+   credentials* → **OAuth client ID**, type *Web application*.
+2. **Authorized redirect URI**: `https://<your-host>/api/auth/google/callback`.
+   Google matches this against a fixed allowlist, so it must be exact —
+   **including which host**. If you use `CANONICAL_HOST`, register the
+   canonical domain, not the `*.code.run` one; the canonical redirect fires
+   before the callback is reached, and an unregistered host fails at Google
+   with `redirect_uri_mismatch` rather than in the app.
+3. **Environment**:
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI=https://<your-host>/api/auth/google/callback` —
+     set it explicitly in production. Unset, the server derives the URI from
+     the incoming request, which is what makes `localhost` work with no second
+     registration but is the wrong host behind `CANONICAL_HOST`.
+4. **Roll the gate out separately from sign-in.** Deploy with
+   `PUBLISH_REQUIRES_ACCOUNT=0` first, so hosts can sign in while anonymous
+   publishing still works, then remove the var to close the gate. Turning both
+   on at once means every publish returns `401` for as long as the client has
+   no sign-in surface.
+5. Verify `GET /healthz` → `auth: { google: true, publish_gate: … }`, then sign
+   in and check `GET /api/account/keyring` returns your invitations.
+
+**What closing the gate does to the numbers.** It freezes a baseline in
+`metrics.json` — `GET /api/metrics` then reports `baseline.before` and
+`baseline.since` alongside the lifetime figures. This matters because gating
+publishes moves both `publish_rate` and adr-013's `new_hosts_per_publish` for
+reasons unrelated to what either measures, and
+[07-monetization](07-monetization.md) §5.1's thresholds were written against an
+ungated denominator. The baseline is taken once and never moves; if
+publish-rate drops sharply against it, `PUBLISH_REQUIRES_ACCOUNT=0` reopens
+publishing without a deploy.
+
+**Deleting an account** removes the user, their sessions and their keyring and
+keeps every published invitation and RSVP (FR-11.7) — guests' share links must
+not break.
+
 ## Local smoke test
 
 ```sh

@@ -352,6 +352,11 @@ and adr-012: no `InvitationPreview` prop changes, no token changes, no
 
 Seven PRs plus a docs pass, in order. PR 0 must ship and run before PR 4.
 
+**Status:** 0, 1, 2, 3, 4 (server), 6 and the docs pass are **done**. PR 4's
+editor sign-in step and PR 5's signed-in UI are **outstanding**, blocked on the
+§10 mockups — so this ADR stays *proposed* until they land, and a deployment
+runs either unconfigured (§7) or with `PUBLISH_REQUIRES_ACCOUNT=0`.
+
 0. **Metrics baseline (§2).** Record publishes, generations and the adr-013
    pair against the pre-gate denominator, with the date the gate lands noted in
    `metrics.json`, so the conversion cost of §2 is measurable and
@@ -448,6 +453,23 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   account session must not revoke a capability the host had before they ever
   signed in, and doing so would destroy access on a shared device in a way no
   host would predict.
+- **`PUBLISH_REQUIRES_ACCOUNT` separates the gate from sign-in** (added after
+  PR 4). §2 and §7 together implied one switch: no OAuth client, no gate;
+  configure one, gate closed. That conflates two decisions and creates a window
+  where publishing `401`s and the client has nothing to offer, because the gate
+  is server-side and the sign-in UI is not. The flag is on by default once
+  OAuth is configured and `0` disables it, following adr-008's convention. It
+  also makes this ADR's own revisit trigger — *publish-rate drops → move the
+  gate* — a config change rather than a deploy, which is what a revisit trigger
+  should cost.
+  The baseline moved with it: it freezes when the **gate closes**, not when
+  OAuth is configured, or staging the rollout would freeze "before" while
+  anonymous publishes were still landing.
+- **Account deletion reports what it kept** (PR 6). §9 settled that
+  invitations and RSVPs survive; the endpoint returns
+  `invitations_retained` so the UI can say so. "Delete my account" and "lose my
+  invitations" are different things and the host has no way to know that unless
+  told.
 - **`web/src/manageTokens.ts` is where host tokens live now** (PR 3). The
   keyring made it the third writer of `inv-manage:<id>`, so the accessors moved
   out of `useHostManage.ts` into one module with a memory layer in front of
