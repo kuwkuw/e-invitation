@@ -19,7 +19,39 @@ interface Counters {
   // the generations that began on a guest page rather than cold.
   invitation_views: number;
   referred_generations: number;
+  // Not a counter — the frozen "counters as they stood" snapshot (adr-014 §2).
+  // Handled apart from SCALAR_COUNTERS in the loader, like field_regenerations.
+  baseline: Baseline | null;
 }
+
+/** The rate inputs, flattened — `field_regenerations` collapsed to its total.
+ *  This is what a baseline freezes and what every derived rate is computed
+ *  from, so lifetime, pre-gate and post-gate figures cannot drift apart. */
+interface CounterTotals {
+  generations: number;
+  field_regenerations: number;
+  backgrounds: number;
+  publishes: number;
+  rsvps: number;
+  invitation_views: number;
+  referred_generations: number;
+}
+
+interface Baseline {
+  at: string;
+  reason: string;
+  counters: CounterTotals;
+}
+
+const TOTAL_KEYS = [
+  "generations",
+  "field_regenerations",
+  "backgrounds",
+  "publishes",
+  "rsvps",
+  "invitation_views",
+  "referred_generations",
+] as const satisfies readonly (keyof CounterTotals)[];
 
 let counters: Counters | null = null;
 
@@ -51,6 +83,7 @@ function load(): Counters {
     rsvps: 0,
     invitation_views: 0,
     referred_generations: 0,
+    baseline: null,
   };
   try {
     if (existsSync(metricsPath())) {
@@ -65,11 +98,37 @@ function load(): Counters {
       for (const [field, count] of Object.entries(stored.field_regenerations ?? {})) {
         if (typeof count === "number") counters.field_regenerations[field] = count;
       }
+      counters.baseline = readBaseline(stored.baseline);
     }
   } catch {
     // start fresh
   }
   return counters;
+}
+
+// Validated field by field rather than trusted: a half-written baseline must
+// degrade to "no baseline" — the file's existing posture — because the
+// alternative is serving a comparison against numbers nobody can vouch for.
+function readBaseline(value: unknown): Baseline | null {
+  if (!value || typeof value !== "object") return null;
+  const { at, reason, counters } = value as Record<string, unknown>;
+  if (typeof at !== "string" || typeof reason !== "string") return null;
+  if (!counters || typeof counters !== "object") return null;
+  const stored = counters as Record<string, unknown>;
+  const frozen = {
+    generations: 0,
+    field_regenerations: 0,
+    backgrounds: 0,
+    publishes: 0,
+    rsvps: 0,
+    invitation_views: 0,
+    referred_generations: 0,
+  };
+  for (const key of TOTAL_KEYS) {
+    const n = stored[key];
+    if (typeof n === "number") frozen[key] = n;
+  }
+  return { at, reason, counters: frozen };
 }
 
 function save(current: Counters): void {
@@ -122,26 +181,93 @@ export function recordInvitationView(): void {
   save(current);
 }
 
-export function metricsSnapshot() {
+/** Freeze the counters as they stand, once (adr-014 §2). Called when the
+ *  publish gate turns on: gating publishes moves `publish_rate` and
+ *  `new_hosts_per_publish` for a reason that has nothing to do with copy
+ *  quality or the share loop, and 07-monetization §5.1's 0.3/0.7 thresholds
+ *  were written against an ungated denominator. Without a frozen "before",
+ *  the two periods are one blended number and neither is readable.
+ *
+ *  Idempotent, because the caller runs at boot: re-freezing on every restart
+ *  would keep resetting the "before" to the current numbers and erase the
+ *  comparison this exists to make. */
+export function markBaseline(reason: string): Baseline {
   const current = load();
-  const totalRegens = Object.values(current.field_regenerations).reduce((a, b) => a + b, 0);
+  if (current.baseline) return current.baseline;
+  current.baseline = { at: new Date().toISOString(), reason, counters: totals(current) };
+  save(current);
+  return current.baseline;
+}
+
+function totals(current: Counters): CounterTotals {
   return {
     generations: current.generations,
-    field_regenerations: { ...current.field_regenerations },
-    regenerate_rate: current.generations === 0 ? 0 : totalRegens / current.generations,
+    field_regenerations: Object.values(current.field_regenerations).reduce((a, b) => a + b, 0),
     backgrounds: current.backgrounds,
     publishes: current.publishes,
-    publish_rate: current.generations === 0 ? 0 : current.publishes / current.generations,
     rsvps: current.rsvps,
     invitation_views: current.invitation_views,
     referred_generations: current.referred_generations,
-    // The share loop, per published invitation. `new_hosts_per_publish` is the
-    // number 07-monetization §5.1 gates every commercial option on: under ~0.3
-    // no pricing model rescues the economics, over ~0.7 acquisition is
-    // effectively free. `views_per_publish` is the funnel step above it —
-    // how many people a share link actually reaches.
-    views_per_publish: current.publishes === 0 ? 0 : current.invitation_views / current.publishes,
-    new_hosts_per_publish:
-      current.publishes === 0 ? 0 : current.referred_generations / current.publishes,
+  };
+}
+
+// Clamped at zero: a metrics.json restored from a backup older than its own
+// baseline would otherwise report negative activity, which reads as a broken
+// deploy rather than as the stale file it is.
+function elapsed(now: CounterTotals, then: CounterTotals): CounterTotals {
+  const delta = { ...now };
+  for (const key of TOTAL_KEYS) delta[key] = Math.max(0, now[key] - then[key]);
+  return delta;
+}
+
+/** Every derived rate, computed in one place — adr-012 §3's "one counting
+ *  implementation" applied to metrics. Lifetime, pre-gate and post-gate all
+ *  come through here, so a rate cannot mean one thing in one block and
+ *  something else in another.
+ *
+ *  `new_hosts_per_publish` is the number 07-monetization §5.1 gates every
+ *  commercial option on: under ~0.3 no pricing model rescues the economics,
+ *  over ~0.7 acquisition is effectively free. `views_per_publish` is the
+ *  funnel step above it — how many people a share link actually reaches. */
+function rates(t: CounterTotals) {
+  return {
+    regenerate_rate: t.generations === 0 ? 0 : t.field_regenerations / t.generations,
+    publish_rate: t.generations === 0 ? 0 : t.publishes / t.generations,
+    views_per_publish: t.publishes === 0 ? 0 : t.invitation_views / t.publishes,
+    new_hosts_per_publish: t.publishes === 0 ? 0 : t.referred_generations / t.publishes,
+  };
+}
+
+// null until a baseline is taken, so /api/metrics keeps its current shape for
+// every deployment that never gates publishing (adr-014 §7).
+function baselineBlock(current: Counters) {
+  const baseline = current.baseline;
+  if (!baseline) return null;
+  const before = baseline.counters;
+  const after = elapsed(totals(current), before);
+  return {
+    at: baseline.at,
+    reason: baseline.reason,
+    before: { ...before, ...rates(before) },
+    since: { ...after, ...rates(after) },
+  };
+}
+
+export function metricsSnapshot() {
+  const current = load();
+  const lifetime = rates(totals(current));
+  return {
+    generations: current.generations,
+    field_regenerations: { ...current.field_regenerations },
+    regenerate_rate: lifetime.regenerate_rate,
+    backgrounds: current.backgrounds,
+    publishes: current.publishes,
+    publish_rate: lifetime.publish_rate,
+    rsvps: current.rsvps,
+    invitation_views: current.invitation_views,
+    referred_generations: current.referred_generations,
+    views_per_publish: lifetime.views_per_publish,
+    new_hosts_per_publish: lifetime.new_hosts_per_publish,
+    baseline: baselineBlock(current),
   };
 }
