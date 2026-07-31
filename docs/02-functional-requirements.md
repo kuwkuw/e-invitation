@@ -69,7 +69,8 @@ implementation.
 ## FR-4 Guest page & RSVP
 
 **Status: built** — `GET /api/invitations/:id`,
-`POST /api/invitations/:id/rsvp` ([GuestPage.tsx](../web/src/GuestPage.tsx))
+`POST /api/invitations/:id/rsvp`, `POST /api/invitations/:id/view`
+([GuestPage.tsx](../web/src/GuestPage.tsx))
 
 - FR-4.1 The share link renders the published invitation publicly — no
   authentication, no registration.
@@ -90,6 +91,16 @@ implementation.
   marketing page. An id that cannot be one the server minted is answered
   without a request, since there is nothing to ask about
   ([adr-011](decisions/adr-011-client-router.md) §3).
+- FR-4.7 The guest page carries exactly one link back to the product
+  ([GuestCta.tsx](../web/src/components/guest/GuestCta.tsx),
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVITO
+  wordmark plus one muted line, below the reply card, in the guest's chrome
+  language (FR-6.3), present in both the form and post-RSVP states. It links to
+  `/create?ref=guest` and never becomes a modal, a card, or an accent-coloured
+  action — the guest experience must not degrade for it, since that experience
+  is what makes the link worth having ([07-monetization.md](07-monetization.md)
+  §5.2). One placement, not two: measuring one yields a number, measuring two
+  yields neither.
 
 ## FR-5 Host views responses
 
@@ -163,11 +174,31 @@ implementation.
 
 **Status: built** — `GET /api/metrics` ([metrics.ts](../server/src/metrics.ts))
 
-- FR-7.1 Expose counters: generations, per-field regenerations, publishes,
-  RSVPs, and the derived regenerate-rate and publish-rate.
+- FR-7.1 Expose counters: generations, per-field regenerations, backgrounds,
+  publishes, RSVPs, and the derived regenerate-rate and publish-rate.
 - FR-7.2 Counters persist to `DATA_DIR/metrics.json` (write-then-rename, same
   discipline as the store) and reload on boot, so the KPIs survive restarts
-  and deploys. A missing or corrupt file starts them fresh.
+  and deploys. A missing or corrupt file starts them fresh. A counter absent
+  from an older file starts at zero rather than resetting the file, so adding
+  one never discards history — the whole value of these numbers is that they
+  are measured over months.
+- FR-7.3 Share-loop counters
+  ([adr-013](decisions/adr-013-share-loop-instrumentation.md)):
+  `invitation_views` counts guest-page views, and `referred_generations` counts
+  generations that arrived from a guest page. Both are **global** — nothing is
+  counted per invitation, and no host-facing surface shows reach.
+- FR-7.4 The derived `views_per_publish` and `new_hosts_per_publish` accompany
+  them. The second is the datum [07-monetization.md](07-monetization.md) §5.1
+  gates every commercial option on; when publishing is gated on an account
+  (FR-11.5) the baseline block reports it before and after the gate, since the
+  gate moves the denominator for reasons unrelated to the share loop
+  ([adr-014](decisions/adr-014-host-accounts.md) §7).
+- FR-7.5 A view is counted by a beacon the guest page fires after a successful
+  load, once per browser per invitation — never from the server-rendered
+  `GET /i/:id`, which serves messenger crawlers (FR-3.5) and would count
+  unfurls instead of guests. A dead link is not a view. "Unique" therefore
+  means "unique browser that has not cleared storage", so the number floats
+  high, consistently, by design (adr-013 §2).
 
 ## FR-8 BYOK — host's own AI key
 
@@ -273,7 +304,7 @@ are reading back the tokens it holds and authorizing a first publish.
 | Path | Page | Audience |
 | --- | --- | --- |
 | `/` | Landing page; lists this browser's invitations with response counts when it has any (FR-5.6, FR-5.7) | Public |
-| `/create` | Editor (generate → edit → publish → share) | Host |
+| `/create` | Editor (generate → edit → publish → share). `?ref=guest` attributes the session (FR-7.3) and is stripped from the URL at mount | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |
 

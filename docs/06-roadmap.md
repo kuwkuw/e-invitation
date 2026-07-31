@@ -3,8 +3,10 @@
 Written 2026-07-23, after the AI background layer (adr-009) and the editor
 decomposition landed; updated 2026-07-24 when the manage-view and
 client-routing iterations shipped, 2026-07-25 when batch response counts
-(adr-012) shipped as FR-5.7, and 2026-07-27 when share-loop instrumentation
-(adr-013) was planned. This doc plans the **next** iteration; when an item
+(adr-012) shipped as FR-5.7, 2026-07-27 when share-loop instrumentation
+(adr-013) was planned, 2026-07-30 when host accounts (adr-014) shipped as
+FR-11, and 2026-07-31 when the share loop got the docs pass it had been owed
+since its code landed. This doc plans the **next** iteration; when an item
 ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -18,7 +20,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Four iterations have shipped since:
+Six iterations have shipped since:
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -30,6 +32,10 @@ Four iterations have shipped since:
   behaviour fix.
 - **Batch response counts** — [adr-012](decisions/adr-012-batch-response-counts.md),
   below. Shipped as FR-5.7.
+- **Share-loop instrumentation** — [adr-013](decisions/adr-013-share-loop-instrumentation.md),
+  below. Shipped as FR-4.7 and FR-7.3–7.5.
+- **Host accounts** — [adr-014](decisions/adr-014-host-accounts.md), below.
+  Shipped as FR-11.
 
 ## Shipped: the host can come back
 
@@ -151,24 +157,24 @@ mockups specify it), counts anywhere but the landing list, and anything that
 would teach the server which invitations belong to one host — the accounts
 model adr-005 rejected.
 
-## Next iteration: share-loop instrumentation
+## Shipped: share-loop instrumentation
 
 Settled in [ADR-013](decisions/adr-013-share-loop-instrumentation.md)
-(proposed). Taken because it is the only backlog item that produces an input
-another decision is waiting on:
+(accepted) and shipped as **FR-4.7** and **FR-7.3–7.5**. Taken because it was
+the only backlog item that produced an input another decision was waiting on:
 [07-monetization.md](07-monetization.md) §5.1 gates every commercial option on
-**new hosts per published invitation**, and that number is not measurable
-today — the guest page has no link back to the product, and `metrics.ts`
-counts nothing about `/i/:id`.
+**new hosts per published invitation**, and that number was not measurable at
+all — the guest page had no link back to the product, and `metrics.ts` counted
+nothing about `/i/:id`.
 
-The other reason is the state of the numbers. Production has 9 generations, 4
+The other reason was the state of the numbers. Production had 9 generations, 4
 publishes, 5 RSVPs and 0 field regenerations lifetime. Three backlog items
-below are gated on a host asking; at this traffic nobody will ask, and the
-regenerate-rate 01-vision calls the primary quality signal has no data to be a
-signal with. Instrumenting the one loop that could bring traffic is worth more
+below are gated on a host asking; at that traffic nobody will ask, and the
+regenerate-rate 01-vision calls the primary quality signal had no data to be a
+signal with. Instrumenting the one loop that could bring traffic was worth more
 than another feature for the hosts who aren't here yet.
 
-What the ADR settles:
+What the ADR settled, and the implementation delivered:
 
 1. **Views are counted client-side**, because `/i/:id` is server-rendered for
    messenger crawlers (FR-3.5) — instrumenting there would count unfurls, not
@@ -193,13 +199,30 @@ What the ADR settles:
    "change answer". Four louder treatments were drawn and rejected, three
    against rules already written down.
 
-Five PRs plus a docs pass. Explicitly not in scope: per-invitation view counts,
-a click counter, cookies or third-party analytics, and any pricing surface —
-07-monetization stays an investigation until the number exists.
+Four PRs — the beacon endpoint, the client beacon, the call to action, and
+attribution — plus this docs pass. Explicitly out of scope, as planned:
+per-invitation view counts, a click counter, cookies or third-party analytics,
+and any pricing surface; 07-monetization stays an investigation until the
+number says something.
 
-The ADR also commits in advance to taking the answer: under ~0.3 new hosts per
-published invitation, §5.1's honest conclusion is that this stays a
-non-commercial project.
+**The docs pass came an iteration late.** The four code PRs landed, host
+accounts was taken next and shipped in full, and only then did FR-4.7 and
+FR-7.3–7.5 get written — so for one iteration the app collected a number that
+no requirement described. Recorded here rather than quietly fixed, because the
+convention at the top of this file is the thing that slipped, and this is the
+first time it has.
+
+That gap had a consequence worth noting: adr-014 put a sign-in in front of
+publishing, and both of adr-013's derived rates divide by publishes. The
+baseline adr-014 §7 froze is what keeps `new_hosts_per_publish` readable across
+that boundary — but §5.1's 0.3/0.7 thresholds were written against an ungated
+denominator, so it is the post-gate block that they apply to.
+
+The ADR also committed in advance to taking the answer: under ~0.3 new hosts
+per published invitation, §5.1's honest conclusion is that this stays a
+non-commercial project. Nothing about that commitment changed by shipping it.
+The number now needs traffic, which is the one thing this iteration cannot
+supply.
 
 ## Shipped: host accounts
 
@@ -262,6 +285,22 @@ be persisted before any of the UI worked: sign-in is a full-page navigation and
 the invitation lived only in memory, so a host would have returned from Google
 to an empty editor.
 
+## No iteration currently taken
+
+Both the share loop and host accounts have shipped and are recorded, so nothing
+below is claimed. The doc's own convention is that this section names the next
+iteration; leaving it empty is deliberate rather than an oversight, because the
+two things that would choose it are outside the code.
+
+The leading candidate is **notifying the host on a new RSVP** — the backlog
+entry below says why, and adr-014 §8 already supplies the verified address it
+needs. The other candidate is **doing nothing yet**: adr-013 shipped the
+measurement that [07-monetization.md](07-monetization.md) §5.1 gates every
+commercial option on, and that measurement now needs published invitations real
+guests open. Taking another feature iteration does not produce that traffic,
+and the numbers are still small enough that reading them would be
+overinterpreting noise.
+
 ## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
@@ -281,9 +320,9 @@ to an empty editor.
   this item narrows rather than disappears.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
-- ~~**Share-loop instrumentation**~~ — taken as the next iteration; see
+- ~~**Share-loop instrumentation**~~ — shipped as FR-4.7 and FR-7.3–7.5; see
   [adr-013](decisions/adr-013-share-loop-instrumentation.md) and the section
-  above.
+  above. What it produces is now waiting on traffic, not on code.
 - ~~**React Router in `web/`**~~ — shipped; see
   [adr-011](decisions/adr-011-client-router.md), which records the original
   declining evaluation, the fact that none of its revisit triggers had fired,

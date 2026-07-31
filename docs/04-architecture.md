@@ -127,12 +127,22 @@ a future DB swap (NFR-7).
   fails the others ([adr-012](decisions/adr-012-batch-response-counts.md)). The
   server still learns nothing about which invitations share a host; the client
   supplies the ids from its browser-local index every time.
+  `POST /api/invitations/:id/view` is the one write with **no credential at
+  all** — it writes only to a global counter, and the id is the only thing
+  there is to check, so counting is gated on holding a real share link. If a
+  second credential-less write ever appears, "validate the id, count, `204`" is
+  the precedent ([adr-013](decisions/adr-013-share-loop-instrumentation.md) §6).
 - **Validation:** every boundary shape parses through
   [schemas.ts](../server/src/schemas.ts); route handlers return `400` on parse
   failure, `403` on token mismatch, `502` when all models fail.
 - **Language:** `EventBrief.language` drives copy; UI language is independent
   ([i18n.ts](../web/src/i18n.ts)).
-- **Observability:** gateway log lines + `/api/metrics` counters (NFR-6).
+- **Observability:** gateway log lines + `/api/metrics` counters (NFR-6),
+  including the share-loop pair — a guest-page view beacon and a
+  `direct`/`guest` source on generate — that produces the
+  [07-monetization](07-monetization.md) §5.1 datum
+  ([adr-013](decisions/adr-013-share-loop-instrumentation.md)). Global counters
+  only: neither the store nor any host surface learns per-invitation reach.
 
 ## 8. Deployment (current)
 

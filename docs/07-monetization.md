@@ -1,12 +1,20 @@
 # 07 — Monetization investigation
 
-**Status:** investigation, not a decision · **Date:** 2026-07-24
+**Status:** investigation, not a decision · **Date:** 2026-07-24 · §5.1 built
+2026-07-27 ([adr-013](decisions/adr-013-share-loop-instrumentation.md)),
+recorded here 2026-07-31
 
-Nothing here is built or committed to. This doc records the unit economics,
-the constraint they run into, and what the existing architecture forces about
-any pricing model — so that the eventual ADR argues from measured numbers
-rather than from a blank page. It expands the "Business model direction (not
-yet built)" note in [01-vision.md](01-vision.md).
+No pricing model here is built or committed to, and none is nearer to being
+so. The one exception is §5.1's **prerequisite measurement**, which shipped —
+deliberately, because it is the only part of this document that can be built
+without deciding anything, and because it is capable of ending the commercial
+question rather than only advancing it.
+
+This doc records the unit economics, the constraint they run into, and what the
+existing architecture forces about any pricing model — so that the eventual ADR
+argues from measured numbers rather than from a blank page. It expands the
+"Business model direction (not yet built)" note in
+[01-vision.md](01-vision.md).
 
 ## 1. The question
 
@@ -102,17 +110,32 @@ re-litigated by a pricing model:
 
 ### 5.1 Instrument before pricing anything (prerequisite)
 
-Count unique views on `/i/:id`, add a "create your own" call to action on the
-guest page carrying a referral parameter, and attribute it in
-`recordGeneration`. Roughly two days of work, no payment surface, and it
-produces the gating datum:
+**Built** — [adr-013](decisions/adr-013-share-loop-instrumentation.md), shipped
+as FR-4.7 and FR-7.3–7.5. Unique views on `/i/:id` are counted by a guest-page
+beacon, the guest page carries one "create your own" call to action with a
+referral parameter, and `recordGeneration` attributes it. No payment surface
+was added. `GET /api/metrics` now reports the gating datum as
+`new_hosts_per_publish`:
 
 - **< ~0.3 new hosts per published invitation** — no pricing model rescues
   the economics; the honest conclusion is that this stays a non-commercial
   project.
 - **> ~0.7** — acquisition is effectively free and the model in §5.2 works.
 
-Everything below is conditional on this measurement.
+Everything below stays conditional on this measurement, and the measurement is
+not yet readable: the thresholds need published invitations that real guests
+open, and production has almost no traffic. Building the counter did not
+answer the question — it only made the question answerable.
+
+Two cautions when the number is eventually read. It is **deliberately
+imprecise**: a view is a browser that has not cleared storage, so the
+denominator's companion floats high and only the magnitude of the ratio means
+anything (adr-013 §2). And **the denominator moved** —
+[adr-014](decisions/adr-014-host-accounts.md) put a sign-in in front of
+publishing after this was instrumented, which changes publish counts for
+reasons unrelated to the share loop. That ADR froze a metrics baseline for
+exactly this; read the post-gate block, since the thresholds above were written
+against an ungated denominator.
 
 ### 5.2 One-time premium unlock per event — $2–3 (UA) / $7–9 (EN)
 
@@ -171,7 +194,8 @@ controls, and the store migration in §7.
 
 ## 8. Open questions
 
-1. New hosts per published invitation (§5.1) — unmeasured, gates everything.
+1. New hosts per published invitation (§5.1) — now **instrumented but not yet
+   answered**: the counter exists and needs traffic. Still gates everything.
 2. Willingness to pay at the §5.2 price points in UA vs EN markets —
    untested; the price range is anchored on competitors serving a
    higher-income, email-centric market.
