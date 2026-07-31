@@ -182,6 +182,9 @@ describe("publish gate", () => {
 
   describe("coming back from Google", () => {
     it("lands in `returning`, not back in `prompt`", () => {
+      // The draft is what the gate parked on the way out, so the real return
+      // trip always has one.
+      saveDraft({ invitation, source: "direct", published: null });
       const { result: hook } = renderHook(
         () => usePublishing(() => {}, { gated: true, signedIn: true, authReturn: "ok" }),
         { wrapper: at("/create?auth=ok") },
@@ -205,6 +208,19 @@ describe("publish gate", () => {
       expect(readManageToken(result.id)).toBe(result.manage_token);
       // The parked draft is spent, so a later ordinary visit finds nothing.
       expect(loadDraft()).toBeNull();
+    });
+
+    // `returning` promises a publish is in flight. With nothing parked there
+    // is none, and the sheet would sit on "Publishing…" forever. Reachable for
+    // real: a browser that refused the draft write (private-mode Safari), or
+    // arriving at /api/auth/google directly rather than through the gate.
+    it("shows nothing when there is no parked draft to resume", () => {
+      const { result: hook } = renderHook(
+        () => usePublishing(() => {}, { gated: true, signedIn: true, authReturn: "ok" }),
+        { wrapper: at("/create?auth=ok") },
+      );
+      // The host is signed in either way; the next Publish press just works.
+      expect(hook.current.gate).toBeNull();
     });
 
     it.each([
