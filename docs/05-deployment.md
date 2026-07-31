@@ -67,28 +67,45 @@ operator-key limits above stop being the ceiling.
 
 ## Custom domain
 
+**The domain is `invinto.app`**, registered and DNS-hosted at Cloudflare.
+
 Nothing in the app hardcodes the host — share URLs come from
 `window.location.origin` and OG meta/image URLs from the request's
-`Host`/`x-forwarded-proto` (trustProxy) — so a custom domain is pure
-platform config plus one env var:
+`Host`/`x-forwarded-proto` (trustProxy) — so a custom domain is platform config
+plus one env var. Two things about *this* domain and registrar are not
+optional, though; both are below.
 
-1. **Northflank**: service → *Networking* → *Domains* → add your domain
-   (e.g. `invito.example.com`) to the port-3001 public endpoint.
-2. **DNS**: at your registrar, create the **CNAME** record Northflank shows
-   for the domain (apex domains need ALIAS/ANAME or the platform's A
-   records). Wait for it to verify; Northflank then provisions and renews
-   the TLS certificate automatically.
-3. **`CANONICAL_HOST=invito.example.com`** (runtime env): requests hitting
-   the service on any other host — the old `*.code.run` endpoint in
-   particular — get a `301` (GET/HEAD; `308` otherwise) to the same path on
-   the canonical domain. Share links published before the switch keep
-   working, and messengers re-unfurl them from one origin. `/healthz` is
-   exempt so platform health checks pass on the internal address. Leave the
-   var unset until DNS + TLS verify — setting it early would redirect onto a
-   domain that doesn't resolve yet.
-4. Verify: `https://invito.example.com/healthz`, publish an invitation and
-   check the share link + `og:image` URL use the new domain, and confirm the
-   old `*.code.run/i/:id` link 301s.
+1. **Northflank**: service → *Networking* → *Domains* → add `invinto.app` to
+   the port-3001 public endpoint.
+2. **DNS at Cloudflare**: create the record Northflank shows. Cloudflare
+   flattens CNAMEs at the apex, so `invinto.app` itself can be a CNAME — no
+   ALIAS/A-record juggling. **Leave the record DNS-only (grey cloud) until
+   Northflank has verified the domain and issued its certificate**; a proxied
+   record can intercept the ACME challenge and the certificate never arrives.
+3. **If you re-enable the Cloudflare proxy afterwards, set SSL/TLS mode to
+   `Full (strict)`.** This is not a preference. `trustProxy` is on, so
+   `request.protocol` follows `x-forwarded-proto`, and Cloudflare's *Flexible*
+   mode talks plain HTTP to the origin — which would make the server emit
+   `og:image` as an `http://` URL. On `.app` that URL is unfetchable (see
+   below), so messenger previews would silently stop unfurling: FR-3.5 gone,
+   with nothing in the logs. Flexible also drops the `Secure` flag from the
+   session cookie. `Full (strict)` keeps `x-forwarded-proto: https` and both
+   stay correct.
+4. **`.app` is HSTS-preloaded as a whole TLD**, by Google, in every major
+   browser. Every connection to `invinto.app` is HTTPS or it does not happen —
+   there is no http to redirect *from*. That is a good default and it costs
+   nothing here, but it does mean an accidental `http://` URL is a hard failure
+   rather than a redirect, which is exactly why step 3 matters.
+5. **`CANONICAL_HOST=invinto.app`** (runtime env): requests reaching the service
+   on any other host — the `*.code.run` endpoint in particular — get a `301`
+   (GET/HEAD; `308` otherwise) to the same path on the canonical domain. Share
+   links published before the switch keep working, and messengers re-unfurl
+   them from one origin. `/healthz` is exempt so platform health checks pass on
+   the internal address. Leave the var unset until DNS + TLS verify — setting it
+   early would redirect onto a domain that does not resolve yet.
+6. Verify: `https://invinto.app/healthz`, publish an invitation and check the
+   share link + `og:image` URL both use `https://invinto.app`, and confirm the
+   old `*.code.run/i/:id` link `301`s.
 
 ## Host sign-in with Google (adr-014)
 
@@ -120,11 +137,18 @@ storage is needed.
    platform-preview domain on that list — `*.vercel.app`, `*.ngrok-free.app`
    and friends.
 
-   So the order of operations is: **domain first, then sign-in**. Set up the
-   custom domain above, confirm `https://<your-domain>/healthz` answers, and
-   only then create the OAuth client. Until then the deployment runs in the §7
-   unconfigured mode, which is fully functional — publishing simply stays
-   anonymous.
+   So the order of operations is: **domain first, then sign-in**. Set up
+   `invinto.app` above, confirm `https://invinto.app/healthz` answers, and only
+   then create the OAuth client — against the canonical host:
+
+   ```
+   https://invinto.app/api/auth/google/callback
+   ```
+
+   `invinto.app` is a valid top private domain (`app` is a plain TLD on the
+   Public Suffix List), so Google accepts it. Until the domain is live the
+   deployment runs in the §7 unconfigured mode, which is fully functional —
+   publishing simply stays anonymous.
 
    **Local development needs no domain.** Google exempts `localhost`, from both
    the HTTPS requirement and this one, so the whole flow can be exercised
@@ -143,7 +167,7 @@ storage is needed.
 
 3. **Environment**:
    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-   - `GOOGLE_REDIRECT_URI=https://<your-host>/api/auth/google/callback` —
+   - `GOOGLE_REDIRECT_URI=https://invinto.app/api/auth/google/callback` —
      set it explicitly in production. Unset, the server derives the URI from
      the incoming request, which is what makes `localhost` work with no second
      registration but is the wrong host behind `CANONICAL_HOST`.
