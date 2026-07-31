@@ -62,9 +62,17 @@ export function usePublishing(
   const [manageCopied, setManageCopied] = useState(false);
   // Seeded from the return trip: a host coming back from Google lands straight
   // in `returning` (or in the outcome they chose), never back in `prompt`.
-  const [gate, setGate] = useState<GateState | null>(() =>
-    authReturn === "ok" ? "returning" : authReturn,
-  );
+  const [gate, setGate] = useState<GateState | null>(() => {
+    if (authReturn !== "ok") return authReturn;
+    // ...unless there is nothing parked to resume. `returning` promises a
+    // publish is in flight, and with no draft none is, so the sheet would sit
+    // on "Publishing…" forever. Two ways to get here and both are real: a
+    // browser that refused the draft write (private-mode Safari — the very
+    // case the memory layer exists for), and arriving at /api/auth/google
+    // directly rather than through the gate. Showing nothing is right: the
+    // host is signed in, and the next Publish press just works.
+    return hasDraft() ? "returning" : null;
+  });
   const [manageShown, setManageShown] = useState(false);
 
   const finish = useCallback((result: PublishResult, invitation: Invitation) => {
