@@ -6,7 +6,8 @@ client-routing iterations shipped, 2026-07-25 when batch response counts
 (adr-012) shipped as FR-5.7, 2026-07-27 when share-loop instrumentation
 (adr-013) was planned, 2026-07-30 when host accounts (adr-014) shipped as
 FR-11, and 2026-07-31 when the share loop got the docs pass it had been owed
-since its code landed. This doc plans the **next** iteration; when an item
+since its code landed and RSVP notifications (adr-015) were planned. This doc
+plans the **next** iteration; when an item
 ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -285,31 +286,71 @@ be persisted before any of the UI worked: sign-in is a full-page navigation and
 the invitation lived only in memory, so a host would have returned from Google
 to an empty editor.
 
-## No iteration currently taken
+## Next iteration: notify the host when replies arrive
 
-Both the share loop and host accounts have shipped and are recorded, so nothing
-below is claimed. The doc's own convention is that this section names the next
-iteration; leaving it empty is deliberate rather than an oversight, because the
-two things that would choose it are outside the code.
+Settled in [ADR-015](decisions/adr-015-rsvp-notifications.md) (**proposed**) and
+planned as **FR-12**. Taken because
+[adr-014](decisions/adr-014-host-accounts.md) §8 named it the natural iteration
+after accounts and supplied the one thing it needs — a verified address and a
+durable per-user row — while deliberately building neither.
 
-The leading candidate is **notifying the host on a new RSVP** — the backlog
-entry below says why, and adr-014 §8 already supplies the verified address it
-needs. The other candidate is **doing nothing yet**: adr-013 shipped the
-measurement that [07-monetization.md](07-monetization.md) §5.1 gates every
-commercial option on, and that measurement now needs published invitations real
-guests open. Taking another feature iteration does not produce that traffic,
-and the numbers are still small enough that reading them would be
-overinterpreting noise.
+The gap it closes is not reachability, which
+[adr-010](decisions/adr-010-host-manage-link.md) already fixed. It is latency:
+a host who checks the dashboard once a week learns about their replies on a
+schedule unrelated to when guests actually sent them, and for an event with a
+catering deadline that is the difference between the dashboard being useful and
+being a record.
+
+What the ADR settles:
+
+1. **An account is the eligibility rule.** The address is the Google-verified
+   one adr-014 already stores; there is no second address and no verification
+   flow of our own. An anonymously published invitation notifies nobody,
+   silently — and with `PUBLISH_REQUIRES_ACCOUNT=0` that is most of them.
+2. **The email carries no credential.** Links point at bare `/manage/:id` and
+   the keyring supplies the token after sign-in (FR-11.3). A forwarded
+   notification or a breached mailbox grants nothing — and this was not
+   buildable before accounts, when a useful link had to carry `#t=`.
+3. **It says replies arrived, not who replied** — title, count, link. Sending
+   guest names to a third-party mail provider on every reply is a bigger step
+   than adr-013 §2 declined to take for a metric, and it buys the host one tap.
+4. **Rate-limited per invitation**, not queued and not debounced: first reply
+   immediately, then at most one per window, with the count from the
+   `countNewSince` the dashboard already uses (adr-012 §3). The whole state is
+   one SQLite column, so a restart costs nothing.
+5. **Sending never blocks or fails the RSVP** — dispatched after the response,
+   never awaited, failures logged and dropped. No retry queue: the next reply
+   after the window carries the full count, which is self-healing.
+6. **One provider, one function, plain `fetch`** — adr-007's finding applied
+   to a new dependency. Resend recommended, with the free-tier limits and the
+   Ukrainian-inbox behaviour flagged as the one claim that has to be verified
+   rather than reasoned about.
+7. **Default on, disclosed at publish, off per invitation**, with one-click
+   unsubscribe (RFC 8058) behind a row-key token — nothing signed, on adr-014's
+   no-session-secret precedent.
+
+Six PRs, the last of which is the docs pass — called out in the plan as not
+optional and not later, because adr-013's arrived an iteration late and this
+iteration also produces DNS records that exist in no other file.
+
+**The ADR is proposed rather than accepted, and its first revisit trigger
+questions the iteration itself.** adr-013 shipped the measurement
+[07-monetization.md](07-monetization.md) §5.1 gates every commercial option on,
+and that measurement needs published invitations real guests open — not another
+feature. Building for hosts who are not here yet is the failure mode this
+roadmap has flagged twice. The counter-argument is that a dashboard's usefulness
+is bounded by how often someone thinks to open it, and no amount of traffic
+fixes that. Worth settling before PR 1 rather than after PR 6.
 
 ## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.
-- **Notify the host on a new RSVP** — needs a transactional email sender and a
-  verified address. [adr-014](decisions/adr-014-host-accounts.md) §8 supplies
-  the address and leaves the sender to this item, which becomes the natural
-  iteration after it.
+- ~~**Notify the host on a new RSVP**~~ — taken as the next iteration; see
+  [adr-015](decisions/adr-015-rsvp-notifications.md) and the section above.
+  [adr-014](decisions/adr-014-host-accounts.md) §8 supplied the address and
+  left the sender to it.
 - **Per-guest edit tokens** so a guest can amend their own answer instead of
   re-submitting — real infrastructure for a rare case (adr-010 §5).
 - **SQLite (or similar) store** for *invitation records* — still only when
