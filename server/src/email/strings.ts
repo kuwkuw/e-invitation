@@ -1,4 +1,5 @@
-// Email copy, both languages (adr-015 §9).
+// Email copy, both languages (adr-015 §9), from the DS
+// `templates/rsvp-notifications` mockups.
 //
 // The first user-facing strings on the server that are not a prompt. NFR-5's
 // rule is that copy lives in one place per side — `web/src/i18n.ts` on the
@@ -21,35 +22,40 @@ export type PluralForms = [one: string, few: string, many: string];
 export interface EmailStrings {
   /** "N new replies", assembled with `pluralForm`. */
   replyForms: PluralForms;
-  /** `{count}` = the rendered "N new replies", `{title}` = invitation title. */
+  /** Count first, then the title: an inbox list truncates from the end, and
+   *  the count is the only thing that changes between messages. */
   subject: string;
+  /** Where to look. Count-independent on purpose — the count is already the
+   *  headline, and a lead that agreed with it in number would need its own
+   *  plural forms to avoid reading wrong at 1. */
   lead: string;
   cta: string;
-  /** Why this arrived. Answering it in the mail is what keeps the unsubscribe
-   *  from being the only explanation a host gets. */
+  /** Why this arrived. `{title}` is the invitation, quoted in the language's
+   *  own quotation marks. Answering it in the mail is what keeps the
+   *  unsubscribe from being the only explanation a host gets. */
   why: string;
   unsubscribe: string;
-  signature: string;
+  wordmark: string;
 }
 
 const STRINGS: Record<Language, EmailStrings> = {
   uk: {
     replyForms: ["нова відповідь", "нові відповіді", "нових відповідей"],
     subject: "{count} — {title}",
-    lead: "На запрошення «{title}» надійшло {count}.",
+    lead: "Гості почали відповідати. Повний список — на сторінці запрошення.",
     cta: "Переглянути відповіді",
-    why: "Ви отримали цей лист, бо опублікували це запрошення, увійшовши в акаунт.",
-    unsubscribe: "Вимкнути сповіщення для цього запрошення",
-    signature: "INVITO",
+    why: "Ви отримали цей лист, бо створили запрошення «{title}» в INVITO.",
+    unsubscribe: "Не надсилати листи про це запрошення",
+    wordmark: "INVITO",
   },
   en: {
     replyForms: ["new reply", "new replies", "new replies"],
     subject: "{count} — {title}",
-    lead: "Your invitation “{title}” has {count}.",
-    cta: "View the replies",
-    why: "You are getting this because you published this invitation while signed in.",
-    unsubscribe: "Turn off notifications for this invitation",
-    signature: "INVITO",
+    lead: "Guests have started replying. The full list is on your invitation page.",
+    cta: "See the replies",
+    why: "You're getting this because you created the invitation “{title}” on INVITO.",
+    unsubscribe: "Turn off emails for this invitation",
+    wordmark: "INVITO",
   },
 };
 
@@ -78,4 +84,11 @@ export function replyCount(n: number, strings: EmailStrings): string {
 
 export function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
+}
+
+/** The title above the count is composition, not prose — past two lines it
+ *  stops being a header. The footer keeps the untruncated title, where it sits
+ *  inside a sentence instead (DS NotifyEmail). */
+export function truncateTitle(title: string, max = 90): string {
+  return title.length <= max ? title : `${title.slice(0, max - 1).trimEnd()}…`;
 }

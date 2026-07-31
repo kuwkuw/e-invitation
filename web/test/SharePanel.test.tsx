@@ -139,9 +139,48 @@ describe("SharePanel reply notifications", () => {
   }
 
   it("says which address replies go to", () => {
-    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    expect(screen.getByText("We'll email host@example.com when replies come in.")).toBeTruthy();
+    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
+    // Split across elements so the address carries its own weight, so the
+    // sentence is read off the block rather than matched as one node.
+    expect(container.querySelector(".sp-notify-text")?.textContent).toBe(
+      "We'll email host@example.com when replies come in.",
+    );
     expect(screen.getByText(UI.en.auth.notifyTurnOff)).toBeTruthy();
+  });
+
+  // The address is a fact about where mail goes, not something to click.
+  it("sets the address apart without making it a link", () => {
+    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const email = container.querySelector(".sp-notify-email");
+    expect(email?.textContent).toBe("host@example.com");
+    expect(container.querySelector(".sp-notify-text a")).toBeNull();
+  });
+
+  // The off state is read from the glyph, so both lines can stay at exactly
+  // the same size, weight and colour (DS NotifyLine §3).
+  it("carries the state in the icon, not in the type", () => {
+    const on = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
+    const onText = on.container.querySelector(".sp-notify-text") as HTMLElement;
+    const onStrokes = on.container.querySelectorAll(".sp-notify-icon path").length;
+    cleanup();
+
+    const off = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
+    const offText = off.container.querySelector(".sp-notify-text") as HTMLElement;
+    const offStrokes = off.container.querySelectorAll(".sp-notify-icon path").length;
+
+    expect(offText.className).toBe(onText.className);
+    // The struck envelope adds the knockout plus the strike itself.
+    expect(offStrokes).toBeGreaterThan(onStrokes);
+  });
+
+  // A Ukrainian address does not break between letters; beside the text the
+  // action ended up hanging next to a three-line sentence.
+  it("puts the action on its own line, not beside the sentence", () => {
+    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const action = container.querySelector(".sp-notify-action");
+    expect(action).toBeTruthy();
+    expect(action?.contains(screen.getByText(UI.en.auth.notifyTurnOff))).toBe(true);
+    expect(container.querySelector(".sp-notify-row")?.contains(action as Node)).toBe(false);
   });
 
   it("says the opposite, and offers the opposite action, when off", () => {
@@ -188,9 +227,9 @@ describe("SharePanel reply notifications", () => {
   });
 
   it("carries the copy in Ukrainian too", () => {
-    renderNotify({ notifyEmail: "host@example.com", t: UI.uk });
-    expect(
-      screen.getByText("Ми напишемо на host@example.com, коли надійдуть відповіді."),
-    ).toBeTruthy();
+    const { container } = renderNotify({ notifyEmail: "host@example.com", t: UI.uk });
+    expect(container.querySelector(".sp-notify-text")?.textContent).toBe(
+      "Ми напишемо на host@example.com, коли надійдуть відповіді.",
+    );
   });
 });

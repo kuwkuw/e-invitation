@@ -38,6 +38,17 @@ function notification(overrides: Partial<Parameters<typeof renderReplyNotificati
   });
 }
 
+/** The renderer escapes host copy before it reaches markup, so an assertion
+ *  about "the title is in the HTML" has to escape the same way. */
+function escapeForTest(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -112,10 +123,67 @@ describe("reply notification", () => {
   });
 
   it("writes the body in the invitation's language", () => {
-    expect(notification({ language: "en", title: "My birthday" }).text).toContain(
-      "You are getting this because you published this invitation while signed in.",
+    // Asserted on the HTML: the text part wraps at 68 characters, so a whole
+    // sentence is not on one line there by construction.
+    expect(notification({ language: "en", title: "My birthday" }).html).toContain(
+      "You&#39;re getting this because you created the invitation “My birthday” on INVITO.",
     );
-    expect(notification().text).toContain("Ви отримали цей лист");
+    expect(notification().html).toContain("Ви отримали цей лист");
+    expect(notification({ language: "en", title: "My birthday" }).text).toContain(
+      "You're getting this",
+    );
+  });
+
+  // The count is the headline, not the lead: it is the only thing that changes
+  // between messages, so it is what the eye should catch (DS NotifyEmail).
+  it("leads with the count and headers with the title", () => {
+    const rendered = notification();
+    const countAt = rendered.html.indexOf("3 нові відповіді");
+    const titleAt = rendered.html.indexOf("Мій день народження");
+    expect(titleAt).toBeGreaterThan(-1);
+    expect(countAt).toBeGreaterThan(titleAt);
+    expect(rendered.html).toContain("font-size:27px");
+  });
+
+  // Past two lines the header stops being a header. The footer keeps the whole
+  // title, because there it sits inside a sentence.
+  it("truncates a long title in the header but not in the footer", () => {
+    const long = `${"Дуже довга назва події ".repeat(6)}кінець`;
+    const rendered = notification({ title: long });
+    expect(rendered.html).toContain("…");
+    expect(rendered.html).toContain(escapeForTest(long));
+    // The subject keeps the full title too — inbox lists truncate themselves.
+    expect(rendered.subject).toContain(long);
+  });
+
+  // Without these Apple Mail inverts bluntly instead of taking our palette.
+  it("declares both colour schemes and ships a dark palette", () => {
+    const html = notification().html;
+    expect(html).toContain('name="color-scheme" content="light dark"');
+    expect(html).toContain('name="supported-color-schemes" content="light dark"');
+    expect(html).toContain("prefers-color-scheme: dark");
+    // The accent lightens on dark: #b3592e drops under 4.5:1 against white.
+    expect(html).toContain("#c76a3c");
+  });
+
+  // Outlook ignores max-width and adds its own spacing without these.
+  it("sizes and resets every table the way mail clients need", () => {
+    const html = notification().html;
+    expect(html).toContain('width="520"');
+    expect(html).toContain('bgcolor="#b3592e"');
+    // The 1px rule is its own bgcolor cell — a CSS border-top is unreliable.
+    expect(html).toContain('bgcolor="#ece6dc" height="1"');
+    expect(html).not.toMatch(/<table(?![^>]*cellpadding="0")/);
+  });
+
+  it("wraps the text part and leaves URLs whole", () => {
+    const rendered = notification();
+    for (const line of rendered.text.split("\n")) {
+      if (line.startsWith("http")) continue;
+      expect(line.length).toBeLessThanOrEqual(68);
+    }
+    expect(rendered.text).toContain("\n--\n");
+    expect(rendered.text).toContain("https://invinto.app/manage/abc12345");
   });
 });
 
