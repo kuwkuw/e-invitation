@@ -77,7 +77,14 @@ export function registerOgRoutes(app: FastifyInstance): void {
     const spaShell = join(process.cwd(), "..", "web", "dist", "index.html");
     let html: string;
     if (existsSync(spaShell)) {
-      html = readFileSync(spaShell, "utf8").replace("</head>", `    ${meta}\n  </head>`);
+      // The replacement is a **function** on purpose. With a string,
+      // `String.replace` expands `$&`, `` $` ``, `$'` and `$1` inside it — and
+      // that expansion happens after escapeHtml has run, so a host who types
+      // `$&` as their invitation title (copy is directly editable, FR-2.1)
+      // would get the matched `</head>` injected into their own meta tag,
+      // closing the head early and mangling the card messengers unfurl. A
+      // replacer's return value is used verbatim.
+      html = readFileSync(spaShell, "utf8").replace("</head>", () => `    ${meta}\n  </head>`);
     } else {
       const invitation = latestVersion(record);
       html = `<!doctype html>

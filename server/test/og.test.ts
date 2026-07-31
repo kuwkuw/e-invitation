@@ -95,6 +95,31 @@ describe("og routes", () => {
     expect(page.body).toContain(`/api/invitations/${id}/og.png?v=1`);
   });
 
+  // Copy is directly editable (FR-2.1), so a title is host-controlled text.
+  // `String.replace` expands `$&` and friends inside a *string* replacement,
+  // and it does so after escapeHtml has run — so the escaping cannot save us.
+  // A title of `$&` used to inject the matched `</head>` into the host's own
+  // meta tag, closing the head early and mangling the card messengers unfurl.
+  it("does not let a $-sequence in the title rewrite the shell", async () => {
+    // Every sequence String.replace treats specially in a string replacement.
+    const title = "$& $` $' $1 $$";
+    const published = await app.inject({
+      method: "POST",
+      url: "/api/invitations/publish",
+      payload: { invitation: { ...invitation, copy: { ...invitation.copy, title } } },
+    });
+    const { id } = published.json();
+
+    const page = await app.inject({ method: "GET", url: `/i/${id}` });
+    expect(page.statusCode).toBe(200);
+    // The property under test: the head is closed exactly once. With a string
+    // replacement `$&` expanded to the matched `</head>`, closing it twice.
+    expect(page.body.match(/<\/head>/g)).toHaveLength(1);
+    // And the title reaches the tag intact — `&` HTML-escaped as it should be,
+    // every `$` sequence otherwise untouched.
+    expect(page.body).toContain(`og:title" content="$&amp; $\` $' $1 $$"`);
+  });
+
   it("404s for unknown invitations", async () => {
     const res = await app.inject({ method: "GET", url: "/i/nope-nope" });
     expect(res.statusCode).toBe(404);
