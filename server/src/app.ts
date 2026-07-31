@@ -7,6 +7,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { pruneExpiredSessions } from "./accounts.js";
 import { publishRequiresAccount, signInAvailable } from "./auth/google.js";
 import { pruneExpiredOauthStates } from "./auth/state.js";
+import { emailConfigured } from "./email/send.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
 import { markBaseline } from "./metrics.js";
@@ -97,6 +98,11 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     llm: llmInfo,
     guardrails: guardrailsSnapshot(),
     auth: { google: authConfigured, publish_gate: publishGate },
+    // adr-015 §8: mail-unconfigured is a supported mode, not a failure — the
+    // server boots and every other feature is unchanged. Read per request
+    // rather than at boot like `auth`, because it is one env lookup and an
+    // operator adding the key wants /healthz to agree without a restart.
+    notifications: { configured: emailConfigured() },
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
