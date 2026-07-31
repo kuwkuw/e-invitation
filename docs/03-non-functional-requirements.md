@@ -87,6 +87,17 @@
 - Browser-local host state (`inv-manage:<id>`, `inv-manage-seen:<id>`,
   `inv-invitations`) never leaves the device. The invitations index holds
   titles and dates only — no tokens.
+- **The guest side stores one flag and no identifier.** `inv-viewed:<id>`
+  suppresses repeat view beacons (FR-7.5) and holds no secret — the id is
+  already in the URL the guest followed. The precise alternative, a server-side
+  set of hashed IPs per invitation, was rejected: it would store a derivative
+  of a network identifier against a specific social event, for every guest,
+  and would be the first thing recorded about a guest who never chose to answer
+  ([adr-013](decisions/adr-013-share-loop-instrumentation.md) §2). The
+  server's own dedupe is an in-process `(ip, invitation)` set that drops at UTC
+  midnight — never persisted, never written to a record. No cookies, no
+  third-party analytics, no fingerprinting: the whole measurement is two
+  integers.
 - Invitation IDs are 8 random bytes base64url; the `InvitationId` regex doubles
   as a path-traversal guard for the file store — keep it strict.
 - All request bodies are zod-validated with length caps before any processing;
@@ -107,10 +118,21 @@
 - One structured JSON log line per LLM request: task, model, fallback flag,
   ok/error, latency, tokens, estimated cost
   ([llm/gateway.ts](../server/src/llm/gateway.ts)).
-- Product counters (generations, regenerations, publishes, RSVPs,
-  regenerate-rate) at `GET /api/metrics`.
+- Product counters (generations, regenerations, backgrounds, publishes, RSVPs,
+  guest-page views, referred generations, and the derived regenerate-rate,
+  publish-rate, `views_per_publish` and `new_hosts_per_publish`) at
+  `GET /api/metrics` (FR-7).
 - The regenerate-rate is the primary quality KPI (see
   [01-vision.md](01-vision.md)).
+- `new_hosts_per_publish` is the primary **commercial** KPI —
+  [07-monetization.md](07-monetization.md) §5.1 gates every option on it. It is
+  collected by the share-loop instrumentation in
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md): a guest-page
+  beacon and a `direct`/`guest` enum on the generate request, both global, both
+  deliberately imprecise. Read the magnitude of the ratio, never the counts.
+- **Measurement never degrades the thing measured.** The view beacon returns
+  `204` with no body and its failure is silence: a guest must never see a
+  spinner, a message or a delay because a counter did or did not record.
 
 ## NFR-7 Scale assumptions (explicit)
 

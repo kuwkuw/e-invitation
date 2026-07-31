@@ -1,9 +1,9 @@
 # ADR-013 — Share-loop instrumentation
 
-**Status:** proposed · **Date:** 2026-07 · Prerequisite for
-[07-monetization.md](../07-monetization.md) §5.1; extends FR-4 and FR-7.
-Guest-side data handling follows NFR-4; the token model is unchanged from
-[adr-005](adr-005-capability-tokens.md).
+**Status:** accepted · **Date:** 2026-07 · Prerequisite for
+[07-monetization.md](../07-monetization.md) §5.1; lands as **FR-4.7** and
+**FR-7.3–7.4**. Guest-side data handling follows NFR-4; the token model is
+unchanged from [adr-005](adr-005-capability-tokens.md).
 
 ## Context
 
@@ -273,3 +273,44 @@ Five PRs, each independently mergeable, in order:
 Then leave it alone and let it collect. §5.1's thresholds need published
 invitations that real guests open; the number means nothing until production
 has traffic, and production currently has almost none.
+
+## Notes from implementation
+
+- **The docs pass came an iteration late.** PRs 1–4 landed as planned, and then
+  [adr-014](adr-014-host-accounts.md) was taken and shipped before PR 5, so the
+  counters ran unrecorded for an iteration — FR-4.7 and FR-7.3–7.4 exist as of
+  this pass, not as of the code. Worth stating because "leave it alone and let
+  it collect" is only a safe instruction while something says what is being
+  collected.
+- **The publish gate now sits inside this ADR's denominator.** Both derived
+  rates divide by `publishes`, and adr-014 §2 put a sign-in in front of exactly
+  that event. That ADR froze a metrics baseline (`markBaseline`) for this
+  reason, and `rates()` computes lifetime, pre-gate and post-gate through one
+  function — so `new_hosts_per_publish` stays readable across the boundary, but
+  §5.1's 0.3/0.7 thresholds were written against an ungated denominator and the
+  post-gate block is the one to read them against.
+- **The `ip:id` set drops at UTC midnight** rather than living for the process
+  lifetime as §6 said. A set that only ever grows is a leak in precisely the
+  scenario this iteration exists to bring about, and the daily drop keeps the
+  property that actually matters — the same reader is not counted twice in one
+  sitting. It matches the day-keyed bound the adr-008 guardrails already use.
+- **The browser flag is written before the request, not after it.** A
+  re-invoked effect cannot then count twice. This trades a lost view on a
+  failed request for never inventing one, which is the right way round: §2
+  already admits the number floats high, and a mechanism that added to that
+  would compound the one bias the measurement concedes.
+- **Blocked storage degrades to the server's dedupe.** `hasBeenViewed` returns
+  false when `localStorage` throws (private-mode Safari), so the view may be
+  counted again on a later visit — a page that renders matters more than a
+  counter that is exactly right, and the per-day `ip:id` set is the backstop.
+- **The call to action hides the wordmark from its accessible name.** The
+  `INVITO` span is `aria-hidden`, so the link reads as "create your own
+  invitation" rather than "INVITO create your own invitation" — the wordmark is
+  there to be seen, and the link is there to be an action.
+- **`?ref` parsing is deliberately incurious**: anything other than the one
+  known value is `direct`, and stripping preserves every other query parameter.
+  The hook owns `ref` and nothing else.
+- **"Nothing is added to the bundle" was half right.** No dependency was added,
+  as Consequences said — but the CTA, the beacon hook and the referral hook are
+  themselves about **2 kB gzipped**, now recorded under NFR-1. The rule that
+  cost is measured and written down applies to code, not only to dependencies.
