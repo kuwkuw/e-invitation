@@ -216,17 +216,42 @@ The swap cost is one module either way, which is the point of §6.
 - **Disclosed where it is caused.** The share panel says, in one line, that
   replies will be emailed to the signed-in address, with the off switch beside
   it. The host learns this at publish, not from the first email.
-- **Per invitation**, as adr-014 §8 specified. A `notification_prefs` row per
-  `(user_id, invitation_id)` carries `enabled`, `last_notified_at` and an
-  `unsub_token`. The row is **a deviation from the default plus send
-  bookkeeping, not a copy of the default**: no row means enabled and never
-  notified, and rows appear when a host changes the setting or when the first
-  notification is sent. That is what makes "default on" an actual default —
-  a value stamped into every publish would have to be migrated if the default
-  ever changed, and it would put a write on the publish path for an invitation
-  that may never receive a reply. It also keeps the dependency pointing one
-  way: publishing creates no notification state, so `linkInvitation` and the
-  account layer need no notion that this feature exists.
+- **Per account, not per invitation** — reversing what adr-014 §8 assumed, and
+  the one place the design changed after the mockups. One-click unsubscribe
+  (RFC 8058) is presented by every mail client as *"stop sending me this kind
+  of mail"*. Honouring that for a single event leaves a host who organizes
+  three still receiving mail about the other two, and their second click is the
+  **spam** button — which costs sender reputation for everything the product
+  sends, including the share links guests unfurl. A preference narrower than
+  the promise the button makes is not a smaller feature, it is a broken one.
+
+  Per-event control is deferred rather than rejected: it is a real want for a
+  host running several events at once, and the revisit trigger below is what
+  brings it back. Nothing here forecloses it — the table gains an
+  `invitation_id` and the token gains a scope when it arrives.
+
+- **Two tables, because the preference and the window have different
+  lifetimes.** `notification_prefs` is keyed by `user_id` and carries `enabled`
+  and the `unsub_token`; `notification_sends` is keyed by
+  `(user_id, invitation_id)` and carries `last_notified_at`, because §4's
+  window is per invitation — a host with two busy events should hear about
+  each rather than have one silence the other. Splitting them also means
+  unsubscribing and resubscribing cannot reset every window.
+
+  A prefs row is **a deviation from the default, not a copy of it**: no row
+  means enabled, and rows appear when a host changes the setting or when the
+  first notification is sent. That is what makes "default on" an actual default
+  — a value stamped into every account would have to be migrated if the default
+  ever changed. It also keeps the dependency pointing one way: publishing
+  creates no notification state, so `linkInvitation` and the account layer need
+  no notion that this feature exists.
+
+- **The copy says what the switch does.** In the share panel the action reads
+  "Turn off all emails", not "Turn off", because it is pressed from one event's
+  panel and takes effect on all of them; in the email footer the link reads
+  "turn these emails off" rather than naming the invitation. A control whose
+  scope is discovered after pressing it is the same defect as the one this
+  section exists to avoid, moved one screen earlier.
 - **One-click unsubscribe.** `GET|POST /api/notifications/unsubscribe/:token`
   sets `enabled = 0`, plus `List-Unsubscribe` and `List-Unsubscribe-Post`
   headers (RFC 8058) so a mail client can do it without opening a page.
@@ -439,6 +464,14 @@ PR 6 are operational state that exists nowhere else.
   publishing enough for a notification to matter, the right move is to say so
   and stop — the rejected alternative above is real, and this ADR is proposed
   rather than accepted for that reason.
+- **A host asks to silence one event without silencing the rest** — most
+  likely someone running several at once, where one has gone quiet and another
+  has not. This is the deferred half of §7 and the most probable of these
+  triggers to fire. It arrives as an `invitation_id` on the prefs row and a
+  scope on the token; what it must **not** do is narrow what
+  `List-Unsubscribe` points at, which stays account-wide whatever else is
+  added, because that header answers to the mail client's promise rather than
+  to ours.
 - **A host asks for the guest's name in the email.** Reopens §3, with the
   guest-side disclosure that would then be owed.
 - **A host asks to be notified without a Google account.** Reopens §1 and puts

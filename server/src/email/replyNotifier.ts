@@ -95,9 +95,9 @@ async function notifyOne(
   baseUrl: string,
 ): Promise<void> {
   // The row is created here rather than at publish (§7): a token exists only
-  // for a pair that is actually being mailed. `ensurePref` never re-enables,
-  // so touching the row cannot undo an unsubscribe.
-  const pref = ensurePref(userId, record.id);
+  // for an account that is actually being mailed. `ensurePref` never
+  // re-enables, so touching the row cannot undo an unsubscribe.
+  const pref = ensurePref(userId);
 
   const invitation = record.versions[record.versions.length - 1];
   if (!invitation) return;

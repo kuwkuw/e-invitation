@@ -6,11 +6,11 @@
 // `localStorage` if it had never cleared it, and the client proceeds down the
 // paths it already had.
 
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { deleteUser, listKeyring } from "../accounts.js";
 import { clearSessionCookie, currentUser, originAllowed } from "../auth/session.js";
 import { getPref, setNotificationsEnabled } from "../notifications.js";
-import { InvitationId, type KeyringEntry, NotificationPrefRequest } from "../schemas.js";
+import { type KeyringEntry, NotificationPrefRequest } from "../schemas.js";
 import { getRecord } from "../store.js";
 
 export function registerAccountRoutes(app: FastifyInstance): void {
@@ -69,30 +69,30 @@ export function registerAccountRoutes(app: FastifyInstance): void {
     return { deleted: true, invitations_retained: retained };
   });
 
-  // Reply notifications for one of this account's invitations (adr-015 §7).
+  // Reply notifications for this account (adr-015 §7). Not per invitation:
+  // one-click unsubscribe is presented by mail clients as "stop sending me
+  // this kind of mail", and a host who clicks it and keeps receiving mail
+  // about their other events reports the next one as spam.
   //
   // Session-authorized rather than manage-token-authorized, and that is the
   // one place this feature departs from adr-014 §1's rule that the token is
-  // the authority: the preference belongs to an *account* — it is a property
-  // of "where do we mail this person" — and the manage token identifies an
-  // invitation, not a person. Two accounts holding the same invitation
-  // (FR-11.4) have two independent preferences and one shared token, so the
-  // token cannot name which one to change.
+  // the authority: the preference is a property of "where do we mail this
+  // person", and the manage token identifies an invitation, not a person.
   //
-  // Nothing here touches the invitation, its RSVPs or its manage token, so
-  // this grants no access the session did not already have.
-  app.get("/api/account/notifications/:id", async (request, reply) => {
-    const held = heldInvitation(request);
-    if ("error" in held) return reply.code(held.code).send({ error: held.error });
-    // Absent row means enabled and never notified — the default is the
-    // absence, not a stored value (adr-015 §7).
-    return { enabled: getPref(held.userId, held.id)?.enabled ?? true };
+  // Nothing here touches an invitation, its RSVPs or its manage token, so this
+  // grants no access the session did not already have.
+  app.get("/api/account/notifications", async (request, reply) => {
+    const user = currentUser(request);
+    if (!user) return reply.code(401).send({ error: "Sign in to continue." });
+    // Absent row means enabled — the default is the absence, not a stored
+    // value (adr-015 §7).
+    return { enabled: getPref(user.id)?.enabled ?? true };
   });
 
-  app.put("/api/account/notifications/:id", async (request, reply) => {
+  app.put("/api/account/notifications", async (request, reply) => {
     if (!originAllowed(request)) return reply.code(403).send({ error: "Cross-origin request." });
-    const held = heldInvitation(request);
-    if ("error" in held) return reply.code(held.code).send({ error: held.error });
+    const user = currentUser(request);
+    if (!user) return reply.code(401).send({ error: "Sign in to continue." });
 
     let body: NotificationPrefRequest;
     try {
@@ -100,27 +100,6 @@ export function registerAccountRoutes(app: FastifyInstance): void {
     } catch {
       return reply.code(400).send({ error: "Expected { enabled: boolean }." });
     }
-    return { enabled: setNotificationsEnabled(held.userId, held.id, body.enabled).enabled };
+    return { enabled: setNotificationsEnabled(user.id, body.enabled).enabled };
   });
-}
-
-/** The signed-in account and a validated invitation id it actually holds.
- *
- *  The keyring check is what stops a session minting preference rows for
- *  invitations it has nothing to do with. It cannot change another host's
- *  preference either way — rows are keyed per (user, invitation) — so this
- *  bounds junk rather than closing a hole. */
-function heldInvitation(
-  request: FastifyRequest,
-): { userId: string; id: string } | { code: number; error: string } {
-  const user = currentUser(request);
-  if (!user) return { code: 401, error: "Sign in to continue." };
-
-  const id = InvitationId.safeParse((request.params as { id?: string }).id);
-  if (!id.success) return { code: 404, error: "Invitation not found." };
-
-  const holds = listKeyring(user.id).some((entry) => entry.invitation_id === id.data);
-  if (!holds) return { code: 404, error: "Invitation not found." };
-
-  return { userId: user.id, id: id.data };
 }

@@ -10,6 +10,7 @@ import {
   disableByUnsubToken,
   ensurePref,
   getPref,
+  lastNotifiedAt,
   markNotified,
   notificationTargets,
   setNotificationsEnabled,
@@ -111,7 +112,7 @@ describe("notification preferences", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
 
-      expect(getPref(user.id, "inv12345")).toBeNull();
+      expect(getPref(user.id)).toBeNull();
       expect(notificationTargets("inv12345")).toEqual([
         {
           user_id: user.id,
@@ -127,17 +128,19 @@ describe("notification preferences", () => {
   describe("ensurePref", () => {
     it("creates an enabled row with an unsubscribe token", () => {
       const { user } = signIn();
-      const pref = ensurePref(user.id, "inv12345");
+      const pref = ensurePref(user.id);
 
       expect(pref.enabled).toBe(true);
-      expect(pref.last_notified_at).toBeNull();
       expect(pref.unsub_token).toMatch(/^[\w-]{20,}$/);
+      // The send bookkeeping lives elsewhere: this row is the account's
+      // answer, not a record of what it has been told.
+      expect(lastNotifiedAt(user.id, "inv12345")).toBeNull();
     });
 
     it("is idempotent and keeps the original token", () => {
       const { user } = signIn();
-      const first = ensurePref(user.id, "inv12345");
-      const again = ensurePref(user.id, "inv12345");
+      const first = ensurePref(user.id);
+      const again = ensurePref(user.id);
 
       expect(again).toEqual(first);
       const rows = getDb().prepare("SELECT COUNT(*) AS n FROM notification_prefs").get() as {
@@ -150,16 +153,22 @@ describe("notification preferences", () => {
     // re-enabled by the send path touching the row.
     it("never re-enables a preference the host turned off", () => {
       const { user } = signIn();
-      setNotificationsEnabled(user.id, "inv12345", false);
+      setNotificationsEnabled(user.id, false);
 
-      expect(ensurePref(user.id, "inv12345").enabled).toBe(false);
+      expect(ensurePref(user.id).enabled).toBe(false);
     });
 
-    it("mints a distinct token per (user, invitation) pair", () => {
-      const { user } = signIn();
-      const one = ensurePref(user.id, "inv11111");
-      const two = ensurePref(user.id, "inv22222");
-      expect(one.unsub_token).not.toBe(two.unsub_token);
+    // One token per account, not per event: it is the credential behind a
+    // mail client's unsubscribe button, and that button promises to stop the
+    // sender rather than one of their messages.
+    it("mints one token per account, whatever it is asked about", () => {
+      const first = signIn("google-sub-1");
+      const second = signIn("google-sub-2");
+
+      expect(ensurePref(first.user.id).unsub_token).toBe(ensurePref(first.user.id).unsub_token);
+      expect(ensurePref(first.user.id).unsub_token).not.toBe(
+        ensurePref(second.user.id).unsub_token,
+      );
     });
   });
 
@@ -168,18 +177,36 @@ describe("notification preferences", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
 
-      setNotificationsEnabled(user.id, "inv12345", false);
+      setNotificationsEnabled(user.id, false);
       expect(notificationTargets("inv12345")).toEqual([]);
 
-      setNotificationsEnabled(user.id, "inv12345", true);
+      setNotificationsEnabled(user.id, true);
       expect(notificationTargets("inv12345")).toHaveLength(1);
+    });
+
+    // The whole point of the account-level switch: off means off everywhere,
+    // because that is what the host was promised when they turned it off.
+    it("covers every invitation the account holds, and later ones too", () => {
+      const { user } = signIn();
+      linkInvitation(user.id, "inv11111");
+      linkInvitation(user.id, "inv22222");
+
+      setNotificationsEnabled(user.id, false);
+
+      expect(notificationTargets("inv11111")).toEqual([]);
+      expect(notificationTargets("inv22222")).toEqual([]);
+
+      // An invitation published after the host opted out is covered without
+      // anyone having to remember to write a row for it.
+      linkInvitation(user.id, "inv33333");
+      expect(notificationTargets("inv33333")).toEqual([]);
     });
 
     it("creates the row when turning off with none present", () => {
       const { user } = signIn();
-      const pref = setNotificationsEnabled(user.id, "inv12345", false);
+      const pref = setNotificationsEnabled(user.id, false);
       expect(pref.enabled).toBe(false);
-      expect(getPref(user.id, "inv12345")?.enabled).toBe(false);
+      expect(getPref(user.id)?.enabled).toBe(false);
     });
   });
 
@@ -190,35 +217,78 @@ describe("notification preferences", () => {
 
       markNotified(user.id, "inv12345", "2026-07-31T10:00:00.000Z");
 
-      expect(getPref(user.id, "inv12345")?.last_notified_at).toBe("2026-07-31T10:00:00.000Z");
+      expect(lastNotifiedAt(user.id, "inv12345")).toBe("2026-07-31T10:00:00.000Z");
       expect(notificationTargets("inv12345")[0].last_notified_at).toBe("2026-07-31T10:00:00.000Z");
     });
 
     it("creates the row when there is none, so the sender needs one call", () => {
       const { user } = signIn();
       markNotified(user.id, "inv12345");
-      expect(getPref(user.id, "inv12345")?.last_notified_at).not.toBeNull();
+      expect(lastNotifiedAt(user.id, "inv12345")).not.toBeNull();
+    });
+
+    // The window is per invitation even though the preference is not: a host
+    // with two busy events should hear about each, not have one silence the
+    // other.
+    it("keeps a separate window per invitation", () => {
+      const { user } = signIn();
+      linkInvitation(user.id, "inv11111");
+      linkInvitation(user.id, "inv22222");
+
+      markNotified(user.id, "inv11111", "2026-07-31T10:00:00.000Z");
+
+      expect(notificationTargets("inv11111")[0].last_notified_at).toBe("2026-07-31T10:00:00.000Z");
+      expect(notificationTargets("inv22222")[0].last_notified_at).toBeNull();
+    });
+
+    // Opting out and back in must not look like "you have already been told"
+    // for every event the account holds.
+    it("survives an unsubscribe and resubscribe without resetting", () => {
+      const { user } = signIn();
+      linkInvitation(user.id, "inv12345");
+      markNotified(user.id, "inv12345", "2026-07-31T10:00:00.000Z");
+
+      setNotificationsEnabled(user.id, false);
+      setNotificationsEnabled(user.id, true);
+
+      expect(lastNotifiedAt(user.id, "inv12345")).toBe("2026-07-31T10:00:00.000Z");
     });
 
     it("leaves a disabled host disabled", () => {
       const { user } = signIn();
-      setNotificationsEnabled(user.id, "inv12345", false);
+      setNotificationsEnabled(user.id, false);
       markNotified(user.id, "inv12345");
       expect(notificationTargets("inv12345")).toEqual([]);
     });
   });
 
   describe("unsubscribe by token", () => {
-    it("disables exactly the pair the token names", () => {
+    // What a mail client's unsubscribe button promises: the sender stops, not
+    // one message. Honouring it for a single event is what earns the second
+    // click on "Spam" — and that costs sender reputation for everything the
+    // product sends, guests' share links included.
+    it("stops every invitation the account holds, not just one", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv11111");
       linkInvitation(user.id, "inv22222");
-      const pref = ensurePref(user.id, "inv11111");
+      const pref = ensurePref(user.id);
 
       expect(disableByUnsubToken(pref.unsub_token)).toBe(true);
       expect(notificationTargets("inv11111")).toEqual([]);
-      // The host's other event is untouched — unsubscribing is per invitation.
-      expect(notificationTargets("inv22222")).toHaveLength(1);
+      expect(notificationTargets("inv22222")).toEqual([]);
+    });
+
+    it("stops only the account the token names", () => {
+      const first = signIn("google-sub-1");
+      const second = signIn("google-sub-2");
+      linkInvitation(first.user.id, "inv12345");
+      linkInvitation(second.user.id, "inv12345");
+
+      disableByUnsubToken(ensurePref(first.user.id).unsub_token);
+
+      const left = notificationTargets("inv12345");
+      expect(left).toHaveLength(1);
+      expect(left[0].user_id).toBe(second.user.id);
     });
 
     it("reports an unknown token without changing anything", () => {
@@ -234,7 +304,7 @@ describe("notification preferences", () => {
     it("leaves the keyring and the published record alone", async () => {
       const { user, cookies } = signIn();
       const published = await publish("Мій день народження", cookies);
-      const pref = ensurePref(user.id, published.id);
+      const pref = ensurePref(user.id);
 
       disableByUnsubToken(pref.unsub_token);
 
@@ -257,7 +327,7 @@ describe("notification preferences", () => {
 
       expect(notificationTargets("inv12345")).toHaveLength(2);
 
-      setNotificationsEnabled(first.user.id, "inv12345", false);
+      setNotificationsEnabled(first.user.id, false);
       const left = notificationTargets("inv12345");
       expect(left).toHaveLength(1);
       expect(left[0].user_id).toBe(second.user.id);
@@ -269,7 +339,7 @@ describe("notification preferences", () => {
   describe("account deletion", () => {
     it("drops the preference rows by cascade", () => {
       const { user } = signIn();
-      ensurePref(user.id, "inv12345");
+      ensurePref(user.id);
 
       deleteUser(user.id);
 
@@ -282,7 +352,7 @@ describe("notification preferences", () => {
     it("keeps the invitation and its RSVPs after the account goes", async () => {
       const { user, cookies } = signIn();
       const published = await publish("Мій день народження", cookies);
-      ensurePref(user.id, published.id);
+      ensurePref(user.id);
       await app.inject({
         method: "POST",
         url: `/api/invitations/${published.id}/rsvp`,

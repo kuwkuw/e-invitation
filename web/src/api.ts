@@ -175,15 +175,16 @@ export async function signOut(): Promise<void> {
   await withSession<void>("/api/auth/signout", { method: "POST" });
 }
 
-/** Reply notifications for one of this account's invitations (adr-015 §7).
- *  Session-authorized: the preference belongs to the account, not to the
- *  invitation, so the manage token cannot name whose to change. */
-export function fetchNotificationPref(id: string): Promise<NotificationPref> {
-  return withSession<NotificationPref>(`/api/account/notifications/${id}`);
+/** Reply notifications for this account (adr-015 §7) — one switch covering
+ *  every invitation, because that is what a mail client's unsubscribe button
+ *  promises. Session-authorized: the preference belongs to the account, not to
+ *  an invitation, so a manage token could not name whose to change. */
+export function fetchNotificationPref(): Promise<NotificationPref> {
+  return withSession<NotificationPref>("/api/account/notifications");
 }
 
-export function setNotificationPref(id: string, enabled: boolean): Promise<NotificationPref> {
-  return withSession<NotificationPref>(`/api/account/notifications/${id}`, {
+export function setNotificationPref(enabled: boolean): Promise<NotificationPref> {
+  return withSession<NotificationPref>("/api/account/notifications", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ enabled }),

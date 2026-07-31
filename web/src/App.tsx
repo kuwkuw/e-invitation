@@ -52,12 +52,9 @@ export default function App() {
     authReturn: authReturn.result,
     authCode: authReturn.code,
   });
-  // Only asked for once there is something published to have a preference
-  // about, and only where the deployment can actually send mail (adr-015 §8).
-  const notify = useNotificationPref(
-    publishing.published?.id ?? null,
-    account.status === "signed_in" && account.notifications,
-  );
+  // Account-level, so it needs no invitation — only a signed-in host on a
+  // deployment that can actually send mail (adr-015 §7, §8).
+  const notify = useNotificationPref(account.status === "signed_in" && account.notifications);
 
   // Finish what the gate interrupted. Guarded by a ref rather than by the
   // gate state, because the publish flips that state itself and StrictMode

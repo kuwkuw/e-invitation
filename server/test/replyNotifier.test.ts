@@ -7,7 +7,7 @@ import { createSession, upsertUser } from "../src/accounts.js";
 import { buildApp } from "../src/app.js";
 import { closeDb } from "../src/db.js";
 import { notifyNewReplies } from "../src/email/replyNotifier.js";
-import { getPref, setNotificationsEnabled } from "../src/notifications.js";
+import { getPref, lastNotifiedAt, setNotificationsEnabled } from "../src/notifications.js";
 import type { Invitation } from "../src/schemas.js";
 import { addRsvp, getRecord, type PublishedRecord } from "../src/store.js";
 
@@ -134,7 +134,7 @@ describe("reply notifications", () => {
       const spy = stubSend();
       const { user, cookies } = signIn();
       let record = await publish(invitation("Мій день"), cookies);
-      setNotificationsEnabled(user.id, record.id, false);
+      setNotificationsEnabled(user.id, false);
       record = reply(record, "Іван", new Date().toISOString());
 
       await notifyNewReplies(record, BASE);
@@ -170,7 +170,7 @@ describe("reply notifications", () => {
       // are news. countNewSince returns 0 without a baseline, which is right
       // for the dashboard and wrong for a first email.
       expect(sentBodies(spy)[0].subject).toBe("2 нові відповіді — Мій день");
-      expect(getPref(user.id, record.id)?.last_notified_at).not.toBeNull();
+      expect(lastNotifiedAt(user.id, record.id)).not.toBeNull();
     });
 
     it("stays silent for a reply inside the window", async () => {
@@ -197,7 +197,7 @@ describe("reply notifications", () => {
 
       // Push the baseline back beyond the window rather than waiting an hour.
       const stamped = new Date(Date.now() - 90 * 60_000).toISOString();
-      setNotificationsEnabled(user.id, record.id, true);
+      setNotificationsEnabled(user.id, true);
       const { markNotified } = await import("../src/notifications.js");
       markNotified(user.id, record.id, stamped);
 
@@ -251,7 +251,7 @@ describe("reply notifications", () => {
       await notifyNewReplies(record, BASE);
 
       const body = sentBodies(spy)[0];
-      const token = getPref(user.id, record.id)?.unsub_token;
+      const token = getPref(user.id)?.unsub_token;
       expect(body.text).toContain(`${BASE}/manage/${record.id}`);
       expect(body.text).not.toContain("#t=");
       expect(body.text).toContain(`${BASE}/api/notifications/unsubscribe/${token}`);
@@ -300,14 +300,14 @@ describe("reply notifications", () => {
       record = reply(record, "Іван", new Date().toISOString());
 
       await notifyNewReplies(record, BASE);
-      expect(getPref(user.id, record.id)?.last_notified_at).toBeNull();
+      expect(lastNotifiedAt(user.id, record.id)).toBeNull();
 
       spy.mockResolvedValue(new Response(JSON.stringify({ id: "msg-2" })));
       record = reply(record, "Олег", new Date().toISOString());
       await notifyNewReplies(record, BASE);
 
       expect(spy).toHaveBeenCalledTimes(2);
-      expect(getPref(user.id, record.id)?.last_notified_at).not.toBeNull();
+      expect(lastNotifiedAt(user.id, record.id)).not.toBeNull();
     });
 
     it("never rejects, whatever the transport does", async () => {

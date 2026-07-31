@@ -68,23 +68,22 @@ async function publish(cookies?: Record<string, string>): Promise<string> {
 /** Same-origin by omission, as the other cookie-mutation tests do — `inject`
  *  defaults `host` to `localhost:80`, so a literal origin has to match that or
  *  it reads as cross-origin. */
-function put(id: string, enabled: boolean, cookies?: Record<string, string>) {
+function put(enabled: boolean, cookies?: Record<string, string>) {
   return app.inject({
     method: "PUT",
-    url: `/api/account/notifications/${id}`,
+    url: "/api/account/notifications",
     payload: { enabled },
     ...(cookies ? { cookies } : {}),
   });
 }
 
 describe("notification preference endpoint", () => {
-  it("reports enabled for an invitation with no preference row yet", async () => {
+  it("reports enabled for an account with no preference row yet", async () => {
     const { cookies } = signIn();
-    const id = await publish(cookies);
 
     const res = await app.inject({
       method: "GET",
-      url: `/api/account/notifications/${id}`,
+      url: "/api/account/notifications",
       cookies,
     });
 
@@ -96,52 +95,44 @@ describe("notification preference endpoint", () => {
     const { cookies } = signIn();
     const id = await publish(cookies);
 
-    expect((await put(id, false, cookies)).json()).toEqual({ enabled: false });
+    expect((await put(false, cookies)).json()).toEqual({ enabled: false });
     const read = await app.inject({
       method: "GET",
-      url: `/api/account/notifications/${id}`,
+      url: "/api/account/notifications",
       cookies,
     });
     expect(read.json()).toEqual({ enabled: false });
     expect(notificationTargets(id)).toEqual([]);
 
-    expect((await put(id, true, cookies)).json()).toEqual({ enabled: true });
+    expect((await put(true, cookies)).json()).toEqual({ enabled: true });
     expect(notificationTargets(id)).toHaveLength(1);
   });
 
   describe("authorization", () => {
     it("refuses a signed-out caller", async () => {
-      const { cookies } = signIn();
-      const id = await publish(cookies);
+      signIn();
 
       expect(
-        (await app.inject({ method: "GET", url: `/api/account/notifications/${id}` })).statusCode,
+        (await app.inject({ method: "GET", url: "/api/account/notifications" })).statusCode,
       ).toBe(401);
-      expect((await put(id, false)).statusCode).toBe(401);
+      expect((await put(false)).statusCode).toBe(401);
     });
 
-    // A session may only speak for invitations its own keyring holds. It could
-    // never change another host's row — they are keyed per pair — but it must
-    // not mint rows for invitations it has nothing to do with either.
-    it("refuses an invitation this account does not hold", async () => {
+    // The switch is the account's own, so there is no id to authorize and no
+    // way to name someone else's — but a second account holding the same
+    // invitation must still be unaffected.
+    it("changes only the calling account, not a co-holder", async () => {
       const owner = signIn("google-sub-1");
-      const stranger = signIn("google-sub-2");
+      const second = signIn("google-sub-2");
       const id = await publish(owner.cookies);
+      const { linkInvitation } = await import("../src/accounts.js");
+      linkInvitation(second.user.id, id);
 
-      const res = await put(id, false, stranger.cookies);
+      await put(false, owner.cookies);
 
-      expect(res.statusCode).toBe(404);
-      expect(notificationTargets(id)).toHaveLength(1);
-    });
-
-    it("refuses a malformed id without touching the store", async () => {
-      const { cookies } = signIn();
-      const res = await app.inject({
-        method: "GET",
-        url: "/api/account/notifications/..%2F..%2Fetc",
-        cookies,
-      });
-      expect(res.statusCode).toBe(404);
+      const left = notificationTargets(id);
+      expect(left).toHaveLength(1);
+      expect(left[0].user_id).toBe(second.user.id);
     });
 
     // adr-014 §4: the cookie-authorized mutations get an origin check.
@@ -151,7 +142,7 @@ describe("notification preference endpoint", () => {
 
       const res = await app.inject({
         method: "PUT",
-        url: `/api/account/notifications/${id}`,
+        url: "/api/account/notifications",
         payload: { enabled: false },
         headers: { origin: "https://evil.example", host: "localhost:3001" },
         cookies,
@@ -163,11 +154,10 @@ describe("notification preference endpoint", () => {
 
     it("rejects a malformed body", async () => {
       const { cookies } = signIn();
-      const id = await publish(cookies);
 
       const res = await app.inject({
         method: "PUT",
-        url: `/api/account/notifications/${id}`,
+        url: "/api/account/notifications",
         payload: { enabled: "yes" },
         cookies,
       });

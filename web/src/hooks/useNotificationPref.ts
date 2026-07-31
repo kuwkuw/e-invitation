@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchNotificationPref, setNotificationPref } from "../api";
 
 /**
- * Whether this host wants email about replies to one invitation (adr-015 §7).
+ * Whether this host wants email about replies (adr-015 §7).
+ *
+ * **One switch for the whole account**, not per invitation: a mail client's
+ * one-click unsubscribe promises "stop sending me this kind of mail", and a
+ * host who clicks it and keeps getting mail about their other events reports
+ * the next one as spam. Per-event control is a later question.
  *
  * State lives here rather than in `SharePanel` so the panel stays composition,
  * the way every other piece of editor state already works.
@@ -14,38 +19,37 @@ import { fetchNotificationPref, setNotificationPref } from "../api";
  * "off" while the server still has "on" would keep mailing a host who believes
  * they turned it off — the one direction of this switch that has to be true.
  */
-export function useNotificationPref(id: string | null, active: boolean) {
+export function useNotificationPref(active: boolean) {
   // Defaults to on, matching the server's "absent row means enabled". A first
   // publish therefore renders correctly before the fetch resolves, which is
   // the common case — the panel opens the instant publishing succeeds.
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    if (!id || !active) return;
+    if (!active) return;
     let live = true;
-    fetchNotificationPref(id)
+    fetchNotificationPref()
       .then((pref) => {
         if (live) setEnabled(pref.enabled);
       })
       // A failed read leaves the default. The host sees "on", which is what a
-      // fresh invitation is, and the next open corrects it.
+      // new account is, and the next open corrects it.
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [id, active]);
+  }, [active]);
 
   const toggle = useCallback(async () => {
-    if (!id) return;
     const next = !enabled;
     setEnabled(next);
     try {
-      const pref = await setNotificationPref(id, next);
+      const pref = await setNotificationPref(next);
       setEnabled(pref.enabled);
     } catch {
       setEnabled(!next);
     }
-  }, [id, enabled]);
+  }, [enabled]);
 
   return { enabled, toggle };
 }

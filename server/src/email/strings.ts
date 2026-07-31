@@ -34,6 +34,9 @@ export interface EmailStrings {
    *  own quotation marks. Answering it in the mail is what keeps the
    *  unsubscribe from being the only explanation a host gets. */
   why: string;
+  /** Deliberately says "these emails", not "this invitation": the link turns
+   *  reply mail off for the whole account, which is what a mail client's
+   *  one-click unsubscribe promises (adr-015 §7). */
   unsubscribe: string;
   wordmark: string;
 }
@@ -45,7 +48,7 @@ const STRINGS: Record<Language, EmailStrings> = {
     lead: "Гості почали відповідати. Повний список — на сторінці запрошення.",
     cta: "Переглянути відповіді",
     why: "Ви отримали цей лист, бо створили запрошення «{title}» в INVITO.",
-    unsubscribe: "Не надсилати листи про це запрошення",
+    unsubscribe: "Не надсилати мені такі листи",
     wordmark: "INVITO",
   },
   en: {
@@ -54,7 +57,7 @@ const STRINGS: Record<Language, EmailStrings> = {
     lead: "Guests have started replying. The full list is on your invitation page.",
     cta: "See the replies",
     why: "You're getting this because you created the invitation “{title}” on INVITO.",
-    unsubscribe: "Turn off emails for this invitation",
+    unsubscribe: "Turn these emails off",
     wordmark: "INVITO",
   },
 };
