@@ -15,6 +15,11 @@ interface Props {
   signedIn?: boolean;
   manageShown?: boolean;
   onToggleManage?: () => void;
+  /** Reply notifications (adr-015 §7). Absent `notifyEmail` — an unconfigured
+   *  deployment or a signed-out host — renders no line at all. */
+  notifyEmail?: string | null;
+  notifyEnabled?: boolean;
+  onToggleNotify?: () => void;
   t: UiStrings;
 }
 
@@ -50,6 +55,9 @@ export function SharePanel({
   signedIn = false,
   manageShown = false,
   onToggleManage,
+  notifyEmail = null,
+  notifyEnabled = true,
+  onToggleNotify,
   t,
 }: Props) {
   const [revealed, setRevealed] = useState(false);
@@ -90,6 +98,25 @@ export function SharePanel({
         <p className="sp-account-note">
           <CheckIcon />
           <span>{t.auth.savedToAccount}</span>
+        </p>
+      )}
+
+      {/* adr-015 §7: disclosed where it is caused. A host learns that replies
+          will be emailed at the moment they publish, with the switch beside
+          the sentence — not from the first email, and not from a settings
+          screen this app does not have. Deliberately the same quiet treatment
+          as the account note above and the same text-button as Show/Hide: the
+          panel's hierarchy exists to keep the manage link subordinate to the
+          share link (adr-010 §3), and a third control competing for attention
+          would spend that. */}
+      {signedIn && notifyEmail && (
+        <p className="sp-notify">
+          <span className="sp-notify-text">
+            {notifyEnabled ? t.auth.notifyOn.replace("{email}", notifyEmail) : t.auth.notifyOff}
+          </span>
+          <button type="button" className="sp-notify-toggle" onClick={onToggleNotify}>
+            {notifyEnabled ? t.auth.notifyTurnOff : t.auth.notifyTurnOn}
+          </button>
         </p>
       )}
 

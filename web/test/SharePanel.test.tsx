@@ -130,3 +130,67 @@ describe("signed in", () => {
     expect(screen.getByText(UI.en.copyManageLink).className).toContain("sp-ghost");
   });
 });
+
+// adr-015 §7: the disclosure is made where it is caused — at publish, beside
+// the switch — rather than discovered from the first email.
+describe("SharePanel reply notifications", () => {
+  function renderNotify(overrides: Partial<Parameters<typeof SharePanel>[0]> = {}) {
+    return renderPanel({ signedIn: true, manageShown: true, t: UI.en, ...overrides });
+  }
+
+  it("says which address replies go to", () => {
+    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
+    expect(screen.getByText("We'll email host@example.com when replies come in.")).toBeTruthy();
+    expect(screen.getByText(UI.en.auth.notifyTurnOff)).toBeTruthy();
+  });
+
+  it("says the opposite, and offers the opposite action, when off", () => {
+    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
+    expect(screen.getByText(UI.en.auth.notifyOff)).toBeTruthy();
+    expect(screen.getByText(UI.en.auth.notifyTurnOn)).toBeTruthy();
+  });
+
+  it("toggles through the callback", () => {
+    const onToggleNotify = vi.fn();
+    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true, onToggleNotify });
+
+    fireEvent.click(screen.getByText(UI.en.auth.notifyTurnOff));
+
+    expect(onToggleNotify).toHaveBeenCalledTimes(1);
+  });
+
+  // §8: a deployment with no mail credentials must promise nothing. The line
+  // is absent, not disabled — an offer that cannot be honoured is worse than
+  // no offer.
+  it("renders nothing when the deployment cannot send mail", () => {
+    const { container } = renderNotify({ notifyEmail: null });
+    expect(container.querySelector(".sp-notify")).toBeNull();
+    expect(screen.queryByText(UI.en.auth.notifyTurnOff)).toBeNull();
+  });
+
+  it("renders nothing for a signed-out host", () => {
+    const { container } = renderPanel({
+      signedIn: false,
+      notifyEmail: "host@example.com",
+      t: UI.en,
+    });
+    expect(container.querySelector(".sp-notify")).toBeNull();
+  });
+
+  // The panel's hierarchy is the safeguard (adr-010 §3): the notification line
+  // must not become a third thing competing with the two links.
+  it("stays quiet — no accent button, and the public link keeps the only one", () => {
+    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const toggle = screen.getByText(UI.en.auth.notifyTurnOff);
+    expect(toggle.className).not.toContain("sp-primary");
+    expect(container.querySelectorAll(".sp-primary")).toHaveLength(1);
+    expect(screen.getByText(UI.en.copyLink).className).toContain("sp-primary");
+  });
+
+  it("carries the copy in Ukrainian too", () => {
+    renderNotify({ notifyEmail: "host@example.com", t: UI.uk });
+    expect(
+      screen.getByText("Ми напишемо на host@example.com, коли надійдуть відповіді."),
+    ).toBeTruthy();
+  });
+});

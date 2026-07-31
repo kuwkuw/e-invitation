@@ -24,6 +24,7 @@ import {
   setSessionCookie,
 } from "../auth/session.js";
 import { consumeOauthState, createOauthState } from "../auth/state.js";
+import { emailConfigured } from "../email/send.js";
 
 const DEFAULT_REDIRECT_TO = "/create";
 const CALLBACK_PATH = "/api/auth/google/callback";
@@ -107,6 +108,13 @@ export function registerAuthRoutes(app: FastifyInstance): void {
       // on a 401, so the sheet is the first frame of the share panel rather
       // than a screen that appears after a failed request.
       publish_gate: publishRequiresAccount(),
+      // Whether this deployment can send reply notifications at all (adr-015
+      // §8). It rides the session probe for the same reason `publish_gate`
+      // does: this endpoint is the client's one question about what the
+      // deployment can do for a host, and the share panel has to know
+      // synchronously — a promise of email that a mail-less deployment will
+      // never keep is worse than no line at all.
+      notifications: emailConfigured(),
       signed_in: user !== null,
       email: user?.email ?? null,
     };

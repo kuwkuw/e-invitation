@@ -280,6 +280,30 @@ A plain-text alternative part ships with it. Not optional: a transactional
 email without one is a spam-filter signal, and it is the version that renders
 correctly everywhere.
 
+**Both surfaces were built before their mockups existed, deliberately and on
+the record.** adr-009 §4 and adr-010 §9 make design precede code, and this is
+the first iteration to go the other way, so it is written here rather than
+discovered in a diff:
+
+- **The email** (PR 2). §3 made it count-only, which dissolved most of what
+  the mockup was for: with no invitation card in the message there is nothing
+  to decide about how the card degrades, and what remains is a sentence, a
+  button and a footer. It is table layout with inline styles and no web fonts
+  — the constraints, not a composition. A DS pass can restyle it without
+  touching the sender.
+- **The share-panel line** (PR 5). This one had a real template to extend —
+  adr-014's `templates/share-panel` signed-in variant — and did not wait for
+  it. The mitigation is that it invents nothing: the line reuses
+  `.sp-account-note`'s values and the switch reuses `.sp-manage-hide`'s, so it
+  is a composition of two controls the DS already specified rather than a new
+  one. A toggle switch would have been a new control and was rejected for
+  exactly that reason.
+
+The standing rule is unchanged and this is not a precedent for the next
+iteration. What made it defensible here is that neither surface needed a
+design *decision* — one had its problem removed by §3, the other had its
+answer already written in the panel it joins.
+
 ## Consequences
 
 - **A second external dependency**, and the first one in the request path of
@@ -386,9 +410,17 @@ Six PRs, each independently mergeable, in order:
    confirmation page. Tests: an unknown token is a `404` that changes nothing,
    a valid one disables exactly its own pair, and unsubscribing never touches
    the manage token or the keyring.
-5. **The share-panel disclosure and switch**, built from the mockup. Tests:
-   the line renders only when sign-in is configured *and* the host is signed
-   in, and toggling it round-trips.
+5. **The share-panel disclosure and switch.** Also the session-authorized
+   preference endpoint the switch needs — `GET`/`PUT
+   /api/account/notifications/:id`, which is where this feature departs from
+   adr-014 §1's rule that the manage token is the authority: the preference
+   belongs to an account rather than to an invitation, and two accounts
+   holding one invitation share a token but not a preference, so the token
+   cannot name whose to change. `/api/auth/session` gains `notifications`, the
+   deployment's answer to whether it can send at all. Tests: the line renders
+   only when mail is configured *and* the host is signed in, toggling
+   round-trips, a session cannot touch an invitation its keyring does not
+   hold, and the write takes the adr-014 §4 origin check.
 6. **A docs pass** — FR-12, the NFR-4 paragraph, NFR-3/NFR-6, the route table,
    `.env.example`, the deployment runbook's DNS + inbox-placement step, the
    roadmap, and this ADR to accepted.

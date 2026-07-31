@@ -1510,6 +1510,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
 .sp-manage-hide:hover { color: #7a5638; }
 
+/* Reply notifications (adr-015 §7). Values deliberately copied from
+   .sp-account-note and .sp-manage-hide rather than chosen: this line is a
+   sibling of the account note, and nothing in the panel should get louder for
+   a preference. */
+.sp-notify { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
+.sp-notify-text { flex: 1; min-width: 0; }
+.sp-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
+.sp-notify-toggle:hover { color: #7a5638; }
+
 /* Landing account footer + account deletion (adr-014 §9, DS
    "LandingSignedInStates"). The footer signs the invitations card because the
    account exists for that list and nothing else. */

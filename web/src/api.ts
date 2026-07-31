@@ -13,6 +13,7 @@ import type {
   Invitation,
   KeyringEntry,
   KeyringResponse,
+  NotificationPref,
   PublishedInvitation,
   PublishResult,
   RsvpInput,
@@ -172,6 +173,21 @@ export async function fetchKeyring(): Promise<KeyringEntry[]> {
 
 export async function signOut(): Promise<void> {
   await withSession<void>("/api/auth/signout", { method: "POST" });
+}
+
+/** Reply notifications for one of this account's invitations (adr-015 §7).
+ *  Session-authorized: the preference belongs to the account, not to the
+ *  invitation, so the manage token cannot name whose to change. */
+export function fetchNotificationPref(id: string): Promise<NotificationPref> {
+  return withSession<NotificationPref>(`/api/account/notifications/${id}`);
+}
+
+export function setNotificationPref(id: string, enabled: boolean): Promise<NotificationPref> {
+  return withSession<NotificationPref>(`/api/account/notifications/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 /** Deletes the account, never the invitations (adr-014 §9). The count comes

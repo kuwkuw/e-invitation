@@ -224,3 +224,12 @@ export type KeyringEntry = z.infer<typeof KeyringEntry>;
 
 export const KeyringResponse = z.object({ invitations: z.array(KeyringEntry) });
 export type KeyringResponse = z.infer<typeof KeyringResponse>;
+
+// Reply notifications for one of an account's invitations (adr-015 §7). The
+// whole preference is one boolean: there is no digest schedule, no verbosity
+// and no second address to choose, by design.
+export const NotificationPrefRequest = z.object({ enabled: z.boolean() });
+export type NotificationPrefRequest = z.infer<typeof NotificationPrefRequest>;
+
+export const NotificationPref = z.object({ enabled: z.boolean() });
+export type NotificationPref = z.infer<typeof NotificationPref>;

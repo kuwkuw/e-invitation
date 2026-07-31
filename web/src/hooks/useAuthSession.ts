@@ -35,9 +35,15 @@ export function useAuthSession() {
   // editor needs this *before* the host presses Publish, so the gate can be
   // the first frame of the share sheet rather than a reaction to a 401.
   const [publishGate, setPublishGate] = useState(false);
+  // Whether the deployment can send reply notifications at all (adr-015 §8).
+  // A deployment concern like `publishGate`, not a per-host one: it decides
+  // whether the share panel makes a promise about email, and a deployment with
+  // no mail credentials must make none.
+  const [notifications, setNotifications] = useState(false);
 
   const apply = useCallback((session: AuthSession) => {
     setPublishGate(session.publish_gate);
+    setNotifications(session.notifications);
     if (!session.configured) {
       setStatus("unavailable");
       setEmail(null);
@@ -107,5 +113,5 @@ export function useAuthSession() {
     return result;
   }, []);
 
-  return { status, email, publishGate, signOut, deleteAccount };
+  return { status, email, publishGate, notifications, signOut, deleteAccount };
 }
