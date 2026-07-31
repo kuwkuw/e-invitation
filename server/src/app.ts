@@ -110,7 +110,16 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   if (existsSync(join(webDist, "index.html"))) {
     await app.register(fastifyStatic, { root: webDist, index: false, wildcard: false });
     app.setNotFoundHandler((request, reply) => {
-      if (request.method === "GET" && !request.url.startsWith("/api")) {
+      // HEAD as well as GET: a HEAD is a GET that wants only the headers, and
+      // answering it with a JSON 404 makes the site look down to anything that
+      // probes that way — uptime checks, link scanners, `curl -I`. Node
+      // suppresses the body on a HEAD response by itself, so sending the shell
+      // yields the right status and Content-Type with nothing after them.
+      // Fastify's `exposeHeadRoutes` already does this for declared GET routes;
+      // the not-found handler is the one path it cannot cover, which is exactly
+      // the path `/`, `/create` and `/manage/:id` arrive on.
+      const wantsShell = request.method === "GET" || request.method === "HEAD";
+      if (wantsShell && !request.url.startsWith("/api")) {
         return reply
           .header("Content-Type", "text/html; charset=utf-8")
           .send(readFileSync(join(webDist, "index.html"), "utf8"));
