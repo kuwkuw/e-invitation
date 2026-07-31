@@ -1445,3 +1445,102 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cr-action:hover { background: #a04e27; }
 .cr-brand { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
+
+/* Sign-in gate (adr-014 §2). From the "auth-gate" template in the E-invitation
+   DS project. It is the first frame of the share sheet, not a screen: same
+   container, same rounded top edge, and the invitation stays visible behind a
+   scrim because that is what makes interrupting a committed host tolerable.
+   No filled accent lives here until a public link exists — the one exception
+   is the retry in `failed`, where repeating really is the useful action. */
+.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(35, 33, 29, 0.30); display: flex; align-items: flex-end; justify-content: center; }
+.ag-sheet { width: 100%; max-width: 460px; background: #fff; border-radius: 26px 26px 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(20, 18, 14, 0.16); }
+.ag-grab { width: 40px; height: 5px; border-radius: 999px; background: #e4ddd0; margin: 0 auto 18px; }
+.ag-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
+.ag-title-inline { margin: 0; }
+.ag-returning-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.ag-why { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
+.ag-google { width: 100%; height: 56px; border: 1px solid #ddd6c8; border-radius: 16px; background: #fff; color: #23211d; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: 0 4px 12px rgba(20, 18, 14, 0.06); cursor: pointer; }
+.ag-google:hover { border-color: #c9bfab; }
+.ag-waiting { width: 100%; height: 56px; border: 1px solid #ece7dd; border-radius: 16px; background: #faf8f4; display: flex; align-items: center; justify-content: center; gap: 11px; color: #8d8577; font-weight: 700; font-size: 1rem; }
+.ag-retry { width: 100%; height: 56px; border: none; border-radius: 16px; background: #b3592e; color: #fff; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3); cursor: pointer; }
+.ag-retry:hover { background: #9f4d26; }
+.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0eadf; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
+.ag-note svg { flex: 0 0 auto; margin-top: 2px; }
+.ag-back { text-align: center; margin-top: 14px; }
+.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: #8d8577; cursor: pointer; padding: 4px 8px; }
+.ag-textbtn:hover { color: #23211d; }
+.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: #23211d; }
+.ag-textbtn-off { color: #c3bbac; cursor: default; }
+/* Red lives only in this 28px icon — never a border, banner, or body text. */
+.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: #fbf0ef; border: 1px solid #eed3d1; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.ag-draft { display: flex; align-items: center; gap: 9px; background: #f7f5f1; border: 1px solid #eee8dd; border-radius: 12px; padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: #6b6659; }
+.ag-draft svg { flex: 0 0 auto; }
+.ag-code { font-size: 0.74rem; color: #c3bbac; text-align: center; margin: 12px 0 0; }
+.ag-progress { height: 3px; border-radius: 999px; background: #f0eadf; margin-bottom: 20px; overflow: hidden; }
+.ag-progress-fill { width: 72%; height: 100%; background: #b3592e; border-radius: 999px; }
+/* The share panel's own blocks in their final positions, greyed. The host is
+   watching the panel being born, not reading about authentication. */
+.ag-skeleton-label { width: 42%; height: 11px; border-radius: 6px; background: #f0eadf; margin-bottom: 12px; }
+.ag-skeleton-link { height: 50px; border: 1px solid #f0eadf; border-radius: 14px; background: #faf8f4; margin-bottom: 12px; }
+.ag-skeleton-primary { height: 54px; border-radius: 16px; background: #f2e7de; margin-bottom: 12px; }
+.ag-skeleton-divider { height: 1px; background: #f4efe6; margin: 16px 0; }
+.ag-skeleton-manage { height: 70px; border-radius: 14px; background: #faf6f0; border: 1px solid #f4ece1; }
+.ag-spin { animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
+@keyframes agSpin { to { transform: rotate(360deg); } }
+@media (min-width: 800px) {
+  /* Desktop: the same sheet becomes a popover under the Publish button, which
+     is where the share panel already appears. */
+  .ag-scrim { align-items: flex-start; justify-content: flex-end; padding: 64px 16px 0; }
+  .ag-sheet { max-width: 380px; border-radius: 18px; box-shadow: 0 18px 40px rgba(20, 18, 14, 0.18); }
+  .ag-grab { display: none; }
+}
+
+/* Share panel, signed-in variant (adr-014 §5, DS "ShareSignedIn"). The
+   hierarchy above is untouched: the public link stays first and stays the only
+   filled accent. What changes is that the manage block collapses to one row —
+   and with it collapses the copy button, so the warning it guards is never
+   absent while the button is present. */
+.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 14px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
+.sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: #8aa98f; }
+.sp-manage-collapsed { width: 100%; background: #faf6f0; border: 1px solid #f0e5d6; border-radius: 12px; display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
+.sp-manage-collapsed:hover { border-color: #e4d4c0; }
+.sp-manage-collapsed svg { flex: 0 0 auto; color: #b99a78; }
+.sp-manage-collapsed-label { flex: 1; font-size: 0.82rem; font-weight: 600; color: #8d7a63; }
+.sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
+.sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
+.sp-manage-hide:hover { color: #7a5638; }
+
+/* Landing account footer + account deletion (adr-014 §9, DS
+   "LandingSignedInStates"). The footer signs the invitations card because the
+   account exists for that list and nothing else. */
+.lp-account { border-top: 1px solid #f0eadf; background: #fbfaf7; display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; }
+.lp-account svg { flex: 0 0 auto; }
+.lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: #8d8577; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 2px 4px; }
+.lp-account-out:hover { color: #23211d; }
+/* One line, in the faintest colour on the page: this is the payoff, not an
+   announcement. */
+.lp-cross-device { display: flex; align-items: flex-start; gap: 7px; margin: 9px 2px 0; font-size: 0.79rem; color: #a29a8b; line-height: 1.45; }
+.lp-cross-device svg { flex: 0 0 auto; margin-top: 2px; }
+.lp-signed-in-empty { padding: 22px 18px 20px; text-align: center; font-size: 0.95rem; color: #6b6659; line-height: 1.5; }
+
+.da-title { margin-bottom: 16px; }
+.da-keep { background: #f4f7f4; border: 1px solid #d9e5da; border-radius: 16px; padding: 17px 16px 15px; margin-bottom: 16px; }
+.da-keep-head { font-family: "Playfair Display", Georgia, serif; font-size: 1.18rem; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
+.da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: #3f4f42; line-height: 1.45; }
+.da-keep-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+.da-keep-list svg { margin-top: 2px; }
+.da-goes { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 16px; }
+.da-keys { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px; margin-bottom: 20px; }
+.da-keys-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
+.da-keys-body { font-size: 0.8rem; color: #7a5638; line-height: 1.45; margin: 0 0 12px; }
+.da-keys-btn { width: 100%; height: 46px; }
+.da-cancel { height: 54px; font-size: 1rem; }
+/* Red as a text colour only — a filled red button would shout "irreversible
+   catastrophe" at a host whose invitations are all about to survive. */
+.da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #a83f3f; cursor: pointer; padding: 4px 8px; }
+.da-confirm:hover { color: #8f3535; }
+/* Quieter than sign-out, which is quieter than everything else on the card. */
+.lp-delete-account { margin: 10px 2px 0; }
+.lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: #a29a8b; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
+.lp-delete-link:hover { color: #a83f3f; }

@@ -119,6 +119,43 @@ export interface CountsResponse {
   results: CountsResult[];
 }
 
+// Host accounts (adr-014 §5). Mirrors the server's KeyringEntry by hand
+// (NFR-8). Deliberately field-for-field compatible with `HostInvitation` in
+// `hostInvitations.ts` plus the token: the keyring seeds the browser-local
+// state the app already runs on rather than introducing a second one.
+export interface KeyringEntry {
+  id: string;
+  manage_token: string;
+  title: string;
+  published_at: string;
+  palette: DesignTokens["palette"];
+}
+
+export interface KeyringResponse {
+  invitations: KeyringEntry[];
+}
+
+/** What deleting an account returns (adr-014 §9). The invitations are
+ *  deliberately retained: guests hold their share links, the RSVPs are the
+ *  guests' data, and the manage token survives on the record. */
+export interface AccountDeletion {
+  deleted: boolean;
+  invitations_retained: number;
+}
+
+/** What `/api/auth/session` reports. `configured` is the deployment's answer
+ *  to "is sign-in available at all" (adr-014 §7) — the client must not show a
+ *  sign-in affordance when it is false. */
+export interface AuthSession {
+  configured: boolean;
+  /** Whether a first publish will be refused without an account (adr-014 §2).
+   *  Read before the host presses Publish, so the gate can be the first frame
+   *  of the share panel rather than a reaction to a 401. */
+  publish_gate: boolean;
+  signed_in: boolean;
+  email: string | null;
+}
+
 // BYOK (ADR-006): the host's own provider key, kept in this browser only.
 export type ByokProvider = "anthropic" | "gemini" | "openai";
 

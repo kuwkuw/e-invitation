@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AccountFooter } from "./components/AccountFooter";
+import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { YourInvitations } from "./components/YourInvitations";
+import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
+import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations } from "./hostInvitations";
-import { LANDING, loadUiLang, saveUiLang } from "./i18n";
+import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
+import { readManageToken } from "./manageTokens";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
 
 // Ported from the "Тепла класика" landing direction designed in Claude Design.
@@ -68,6 +73,27 @@ export function LandingPage() {
   // the rows exactly as they are (adr-012 §6). `mine` is stable, so the ids
   // handed to the hook are too.
   const counts = useHostInvitationCounts(mine.map((m) => m.id));
+  const account = useAuthSession();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const signedIn = account.status === "signed_in" && account.email !== null;
+  // The list is seeded from the keyring on sign-in, so by the time it is
+  // non-empty for a signed-in host these are their account's invitations.
+  const replyCount = mine.reduce((total, invitation) => {
+    const result = counts?.get(invitation.id);
+    return total + (result?.counts ? result.counts.yes + result.counts.no : 0);
+  }, 0);
+
+  /** Every manage link this browser holds, one per line. The only real loss in
+   *  deleting an account is convenient access, so it is handed back first. */
+  function copyAllManageLinks() {
+    const links = mine
+      .map((invitation) => {
+        const token = readManageToken(invitation.id);
+        return token ? `${invitation.title}: ${manageUrl(invitation.id, token)}` : null;
+      })
+      .filter((line): line is string => line !== null);
+    void navigator.clipboard.writeText(links.join("\n"));
+  }
 
   // Every call to action on the page goes to the same place; the editor starts
   // empty either way, so there is nothing to carry across.
@@ -93,7 +119,34 @@ export function LandingPage() {
       {/* Reading order per the DS Returning template: header → your events →
           pitch. A first-time visitor has an empty list and sees the page
           exactly as before. */}
-      <YourInvitations invitations={mine} counts={counts} t={t} />
+      <YourInvitations
+        invitations={mine}
+        counts={counts}
+        signedIn={signedIn}
+        // Rendered inside the card, because the account exists for this list.
+        footer={
+          signedIn && account.email ? (
+            <AccountFooter email={account.email} onSignOut={account.signOut} t={AUTH[lang]} />
+          ) : null
+        }
+        onDeleteAccount={signedIn ? () => setConfirmingDelete(true) : undefined}
+        t={t}
+        auth={AUTH[lang]}
+      />
+
+      {confirmingDelete && (
+        <DeleteAccountSheet
+          invitationCount={mine.length}
+          replyCount={replyCount}
+          onCopyAllLinks={copyAllManageLinks}
+          onConfirm={() => {
+            void account.deleteAccount();
+            setConfirmingDelete(false);
+          }}
+          onCancel={() => setConfirmingDelete(false)}
+          t={AUTH[lang]}
+        />
+      )}
 
       <section className="lp-hero">
         <div className="lp-hero-copy">

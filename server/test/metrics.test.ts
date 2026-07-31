@@ -47,6 +47,7 @@ describe("durable metrics", () => {
       referred_generations: 0,
       views_per_publish: 1,
       new_hosts_per_publish: 0,
+      baseline: null,
     });
   });
 
@@ -116,6 +117,128 @@ describe("durable metrics", () => {
     m.recordPublish();
     m.recordPublish();
     expect(m.metricsSnapshot().publish_rate).toBe(2);
+  });
+
+  // adr-014 §2: the publish gate moves publish_rate and new_hosts_per_publish
+  // for reasons unrelated to what either measures. Without a frozen "before",
+  // the two periods blend into one number and neither is readable.
+  describe("gate baseline", () => {
+    it("splits the counters into before and since at the moment it is taken", async () => {
+      const m = await freshMetrics();
+      // Pre-gate: production's lifetime numbers as adr-013 recorded them.
+      for (let i = 0; i < 9; i++) m.recordGeneration();
+      for (let i = 0; i < 4; i++) m.recordPublish();
+
+      m.markBaseline("auth-gate");
+
+      // Post-gate: the same traffic, half of it now failing to reach publish.
+      for (let i = 0; i < 4; i++) m.recordGeneration();
+      m.recordPublish();
+
+      const snapshot = m.metricsSnapshot();
+      expect(snapshot.generations).toBe(13);
+      expect(snapshot.publishes).toBe(5);
+
+      const baseline = snapshot.baseline;
+      expect(baseline?.reason).toBe("auth-gate");
+      expect(baseline?.before.generations).toBe(9);
+      expect(baseline?.before.publishes).toBe(4);
+      expect(baseline?.since.generations).toBe(4);
+      expect(baseline?.since.publishes).toBe(1);
+      // The comparison the ADR's revisit trigger is written against.
+      expect(baseline?.before.publish_rate).toBeCloseTo(0.444, 3);
+      expect(baseline?.since.publish_rate).toBe(0.25);
+    });
+
+    it("is idempotent across restarts, so booting never re-freezes it", async () => {
+      const m1 = await freshMetrics();
+      m1.recordGeneration();
+      m1.recordPublish();
+      const first = m1.markBaseline("auth-gate");
+
+      m1.recordGeneration();
+      m1.recordGeneration();
+
+      // The gate calls this at boot, so every restart would otherwise reset
+      // "before" to the current numbers and erase the comparison.
+      const m2 = await freshMetrics();
+      const second = m2.markBaseline("auth-gate");
+      expect(second.at).toBe(first.at);
+
+      const baseline = m2.metricsSnapshot().baseline;
+      expect(baseline?.before.generations).toBe(1);
+      expect(baseline?.since.generations).toBe(2);
+    });
+
+    it("derives before/since rates through the same code as lifetime", async () => {
+      const m = await freshMetrics();
+      m.markBaseline("auth-gate");
+      m.recordGeneration("guest");
+      m.recordGeneration("guest");
+      m.recordInvitationView();
+      m.recordPublish();
+
+      const snapshot = m.metricsSnapshot();
+      // Nothing happened before the baseline, so "since" must equal lifetime.
+      expect(snapshot.baseline?.since.new_hosts_per_publish).toBe(snapshot.new_hosts_per_publish);
+      expect(snapshot.baseline?.since.views_per_publish).toBe(snapshot.views_per_publish);
+      // ...and an empty "before" derives zeros rather than dividing by zero.
+      expect(snapshot.baseline?.before.new_hosts_per_publish).toBe(0);
+      expect(snapshot.baseline?.before.publish_rate).toBe(0);
+    });
+
+    it("clamps a baseline that is ahead of the counters instead of going negative", async () => {
+      // What a metrics.json restored from a backup older than its own baseline
+      // looks like. Negative activity reads as a broken deploy; zero reads as
+      // what it is.
+      writeFileSync(
+        join(dataDir, "metrics.json"),
+        JSON.stringify({
+          generations: 2,
+          field_regenerations: {},
+          publishes: 1,
+          baseline: {
+            at: "2026-07-30T00:00:00.000Z",
+            reason: "auth-gate",
+            counters: { generations: 9, publishes: 4 },
+          },
+        }),
+        "utf8",
+      );
+      const m = await freshMetrics();
+      const baseline = m.metricsSnapshot().baseline;
+      expect(baseline?.since.generations).toBe(0);
+      expect(baseline?.since.publishes).toBe(0);
+      expect(baseline?.before.generations).toBe(9);
+    });
+
+    it("degrades a malformed baseline to none rather than serving it", async () => {
+      writeFileSync(
+        join(dataDir, "metrics.json"),
+        JSON.stringify({ generations: 3, field_regenerations: {}, baseline: { at: 42 } }),
+        "utf8",
+      );
+      const m = await freshMetrics();
+      // The counters still load; only the comparison nobody can vouch for goes.
+      expect(m.metricsSnapshot().generations).toBe(3);
+      expect(m.metricsSnapshot().baseline).toBeNull();
+    });
+
+    it("leaves a metrics file written before baselines existed reporting none", async () => {
+      writeFileSync(
+        join(dataDir, "metrics.json"),
+        JSON.stringify({ generations: 9, field_regenerations: {}, publishes: 4, rsvps: 5 }),
+        "utf8",
+      );
+      const m = await freshMetrics();
+      expect(m.metricsSnapshot().baseline).toBeNull();
+
+      // Taking one later freezes what the old file had accumulated, which is
+      // the whole point: the "before" period predates this code.
+      m.markBaseline("auth-gate");
+      expect(m.metricsSnapshot().baseline?.before.generations).toBe(9);
+      expect(JSON.parse(readFileSync(join(dataDir, "metrics.json"), "utf8")).generations).toBe(9);
+    });
   });
 
   it("starts fresh on a corrupt or partial metrics file", async () => {

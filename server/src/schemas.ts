@@ -203,3 +203,24 @@ export type CountsResult = z.infer<typeof CountsResult>;
 
 export const CountsResponse = z.object({ results: z.array(CountsResult) });
 export type CountsResponse = z.infer<typeof CountsResponse>;
+
+// The signed-in host's keyring (adr-014 §5). Exactly what `localStorage` holds
+// for a host who never cleared it: the manage token per invitation, plus the
+// three fields the returning-host list renders. It is a *seed* for the state
+// the client already has, not a new shape for it to reason about — which is
+// why `title`/`published_at`/`palette` match `hostInvitations.ts` field for
+// field.
+//
+// The token is read off the record at request time and stored nowhere else:
+// the keyring table holds only which invitations an account published.
+export const KeyringEntry = z.object({
+  id: InvitationId,
+  manage_token: z.string(),
+  title: z.string(),
+  published_at: z.string(),
+  palette: DesignTokens.shape.palette,
+});
+export type KeyringEntry = z.infer<typeof KeyringEntry>;
+
+export const KeyringResponse = z.object({ invitations: z.array(KeyringEntry) });
+export type KeyringResponse = z.infer<typeof KeyringResponse>;

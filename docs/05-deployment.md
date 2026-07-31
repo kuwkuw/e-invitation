@@ -67,28 +67,131 @@ operator-key limits above stop being the ceiling.
 
 ## Custom domain
 
+**The domain is `invinto.app`**, registered and DNS-hosted at Cloudflare.
+
 Nothing in the app hardcodes the host — share URLs come from
 `window.location.origin` and OG meta/image URLs from the request's
-`Host`/`x-forwarded-proto` (trustProxy) — so a custom domain is pure
-platform config plus one env var:
+`Host`/`x-forwarded-proto` (trustProxy) — so a custom domain is platform config
+plus one env var. Two things about *this* domain and registrar are not
+optional, though; both are below.
 
-1. **Northflank**: service → *Networking* → *Domains* → add your domain
-   (e.g. `invito.example.com`) to the port-3001 public endpoint.
-2. **DNS**: at your registrar, create the **CNAME** record Northflank shows
-   for the domain (apex domains need ALIAS/ANAME or the platform's A
-   records). Wait for it to verify; Northflank then provisions and renews
-   the TLS certificate automatically.
-3. **`CANONICAL_HOST=invito.example.com`** (runtime env): requests hitting
-   the service on any other host — the old `*.code.run` endpoint in
-   particular — get a `301` (GET/HEAD; `308` otherwise) to the same path on
-   the canonical domain. Share links published before the switch keep
-   working, and messengers re-unfurl them from one origin. `/healthz` is
-   exempt so platform health checks pass on the internal address. Leave the
-   var unset until DNS + TLS verify — setting it early would redirect onto a
-   domain that doesn't resolve yet.
-4. Verify: `https://invito.example.com/healthz`, publish an invitation and
-   check the share link + `og:image` URL use the new domain, and confirm the
-   old `*.code.run/i/:id` link 301s.
+1. **Northflank**: service → *Networking* → *Domains* → add `invinto.app` to
+   the port-3001 public endpoint.
+2. **DNS at Cloudflare**: create the record Northflank shows. Cloudflare
+   flattens CNAMEs at the apex, so `invinto.app` itself can be a CNAME — no
+   ALIAS/A-record juggling. **Leave the record DNS-only (grey cloud) until
+   Northflank has verified the domain and issued its certificate**; a proxied
+   record can intercept the ACME challenge and the certificate never arrives.
+3. **If you re-enable the Cloudflare proxy afterwards, set SSL/TLS mode to
+   `Full (strict)`.** This is not a preference. `trustProxy` is on, so
+   `request.protocol` follows `x-forwarded-proto`, and Cloudflare's *Flexible*
+   mode talks plain HTTP to the origin — which would make the server emit
+   `og:image` as an `http://` URL. On `.app` that URL is unfetchable (see
+   below), so messenger previews would silently stop unfurling: FR-3.5 gone,
+   with nothing in the logs. Flexible also drops the `Secure` flag from the
+   session cookie. `Full (strict)` keeps `x-forwarded-proto: https` and both
+   stay correct.
+4. **`.app` is HSTS-preloaded as a whole TLD**, by Google, in every major
+   browser. Every connection to `invinto.app` is HTTPS or it does not happen —
+   there is no http to redirect *from*. That is a good default and it costs
+   nothing here, but it does mean an accidental `http://` URL is a hard failure
+   rather than a redirect, which is exactly why step 3 matters.
+5. **`CANONICAL_HOST=invinto.app`** (runtime env): requests reaching the service
+   on any other host — the `*.code.run` endpoint in particular — get a `301`
+   (GET/HEAD; `308` otherwise) to the same path on the canonical domain. Share
+   links published before the switch keep working, and messengers re-unfurl
+   them from one origin. `/healthz` is exempt so platform health checks pass on
+   the internal address. Leave the var unset until DNS + TLS verify — setting it
+   early would redirect onto a domain that does not resolve yet.
+6. Verify: `https://invinto.app/healthz`, publish an invitation and check the
+   share link + `og:image` URL both use `https://invinto.app`, and confirm the
+   old `*.code.run/i/:id` link `301`s.
+
+## Host sign-in with Google (adr-014)
+
+Optional. With `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` unset the server
+boots, sign-in is not offered, and publishing stays anonymous — the supported
+mode for local development and self-hosting
+([adr-014](decisions/adr-014-host-accounts.md) §7). Account state lives in
+`DATA_DIR/app.db`, so the volume in step 3 already carries it and no extra
+storage is needed.
+
+1. **Google Cloud console** → *APIs & Services* → *Credentials* → *Create
+   credentials* → **OAuth client ID**, type *Web application*.
+2. **Authorized redirect URI**: `https://<your-host>/api/auth/google/callback`.
+   Google matches this against a fixed allowlist **character for character**,
+   so it must be exact, including which host. An unregistered host fails at
+   Google with `redirect_uri_mismatch` — nothing reaches the app, so nothing
+   appears in its logs.
+
+   **A registrable domain of your own is required. The Northflank preview
+   hostname cannot be used, in any mode.** Google refuses any redirect URI
+   whose host is not a *top private domain*, and `*.code.run` is on the
+   [Public Suffix List](https://publicsuffix.org/list/), submitted by
+   Northflank. The rule is a wildcard, so
+   `p01--yourapp--xxxxxxxx.code.run` is not a domain *under* a public suffix —
+   it **is** one, with no registrable domain beneath it. The console rejects it
+   at entry with "must use a domain that is a valid top private domain". This
+   is not a Testing-vs-Production distinction and there is no path, subpath or
+   alternate spelling that gets round it. The same is true of every
+   platform-preview domain on that list — `*.vercel.app`, `*.ngrok-free.app`
+   and friends.
+
+   So the order of operations is: **domain first, then sign-in**. Set up
+   `invinto.app` above, confirm `https://invinto.app/healthz` answers, and only
+   then create the OAuth client — against the canonical host:
+
+   ```
+   https://invinto.app/api/auth/google/callback
+   ```
+
+   `invinto.app` is a valid top private domain (`app` is a plain TLD on the
+   Public Suffix List), so Google accepts it. Until the domain is live the
+   deployment runs in the §7 unconfigured mode, which is fully functional —
+   publishing simply stays anonymous.
+
+   **Local development needs no domain.** Google exempts `localhost`, from both
+   the HTTPS requirement and this one, so the whole flow can be exercised
+   before any domain exists. Register both dev ports and leave
+   `GOOGLE_REDIRECT_URI` unset so the server derives the URI from the request:
+
+   ```
+   http://localhost:5173/api/auth/google/callback   # what `pnpm dev` uses:
+                                                    # Vite proxies /api and does
+                                                    # not rewrite the Host header
+   http://localhost:3001/api/auth/google/callback   # hitting the API directly
+   ```
+
+   Google allows several redirect URIs on one client, so the production URI is
+   an **addition** later, not a swap — keep the localhost pair for development.
+
+3. **Environment**:
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI=https://invinto.app/api/auth/google/callback` —
+     set it explicitly in production. Unset, the server derives the URI from
+     the incoming request, which is what makes `localhost` work with no second
+     registration but is the wrong host behind `CANONICAL_HOST`.
+4. **Roll the gate out separately from sign-in.** Deploy with
+   `PUBLISH_REQUIRES_ACCOUNT=0` first, so hosts can sign in while anonymous
+   publishing still works, then remove the var to close the gate. Turning both
+   on at once means every publish returns `401` for as long as the client has
+   no sign-in surface.
+5. Verify `GET /healthz` → `auth: { google: true, publish_gate: … }`, then sign
+   in and check `GET /api/account/keyring` returns your invitations.
+
+**What closing the gate does to the numbers.** It freezes a baseline in
+`metrics.json` — `GET /api/metrics` then reports `baseline.before` and
+`baseline.since` alongside the lifetime figures. This matters because gating
+publishes moves both `publish_rate` and adr-013's `new_hosts_per_publish` for
+reasons unrelated to what either measures, and
+[07-monetization](07-monetization.md) §5.1's thresholds were written against an
+ungated denominator. The baseline is taken once and never moves; if
+publish-rate drops sharply against it, `PUBLISH_REQUIRES_ACCOUNT=0` reopens
+publishing without a deploy.
+
+**Deleting an account** removes the user, their sessions and their keyring and
+keeps every published invitation and RSVP (FR-11.7) — guests' share links must
+not break.
 
 ## Local smoke test
 

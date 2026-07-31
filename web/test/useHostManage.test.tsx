@@ -4,7 +4,8 @@ import { MemoryRouter, useLocation, useNavigationType } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
 import { ApiError } from "../src/api";
-import { manageTokenKey, tokenFromManageLink, useHostManage } from "../src/hooks/useHostManage";
+import { tokenFromManageLink, useHostManage } from "../src/hooks/useHostManage";
+import { forgetHeldManageTokens, manageTokenKey } from "../src/manageTokens";
 import type { PublishedInvitation, RsvpSummary } from "../src/types";
 
 const ID = "abc123";
@@ -45,6 +46,7 @@ function renderWithLocation(id: string, entry: string) {
 beforeEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
+  forgetHeldManageTokens();
 });
 
 describe("tokenFromManageLink", () => {

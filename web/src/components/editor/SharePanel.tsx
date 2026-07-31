@@ -10,6 +10,11 @@ interface Props {
   copied: boolean;
   onCopyManageLink: () => void;
   manageCopied: boolean;
+  /** A signed-in host's account holds the manage link for them (adr-014 §5),
+   *  so the block collapses — see the component comment. */
+  signedIn?: boolean;
+  manageShown?: boolean;
+  onToggleManage?: () => void;
   t: UiStrings;
 }
 
@@ -22,6 +27,19 @@ interface Props {
  * a quiet outline button and an explicit warning. There is no server-side
  * protection against a host pasting the wrong one into a group chat, so this
  * hierarchy is the safeguard (adr-010 §3, "share-panel" DS template).
+ *
+ * For a signed-in host the block collapses to one row behind "Show" (DS
+ * `ShareSignedIn`). That block had been carrying two different messages in one
+ * piece of copy — *keep this safe, it is your only way back* and *do not send
+ * this to anyone*. An account makes the first untrue and leaves the second
+ * exactly as true, so they are separated: the keeping moves up into a quiet
+ * account line, and the warning stays word-for-word where it was.
+ *
+ * Collapsing is not a quieter warning. The warning exists to stop the wrong
+ * link being copied, and collapsed there is nothing to copy — no link text, no
+ * button, no selection. The risk appears with the copy button, and so does the
+ * warning. **The copy button never exists on screen without it**: every state,
+ * every width, both languages.
  */
 export function SharePanel({
   published,
@@ -29,10 +47,16 @@ export function SharePanel({
   copied,
   onCopyManageLink,
   manageCopied,
+  signedIn = false,
+  manageShown = false,
+  onToggleManage,
   t,
 }: Props) {
   const [revealed, setRevealed] = useState(false);
   const guestUrl = shareUrl(published.id);
+  // Signed out, the block is always open: there it really is the only key, and
+  // its weight is earned.
+  const manageOpen = !signedIn || manageShown;
 
   return (
     <div className="cc-share-panel">
@@ -62,34 +86,54 @@ export function SharePanel({
 
       <div className="sp-divider" />
 
-      <section className="sp-manage">
-        <p className="sp-manage-label">
-          <LockIcon />
-          {t.manageLinkLabel}
+      {signedIn && (
+        <p className="sp-account-note">
+          <CheckIcon />
+          <span>{t.auth.savedToAccount}</span>
         </p>
-        <p className="sp-manage-warning">{t.manageLinkWarning}</p>
-        <div className="sp-manage-row">
-          {/* Masked by default so it can't be swept up by a stray select-all
+      )}
+
+      {signedIn && !manageOpen ? (
+        <button type="button" className="sp-manage-collapsed" onClick={onToggleManage}>
+          <LockIcon />
+          <span className="sp-manage-collapsed-label">{t.manageLinkLabel}</span>
+          <span className="sp-manage-collapsed-action">{t.auth.showManage}</span>
+        </button>
+      ) : (
+        <section className="sp-manage">
+          <p className="sp-manage-label">
+            <LockIcon />
+            {t.manageLinkLabel}
+            {signedIn && (
+              <button type="button" className="sp-manage-hide" onClick={onToggleManage}>
+                {t.auth.hideManage}
+              </button>
+            )}
+          </p>
+          <p className="sp-manage-warning">{t.manageLinkWarning}</p>
+          <div className="sp-manage-row">
+            {/* Masked by default so it can't be swept up by a stray select-all
               or an absent-minded copy. Revealing is a deliberate act. */}
-          <span className="sp-manage-value">
-            {revealed
-              ? manageUrl(published.id, published.manage_token)
-              : `${window.location.host}/manage/${t.manageLinkMasked}`}
-          </span>
-          <button type="button" className="sp-ghost" onClick={onCopyManageLink}>
-            {t.copyManageLink}
-          </button>
-        </div>
-        {manageCopied ? (
-          <p className="sp-manage-copied">{t.manageLinkCopied}</p>
-        ) : (
-          !revealed && (
-            <button type="button" className="sp-reveal" onClick={() => setRevealed(true)}>
-              {t.revealManageLink}
+            <span className="sp-manage-value">
+              {revealed
+                ? manageUrl(published.id, published.manage_token)
+                : `${window.location.host}/manage/${t.manageLinkMasked}`}
+            </span>
+            <button type="button" className="sp-ghost" onClick={onCopyManageLink}>
+              {t.copyManageLink}
             </button>
-          )
-        )}
-      </section>
+          </div>
+          {manageCopied ? (
+            <p className="sp-manage-copied">{t.manageLinkCopied}</p>
+          ) : (
+            !revealed && (
+              <button type="button" className="sp-reveal" onClick={() => setRevealed(true)}>
+                {t.revealManageLink}
+              </button>
+            )
+          )}
+        </section>
+      )}
 
       <a className="sp-responses-link" href={`/manage/${published.id}`}>
         {t.viewResponses}

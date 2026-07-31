@@ -220,6 +220,54 @@ implementation.
   and $0.039/image against the daily budget. BYOK: Gemini keys only.
 - FR-10.5 The OG share card stays token-only (v1 decision, adr-009 §7).
 
+## FR-11 Host accounts
+
+**Status: built** — [adr-014](decisions/adr-014-host-accounts.md),
+`/api/auth/*`, `/api/account/*` ([accounts.ts](../server/src/accounts.ts),
+[routes/auth.ts](../server/src/routes/auth.ts))
+
+The first reversal of part of [adr-005](decisions/adr-005-capability-tokens.md).
+An account is a **keyring, not an owner**: the `manage_token` remains the
+credential every host-facing endpoint checks, and a session's only new powers
+are reading back the tokens it holds and authorizing a first publish.
+
+- FR-11.1 A host signs in with Google (OpenID Connect, authorization code +
+  PKCE, scopes `openid email`). The account keys on the Google `sub`; the
+  verified email is stored as data, never as identity. No password, no profile
+  data, no other provider.
+- FR-11.2 The session is an opaque id in an httpOnly `SameSite=Lax` cookie
+  scoped to `Path=/api`, so it never rides `GET /i/:id` or the OG image
+  request. Sign-out revokes it server-side, not just in the browser.
+- FR-11.3 `GET /api/account/keyring` returns every invitation the account has
+  published, with its manage token, title, publish date and palette — what
+  `localStorage` would hold had this browser never been cleared. The client
+  seeds `inv-manage:<id>` and `inv-invitations` from it, so every other host
+  surface is unchanged.
+- FR-11.4 Publishing while signed in links the invitation to the account.
+  Republishing links too, which is how a host claims an invitation they first
+  published anonymously.
+- FR-11.5 A **first** publish requires an account when
+  `PUBLISH_REQUIRES_ACCOUNT` is on (default once OAuth is configured).
+  Generating, editing, per-field regeneration, backgrounds and the entire
+  guest side stay anonymous. Republishing with a valid manage token is **never**
+  gated — everything already published keeps working forever, signed in or not.
+- FR-11.6 With no OAuth client configured, the server boots and publish stays
+  anonymous; `GET /healthz` reports `auth.google` and `auth.publish_gate`
+  separately. The client shows no sign-in affordance at all in that mode.
+- FR-11.7 `DELETE /api/account` removes the user, their sessions and their
+  keyring, and **not** the invitations they published or the RSVPs guests left:
+  guests' share links must not break, RSVP rows are the guests' data, and the
+  manage token survives on the record. The response reports how many
+  invitations were retained.
+- FR-11.8 Sign-out and deletion both leave this browser's manage tokens in
+  place — neither revokes a capability the host held before signing in.
+- FR-11.9 The gate is the first frame of the share sheet, not a separate
+  screen: the invitation stays visible, and the editor's draft is parked before
+  the redirect and restored on return, so a host comes back to exactly what
+  they left. Declining at Google is a distinct, non-error state from a failed
+  handshake, which carries a coarse `state`/`exchange`/`identity` class for
+  support.
+
 ## Routing map (web)
 
 | Path | Page | Audience |
@@ -228,6 +276,17 @@ implementation.
 | `/create` | Editor (generate → edit → publish → share) | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |
+
+### Account endpoints (FR-11)
+
+| Endpoint | Purpose | Authorized by |
+| --- | --- | --- |
+| `GET /api/auth/google` | Start sign-in; redirects to Google | — (`503` when unconfigured) |
+| `GET /api/auth/google/callback` | Finish sign-in; sets the session cookie | One-time `state` + verified `id_token` |
+| `GET /api/auth/session` | Is sign-in available, and am I signed in | Session cookie (optional) |
+| `POST /api/auth/signout` | Revoke this session | Session cookie + origin check |
+| `GET /api/account/keyring` | This account's invitations + manage tokens | Session cookie |
+| `DELETE /api/account` | Delete the account, keep the invitations | Session cookie + origin check |
 
 ## Not yet built (backlog)
 

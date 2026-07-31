@@ -1,7 +1,8 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { HostInvitation } from "../hostInvitations";
-import type { LandingStrings } from "../i18n";
+import type { AuthStrings, LandingStrings } from "../i18n";
 import { pluralForm } from "../plural";
 import { formatRelativeTime } from "../relativeTime";
 import type { CountsResult, RsvpCounts } from "../types";
@@ -16,22 +17,50 @@ const VISIBLE = 3;
  *
  * Deliberately quiet: a plain surface card with a modest heading, above the
  * pitch but never louder than it. "Create" stays the only accent button on
- * the page. The list comes from this browser alone, and the subtitle says so
- * rather than implying an account.
+ * the page.
+ *
+ * Signed out, the subtitle says "on this device" and the block is exactly what
+ * it has always been — no sign-in offer, because that would be an
+ * advertisement in the place a host simply wants their list (adr-014, DS
+ * `LandingSignedInStates`). Signed in, the same list comes from the account,
+ * the card gains an account footer, and one faint line says it travels.
  */
 export function YourInvitations({
   invitations,
   counts,
+  signedIn = false,
+  footer = null,
+  onDeleteAccount,
   t,
+  auth,
 }: {
   invitations: HostInvitation[];
   /** Per-row counts, keyed by id (adr-012). Absent until the batch resolves —
    *  and it may never resolve; the rows render fully without it. */
   counts?: Map<string, CountsResult>;
+  signedIn?: boolean;
+  /** The account footer, rendered inside the card. Null when signed out or
+   *  when the deployment has no OAuth client at all — in which case nothing
+   *  about accounts renders, not even a disabled control (adr-014 §7). */
+  footer?: ReactNode;
+  onDeleteAccount?: () => void;
   t: LandingStrings;
+  auth: AuthStrings;
 }) {
   const [expanded, setExpanded] = useState(false);
-  if (invitations.length === 0) return null;
+  // Signed in with nothing published yet: no heading over an empty space, but
+  // the card stays, or there would be no way to sign out.
+  if (invitations.length === 0) {
+    if (!signedIn || !footer) return null;
+    return (
+      <section className="lp-yours">
+        <div className="lp-yours-card">
+          <p className="lp-signed-in-empty">{auth.emptySignedIn}</p>
+          {footer}
+        </div>
+      </section>
+    );
+  }
 
   const capped = expanded ? invitations : invitations.slice(0, VISIBLE);
   const single = invitations.length === 1;
@@ -41,9 +70,11 @@ export function YourInvitations({
       <div className="lp-yours-head">
         <h2>{single ? t.yoursTitleOne : t.yoursTitle}</h2>
         <span className="lp-yours-sub">
-          {single
-            ? t.yoursOnThisDevice
-            : t.yoursCountOnThisDevice.replace("{n}", String(invitations.length))}
+          {signedIn
+            ? auth.invitationCount.replace("{n}", String(invitations.length))
+            : single
+              ? t.yoursOnThisDevice
+              : t.yoursCountOnThisDevice.replace("{n}", String(invitations.length))}
         </span>
       </div>
 
@@ -90,7 +121,29 @@ export function YourInvitations({
             {t.yoursShowAll.replace("{n}", String(invitations.length))}
           </button>
         )}
+
+        {footer}
       </div>
+
+      {signedIn && (
+        // The payoff of the whole feature, and a host has no way to know it
+        // otherwise. One line, in the faintest colour on the page.
+        <p className="lp-cross-device">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="5" width="12" height="9" rx="1.6" stroke="#b0a99a" strokeWidth="1.6" />
+            <rect x="14" y="11" width="7" height="10" rx="1.6" stroke="#b0a99a" strokeWidth="1.6" />
+          </svg>
+          <span>{auth.crossDevice}</span>
+        </p>
+      )}
+
+      {signedIn && onDeleteAccount && (
+        <p className="lp-delete-account">
+          <button type="button" className="lp-delete-link" onClick={onDeleteAccount}>
+            {auth.deleteAccount}
+          </button>
+        </p>
+      )}
     </section>
   );
 }

@@ -85,3 +85,48 @@ describe("SharePanel", () => {
     expect(onCopyManageLink).toHaveBeenCalledTimes(1);
   });
 });
+
+// adr-014 §5 / DS `ShareSignedIn`. The hierarchy above must survive intact;
+// what changes is how much work it takes to reach the manage link.
+describe("signed in", () => {
+  function renderSignedIn(manageShown: boolean, onToggleManage = () => {}) {
+    return render(
+      <SharePanel
+        published={published}
+        onCopyLink={() => {}}
+        copied={false}
+        onCopyManageLink={() => {}}
+        manageCopied={false}
+        signedIn
+        manageShown={manageShown}
+        onToggleManage={onToggleManage}
+        t={UI.en}
+      />,
+    );
+  }
+
+  it("collapses the manage block and says the account holds it", () => {
+    renderSignedIn(false);
+    expect(screen.getByText(UI.en.auth.savedToAccount)).toBeTruthy();
+    expect(screen.getByText(UI.en.auth.showManage)).toBeTruthy();
+    // Collapsed there is nothing to copy, so nothing to warn about.
+    expect(screen.queryByText(UI.en.copyManageLink)).toBeNull();
+    expect(screen.queryByText(UI.en.manageLinkWarning)).toBeNull();
+  });
+
+  // The hard rule from ShareSpec: the copy button never exists on screen
+  // without the warning above it — every state, every width, both languages.
+  it("brings back the warning with the copy button, word for word", () => {
+    renderSignedIn(true);
+    expect(screen.getByText(UI.en.copyManageLink)).toBeTruthy();
+    expect(screen.getByText(UI.en.manageLinkWarning)).toBeTruthy();
+  });
+
+  it("keeps the public link first and the only filled accent", () => {
+    renderSignedIn(true);
+    // Same primary as the signed-out panel: one filled accent, and it is the
+    // guest link.
+    expect(screen.getByText(UI.en.copyLink).className).toContain("sp-primary");
+    expect(screen.getByText(UI.en.copyManageLink).className).toContain("sp-ghost");
+  });
+});

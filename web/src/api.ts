@@ -1,5 +1,7 @@
 import { loadByok } from "./byok";
 import type {
+  AccountDeletion,
+  AuthSession,
   BackgroundRef,
   CopyField,
   CountsRequestItem,
@@ -9,6 +11,8 @@ import type {
   EventBrief,
   GenerateSource,
   Invitation,
+  KeyringEntry,
+  KeyringResponse,
   PublishedInvitation,
   PublishResult,
   RsvpInput,
@@ -146,4 +150,40 @@ export function fetchRsvps(id: string, manageToken: string): Promise<RsvpSummary
 export async function fetchCounts(items: CountsRequestItem[]): Promise<CountsResult[]> {
   const result = await post<CountsResponse>("/api/invitations/counts", { items });
   return result.results;
+}
+
+// Host accounts (adr-014). The session rides an httpOnly cookie scoped to
+// /api, so these requests need `credentials: "same-origin"` and the client
+// never sees the value — what it is signed in *as* comes from the server.
+function withSession<T>(path: string, init?: RequestInit): Promise<T> {
+  return request<T>(path, { ...init, credentials: "same-origin" });
+}
+
+export function fetchAuthSession(): Promise<AuthSession> {
+  return withSession<AuthSession>("/api/auth/session");
+}
+
+/** Every manage token this account holds — what `localStorage` would have if
+ *  this browser had never cleared it (adr-014 §5). */
+export async function fetchKeyring(): Promise<KeyringEntry[]> {
+  const result = await withSession<KeyringResponse>("/api/account/keyring");
+  return result.invitations;
+}
+
+export async function signOut(): Promise<void> {
+  await withSession<void>("/api/auth/signout", { method: "POST" });
+}
+
+/** Deletes the account, never the invitations (adr-014 §9). The count comes
+ *  back so the UI can say what was kept rather than leave the host guessing
+ *  whether their events went with it. */
+export function deleteAccount(): Promise<AccountDeletion> {
+  return withSession<AccountDeletion>("/api/account", { method: "DELETE" });
+}
+
+/** A full-page navigation, not a fetch: the browser has to follow Google's
+ *  redirect chain and come back with a `Set-Cookie`. The one place the app
+ *  leaves its own origin, and the one navigation the router cannot own. */
+export function startGoogleSignIn(redirectTo: string): void {
+  window.location.assign(`/api/auth/google?redirect_to=${encodeURIComponent(redirectTo)}`);
 }

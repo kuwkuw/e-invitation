@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
 import { useHostInvitationCounts } from "../src/hooks/useHostInvitationCounts";
-import { manageSeenKey, manageTokenKey } from "../src/hooks/useHostManage";
+import { forgetHeldManageTokens, manageSeenKey, manageTokenKey } from "../src/manageTokens";
 import type { CountsResult } from "../src/types";
 
 const ok = (id: string, yes: number, newSince = 0): CountsResult => ({
@@ -15,6 +15,7 @@ const ok = (id: string, yes: number, newSince = 0): CountsResult => ({
 beforeEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
+  forgetHeldManageTokens();
 });
 
 describe("useHostInvitationCounts", () => {
