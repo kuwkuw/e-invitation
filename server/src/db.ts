@@ -65,6 +65,36 @@ const SCHEMA = `
     created_at    TEXT NOT NULL,
     PRIMARY KEY (user_id, invitation_id)
   );
+  -- The keyring's primary key answers "what has this host published"; RSVP
+  -- notifications (adr-015 §1) ask the reverse — "who should hear about this
+  -- invitation" — which that key cannot serve. One index rather than a second
+  -- table: there is exactly one link between an account and an invitation and
+  -- it already lives here.
+  CREATE INDEX IF NOT EXISTS keyring_invitation_id ON keyring(invitation_id);
+
+  -- adr-015 §7. A row is a **deviation from the default plus send
+  -- bookkeeping**, not a copy of the default: absent means enabled and never
+  -- notified, which is what makes "default on" a real default rather than a
+  -- value stamped into every publish. Rows appear when a host changes the
+  -- setting or when the first notification is sent.
+  --
+  -- Keyed per (user, invitation) so two accounts holding the same invitation
+  -- (FR-11.4 allows it) unsubscribe independently. No foreign key on
+  -- invitation_id — invitations are files, not rows, exactly as in keyring.
+  --
+  -- unsub_token is 16 random bytes and nothing is signed: adr-014 established
+  -- there is no signing secret in this codebase because a session cookie's
+  -- value "means nothing except as a row key". The same holds here, and the
+  -- token's only power is to turn one invitation's mail off for one account.
+  CREATE TABLE IF NOT EXISTS notification_prefs (
+    user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    invitation_id    TEXT NOT NULL,
+    enabled          INTEGER NOT NULL DEFAULT 1,
+    unsub_token      TEXT NOT NULL UNIQUE,
+    last_notified_at TEXT,
+    created_at       TEXT NOT NULL,
+    PRIMARY KEY (user_id, invitation_id)
+  );
 
   CREATE TABLE IF NOT EXISTS oauth_states (
     state         TEXT PRIMARY KEY,

@@ -218,7 +218,15 @@ The swap cost is one module either way, which is the point of §6.
   it. The host learns this at publish, not from the first email.
 - **Per invitation**, as adr-014 §8 specified. A `notification_prefs` row per
   `(user_id, invitation_id)` carries `enabled`, `last_notified_at` and an
-  `unsub_token`.
+  `unsub_token`. The row is **a deviation from the default plus send
+  bookkeeping, not a copy of the default**: no row means enabled and never
+  notified, and rows appear when a host changes the setting or when the first
+  notification is sent. That is what makes "default on" an actual default —
+  a value stamped into every publish would have to be migrated if the default
+  ever changed, and it would put a write on the publish path for an invitation
+  that may never receive a reply. It also keeps the dependency pointing one
+  way: publishing creates no notification state, so `linkInvitation` and the
+  account layer need no notion that this feature exists.
 - **One-click unsubscribe.** `GET|POST /api/notifications/unsubscribe/:token`
   sets `enabled = 0`, plus `List-Unsubscribe` and `List-Unsubscribe-Post`
   headers (RFC 8058) so a mail client can do it without opening a page.
@@ -359,9 +367,13 @@ Six PRs, each independently mergeable, in order:
 
 1. **The prefs table and the reverse lookup.** `notification_prefs`, the
    `keyring_invitation_id` index, and the accessors — enable/disable, read by
-   invitation, `last_notified_at`. No sending, no routes. Tests: a publish
-   while signed in creates a row, account deletion drops it, invitations and
-   RSVPs survive deletion (FR-11.7 unchanged).
+   invitation, `last_notified_at`, resolve by unsubscribe token. No sending, no
+   routes. Tests: a publish while signed in makes the host a target and an
+   anonymous one makes nobody a target, an absent row reads as enabled and
+   never notified, disabling drops a host from the targets, a token disables
+   exactly its own pair, two hosts on one invitation unsubscribe
+   independently, account deletion drops the rows by cascade, and invitations
+   and RSVPs survive deletion (FR-11.7 unchanged).
 2. **The sender.** `email/send.ts` — one `fetch`, one log line, unconfigured is
    a no-op returning a reason. Strings module with both languages, HTML plus
    plain-text parts. Tests mock the boundary; no test sends mail.
