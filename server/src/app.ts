@@ -7,6 +7,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { pruneExpiredSessions } from "./accounts.js";
 import { publishRequiresAccount, signInAvailable } from "./auth/google.js";
 import { pruneExpiredOauthStates } from "./auth/state.js";
+import { notifyWindowMinutes } from "./email/replyNotifier.js";
 import { emailConfigured } from "./email/send.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
@@ -102,7 +103,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     // server boots and every other feature is unchanged. Read per request
     // rather than at boot like `auth`, because it is one env lookup and an
     // operator adding the key wants /healthz to agree without a restart.
-    notifications: { configured: emailConfigured() },
+    notifications: { configured: emailConfigured(), window_minutes: notifyWindowMinutes() },
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
