@@ -1500,7 +1500,10 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    filled accent. What changes is that the manage block collapses to one row —
    and with it collapses the copy button, so the warning it guards is never
    absent while the button is present. */
-.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 14px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
+/* 10px, not 14: this and .sp-notify below it are one stack of quiet account
+   facts, and the tighter gap groups them instead of reading as three
+   equally-spaced rows (DS "NotifyLine" §4). */
+.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
 .sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: #8aa98f; }
 .sp-manage-collapsed { width: 100%; background: #faf6f0; border: 1px solid #f0e5d6; border-radius: 12px; display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
 .sp-manage-collapsed:hover { border-color: #e4d4c0; }
@@ -1509,6 +1512,25 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
 .sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
 .sp-manage-hide:hover { color: #7a5638; }
+
+/* Reply notifications (adr-015 §7, DS "rsvp-notifications/NotifyLine").
+   Same values as .sp-account-note above — the two are one stack of quiet facts
+   about the account, which is why that note's bottom margin is 10px not 14.
+
+   The action sits on its own line rather than beside the text: a Ukrainian
+   address does not break between letters, so a baseline-aligned button ends up
+   hanging beside a three-line sentence and reads as a caption to its first
+   line. Indented to the text column (15px icon + 8px gap) so the two still
+   read as one block. The 40px height is a finger target; the negative margin
+   keeps the label optically flush despite it. */
+.sp-notify { margin: 0 0 12px; }
+.sp-notify-row { display: flex; align-items: flex-start; gap: 8px; }
+.sp-notify-icon { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 3px; color: #b7ae9e; }
+.sp-notify-text { margin: 0; font-size: 0.8rem; color: #8d8577; line-height: 1.45; overflow-wrap: anywhere; }
+.sp-notify-email { color: #6b6659; font-weight: 600; }
+.sp-notify-action { padding-left: 23px; }
+.sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
+.sp-notify-toggle:hover { color: #7a5638; }
 
 /* Landing account footer + account deletion (adr-014 §9, DS
    "LandingSignedInStates"). The footer signs the invitations card because the

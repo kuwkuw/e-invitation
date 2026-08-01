@@ -143,6 +143,41 @@ export const LockIcon = () => (
   </svg>
 );
 
+/** Reply notifications, on (adr-015 §7). The DS carries one envelope glyph
+ *  across the share panel, the not-found page and the unsubscribe page. */
+export const MailIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="6" width="18" height="12.5" rx="2.4" stroke="currentColor" strokeWidth="1.6" />
+    <path
+      d="M4 8.2l8 5.6 8-5.6"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Reply notifications, off. The same envelope struck through — the state is
+ *  read from the glyph rather than from weight or colour, so the off line can
+ *  stay at exactly the on line's values. The white stroke underneath is a
+ *  knockout so the strike does not merge with the envelope's own outline; it
+ *  is literally the panel's background, not a themed colour. */
+export const MailOffIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="6" width="18" height="12.5" rx="2.4" stroke="currentColor" strokeWidth="1.6" />
+    <path
+      d="M4 8.2l8 5.6 8-5.6"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M3.4 19.6L20.6 4.9" stroke="#ffffff" strokeWidth="3.4" strokeLinecap="round" />
+    <path d="M3.4 19.6L20.6 4.9" stroke="#a29a8b" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
+
 /** Three-dot "working" indicator; CSS animates the dots. */
 export const BusyDots = () => (
   <span className="cc-dots">

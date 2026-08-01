@@ -65,6 +65,54 @@ const SCHEMA = `
     created_at    TEXT NOT NULL,
     PRIMARY KEY (user_id, invitation_id)
   );
+  -- The keyring's primary key answers "what has this host published"; RSVP
+  -- notifications (adr-015 §1) ask the reverse — "who should hear about this
+  -- invitation" — which that key cannot serve. One index rather than a second
+  -- table: there is exactly one link between an account and an invitation and
+  -- it already lives here.
+  CREATE INDEX IF NOT EXISTS keyring_invitation_id ON keyring(invitation_id);
+
+  -- adr-015 §7, and the reason there are two tables rather than one: the
+  -- **preference is per account** while the **rate-limit window is per
+  -- invitation**. They are different questions with different lifetimes, and
+  -- one row carrying both would have made the account's answer depend on which
+  -- invitation happened to be looked at.
+  --
+  -- The preference is account-wide because one-click unsubscribe (RFC 8058) is
+  -- presented by every mail client as "stop sending me this kind of mail", and
+  -- a host who clicks it and keeps receiving mail about their other two events
+  -- reports the next one as spam. That costs sender reputation for every
+  -- message the product sends, guests' share links included. Per-invitation
+  -- control is a later question (adr-015 §7's revisit trigger).
+  --
+  -- A row is still a **deviation from the default**, not a copy of it: absent
+  -- means enabled, which is what makes "default on" a real default rather than
+  -- a value stamped into every account. unsub_token is 16 random bytes and
+  -- nothing is signed — adr-014 established there is no signing secret here
+  -- because a session cookie's value "means nothing except as a row key", and
+  -- the same holds for this one.
+  CREATE TABLE IF NOT EXISTS notification_prefs (
+    user_id     TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    enabled     INTEGER NOT NULL DEFAULT 1,
+    unsub_token TEXT NOT NULL UNIQUE,
+    created_at  TEXT NOT NULL
+  );
+
+  -- Send bookkeeping, per (account, invitation): when this host was last told
+  -- about this invitation. The adr-015 §4 window measures from here, and
+  -- countNewSince counts replies after it. Separate from the preference
+  -- above because a host who unsubscribes and resubscribes must not thereby
+  -- reset every invitation's window, and because this row is written by the
+  -- send path while that one is written by the host.
+  --
+  -- No foreign key on invitation_id — invitations are files, not rows, exactly
+  -- as in keyring.
+  CREATE TABLE IF NOT EXISTS notification_sends (
+    user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    invitation_id    TEXT NOT NULL,
+    last_notified_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, invitation_id)
+  );
 
   CREATE TABLE IF NOT EXISTS oauth_states (
     state         TEXT PRIMARY KEY,

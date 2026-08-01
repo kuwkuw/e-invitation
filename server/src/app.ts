@@ -7,6 +7,8 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { pruneExpiredSessions } from "./accounts.js";
 import { publishRequiresAccount, signInAvailable } from "./auth/google.js";
 import { pruneExpiredOauthStates } from "./auth/state.js";
+import { notifyWindowMinutes } from "./email/replyNotifier.js";
+import { emailConfigured } from "./email/send.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
 import { markBaseline } from "./metrics.js";
@@ -14,6 +16,7 @@ import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
+import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -97,11 +100,19 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     llm: llmInfo,
     guardrails: guardrailsSnapshot(),
     auth: { google: authConfigured, publish_gate: publishGate },
+    // adr-015 §8: mail-unconfigured is a supported mode, not a failure — the
+    // server boots and every other feature is unchanged. Read per request
+    // rather than at boot like `auth`, because it is one env lookup and an
+    // operator adding the key wants /healthz to agree without a restart.
+    notifications: { configured: emailConfigured(), window_minutes: notifyWindowMinutes() },
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
+  // Outside /api (adr-015 §7) and therefore registered before the SPA
+  // fallback, which would otherwise serve the shell for this path.
+  registerUnsubscribeRoutes(app);
 
   // Production: serve the built SPA from the same process. /i/:id stays a
   // dynamic route (OG meta injection); everything else non-/api falls back

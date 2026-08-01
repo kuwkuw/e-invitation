@@ -124,6 +124,13 @@ export interface AuthStrings {
   savedToAccount: string;
   showManage: string;
   hideManage: string;
+  /** adr-015 §7: the disclosure is made where it is caused — at publish, with
+   *  the off switch beside it — rather than discovered from the first email.
+   *  `{email}` is the signed-in address the replies will go to. */
+  notifyOn: string;
+  notifyOff: string;
+  notifyTurnOff: string;
+  notifyTurnOn: string;
   signOut: string;
   crossDevice: string;
   emptySignedIn: string;
@@ -167,6 +174,10 @@ export const AUTH: Record<Language, AuthStrings> = {
     savedToAccount: "Saved to your account — it'll be there on any device you sign in on.",
     showManage: "Show",
     hideManage: "Hide",
+    notifyOn: "We'll email {email} when replies come in.",
+    notifyOff: "We won't email you about replies to any of your invitations.",
+    notifyTurnOff: "Turn off all emails",
+    notifyTurnOn: "Turn emails back on",
     signOut: "Sign out",
     crossDevice: "This list opens on any device you sign in on.",
     emptySignedIn: "Your invitations will appear here — and stay, wherever you sign in.",
@@ -209,6 +220,10 @@ export const AUTH: Record<Language, AuthStrings> = {
       "Збережено у вашому акаунті — відкриється на будь-якому пристрої, де ви увійдете.",
     showManage: "Показати",
     hideManage: "Сховати",
+    notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
+    notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
+    notifyTurnOff: "Вимкнути всі листи",
+    notifyTurnOn: "Увімкнути листи",
     signOut: "Вийти",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
     emptySignedIn: "Тут з'являться ваші запрошення — і залишаться, куди б ви не увійшли.",

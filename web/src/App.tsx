@@ -12,6 +12,7 @@ import { loadDraft } from "./draft";
 import { useAuthReturn } from "./hooks/useAuthReturn";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useInvitationEditor } from "./hooks/useInvitationEditor";
+import { useNotificationPref } from "./hooks/useNotificationPref";
 import { usePublishing } from "./hooks/usePublishing";
 import { useReferralSource } from "./hooks/useReferralSource";
 import { loadUiLang, saveUiLang, UI } from "./i18n";
@@ -51,6 +52,9 @@ export default function App() {
     authReturn: authReturn.result,
     authCode: authReturn.code,
   });
+  // Account-level, so it needs no invitation — only a signed-in host on a
+  // deployment that can actually send mail (adr-015 §7, §8).
+  const notify = useNotificationPref(account.status === "signed_in" && account.notifications);
 
   // Finish what the gate interrupted. Guarded by a ref rather than by the
   // gate state, because the publish flips that state itself and StrictMode
@@ -127,6 +131,9 @@ export default function App() {
           signedIn={account.status === "signed_in"}
           manageShown={publishing.manageShown}
           onToggleManage={publishing.toggleManageShown}
+          notifyEmail={account.notifications ? account.email : null}
+          notifyEnabled={notify.enabled}
+          onToggleNotify={notify.toggle}
           t={t}
         />
       )}

@@ -63,10 +63,16 @@
   },
   "overrides": [
     {
-      // The gateway's one-JSON-line-per-request log and the image path's
-      // copy of it are the observability contract, not stray debugging;
-      // scripts/ are CLI tools whose output is the point.
-      "includes": ["server/src/llm/gateway.ts", "server/src/llm/imageGen.ts", "scripts/**"],
+      // The gateway's one-JSON-line-per-request log, the image path's copy of
+      // it, and the mail sender's (adr-015 §5, the only record that a
+      // notification was attempted) are the observability contract, not stray
+      // debugging; scripts/ are CLI tools whose output is the point.
+      "includes": [
+        "server/src/llm/gateway.ts",
+        "server/src/llm/imageGen.ts",
+        "server/src/email/send.ts",
+        "scripts/**"
+      ],
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     },
     {

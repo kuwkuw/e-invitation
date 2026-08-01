@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { OG_HEIGHT, OG_WIDTH, renderOgPng } from "../og/render.js";
+import { absoluteBase } from "../publicUrl.js";
 import { type Invitation, InvitationId } from "../schemas.js";
 import { getRecord, type PublishedRecord } from "../store.js";
 
@@ -19,10 +20,6 @@ const pngCache = new Map<string, Buffer>();
 function lookup(params: unknown): PublishedRecord | null {
   const id = InvitationId.safeParse((params as { id?: string }).id);
   return id.success ? getRecord(id.data) : null;
-}
-
-function absoluteBase(request: FastifyRequest): string {
-  return `${request.protocol}://${request.headers.host ?? "localhost"}`;
 }
 
 function escapeHtml(text: string): string {

@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { linkInvitation } from "../accounts.js";
 import { publishRequiresAccount } from "../auth/google.js";
 import { currentUser } from "../auth/session.js";
+import { notifyNewReplies } from "../email/replyNotifier.js";
 import { budgetExhausted, consumeIpAllowance, type LimitedTask } from "../guardrails.js";
 import { AllModelsFailedError, type ByokKey } from "../llm/gateway.js";
 import {
@@ -21,6 +22,7 @@ import {
 } from "../metrics.js";
 import { regenerateField } from "../pipeline/copy.js";
 import { generateInvitation } from "../pipeline/generate.js";
+import { absoluteBase } from "../publicUrl.js";
 import { countNewSince, summarizeRsvps } from "../rsvpSummary.js";
 import {
   BackgroundId,
@@ -220,8 +222,18 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: describeZodError(error) });
     }
-    addRsvp(record, { ...body, created_at: new Date().toISOString() });
+    // `addRsvp` is immutable and returns the updated record — the reply that
+    // just arrived is only in *that* one. Notifying from `record` would count
+    // every reply except the one being notified about, which for a first reply
+    // is zero and no email at all.
+    const withReply = addRsvp(record, { ...body, created_at: new Date().toISOString() });
     recordRsvp();
+    // adr-015 §5: dispatched, never awaited. The RSVP is durable on disk by
+    // this line, and the guest must never wait on a mail API or see an error
+    // because one failed — the same rule adr-013 §6 applied to the view
+    // beacon, with more at stake. `notifyNewReplies` swallows everything, so
+    // the floating promise cannot become an unhandled rejection.
+    void notifyNewReplies(withReply, absoluteBase(request));
     return { ok: true };
   });
 

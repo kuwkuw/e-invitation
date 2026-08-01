@@ -116,6 +116,9 @@ describe("sign-in unconfigured", () => {
     expect(session.json()).toEqual({
       configured: false,
       publish_gate: false,
+      // No mail credentials either, so the share panel promises no email
+      // (adr-015 §8) — unconfigured across the board is a supported mode.
+      notifications: false,
       signed_in: false,
       email: null,
     });
@@ -182,6 +185,9 @@ describe("google sign-in", () => {
     expect(session.json()).toEqual({
       configured: true,
       publish_gate: true,
+      // Sign-in configured, mail not — the two switches are independent
+      // (adr-015 §8), so a host can publish and still be promised no email.
+      notifications: false,
       signed_in: true,
       email: "host@example.com",
     });

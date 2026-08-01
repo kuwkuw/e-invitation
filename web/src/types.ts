@@ -152,8 +152,19 @@ export interface AuthSession {
    *  Read before the host presses Publish, so the gate can be the first frame
    *  of the share panel rather than a reaction to a 401. */
   publish_gate: boolean;
+  /** Whether this deployment can send reply notifications at all (adr-015 §8).
+   *  False means the share panel shows no notification line — a promise of
+   *  email a mail-less deployment will never keep is worse than saying
+   *  nothing. */
+  notifications: boolean;
   signed_in: boolean;
   email: string | null;
+}
+
+/** A host's reply-notification preference for one invitation (adr-015 §7).
+ *  Mirrors the server's `NotificationPref` by hand (NFR-8). */
+export interface NotificationPref {
+  enabled: boolean;
 }
 
 // BYOK (ADR-006): the host's own provider key, kept in this browser only.
