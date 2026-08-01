@@ -1,6 +1,6 @@
 # ADR-015 — Notify the host when replies arrive
 
-**Status:** proposed · **Date:** 2026-07-31 · Builds on
+**Status:** accepted · **Date:** 2026-07-31 · Builds on
 [adr-014](adr-014-host-accounts.md) §8, which supplies the address and
 deliberately left the sender to this iteration. Lands as **FR-12**, extends
 FR-5, and adds a paragraph to NFR-4 that this ADR argues is the whole cost of
@@ -477,6 +477,52 @@ four code PRs, host accounts was taken next, and adr-013's docs pass arrived an
 iteration late — recorded in 06-roadmap because the convention is what slipped.
 This iteration is the one where that must not repeat, and the DNS records in
 PR 6 are operational state that exists nowhere else.
+
+## Notes from implementation
+
+- **The unsubscribe scope was wrong as designed, and the DS pass caught it.**
+  §7 originally specified a per-invitation preference, following adr-014 §8.
+  RFC 8058's one-click is presented by mail clients as "stop sending me this
+  kind of mail"; honouring it for one event leaves a host who runs three still
+  receiving mail about the other two, and their second click is **Spam** —
+  which costs deliverability for everything the product sends, guests' share
+  links included. The preference is account-wide, per-event control is
+  deferred with its own trigger below, and §7 was rewritten rather than
+  patched. The mockups had already been drawn against the old model, so their
+  done-state copy — naming the invitation and promising "your other events are
+  unchanged" — had to be replaced with account-scoped copy.
+- **`GET` must not mutate**, which the plan did not anticipate. Mail scanners,
+  corporate link checkers and Gmail's proxy follow links in mail with no human
+  involved, so the obvious single-route design would have unsubscribed hosts
+  through their own provider, silently. There are three page states, not the
+  mockup's two: `GET` confirms, `POST` mutates. Fastify parses JSON only, so
+  the form-encoded one-click body needed a content-type parser — without it
+  the `List-Unsubscribe-Post` header advertises a button that `415`s.
+- **The routes moved off `/api`.** The session cookie is scoped `Path=/api`
+  and the URL arrives from an inbox, so `/unsubscribe/:token` keeps a session
+  credential away from a link a mail provider may fetch on the reader's
+  behalf. It also answers HTML where everything under `/api` answers JSON.
+- **Two tables, not one.** The preference is per account but §4's window is per
+  invitation, so `notification_prefs` (keyed by user) and `notification_sends`
+  (keyed by user + invitation) are separate. A single row would have made the
+  account's answer depend on which invitation was looked at, and would have let
+  unsubscribing and resubscribing reset every window.
+- **A bug the tests caught, which the design could not have.** `addRsvp` is
+  immutable, and the RSVP route was passing the notifier its *pre-reply*
+  record — so the count excluded the reply being notified about, which for a
+  first reply is zero and therefore no email at all. Only a test through the
+  real route finds this; the notifier was correct throughout and the caller was
+  not.
+- **`countNewSince` could not serve the first email.** It returns 0 without a
+  baseline, which is right for the dashboard — "everything is new" tells a host
+  nothing on a first visit — and wrong for a first notification, where every
+  live reply is news. The first send counts live replies instead.
+- **`absoluteBase` was extracted** from `routes/og.ts` into `publicUrl.ts`,
+  because the `og:image` host and the manage link in a host's inbox have to
+  agree and a drifted copy breaks either one silently.
+- **Both surfaces shipped before their mockups**, recorded in §10. The
+  unsubscribe page did not: it was designed first, as the convention intends.
+- **Bundle cost: +0.52 kB gzipped** (88.20 → 88.72), recorded under NFR-1.
 
 ## Revisit triggers
 

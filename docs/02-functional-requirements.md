@@ -299,6 +299,62 @@ are reading back the tokens it holds and authorizing a first publish.
   handshake, which carries a coarse `state`/`exchange`/`identity` class for
   support.
 
+## FR-12 Reply notifications
+
+**Status: built** — [adr-015](decisions/adr-015-rsvp-notifications.md),
+`GET|POST /unsubscribe/:token`, `GET|PUT /api/account/notifications`
+([email/](../server/src/email/), [notifications.ts](../server/src/notifications.ts))
+
+Closes the latency gap FR-5 left open. adr-010 made the responses *reachable*
+after a closed tab; this makes them *timely* — a host who checks once a week
+otherwise learns about replies on a schedule unrelated to when guests sent
+them.
+
+- FR-12.1 When replies arrive for an invitation published while signed in, the
+  host is emailed at the Google-verified address from FR-11.1. **An account is
+  the eligibility rule**: an invitation published anonymously notifies nobody,
+  silently and permanently, until someone republishes it signed in (FR-11.4).
+  There is no second address and no verification flow of our own.
+- FR-12.2 The email carries the invitation title, **a count, and a link** — no
+  guest name, no attendance, no party size, no note. Guest data does not leave
+  the system: what a third-party mail provider learns is that this host has an
+  event with replies ([adr-015](decisions/adr-015-rsvp-notifications.md) §3).
+- FR-12.3 Links point at bare `/manage/:id` with **no `#t=` fragment**. The
+  keyring supplies the manage token once the host signs in (FR-11.3), so a
+  forwarded notification or a breached mailbox grants nothing. The unsubscribe
+  URL is the only credential in the message.
+- FR-12.4 At most one email per invitation per window
+  (`NOTIFY_WINDOW_MINUTES`, default 60). The first reply mails immediately;
+  replies inside the window mail nothing; the next one after it carries every
+  reply since the last notification, counted by the same `countNewSince` the
+  dashboard uses (FR-5.7) so the two can never disagree. A host who has never
+  been told gets every live reply counted, since all of them are news.
+- FR-12.5 Sending never blocks or fails an RSVP. It is dispatched after the
+  guest's response, never awaited, and every failure is swallowed and logged —
+  a dropped notification costs a nudge, and the next reply after the window
+  carries the full count anyway. There is no retry queue.
+- FR-12.6 A host can turn reply email off, **for their whole account**, from
+  the share panel or from any message. The switch is account-wide because a
+  mail client's one-click unsubscribe (RFC 8058) promises to stop the sender,
+  not one message; honouring it per invitation earns the spam button instead,
+  which costs deliverability for everything the product sends. Per-invitation
+  control is deliberately deferred (adr-015 §7).
+- FR-12.7 The disclosure is made where it is caused: the share panel says which
+  address replies will go to, with the switch beside it, at the moment the host
+  publishes — not in a settings screen this app does not have, and not
+  discovered from the first email.
+- FR-12.8 `GET /unsubscribe/:token` never mutates — mail scanners and link
+  prefetchers follow links without a human, so it renders a confirm step;
+  `POST` is the mutation and RFC 8058's one-click posts to it. An unresolvable
+  token says the link no longer works without revealing whether it ever
+  existed, and never reads as an error. Unsubscribing touches no manage token,
+  no keyring row and no invitation.
+- FR-12.9 With no mail credentials the server boots and every other feature is
+  unchanged; nothing in the UI offers a preference that cannot be honoured.
+  `GET /healthz` reports `notifications.configured` and
+  `notifications.window_minutes`, and `/api/auth/session` reports
+  `notifications` so the share panel knows whether to promise anything.
+
 ## Routing map (web)
 
 | Path | Page | Audience |
@@ -318,6 +374,19 @@ are reading back the tokens it holds and authorizing a first publish.
 | `POST /api/auth/signout` | Revoke this session | Session cookie + origin check |
 | `GET /api/account/keyring` | This account's invitations + manage tokens | Session cookie |
 | `DELETE /api/account` | Delete the account, keep the invitations | Session cookie + origin check |
+
+### Notification endpoints (FR-12)
+
+| Endpoint | Purpose | Authorized by |
+| --- | --- | --- |
+| `GET /api/account/notifications` | Is reply email on for this account | Session cookie |
+| `PUT /api/account/notifications` | Turn it on or off | Session cookie + origin check |
+| `GET /unsubscribe/:token` | Confirm step — never mutates | Unsubscribe token |
+| `POST /unsubscribe/:token` | Turn reply email off; RFC 8058 one-click posts here | Unsubscribe token (no origin check — one-click is cross-origin by definition) |
+
+`/unsubscribe` sits **outside `/api`** on purpose: the session cookie is scoped
+`Path=/api`, and this URL arrives from an inbox where a mail provider may fetch
+it on the reader's behalf.
 
 ## Not yet built (backlog)
 

@@ -132,11 +132,23 @@ a future DB swap (NFR-7).
   there is to check, so counting is gated on holding a real share link. If a
   second credential-less write ever appears, "validate the id, count, `204`" is
   the precedent ([adr-013](decisions/adr-013-share-loop-instrumentation.md) §6).
+  `POST /unsubscribe/:token` is authorized by an unguessable token and takes
+  **no origin check**, unlike the cookie-authorized mutations: RFC 8058
+  one-click arrives from the mail provider's servers and is cross-origin by
+  definition. It sits outside `/api` so the `Path=/api` session cookie never
+  rides a URL that came from an inbox
+  ([adr-015](decisions/adr-015-rsvp-notifications.md) §7).
 - **Validation:** every boundary shape parses through
   [schemas.ts](../server/src/schemas.ts); route handlers return `400` on parse
   failure, `403` on token mismatch, `502` when all models fail.
 - **Language:** `EventBrief.language` drives copy; UI language is independent
   ([i18n.ts](../web/src/i18n.ts)).
+- **Outbound mail:** one `fetch` to one provider endpoint
+  ([email/send.ts](../server/src/email/send.ts)), no SDK and no transport
+  abstraction until there is a second transport — adr-007's finding applied to
+  a new dependency. Reply notifications are dispatched after the guest's RSVP
+  response and never awaited, so the only request path a guest is on stays free
+  of it ([adr-015](decisions/adr-015-rsvp-notifications.md) §5, §6).
 - **Observability:** gateway log lines + `/api/metrics` counters (NFR-6),
   including the share-loop pair — a guest-page view beacon and a
   `direct`/`guest` source on generate — that produces the

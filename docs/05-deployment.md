@@ -193,6 +193,44 @@ publishing without a deploy.
 keeps every published invitation and RSVP (FR-11.7) — guests' share links must
 not break.
 
+## Reply notifications (adr-015)
+
+Optional. Unset means no notifications and no other change (FR-12.9), which is
+what local development and self-hosting run in.
+
+This is the first thing the product needs that **cannot be fixed by a deploy**.
+A misconfigured DKIM record does not fail — the API returns `200` and the mail
+lands in spam, silently, for everyone.
+
+1. **Create a Resend account** and add `invinto.app` as a sending domain.
+   `server/src/email/send.ts` is one `fetch` at one endpoint, so switching
+   providers later is that file and nothing else.
+2. **DNS at Cloudflare**, alongside the records from the custom-domain section:
+   - **SPF** — a `TXT` at the apex. If one already exists, **edit it**; a
+     domain with two SPF records fails SPF entirely rather than merging them.
+   - **DKIM** — the `CNAME`/`TXT` records Resend shows for the domain.
+     **DNS-only (grey cloud)**, like the verification record above.
+   - **DMARC** — a `TXT` at `_dmarc.invinto.app`. Start at
+     `v=DMARC1; p=none; rua=mailto:…` so reports arrive without mail being
+     rejected while the other two settle, and tighten to `p=quarantine` once
+     the reports are clean.
+3. **Runtime env**: `RESEND_API_KEY`, and `NOTIFY_FROM` on the verified domain
+   (e.g. `INVITO <replies@invinto.app>`). Optionally
+   `NOTIFY_WINDOW_MINUTES` — default 60, `0` means notify on every reply.
+4. **Notifications also need sign-in configured.** The address is the
+   Google-verified one from adr-014; with no OAuth client there are no
+   accounts, so nothing is ever sent.
+5. **Verify by inbox placement, not by status code.** `GET /healthz` reports
+   `notifications.configured`, which only says the two env vars are set.
+   Publish a test invitation signed in, RSVP to it, and confirm the mail
+   **arrives in the inbox** of a Gmail account *and* a Ukrainian provider
+   (`ukr.net`, `meta.ua`) — the hosts this product actually serves, and the
+   ones a new sending domain is most likely to be filtered by. Check the
+   message's own headers for `dkim=pass` and `spf=pass`.
+6. Verify the loop end to end: the email links to `/manage/:id` with **no**
+   `#t=` fragment, its unsubscribe link opens a confirm page without
+   unsubscribing, and pressing the button turns replies off across the account.
+
 ## Local smoke test
 
 ```sh
