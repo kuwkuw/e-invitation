@@ -431,10 +431,32 @@ Six PRs, each independently mergeable, in order:
    does not, one after it carries the count since `last_notified_at`, an
    anonymous invitation notifies nobody, a send failure leaves the RSVP intact
    and returns `{ok: true}`.
-4. **Unsubscribe.** The token route, `List-Unsubscribe` headers, and the
-   confirmation page. Tests: an unknown token is a `404` that changes nothing,
-   a valid one disables exactly its own pair, and unsubscribing never touches
-   the manage token or the keyring.
+4. **Unsubscribe.** The token routes, `List-Unsubscribe` headers, and the
+   page.
+
+   **`GET` must not mutate.** Mail scanners, corporate link checkers and
+   Gmail's proxy all follow links in mail with no human involved, so a `GET`
+   that unsubscribed would opt hosts out through their own provider —
+   silently, and with nothing to tell them it happened. `GET` renders a
+   confirm state with a button; `POST` is the mutation, and RFC 8058's
+   one-click posts straight to it. That third state is not in the mockup,
+   which was drawn for a done/dead pair.
+
+   The routes live at `/unsubscribe/:token`, **outside `/api`**: the session
+   cookie is scoped `Path=/api` (adr-014 §4) and this URL arrives from an
+   inbox, so it should carry no session credential to a link a mail provider
+   may fetch on the reader's behalf. It also answers HTML where everything
+   under `/api` answers JSON. The `POST` takes no origin check, unlike the
+   cookie-authorized mutations — a one-click request comes from the provider's
+   servers and is cross-origin by definition, and the unguessable token is
+   what authorizes it.
+
+   The token is not consumed, so the page is idempotent: a second arrival
+   confirms rather than reporting a dead link. Tests: `GET` changes nothing, a
+   `POST` stops every invitation the account holds, the form-encoded one-click
+   body is accepted, an unresolvable token says so without revealing whether
+   it ever existed, and unsubscribing touches no manage token and no keyring
+   row.
 5. **The share-panel disclosure and switch.** Also the session-authorized
    preference endpoint the switch needs — `GET`/`PUT
    /api/account/notifications/:id`, which is where this feature departs from

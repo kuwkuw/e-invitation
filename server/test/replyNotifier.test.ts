@@ -254,10 +254,8 @@ describe("reply notifications", () => {
       const token = getPref(user.id)?.unsub_token;
       expect(body.text).toContain(`${BASE}/manage/${record.id}`);
       expect(body.text).not.toContain("#t=");
-      expect(body.text).toContain(`${BASE}/api/notifications/unsubscribe/${token}`);
-      expect(body.headers["List-Unsubscribe"]).toBe(
-        `<${BASE}/api/notifications/unsubscribe/${token}>`,
-      );
+      expect(body.text).toContain(`${BASE}/unsubscribe/${token}`);
+      expect(body.headers["List-Unsubscribe"]).toBe(`<${BASE}/unsubscribe/${token}>`);
     });
 
     // §3, checked end to end: the guest's name reaches the store and not the

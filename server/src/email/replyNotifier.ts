@@ -109,7 +109,7 @@ async function notifyOne(
     // No `#t=` fragment: the keyring supplies the manage token after sign-in
     // (§2), so a forwarded email grants nothing.
     manageUrl: `${baseUrl}/manage/${record.id}`,
-    unsubscribeUrl: `${baseUrl}/api/notifications/unsubscribe/${pref.unsub_token}`,
+    unsubscribeUrl: `${baseUrl}/unsubscribe/${pref.unsub_token}`,
   });
 
   const outcome = await sendEmail({
@@ -117,7 +117,7 @@ async function notifyOne(
     subject: message.subject,
     html: message.html,
     text: message.text,
-    unsubscribeUrl: `${baseUrl}/api/notifications/unsubscribe/${pref.unsub_token}`,
+    unsubscribeUrl: `${baseUrl}/unsubscribe/${pref.unsub_token}`,
   });
 
   // Stamped only on success, so a failed send does not consume the window —

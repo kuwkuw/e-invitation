@@ -16,6 +16,7 @@ import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
+import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -109,6 +110,9 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   registerAccountRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
+  // Outside /api (adr-015 §7) and therefore registered before the SPA
+  // fallback, which would otherwise serve the shell for this path.
+  registerUnsubscribeRoutes(app);
 
   // Production: serve the built SPA from the same process. /i/:id stays a
   // dynamic route (OG meta injection); everything else non-/api falls back

@@ -101,6 +101,18 @@ export function notificationTargets(invitationId: string): NotificationTarget[] 
   }));
 }
 
+/** Resolve a token without acting on it — what the unsubscribe page's GET
+ *  needs, since GET must be able to render the right state without mutating
+ *  (adr-015 §7). Null for a token we never minted. */
+export function prefByUnsubToken(token: string): NotificationPref | null {
+  const row = getDb()
+    .prepare(
+      "SELECT user_id, enabled, unsub_token, created_at FROM notification_prefs WHERE unsub_token = ?",
+    )
+    .get(token) as PrefRow | undefined;
+  return row ? hydrate(row) : null;
+}
+
 export function getPref(userId: string): NotificationPref | null {
   const row = getDb()
     .prepare(
