@@ -6,9 +6,8 @@ client-routing iterations shipped, 2026-07-25 when batch response counts
 (adr-012) shipped as FR-5.7, 2026-07-27 when share-loop instrumentation
 (adr-013) was planned, 2026-07-30 when host accounts (adr-014) shipped as
 FR-11, and 2026-07-31 when the share loop got the docs pass it had been owed
-since its code landed and RSVP notifications (adr-015) were planned. This doc
-plans the **next** iteration; when an item
-ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
+since its code landed and RSVP notifications (adr-015) shipped as FR-12. This
+doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
 
@@ -21,7 +20,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Six iterations have shipped since:
+Seven iterations have shipped since:
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -37,6 +36,8 @@ Six iterations have shipped since:
   below. Shipped as FR-4.7 and FR-7.3–7.5.
 - **Host accounts** — [adr-014](decisions/adr-014-host-accounts.md), below.
   Shipped as FR-11.
+- **Reply notifications** — [adr-015](decisions/adr-015-rsvp-notifications.md),
+  below. Shipped as FR-12.
 
 ## Shipped: the host can come back
 
@@ -286,10 +287,10 @@ be persisted before any of the UI worked: sign-in is a full-page navigation and
 the invitation lived only in memory, so a host would have returned from Google
 to an empty editor.
 
-## Next iteration: notify the host when replies arrive
+## Shipped: notify the host when replies arrive
 
-Settled in [ADR-015](decisions/adr-015-rsvp-notifications.md) (**proposed**) and
-planned as **FR-12**. Taken because
+Settled in [ADR-015](decisions/adr-015-rsvp-notifications.md) (accepted) and
+shipped as **FR-12**. Taken because
 [adr-014](decisions/adr-014-host-accounts.md) §8 named it the natural iteration
 after accounts and supplied the one thing it needs — a verified address and a
 durable per-user row — while deliberately building neither.
@@ -325,29 +326,61 @@ What the ADR settles:
    to a new dependency. Resend recommended, with the free-tier limits and the
    Ukrainian-inbox behaviour flagged as the one claim that has to be verified
    rather than reasoned about.
-7. **Default on, disclosed at publish, off per invitation**, with one-click
-   unsubscribe (RFC 8058) behind a row-key token — nothing signed, on adr-014's
-   no-session-secret precedent.
+7. **Default on, disclosed at publish, revocable in one click** (RFC 8058)
+   behind a row-key token — nothing signed, on adr-014's no-session-secret
+   precedent. The plan said *off per invitation*; that was wrong and is the one
+   thing the build changed — see below.
 
-Six PRs, the last of which is the docs pass — called out in the plan as not
-optional and not later, because adr-013's arrived an iteration late and this
-iteration also produces DNS records that exist in no other file.
+Six PRs plus this docs pass, delivered as one branch: the store and the reverse
+lookup, the sender and the message, the trigger, the share-panel disclosure and
+its endpoint, the unsubscribe routes and page, a DS pass, and the scope
+correction below. The docs pass was called out in the plan as not optional and
+not later — adr-013's arrived an iteration late — and this iteration also
+produces DNS records that exist in no other file, now in
+[05-deployment.md](05-deployment.md).
 
-**The ADR is proposed rather than accepted, and its first revisit trigger
-questions the iteration itself.** adr-013 shipped the measurement
+**The scope of unsubscribe was wrong as planned, and the design pass caught
+it.** §7 specified a per-invitation preference, following adr-014 §8. But a
+mail client's one-click unsubscribe promises to stop *the sender*: a host with
+three events who clicks it and keeps receiving mail about the other two presses
+**Spam** next, and that costs deliverability for every message the product
+sends, guests' share links included. The preference is account-wide; per-event
+control is deferred with its own revisit trigger. Two smaller corrections are in
+the ADR's implementation notes — `GET` must not mutate, because mail scanners
+follow links without a human, and the routes therefore moved off `/api`.
+
+**The first revisit trigger was never settled, and shipping did not settle
+it.** adr-013 produced the measurement
 [07-monetization.md](07-monetization.md) §5.1 gates every commercial option on,
 and that measurement needs published invitations real guests open — not another
 feature. Building for hosts who are not here yet is the failure mode this
-roadmap has flagged twice. The counter-argument is that a dashboard's usefulness
-is bounded by how often someone thinks to open it, and no amount of traffic
-fixes that. Worth settling before PR 1 rather than after PR 6.
+roadmap has now flagged three times. What this iteration cost was a second
+external dependency and a DNS setup; what it bought is a loop that closes
+without the host thinking to check. The honest position is that the trigger
+still stands over whatever comes next.
+
+## No iteration currently taken
+
+Nothing below is claimed. The doc's convention is that this section names the
+next iteration, and leaving it empty is again deliberate: adr-015 closed the
+last backlog item that had a decision waiting on it, and every remaining one is
+gated on a host asking or on traffic that does not exist yet.
+
+The standing candidate is still **doing nothing yet**. adr-013 shipped the
+measurement [07-monetization.md](07-monetization.md) §5.1 gates every
+commercial option on; adr-015 has now given hosts a reason to come back without
+being reminded. Both need published invitations that real guests open, and no
+further feature produces those. The next thing worth doing may well be
+operational rather than product: configuring the mail domain (§Reply
+notifications in [05-deployment.md](05-deployment.md)), closing the publish
+gate, and letting the numbers accumulate.
 
 ## Candidate backlog
 
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.
-- ~~**Notify the host on a new RSVP**~~ — taken as the next iteration; see
+- ~~**Notify the host on a new RSVP**~~ — shipped as FR-12; see
   [adr-015](decisions/adr-015-rsvp-notifications.md) and the section above.
   [adr-014](decisions/adr-014-host-accounts.md) §8 supplied the address and
   left the sender to it.

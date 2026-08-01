@@ -12,11 +12,13 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **88.2 kB gzipped** (271.8 kB raw), measured with
+  **88.7 kB gzipped** (274.4 kB raw), measured with
   `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
   ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
-  share-loop client (adr-013) and **+5.4 kB is host accounts**
+  share-loop client (adr-013), **+0.5 kB is reply notifications**
+  ([adr-015](decisions/adr-015-rsvp-notifications.md) — a hook, one panel row
+  and two icons, no dependency) and **+5.4 kB is host accounts**
   ([adr-014](decisions/adr-014-host-accounts.md)) — the sign-in gate, the
   signed-in share panel and the account surfaces. No Google SDK: the handshake
   is a server-side redirect flow, which is what kept that number to five
@@ -45,6 +47,15 @@
   lazily); only generation calls fail without credentials.
 - Published records are written write-then-rename so a crash mid-write never
   leaves a truncated file ([store.ts](../server/src/store.ts)).
+- **Mail-unconfigured is a supported mode**, the third application of the
+  keyless-boot rule after provider keys and OAuth (FR-12.9): no
+  `RESEND_API_KEY` means no notifications and no other change, and no UI offers
+  a preference that cannot be honoured.
+- **A notification never costs an RSVP.** Sending is dispatched after the
+  guest's response and never awaited, the sender never throws, and a failed
+  send is logged and dropped rather than retried — the next reply after the
+  window carries the full count, which is self-healing where a retry queue
+  would be state to maintain (adr-015 §5).
 
 ## NFR-4 Security & privacy
 
@@ -61,6 +72,20 @@
 - **Signing in discloses to Google** that this person publishes invitations
   here. Unavoidable with a third-party identity provider, and stated rather
   than discovered.
+- **The address collected for identity is now also used for messaging**
+  (FR-12, [adr-015](decisions/adr-015-rsvp-notifications.md)). That is a
+  different claim from holding it, so it comes with three commitments: the use
+  is **disclosed at publish** rather than discovered from the first email, it
+  is **revocable in one click** from any message without signing in, and
+  turning it off covers the whole account, because a mail client's unsubscribe
+  button promises to stop the sender rather than one message.
+- **No guest data reaches the mail provider.** A notification carries the
+  invitation title, a count and a link — never a guest's name, attendance or
+  note. What the provider learns is that this host has an event with replies,
+  which is unavoidable for anything that mails them. Sending guest names would
+  be a larger step than adr-013 §2 declined to take for a metric, and it is
+  declined for the same reason. The unsubscribe page echoes nothing at all:
+  every string on it is ours and the token never appears in its body.
 - **Deleting an account** (FR-11.7) removes the user, sessions and keyring and
   keeps every published invitation and RSVP: guests hold those share links, the
   RSVP rows are the guests' data, and the manage token survives on the record.
@@ -133,6 +158,10 @@
 - **Measurement never degrades the thing measured.** The view beacon returns
   `204` with no body and its failure is silence: a guest must never see a
   spinner, a message or a delay because a counter did or did not record.
+- One structured JSON line per notification attempt — ok/error, provider
+  status, latency ([email/send.ts](../server/src/email/send.ts)). The recipient
+  is **not** logged: it is the host's address, and a log of them is a mailing
+  list. Neither is the API key nor the body.
 
 ## NFR-7 Scale assumptions (explicit)
 
