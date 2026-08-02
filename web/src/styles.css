@@ -1029,8 +1029,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
    for. Matches .lp-account-out, the other muted account control. */
-.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: #6b6659; text-decoration: none; padding: 2px 4px; }
-.lp-nav-signin:hover { color: #23211d; text-decoration: underline; }
+/* #8f887a is not a new grey — it is the idle colour of the language segment
+   18px to its right (DS LandingSignedOut). The link and the switcher become one
+   quiet pair standing before the accent, so the nav never grows a third level
+   of brightness. Weight 600 at 0.9rem: lighter than the button beside it,
+   without dropping to fine print. */
+.lp-nav-signin { font: inherit; font-size: 0.9rem; font-weight: 600; color: #8f887a; text-decoration: none; padding: 6px 2px; white-space: nowrap; transition: color 0.14s; }
+.lp-nav-signin:hover { color: #23211d; }
 
 .lp-hero {
   padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);
@@ -1119,8 +1124,25 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   .lp-fan-2 { width: 175px; margin-left: -50px; }
 }
 
+/* The wordmark yields before anything else does, because it is the one element
+   in the bar that does nothing: it leads nowhere (we are already on the landing
+   page) and it is not a control. Threshold measured rather than guessed — with
+   the wordmark at 1.3rem the row wants 413px, and phones start at 375. */
+@media (max-width: 420px) {
+  .lp-brand { font-size: 1.02rem; }
+}
+
 @media (max-width: 800px) {
+  /* Only the CTA hides. The sign-in link must survive this breakpoint — a new
+     phone is the exact case it exists for, and hiding it here would remove it
+     from the one situation it was built to serve. */
   .lp-nav .lp-cta { display: none; } /* mobile uses the sticky bottom bar instead */
+  .lp-nav-signin { font-size: 0.85rem; }
+  /* Scoped to the nav, not to every switcher: this is the only bar in the app
+     with three things competing for width. Measured — the row needs 413px to
+     lay out uncompressed with 46px segments, which is wider than the phones
+     this exists for. */
+  .lp-nav .ls-seg { min-width: 38px; height: 38px; font-size: 0.78rem; }
   .lp-steps-grid { grid-template-columns: 1fr; gap: 22px; }
   .lp-step { display: flex; gap: 16px; text-align: left; align-items: flex-start; }
   .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }
