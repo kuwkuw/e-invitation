@@ -20,10 +20,14 @@ import { fetchNotificationPref, setNotificationPref } from "../api";
  * they turned it off — the one direction of this switch that has to be true.
  */
 export function useNotificationPref(active: boolean) {
-  // Defaults to on, matching the server's "absent row means enabled". A first
-  // publish therefore renders correctly before the fetch resolves, which is
-  // the common case — the panel opens the instant publishing succeeds.
-  const [enabled, setEnabled] = useState(true);
+  // Defaults to off, matching the server's "absent row means disabled" — reply
+  // email is opt-in (adr-015 §7, amended). A first publish therefore renders
+  // correctly before the fetch resolves, which is the common case: the panel
+  // opens the instant publishing succeeds. It is also the safe direction to be
+  // wrong in. Showing "off" while the server has "on" costs a host one
+  // redundant tap; showing "on" while the server has "off" promises mail that
+  // never arrives, and they find out by missing replies.
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -32,8 +36,9 @@ export function useNotificationPref(active: boolean) {
       .then((pref) => {
         if (live) setEnabled(pref.enabled);
       })
-      // A failed read leaves the default. The host sees "on", which is what a
-      // new account is, and the next open corrects it.
+      // A failed read leaves the default. The host sees "off", which is what a
+      // new account is, and the next open corrects it. A host who had turned
+      // mail on sees an offer to turn it on again; accepting is idempotent.
       .catch(() => {});
     return () => {
       live = false;

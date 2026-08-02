@@ -150,7 +150,7 @@ describe("SharePanel reply notifications", () => {
 
   // The address is a fact about where mail goes, not something to click.
   it("sets the address apart without making it a link", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
     const email = container.querySelector(".sp-notify-email");
     expect(email?.textContent).toBe("host@example.com");
     expect(container.querySelector(".sp-notify-text a")).toBeNull();
@@ -176,17 +176,30 @@ describe("SharePanel reply notifications", () => {
   // A Ukrainian address does not break between letters; beside the text the
   // action ended up hanging next to a three-line sentence.
   it("puts the action on its own line, not beside the sentence", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
     const action = container.querySelector(".sp-notify-action");
     expect(action).toBeTruthy();
     expect(action?.contains(screen.getByText(UI.en.auth.notifyTurnOff))).toBe(true);
     expect(container.querySelector(".sp-notify-row")?.contains(action as Node)).toBe(false);
   });
 
-  it("says the opposite, and offers the opposite action, when off", () => {
+  // adr-015 §7 as amended. Off is where every host now starts, so this is the
+  // state the panel shows at the moment publishing succeeds — and it has to
+  // read as an offer. `notifyOff` states a decision ("we won't email you")
+  // that a host who just published has never made.
+  it("offers rather than reports when off", () => {
     renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
-    expect(screen.getByText(UI.en.auth.notifyOff)).toBeTruthy();
-    expect(screen.getByText(UI.en.auth.notifyTurnOn)).toBeTruthy();
+    expect(screen.getByText(UI.en.auth.notifyOffer)).toBeTruthy();
+    expect(screen.getByText(UI.en.auth.notifyOptIn)).toBeTruthy();
+    expect(screen.queryByText(UI.en.auth.notifyOff)).toBeNull();
+  });
+
+  // The default carries the reversal: a panel handed no preference must not
+  // imply mail is already coming.
+  it("defaults to the offer, not to a promise", () => {
+    renderNotify({ notifyEmail: "host@example.com" });
+    expect(screen.getByText(UI.en.auth.notifyOptIn)).toBeTruthy();
+    expect(screen.queryByText(UI.en.auth.notifyTurnOff)).toBeNull();
   });
 
   it("toggles through the callback", () => {
@@ -219,7 +232,7 @@ describe("SharePanel reply notifications", () => {
   // The panel's hierarchy is the safeguard (adr-010 §3): the notification line
   // must not become a third thing competing with the two links.
   it("stays quiet — no accent button, and the public link keeps the only one", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com" });
+    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
     const toggle = screen.getByText(UI.en.auth.notifyTurnOff);
     expect(toggle.className).not.toContain("sp-primary");
     expect(container.querySelectorAll(".sp-primary")).toHaveLength(1);
@@ -227,7 +240,11 @@ describe("SharePanel reply notifications", () => {
   });
 
   it("carries the copy in Ukrainian too", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com", t: UI.uk });
+    const { container } = renderNotify({
+      notifyEmail: "host@example.com",
+      notifyEnabled: true,
+      t: UI.uk,
+    });
     expect(container.querySelector(".sp-notify-text")?.textContent).toBe(
       "Ми напишемо на host@example.com, коли надійдуть відповіді.",
     );

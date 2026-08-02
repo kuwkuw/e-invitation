@@ -132,8 +132,16 @@ export interface AuthStrings {
    *  line above — repeating it would say one thing twice in one block. */
   notifyOnAccount: string;
   notifyOff: string;
+  /** The share panel's off state, which under opt-in is where every host
+   *  starts. It has to read as an offer at the moment replies become possible,
+   *  not as `notifyOff`'s statement about mail already declined — a host who
+   *  has just published has not turned anything off. */
+  notifyOffer: string;
+  /** Accepting that offer, and the only "on" label there is. It replaced a
+   *  "turn emails back on" that opt-in made false: a host who never asked is
+   *  not returning to anything, and no surface can tell them from one who is. */
+  notifyOptIn: string;
   notifyTurnOff: string;
-  notifyTurnOn: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
    *  publish gate. Names the payoff rather than the act — a host does not know
@@ -185,8 +193,9 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyOn: "We'll email {email} when replies come in.",
     notifyOnAccount: "We'll email you when replies come in.",
     notifyOff: "We won't email you about replies to any of your invitations.",
+    notifyOffer: "Want an email when replies come in?",
+    notifyOptIn: "Email me about replies",
     notifyTurnOff: "Turn off all emails",
-    notifyTurnOn: "Turn emails back on",
     signOut: "Sign out",
     signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
@@ -233,8 +242,9 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
     notifyOnAccount: "Ми напишемо вам, коли надійдуть відповіді.",
     notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
+    notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
+    notifyOptIn: "Повідомляти про відповіді",
     notifyTurnOff: "Вимкнути всі листи",
-    notifyTurnOn: "Увімкнути листи",
     signOut: "Вийти",
     signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",

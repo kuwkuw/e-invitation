@@ -18,6 +18,10 @@ interface Props {
   /** Reply notifications (adr-015 §7). Absent `notifyEmail` — an unconfigured
    *  deployment or a signed-out host — renders no line at all. */
   notifyEmail?: string | null;
+  /** Opt-in, so this defaults to false and the block is an offer rather than a
+   *  disclosure (adr-015 §7, amended). This is the moment it belongs at: a
+   *  switch a host has to go and find later would leave the feature unused by
+   *  everyone who did not think to look for it. */
   notifyEnabled?: boolean;
   onToggleNotify?: () => void;
   t: UiStrings;
@@ -56,7 +60,7 @@ export function SharePanel({
   manageShown = false,
   onToggleManage,
   notifyEmail = null,
-  notifyEnabled = true,
+  notifyEnabled = false,
   onToggleNotify,
   t,
 }: Props) {
@@ -127,13 +131,16 @@ export function SharePanel({
                   {notifyOnAfter}
                 </>
               ) : (
-                t.auth.notifyOff
+                // An offer, not a report. Under opt-in this is where every
+                // host starts, and `notifyOff` states a decision that a host
+                // who has just published has not made.
+                t.auth.notifyOffer
               )}
             </p>
           </div>
           <div className="sp-notify-action">
             <button type="button" className="sp-notify-toggle" onClick={onToggleNotify}>
-              {notifyEnabled ? t.auth.notifyTurnOff : t.auth.notifyTurnOn}
+              {notifyEnabled ? t.auth.notifyTurnOff : t.auth.notifyOptIn}
             </button>
           </div>
         </div>

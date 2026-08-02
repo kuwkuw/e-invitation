@@ -23,10 +23,14 @@ const ok = (enabled: boolean) => async () =>
   });
 
 describe("useNotificationPref", () => {
-  it("defaults to on before the read resolves, matching the absent-row default", () => {
+  // Reply email is opt-in (adr-015 §7, amended), and this is also the safe
+  // direction to be wrong in: "off" while the server has "on" costs a
+  // redundant tap, "on" while the server has "off" promises mail that never
+  // comes and is discovered by missing replies.
+  it("defaults to off before the read resolves, matching the absent-row default", () => {
     stubFetch({ get: ok(true) });
     const { result } = renderHook(() => useNotificationPref(true));
-    expect(result.current.enabled).toBe(true);
+    expect(result.current.enabled).toBe(false);
   });
 
   it("adopts the stored preference", async () => {
@@ -67,7 +71,10 @@ describe("useNotificationPref", () => {
       put: async () => new Response("nope", { status: 500 }),
     });
     const { result } = renderHook(() => useNotificationPref(true));
-    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+    // Wait for the state, not just the call: toggling off the default instead
+    // of off the stored value would test the opposite transition.
+    await waitFor(() => expect(result.current.enabled).toBe(true));
+    expect(spy).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       await result.current.toggle();
@@ -79,6 +86,6 @@ describe("useNotificationPref", () => {
   it("leaves the default in place when the read fails", async () => {
     stubFetch({ get: async () => new Response("nope", { status: 500 }) });
     const { result } = renderHook(() => useNotificationPref(true));
-    await waitFor(() => expect(result.current.enabled).toBe(true));
+    await waitFor(() => expect(result.current.enabled).toBe(false));
   });
 });
