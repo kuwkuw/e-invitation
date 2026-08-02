@@ -344,6 +344,11 @@ describe("google sign-in", () => {
     ["//evil.example", "/create"],
     ["/\\evil.example", "/create"],
     ["https://evil.example", "/create"],
+    // A URL parser strips tabs and newlines before it decides what the string
+    // means, so these reach `//evil.example` through a guard that only checks
+    // for a leading slash pair.
+    ["/\t/evil.example", "/create"],
+    ["/\n/evil.example", "/create"],
     ["/manage/abc123", "/manage/abc123"],
   ])("guards redirect_to %s", async (requested, expected) => {
     configureGoogle();

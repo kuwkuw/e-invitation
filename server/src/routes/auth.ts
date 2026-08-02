@@ -189,13 +189,20 @@ function callbackUri(request: FastifyRequest, configured: string | null): string
   return configured ?? `${request.protocol}://${request.headers.host}${CALLBACK_PATH}`;
 }
 
+/** What a same-origin path may be spelled with. An **allowlist**, because the
+ *  list of tricks is not knowable: `//evil.example` and `/\evil.example` are
+ *  protocol-relative in browsers that normalize them, and a raw tab or newline
+ *  is stripped from a URL *before* it is parsed — so `/⇥/evil.example` arrives
+ *  at `//evil.example` through any guard that only knows about slashes. */
+const SAFE_REDIRECT_PATH = /^\/[\w\-./~]*$/;
+
 /** An open-redirect guard, not a formality: `redirect_to` comes off the query
  *  string and ends up in a `Location` header. Only same-origin absolute paths
- *  survive — a protocol-relative `//evil.example` or a backslash variant is a
- *  full external redirect in browsers that normalize it. */
+ *  survive, and `//` is still refused explicitly — the class above has to allow
+ *  the separator, so the leading pair is the one shape it cannot rule out. */
 function safeRedirectPath(value: string | undefined): string {
-  if (!value?.startsWith("/")) return DEFAULT_REDIRECT_TO;
-  if (value.startsWith("//") || value.startsWith("/\\")) return DEFAULT_REDIRECT_TO;
+  if (!value || !SAFE_REDIRECT_PATH.test(value)) return DEFAULT_REDIRECT_TO;
+  if (value.startsWith("//")) return DEFAULT_REDIRECT_TO;
   return value;
 }
 

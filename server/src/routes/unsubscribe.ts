@@ -19,12 +19,27 @@ import { pageLanguage, renderUnsubscribePage, type UnsubscribeState } from "../u
  *  base64url actually produces rather than trusted by length alone. */
 const TOKEN = /^[\w-]{1,64}$/;
 
-export function registerUnsubscribeRoutes(app: FastifyInstance): void {
+export async function registerUnsubscribeRoutes(app: FastifyInstance): Promise<void> {
+  // Encapsulated in a plugin so the content-type parser below reaches these two
+  // routes and nothing else.
+  await app.register(async (scope) => {
+    registerRoutes(scope);
+  });
+}
+
+function registerRoutes(app: FastifyInstance): void {
   // RFC 8058's one-click POST arrives as `application/x-www-form-urlencoded`
   // with `List-Unsubscribe=One-Click`. Fastify parses JSON only, so without
   // this the mail provider's request is a 415 and the header is worse than
   // useless — it advertises a button that fails. The body is not read: the
   // token in the path is the whole request.
+  //
+  // **Scoped, not global.** A content-type parser on the root instance would
+  // teach every endpoint in the app to accept a form body, and a cross-site
+  // HTML form can only post form-encoded data — so the 415 the rest of the app
+  // answers those with is a free layer of CSRF defence beneath `SameSite=Lax`
+  // and the origin checks. This feature needs one exception and takes exactly
+  // one.
   app.addContentTypeParser(
     "application/x-www-form-urlencoded",
     { parseAs: "string" },
