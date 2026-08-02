@@ -310,6 +310,17 @@ are reading back the tokens it holds and authorizing a first publish.
   renders only where sign-in is configured (FR-11.6), and only while signed
   out. Declining at Google returns the host to where they started it.
 
+  It lives in the page header, beside the language switcher and **never beside
+  the Create button** — adjacent to the accent it reads as that button's
+  caption ("create… or sign in?"); on the far side of the switcher it belongs
+  to the chrome. It stays out of the invitations card, which carries no sign-in
+  offer: that would be an advertisement where a host simply wants their list.
+  The refinement that boundary needed, since it is not where it looks: what the
+  card may not carry is an **offer**, not a **fact**. A line stating what is
+  true of the rows in front of the host is not an advertisement. *A line that
+  would disappear by itself after sign-in is a fact; one that disappears
+  because it was accepted is an offer.*
+
 ## FR-12 Reply notifications
 
 **Status: built** — [adr-015](decisions/adr-015-rsvp-notifications.md),
@@ -383,6 +394,14 @@ them.
   is absent, never disabled, for a host with no session on this device: the
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
+- FR-12.12 The control is **one checkbox on all three surfaces** — share panel,
+  dashboard, landing account footer — with the whole label as a 44px target and
+  a real `input` so it is keyboard-reachable. Its **name** is identical in
+  every state; the second row carries the state *and the scope*, so a host
+  agrees knowing what they are agreeing to rather than being told afterwards.
+  The checked box is ink, never the accent: the accent means "the public link"
+  (adr-010 §3.1). Where nothing is pressable — the notification email, the
+  unsubscribe page — a struck envelope still states the condition instead.
 
 | Path | Page | Audience |
 | --- | --- | --- |

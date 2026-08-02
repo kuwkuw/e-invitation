@@ -124,29 +124,24 @@ export interface AuthStrings {
   savedToAccount: string;
   showManage: string;
   hideManage: string;
-  /** adr-015 §7: the disclosure is made where it is caused — at publish, with
-   *  the off switch beside it — rather than discovered from the first email.
-   *  `{email}` is the signed-in address the replies will go to. */
-  notifyOn: string;
-  /** The same fact on the landing footer, where the address is already on the
-   *  line above — repeating it would say one thing twice in one block. */
-  notifyOnAccount: string;
-  notifyOff: string;
-  /** The share panel's off state, which under opt-in is where every host
-   *  starts. It has to read as an offer at the moment replies become possible,
-   *  not as `notifyOff`'s statement about mail already declined — a host who
-   *  has just published has not turned anything off. */
-  notifyOffer: string;
-  /** Accepting that offer, and the only "on" label there is. It replaced a
-   *  "turn emails back on" that opt-in made false: a host who never asked is
-   *  not returning to anything, and no surface can tell them from one who is. */
+  /** The **name** of the setting — every surface, both states, never changes
+   *  (DS `ShareOptIn`). That invariance is what makes unchecking as easy as
+   *  checking, and it is why the verbs this replaced are gone: "turn off all
+   *  emails" and "turn emails back on" were only ever needed where there was
+   *  no control to carry the action. `{email}` never appears here. */
   notifyOptIn: string;
-  /** The scope, said out loud on the manage page — a page about one event
-   *  carrying a switch that governs them all. Without it the control looks
-   *  per-invitation, and a host who silences one event and finds they silenced
-   *  three presses Spam, which is the outcome opt-in exists to avoid. */
-  notifyAllEvents: string;
-  notifyTurnOff: string;
+  /** The **state** row: what is true right now, with the scope inside it.
+   *
+   *  One string per surface and state rather than one reused everywhere, and
+   *  that is deliberate — an offer and a report are different sentences, and
+   *  the landing footer already carries the address a line above. Folding the
+   *  scope in here is the point of the set: as a line of its own it sat where
+   *  fine print sits and was read like fine print. */
+  notifyStateOffer: string;
+  notifyStateOn: string;
+  notifyStateOffNow: string;
+  notifyStateOnEvent: string;
+  notifyStateOnAccount: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
    *  publish gate. Names the payoff rather than the act — a host does not know
@@ -195,13 +190,12 @@ export const AUTH: Record<Language, AuthStrings> = {
     savedToAccount: "Saved to your account — it'll be there on any device you sign in on.",
     showManage: "Show",
     hideManage: "Hide",
-    notifyOn: "We'll email {email} when replies come in.",
-    notifyOnAccount: "We'll email you when replies come in.",
-    notifyOff: "We won't email you about replies to any of your invitations.",
-    notifyOffer: "Want an email when replies come in?",
     notifyOptIn: "Email me about replies",
-    notifyAllEvents: "Covers every invitation in your account, not just this one.",
-    notifyTurnOff: "Turn off all emails",
+    notifyStateOffer: "To {email} — for every invitation in your account.",
+    notifyStateOn: "We'll email {email} when replies come in.",
+    notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
+    notifyStateOnEvent: "To {email} — for all your invitations, not just this one.",
+    notifyStateOnAccount: "For all your invitations.",
     signOut: "Sign out",
     signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
@@ -245,13 +239,12 @@ export const AUTH: Record<Language, AuthStrings> = {
       "Збережено у вашому акаунті — відкриється на будь-якому пристрої, де ви увійдете.",
     showManage: "Показати",
     hideManage: "Сховати",
-    notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
-    notifyOnAccount: "Ми напишемо вам, коли надійдуть відповіді.",
-    notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
-    notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
     notifyOptIn: "Повідомляти про відповіді",
-    notifyAllEvents: "Стосується всіх запрошень у вашому акаунті, не лише цього.",
-    notifyTurnOff: "Вимкнути всі листи",
+    notifyStateOffer: "На {email} — про всі ваші запрошення.",
+    notifyStateOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
+    notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",
+    notifyStateOnEvent: "Пишемо на {email} — про всі ваші запрошення, не лише про це.",
+    notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
     signOut: "Вийти",
     signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",

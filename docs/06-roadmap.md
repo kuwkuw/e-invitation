@@ -513,6 +513,38 @@ on and are now off. Preserving their old behaviour would mean writing `enabled
 preserve a default, which is the opposite of what this iteration is for. At
 production's account count the cost is a handful of hosts who opt in again.
 
+## Shipped: the design pass those two iterations skipped
+
+Both iterations above shipped their UI **before** their mockups, against the
+convention adr-009 §4 and adr-010 §9 set. This closed that debt, and the pass
+did what a design pass is for: it disagreed.
+
+The question put to it was how loud an opt-in offer may be inside a panel whose
+hierarchy is a safety control. The answer was that loudness was the wrong axis
+— [adr-010](decisions/adr-010-host-manage-link.md) §3 counts **fills**, not
+affordances, so a control that spends no fill costs the hierarchy nothing and
+competes only with the prose around it. Reply email became one checkbox on all
+three surfaces, recorded as §3.1 and FR-12.12.
+
+Three defects came with that verdict, and none of them were matters of taste:
+the tap target was the height of a button's text on a phone-first product; the
+scope was disclosed only *after* a host had agreed to it; and the two rows were
+a sentence plus fine print rather than a name that never changes and a state
+that does. The landing nav's link also got its measured breakpoint — the bar
+wanted 413px to lay out uncompressed, which is wider than any phone it serves.
+
+Two of the pass's findings did **not** apply, checked against the code rather
+than accepted: the `≤800px` rule hides `.lp-cta` specifically rather than the
+nav group, and the cross-device line is already gated on being signed in. A
+third — that the pass's suggested wordmark breakpoint was 370px — was replaced
+by a measurement instead of adopted.
+
+Two proposals were declined with reasons, not dropped: naming the account's
+invitation count on the dashboard (a cross-surface data dependency bought for a
+phrase, when "not just this one" needs nothing), and claiming locally-held
+invitations at sign-in, which is a product decision and is now in the backlog
+below.
+
 ## No iteration currently taken
 
 Both sections above shipped on 2026-08-02, and the position at the top of them
@@ -534,6 +566,25 @@ that touches the loop the measurement is about.
 
 ## Candidate backlog
 
+- **Claim locally-held invitations into the account on sign-in** — raised by
+  the 2026-08-02 design pass, planned rather than built. Today a signed-in host
+  on a device that already published sees one list assembled from two sources,
+  and nothing reconciles them: the design pass calls that "an unfinished
+  migration shown to the host", and it is right. The proposal is that signing
+  in links into the keyring every invitation whose manage token is in this
+  browser's storage — the same proof of ownership `/manage/:id` already runs
+  on, so no new trust — followed by a one-time line reporting what moved.
+
+  Why it is not in that pass: it is the first **multi-token write**
+  ([adr-012](decisions/adr-012-batch-response-counts.md) was the first
+  multi-token read), it needs the same per-item constant-time verification, and
+  it changes what an account holds without the host asking for it. That is a
+  decision, not a design correction.
+
+  What it would fix beyond tidiness: FR-11.9's "opens on any device you sign in
+  on" is currently false for rows this browser holds but the account does not,
+  and without claiming, the "only on this device" row goes from rare exception
+  to the normal case on every second device.
 - **Native share sheet at publish** — the host's share panel is copy-link only,
   while the guest page already uses `navigator.share`. Intent 4 in
   [01-vision.md](01-vision.md) is messenger-native sharing, and at the highest

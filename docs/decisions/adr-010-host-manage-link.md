@@ -74,6 +74,36 @@ republish rights. Mitigated by labelling only. Rejected alternatives: a
 short-lived signed link (needs server state and a mail channel we don't
 have), and requiring accounts (rejected wholesale by adr-005).
 
+#### 3.1 The hierarchy counts fills, not affordances
+
+Added 2026-08-02, after
+[adr-015](adr-015-rsvp-notifications.md)'s opt-in reversal ran the rule above
+into a case it did not cover.
+
+The share panel's hierarchy is a safety control, not a taste preference: the
+public `/i/:id` link owns the only filled accent so a host reaching for
+"the link" reaches for the one that is safe to paste. That made every later
+addition to the panel default to *quieter*, which was right until the panel had
+to carry something a host must **act on** rather than merely read. A reply-email
+offer nobody notices is a feature nobody has.
+
+The resolution is that §3's rule was always about **fills**. A control with no
+fill does not compete with the accent button — it competes with the prose around
+it, and it is supposed to win against that. So:
+
+> A new control in the share panel may take any affordance that spends no fill.
+> It may not take colour, weight, or button geometry that rhymes with the
+> primary.
+
+Reply email is therefore a checkbox: a square is recognised as pressable at a
+glance, and its checked state is ink (`#6b6659`), never terracotta. Visibility
+bought with *category* rather than pigment.
+
+This also disposes of the objection that had ruled out a toggle — that a toggle
+needs a caption, a caption needs a heading, and a heading turns a disclosure
+into the settings screen adr-015 keeps refusing. A checkbox's caption is its
+own sentence, so no heading appears.
+
 ### 4. A local "your invitations" index
 
 `localStorage` already accumulates `inv-manage:<id>` keys, but an id is not

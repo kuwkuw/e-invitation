@@ -135,6 +135,21 @@ describe("the landing sign-in link", () => {
     expect(link.getAttribute("href")).toBe("/api/auth/google?redirect_to=%2F");
   });
 
+  // DS LandingSignedOut: left of the language switcher, never beside Create.
+  // Next to the accent it reads as that button's caption — "create… or sign
+  // in?" — where on the far side it belongs to the chrome group instead.
+  it("sits with the chrome, not beside the call to action", async () => {
+    stubApi({ signedIn: false });
+    const { container } = renderLanding();
+    await screen.findByText(label);
+
+    const order = [...(container.querySelector(".lp-nav-right")?.children ?? [])].map(
+      (el) => el.className.split(" ")[0],
+    );
+    expect(order[0]).toBe("lp-nav-signin");
+    expect(order[order.length - 1]).toBe("lp-cta");
+  });
+
   it("does not offer sign-in to a host already signed in", async () => {
     stubApi({ signedIn: true, keyring: [keyringEntry] });
     renderLanding();
