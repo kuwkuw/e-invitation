@@ -1535,11 +1535,25 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Landing account footer + account deletion (adr-014 §9, DS
    "LandingSignedInStates"). The footer signs the invitations card because the
    account exists for that list and nothing else. */
-.lp-account { border-top: 1px solid #f0eadf; background: #fbfaf7; display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; }
-.lp-account svg { flex: 0 0 auto; }
+/* The footer is a block, not a row: the identity line keeps the old flex
+   layout and the notification line (adr-015 §7, DS LandingAccountNotify) sits
+   under it. Heights: 46px with no mail line, 111px with one line of text,
+   129px when Ukrainian "off" wraps to two at 375px — 11 + 24 + 5 + text + 40
+   + 12. The growth lands on the quietest block of the page, below the list. */
+.lp-account { border-top: 1px solid #f0eadf; background: #fbfaf7; padding: 11px 14px 12px; }
+.lp-account-id { display: flex; align-items: center; gap: 10px; min-height: 24px; }
+.lp-account-id svg { flex: 0 0 auto; }
 .lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: #8d8577; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 2px 4px; }
 .lp-account-out:hover { color: #23211d; }
+
+/* 26px = the 16px glyph + its 10px gap, so the sentence starts under the
+   address rather than under the envelope. */
+.lp-account-mail { margin-top: 5px; padding-left: 26px; }
+.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: #8d8577; }
+.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
+.lp-notify-all:hover { color: #7a5638; }
+@media (min-width: 900px) { .lp-account { padding: 11px 20px 12px; } }
 /* One line, in the faintest colour on the page: this is the payoff, not an
    announcement. */
 .lp-cross-device { display: flex; align-items: flex-start; gap: 7px; margin: 9px 2px 0; font-size: 0.79rem; color: #a29a8b; line-height: 1.45; }

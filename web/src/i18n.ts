@@ -128,6 +128,9 @@ export interface AuthStrings {
    *  the off switch beside it — rather than discovered from the first email.
    *  `{email}` is the signed-in address the replies will go to. */
   notifyOn: string;
+  /** The same fact on the landing footer, where the address is already on the
+   *  line above — repeating it would say one thing twice in one block. */
+  notifyOnAccount: string;
   notifyOff: string;
   notifyTurnOff: string;
   notifyTurnOn: string;
@@ -175,6 +178,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     showManage: "Show",
     hideManage: "Hide",
     notifyOn: "We'll email {email} when replies come in.",
+    notifyOnAccount: "We'll email you when replies come in.",
     notifyOff: "We won't email you about replies to any of your invitations.",
     notifyTurnOff: "Turn off all emails",
     notifyTurnOn: "Turn emails back on",
@@ -221,6 +225,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     showManage: "Показати",
     hideManage: "Сховати",
     notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
+    notifyOnAccount: "Ми напишемо вам, коли надійдуть відповіді.",
     notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
     notifyTurnOff: "Вимкнути всі листи",
     notifyTurnOn: "Увімкнути листи",

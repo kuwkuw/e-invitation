@@ -7,6 +7,7 @@ import { LangSwitcher } from "./components/LangSwitcher";
 import { YourInvitations } from "./components/YourInvitations";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
+import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations } from "./hostInvitations";
 import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
@@ -76,6 +77,12 @@ export function LandingPage() {
   const account = useAuthSession();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const signedIn = account.status === "signed_in" && account.email !== null;
+  // Two conditions, and both render the line **absent** rather than disabled
+  // (DS LandingAccountNotify): a deployment that cannot send mail must promise
+  // nothing, and before the first invitation a preference about replies is
+  // about nothing. It appears with the first published invitation.
+  const canNotify = signedIn && account.notifications && mine.length > 0;
+  const notify = useNotificationPref(canNotify);
   // The list is seeded from the keyring on sign-in, so by the time it is
   // non-empty for a signed-in host these are their account's invitations.
   const replyCount = mine.reduce((total, invitation) => {
@@ -126,7 +133,12 @@ export function LandingPage() {
         // Rendered inside the card, because the account exists for this list.
         footer={
           signedIn && account.email ? (
-            <AccountFooter email={account.email} onSignOut={account.signOut} t={AUTH[lang]} />
+            <AccountFooter
+              email={account.email}
+              onSignOut={account.signOut}
+              notify={canNotify ? { enabled: notify.enabled, onToggle: notify.toggle } : null}
+              t={AUTH[lang]}
+            />
           ) : null
         }
         onDeleteAccount={signedIn ? () => setConfirmingDelete(true) : undefined}
