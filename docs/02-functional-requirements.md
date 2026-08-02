@@ -342,7 +342,11 @@ them.
 - FR-12.7 The disclosure is made where it is caused: the share panel says which
   address replies will go to, with the switch beside it, at the moment the host
   publishes — not in a settings screen this app does not have, and not
-  discovered from the first email.
+  discovered from the first email. **The control also has a durable home** in
+  the landing page's account footer, because a disclosure is a moment and a
+  preference needs an address; without it the only lasting way out would be to
+  go and find one of the emails. It is absent, never disabled, where the
+  deployment cannot send mail or the host has published nothing yet.
 - FR-12.8 `GET /unsubscribe/:token` never mutates — mail scanners and link
   prefetchers follow links without a human, so it renders a confirm step;
   `POST` is the mutation and RFC 8058's one-click posts to it. An unresolvable

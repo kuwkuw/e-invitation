@@ -153,3 +153,100 @@ describe("delete account confirmation", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 });
+
+// adr-015 §7's durable home for the account-wide switch (DS
+// LandingAccountNotify). The share panel discloses it at publish; this is
+// where it lives afterwards.
+describe("AccountFooter reply notifications", () => {
+  const notifyOn = { enabled: true, onToggle: () => {} };
+
+  it("says what we send, without repeating the address above it", () => {
+    const { container } = render(
+      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
+    );
+    const line = container.querySelector(".lp-account-mail p");
+    expect(line?.textContent).toBe(auth.notifyOnAccount);
+    // The address is on the row above; saying it twice in one block is the one
+    // change from the share panel's wording.
+    expect(line?.textContent).not.toContain("olena@example.com");
+    expect(screen.getByText(auth.notifyTurnOff)).toBeTruthy();
+  });
+
+  it("states the account-wide scope when off, and offers the way back", () => {
+    render(
+      <AccountFooter
+        email="olena@example.com"
+        onSignOut={() => {}}
+        notify={{ enabled: false, onToggle: () => {} }}
+        t={auth}
+      />,
+    );
+    expect(screen.getByText(auth.notifyOff)).toBeTruthy();
+    expect(screen.getByText(auth.notifyTurnOn)).toBeTruthy();
+  });
+
+  it("toggles through the callback", () => {
+    const onToggle = vi.fn();
+    render(
+      <AccountFooter
+        email="olena@example.com"
+        onSignOut={() => {}}
+        notify={{ enabled: true, onToggle }}
+        t={auth}
+      />,
+    );
+    fireEvent.click(screen.getByText(auth.notifyTurnOff));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  // Absent, never disabled: a dead control promises a feature that is not
+  // there. This is the deployment-without-mail and the no-invitations-yet case.
+  it("renders no line at all when there is nothing to promise", () => {
+    const { container } = render(
+      <AccountFooter email="olena@example.com" onSignOut={() => {}} t={auth} />,
+    );
+    expect(container.querySelector(".lp-account-mail")).toBeNull();
+    expect(screen.queryByText(auth.notifyTurnOff)).toBeNull();
+    // The identity row is untouched — this is the footer exactly as it was.
+    expect(screen.getByText("olena@example.com")).toBeTruthy();
+    expect(screen.getByText(auth.signOut)).toBeTruthy();
+  });
+
+  // One glyph signs both rows: the same envelope struck through, rather than a
+  // second icon 20px away meaning something else.
+  it("strikes the envelope it already has instead of adding one", () => {
+    const on = render(
+      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
+    );
+    expect(on.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
+    const onStrokes = on.container.querySelectorAll(".lp-account-id svg path").length;
+    cleanup();
+
+    const off = render(
+      <AccountFooter
+        email="olena@example.com"
+        onSignOut={() => {}}
+        notify={{ enabled: false, onToggle: () => {} }}
+        t={auth}
+      />,
+    );
+    expect(off.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
+    expect(off.container.querySelectorAll(".lp-account-id svg path").length).toBeGreaterThan(
+      onStrokes,
+    );
+  });
+
+  it("carries the copy in Ukrainian too", () => {
+    const { container } = render(
+      <AccountFooter
+        email="olena@example.com"
+        onSignOut={() => {}}
+        notify={notifyOn}
+        t={AUTH.uk}
+      />,
+    );
+    expect(container.querySelector(".lp-account-mail p")?.textContent).toBe(
+      "Ми напишемо вам, коли надійдуть відповіді.",
+    );
+  });
+});

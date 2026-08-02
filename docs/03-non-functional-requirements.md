@@ -12,11 +12,11 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **88.7 kB gzipped** (274.4 kB raw), measured with
+  **88.9 kB gzipped** (275.1 kB raw), measured with
   `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
   ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
-  share-loop client (adr-013), **+0.5 kB is reply notifications**
+  share-loop client (adr-013), **+0.7 kB is reply notifications**
   ([adr-015](decisions/adr-015-rsvp-notifications.md) — a hook, one panel row
   and two icons, no dependency) and **+5.4 kB is host accounts**
   ([adr-014](decisions/adr-014-host-accounts.md)) — the sign-in gate, the

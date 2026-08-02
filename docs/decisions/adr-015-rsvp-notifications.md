@@ -252,6 +252,23 @@ The swap cost is one module either way, which is the point of §6.
   "turn these emails off" rather than naming the invitation. A control whose
   scope is discovered after pressing it is the same defect as the one this
   section exists to avoid, moved one screen earlier.
+
+- **Disclosure is a moment; a preference needs an address.** These are
+  different questions and this section originally answered only the first,
+  which is how the switch shipped reachable *only* from the post-publish share
+  sheet — a sheet that appears once and is then gone, leaving the email footer
+  as the only durable way out. That is precisely the friction that earns the
+  spam button.
+
+  The rule, corrected: **the disclosure lives where the cause arises; the
+  control lives on the surface of its own level** — account-level in the
+  account, event-level in the event. So the share-panel line stays exactly
+  where it is, and the switch also has a permanent home in the landing page's
+  account footer, which is the only account surface the app has.
+
+  Absent, never disabled, on two conditions: a deployment that cannot send mail
+  promises nothing, and before a host's first invitation a preference about
+  replies is about nothing. It appears with the first published invitation.
 - **One-click unsubscribe.** `GET|POST /api/notifications/unsubscribe/:token`
   sets `enabled = 0`, plus `List-Unsubscribe` and `List-Unsubscribe-Post`
   headers (RFC 8058) so a mail client can do it without opening a page.
@@ -521,8 +538,26 @@ PR 6 are operational state that exists nowhere else.
   because the `og:image` host and the manage link in a host's inbox have to
   agree and a drifted copy breaks either one silently.
 - **Both surfaces shipped before their mockups**, recorded in §10. The
-  unsubscribe page did not: it was designed first, as the convention intends.
-- **Bundle cost: +0.52 kB gzipped** (88.20 → 88.72), recorded under NFR-1.
+  unsubscribe page did not: it was designed first, as the convention intends,
+  and neither did the account footer below.
+- **The switch had no durable home, and production found it before we did.**
+  §7 answered "where is this disclosed" and never "where does it live", so the
+  control shipped reachable only from the post-publish share sheet — visible
+  once, then unreachable, leaving the email footer as the only way out. Fixed
+  by the account-footer line (DS `LandingAccountNotify`), with §7 amended so
+  the next preference does not repeat it. The design pass answered the
+  placement question in full: the footer already carried two account facts that
+  merely fitted on one line, so the rule was never "one thing" but "the
+  account"; the alternatives each failed for a reason (a row in the list reads
+  as another invitation, a line beside "delete account" puts the routine next
+  to the irreversible, and `/manage/:id` is an event surface for an
+  account-level setting).
+- **"Delete account" deliberately did not move** with it. The split is by
+  consequence rather than by topic: inside the card are the things a host can
+  press and change their mind about; outside it, in the page's quietest colour,
+  is the one that opens a confirmation. Collecting all account controls in one
+  block is the path to the settings screen this ADR keeps refusing.
+- **Bundle cost: +0.71 kB gzipped** (88.20 → 88.91), recorded under NFR-1.
 
 ## Revisit triggers
 
