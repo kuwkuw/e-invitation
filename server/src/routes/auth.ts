@@ -106,8 +106,10 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     reply.clearCookie(OAUTH_COOKIE, oauthCookieOptions(request));
 
     // The host pressed "cancel" on Google's screen. Not an error, and it must
-    // not read like one.
-    if (query.error) return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "declined"), 302);
+    // not read like one — including in where it leaves them.
+    if (query.error) {
+      return reply.redirect(withAuthResult(declinedReturn(query.state), "declined"), 302);
+    }
     if (!query.code || !query.state) {
       return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed", "state"), 302);
     }
@@ -204,6 +206,25 @@ function safeRedirectPath(value: string | undefined): string {
   if (!value || !SAFE_REDIRECT_PATH.test(value)) return DEFAULT_REDIRECT_TO;
   if (value.startsWith("//")) return DEFAULT_REDIRECT_TO;
   return value;
+}
+
+/**
+ * Where a declined sign-in lands the host: back where they pressed it.
+ *
+ * `/create` was right for as long as the publish gate was the only way in —
+ * the host was already there. With a sign-in entry point on the landing page,
+ * a host who changes their mind would be dropped into an editor they never
+ * asked for, which reads as a product that ignored them.
+ *
+ * The row is consumed because the flow is over either way; an unknown or
+ * absent state simply falls back. No browser-binding check, unlike the paths
+ * below it: this decides a same-origin path that `safeRedirectPath` already
+ * constrained at mint, grants nothing, and burning a state row here is
+ * something anyone holding the state value can already do at the callback.
+ */
+function declinedReturn(state: string | undefined): string {
+  if (!state) return DEFAULT_REDIRECT_TO;
+  return consumeOauthState(state)?.redirect_to ?? DEFAULT_REDIRECT_TO;
 }
 
 /** The result rides a query parameter, which the client reads once and strips

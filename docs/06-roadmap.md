@@ -5,8 +5,11 @@ decomposition landed; updated 2026-07-24 when the manage-view and
 client-routing iterations shipped, 2026-07-25 when batch response counts
 (adr-012) shipped as FR-5.7, 2026-07-27 when share-loop instrumentation
 (adr-013) was planned, 2026-07-30 when host accounts (adr-014) shipped as
-FR-11, and 2026-07-31 when the share loop got the docs pass it had been owed
-since its code landed and RSVP notifications (adr-015) shipped as FR-12. This
+FR-11, 2026-07-31 when the share loop got the docs pass it had been owed since
+its code landed and RSVP notifications (adr-015) shipped as FR-12, and
+2026-08-02 when production was read against
+[07-monetization.md](07-monetization.md) §5.1 for the first time and the next
+iteration was taken. This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -359,24 +362,189 @@ external dependency and a DNS setup; what it bought is a loop that closes
 without the host thinking to check. The honest position is that the trigger
 still stands over whatever comes next.
 
+## Shipped: the returning host on a new device
+
+Planned 2026-08-02. The operational candidate the previous version of this
+section named was taken and is done — the mail domain is configured
+(`notifications.configured`) and the publish gate is closed
+(`auth.publish_gate`) — so this begins by reading what accumulated.
+
+**What production said**, lifetime and since the adr-014 baseline: 20 / 5
+generations, 10 / 3 publishes, 11 / 2 RSVPs, 6 / 4 guest-page views, and
+**0 / 0 referred generations**. `new_hosts_per_publish` is 0 and
+`views_per_publish` is 0.6 — fewer than one guest opening each published
+invitation. §5.1's thresholds are not merely unmet, they are unreadable at this
+n, and nothing here changes that. **This doc's three previous warnings about
+building for hosts who are not here yet all still stand**, and this iteration
+is scoped to be answerable to them.
+
+Two things came first because they were not features:
+
+1. **Groq is configured in production.** `/healthz` reported `groq: false`,
+   `anthropic: false`, `openai: false` — one provider, with the remaining three
+   entries of every task walk unset. Gemini's free tier is ~20 requests/day and
+   a generate spent three of them, so the live product returned 502 above
+   roughly six invitations a day, with no degradation path and no fallback to
+   walk to. Brief extraction and design resolution now route to Groq first —
+   adr-007's free-tier-first order with both tiers actually present — leaving
+   one Gemini call per generate. This is the ceiling that any traffic at all
+   would have hit before it hit anything else.
+2. **The publish gate stays closed.** adr-014 §2's revisit trigger and the
+   `PUBLISH_REQUIRES_ACCOUNT=0` switch were both weighed and declined:
+   publishing requires an account. Post-gate `publish_rate` reads 0.6 against
+   the baseline's 0.47, which on three publishes is noise. The gate's cost
+   stays unmeasured until traffic exists, and that is the honest statement of
+   it rather than a defence of the number.
+
+The iteration itself is a **correctness fix, not a growth item**, and rests on
+that: FR-11's cross-device event list was built, shipped, and is effectively
+unreachable.
+
+1. **The landing list never refreshes after the keyring seed.**
+   [LandingPage.tsx](../web/src/LandingPage.tsx) reads `loadHostInvitations()`
+   once, synchronously, in a `useState` initializer;
+   [useAuthSession.ts](../web/src/hooks/useAuthSession.ts) fetches the keyring
+   and writes those entries **after** that read, and nothing re-reads them. A
+   signed-in host on a new device sees an empty list until they reload. Two
+   comments in that file assert the opposite, which is what let it through, and
+   no test covers the seed-to-render path.
+2. **There is no way to sign in except by publishing.** The product's only
+   sign-in affordance is `AuthGate`, which adr-014 makes the first frame of the
+   share sheet. A returning host on a new phone who wants to check their RSVPs
+   has to open `/create`, generate an invitation they do not want, and press
+   Publish to reach it. That is not what §2 gates — §2 puts a gate at publish,
+   and a door on the landing page is not a gate — but it is what having no
+   other entry point produced.
+
+What is settled:
+
+1. **The keyring becomes authoritative for the list** when the host is signed
+   in, with `hostInvitations.ts` as the fallback. Better than refreshing the
+   local copy, because it also ends the staleness of publishing on one device
+   and not seeing it on another.
+2. **The manage tokens stay in the browser.** With the gate closed the keyring
+   is a complete record, which weakens but does not remove the case: the gate
+   is a runtime switch that flips without a deploy, deletion must keep working
+   without destroying access (FR-11.7), and local development and self-hosting
+   run with no OAuth client at all (adr-014 §7), where the browser copy is the
+   only path there is. Server-only tokens would make the account an owner
+   rather than a keyring, which is a larger reversal of
+   [adr-005](decisions/adr-005-capability-tokens.md) than adr-014 took and
+   would need its own record.
+3. **Sign-in is a quiet header link**, not a button competing with the Create
+   call to action. A first-time visitor and a returning host on a new device
+   are indistinguishable — both have empty storage and no session — so the
+   affordance has to cost the first one nothing.
+4. **adr-014 §5 is amended rather than worked around.** *"This hook owns no
+   invitation state and exposes no list"* stops being true, and that property
+   was load-bearing: it is why `useHostManage`, `usePublishing` and
+   `useHostInvitationCounts` need no account awareness. They keep it — only the
+   landing list learns.
+5. **No new endpoint and no new ADR.** `/api/account/keyring` already returns
+   the list shape and `/api/auth/google/start` already takes a guarded
+   `redirect_to`. The one server change is that cancelling sign-in returns
+   where it started instead of to `/create`.
+
+Shipped as **FR-11.10** and **FR-11.11**, in three code commits plus this docs
+pass: the keyring-first list, the declined-sign-in return path, and the link
+itself. adr-014's implementation notes carry the §5 amendment.
+
+**adr-010 §9's design-before-code rule was not followed, on purpose.** It was
+written for substantial new surfaces — the gate, the dashboard, the share
+panel — and the whole UI here is one muted text link in an existing header. The
+constraint it had to respect was already written down and already tested:
+`accountUi.test.tsx` holds adr-014 §10's ruling that the invitations card
+carries no sign-in offer, because that would be an advertisement in the place a
+host simply wants their list. The header was the only place left, which is
+most of what a mockup would have concluded.
+
+## Shipped: reply notifications become opt-in
+
+adr-015 §7 shipped **default on** on 2026-07-31 and this reverses it two days
+later, which is worth stating plainly rather than folding into the section
+above.
+
+1. **The reason is deliverability, not consent.** The consent case is weak —
+   this is transactional mail to the account owner's own Google-verified
+   address about their own event, disclosed at the moment it is caused and off
+   in one click. What carries it is that `invinto.app` is an unwarmed sending
+   domain: [05-deployment.md](05-deployment.md) already flags Ukrainian inbox
+   placement as the one claim to verify rather than reason about, and spam
+   presses at this volume damage the **share links** too, not only the
+   notifications.
+2. **The choice moves to the publish moment**, rather than the default merely
+   flipping. A switch on the landing footer that a first-time host never
+   scrolls to would reinstate exactly the *"without the host thinking to
+   check"* that adr-015 existed to remove. The share panel already renders the
+   block; it stops disclosing a default and starts asking.
+3. **"Absent row means enabled" inverts, and it is load-bearing.**
+   `notifications.ts`'s eligibility join and its own comment about a default
+   that cannot drift both move with it, as does `useNotificationPref`'s
+   optimistic `true`. Accounts with no row go from on to off with no migration;
+   at this scale that is a choice, and it is recorded here rather than
+   discovered later.
+4. **The manage page gains the control**, absent rather than disabled when
+   signed out — the preference endpoints are session-authorized while
+   `/manage/:id` is manage-token-authorized, so a pasted manage link genuinely
+   cannot reach it. Opt-in makes this surface more necessary, not less: a host
+   who declined at publish and later wonders why no mail arrives looks at that
+   event's dashboard, not at the landing page.
+5. **Account-wide, and labelled as such.** Per-event control stays deferred
+   with adr-015 §7's trigger intact — one-click unsubscribe must still stop
+   everything, so per-event is both layers rather than a replacement.
+
+Shipped as **FR-12.10** and **FR-12.11**, in three code commits plus this docs
+pass: the server default and its eligibility join, the publish-moment choice,
+and the dashboard control. adr-015 carries the §7 amendment.
+
+Two things this iteration is answerable for. **It contradicts a note in
+adr-015's own implementation record**, which rejected `/manage/:id` as "an
+event surface for an account-level setting" — the amendment argues that the
+objection was decided under default-on and is outweighed rather than
+overturned, and that the scope line is what it costs. And **the tests carried
+the reversal rather than being patched around it**: opting in is now visible in
+every case that expects mail, which is what makes the default readable from the
+test file instead of only from the schema.
+
+Not done, deliberately: no migration. An account with a stored answer keeps it
+either way; what changes is the accounts with **no** row, which were implicitly
+on and are now off. Preserving their old behaviour would mean writing `enabled
+= 1` rows for hosts who never asked for anything — inventing consent to
+preserve a default, which is the opposite of what this iteration is for. At
+production's account count the cost is a handful of hosts who opt in again.
+
 ## No iteration currently taken
 
-Nothing below is claimed. The doc's convention is that this section names the
-next iteration, and leaving it empty is again deliberate: adr-015 closed the
-last backlog item that had a decision waiting on it, and every remaining one is
-gated on a host asking or on traffic that does not exist yet.
+Both sections above shipped on 2026-08-02, and the position at the top of them
+is unchanged by having done so: `views_per_publish` is 0.6,
+`new_hosts_per_publish` is 0, and neither number moved, because neither
+iteration was capable of moving it. One fixed a capability that was built and
+unreachable; the other stopped an unwarmed sending domain mailing people who
+had not asked. Both were worth doing and neither was growth.
 
-The standing candidate is still **doing nothing yet**. adr-013 shipped the
-measurement [07-monetization.md](07-monetization.md) §5.1 gates every
-commercial option on; adr-015 has now given hosts a reason to come back without
-being reminded. Both need published invitations that real guests open, and no
-further feature produces those. The next thing worth doing may well be
-operational rather than product: configuring the mail domain (§Reply
-notifications in [05-deployment.md](05-deployment.md)), closing the publish
-gate, and letting the numbers accumulate.
+What did change is the ceiling: with Groq configured, the product survives
+roughly three times the traffic it could have a day earlier. That matters only
+if traffic arrives, which remains the one thing no feature in this backlog
+produces.
+
+The standing candidate is still **doing nothing yet** — publish real events,
+let the numbers accumulate, and read §5.1 when there is something to read. Of
+the two items below that would change anything, the share sheet is the only one
+that touches the loop the measurement is about.
 
 ## Candidate backlog
 
+- **Native share sheet at publish** — the host's share panel is copy-link only,
+  while the guest page already uses `navigator.share`. Intent 4 in
+  [01-vision.md](01-vision.md) is messenger-native sharing, and at the highest
+  value moment in the product a mobile host has to copy, leave the app, find
+  Viber and paste. About one PR, and it sits directly on the only acquisition
+  channel [07-monetization.md](07-monetization.md) §3 says is affordable.
+- **Invitation gallery on the landing page** — a visitor cannot see what they
+  would get without typing a sentence first. The token map is deterministic
+  ([adr-003](decisions/adr-003-no-image-generation.md)), so samples cost no LLM
+  call. Both a conversion surface and the only plausible Ukrainian-language
+  search asset the product could have. Larger, and unclaimed.
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.

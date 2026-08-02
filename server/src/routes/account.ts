@@ -84,9 +84,10 @@ export function registerAccountRoutes(app: FastifyInstance): void {
   app.get("/api/account/notifications", async (request, reply) => {
     const user = currentUser(request);
     if (!user) return reply.code(401).send({ error: "Sign in to continue." });
-    // Absent row means enabled — the default is the absence, not a stored
-    // value (adr-015 §7).
-    return { enabled: getPref(user.id)?.enabled ?? true };
+    // Absent row means **disabled**: reply email is opt-in (adr-015 §7,
+    // amended). Nothing is sent to an account that has not asked, and the
+    // default is still the absence of a row rather than a stored value.
+    return { enabled: getPref(user.id)?.enabled ?? false };
   });
 
   app.put("/api/account/notifications", async (request, reply) => {

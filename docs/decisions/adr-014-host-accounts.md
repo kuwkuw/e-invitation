@@ -534,6 +534,48 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   memory layer — `forgetHeldManageTokens()` exists so that is stated rather
   than discovered.
 
+### Amended 2026-08-02 — the returning-host iteration
+
+Not from this ADR's own build. A later iteration
+([06-roadmap.md](../06-roadmap.md)) found that what §5 and §10 shipped was
+reachable only by accident, and changed two things here.
+
+- **§5's "seeds the client; does not restructure it" was half right, and the
+  half that was wrong was load-bearing.** The seed is asynchronous; the landing
+  list read `inv-invitations` synchronously in a `useState` initializer at
+  mount. Nothing re-read it, so a signed-in host on a device that had never
+  published saw an empty list until they reloaded — the cross-device list of
+  FR-11.3, delivered and unreachable. `useAuthSession` now **returns** the
+  keyring entries and the landing page renders them; the seed into storage
+  stays, so `useHostManage`, `usePublishing`, `useHostInvitationCounts` and
+  `/manage/:id` keep the account-unawareness §5 was written for. Only the
+  landing list learns. Returning the entries also gives the list the property
+  the memory layer above already gives the tokens: it survives a blocked store.
+- **The list is a union, not a replacement.** The keyring wins on a matching
+  id — it is read off the record, so a title republished elsewhere is current
+  there and stale locally — but an invitation this browser published before it
+  ever signed in is in no keyring, and rendering the keyring alone would take
+  it off a host's own list. At the time of writing that describes most of
+  production, which published 7 of 10 invitations before the gate existed.
+  `null` (no answer) and `[]` (an account holding nothing) stay distinct.
+- **§2's gate was the only door.** `AuthGate` being the first frame of the
+  share sheet is right, and it was also the *only* sign-in affordance in the
+  product: a host returning on a new phone had to generate an invitation they
+  did not want and press Publish to reach the feature that exists so they would
+  not have to. The landing page now carries one muted link into the same flow
+  with `redirect_to=/`. That is not a gate — nothing is refused, and generate
+  and edit stay anonymous — so §2 is unchanged. It stays out of the invitations
+  card, where §10's `LandingSignedInStates` ruled an offer would be an
+  advertisement in the place a host simply wants their list.
+- **A declined sign-in now returns where it started.** `/create` was correct
+  while the gate was the only entry point, and became wrong with the second
+  one.
+- **§10 was not followed for the link, deliberately.** Design-before-code was
+  written for substantial new surfaces — the gate, the dashboard, the share
+  panel. One muted text link in an existing header does not earn a template
+  round trip, and the constraint it had to respect was already written down in
+  a test.
+
 ## Revisit triggers
 
 Written down now so the decision is falsifiable later:

@@ -5,7 +5,7 @@ import {
   fetchKeyring,
   signOut as signOutRequest,
 } from "../api";
-import { recordHostInvitation } from "../hostInvitations";
+import { type HostInvitation, recordHostInvitation } from "../hostInvitations";
 import { writeManageToken } from "../manageTokens";
 import type { AuthSession } from "../types";
 
@@ -24,13 +24,23 @@ export type AuthStatus = "loading" | "unavailable" | "signed_out" | "signed_in";
  * all. They keep resolving a manage token exactly as they did before accounts
  * existed; there is simply one more way for that token to be present.
  *
- * Which is also why this hook owns no invitation state and exposes no list:
- * the returning-host list still reads `hostInvitations.ts`, and it cannot tell
- * whether an entry got there by publishing or by signing in.
+ * **It does expose the list, and that amends §5 rather than drifting from
+ * it.** Seeding storage and trusting that whoever reads it does so afterwards
+ * is what left a signed-in host on a new device staring at an empty landing
+ * list until they reloaded: the read there is synchronous and happens at mount,
+ * and this fetch cannot be. Returning the entries also means the list survives
+ * a blocked store, the way `manageTokens.ts` already makes the tokens survive
+ * one. Every other consumer keeps its account-unawareness — only the landing
+ * list learns.
  */
 export function useAuthSession() {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [email, setEmail] = useState<string | null>(null);
+  // What the account holds. `null` is "the keyring has not answered" — signed
+  // out, unconfigured, or still in flight — and is deliberately distinct from
+  // `[]`, an account that holds nothing: only the second one should be allowed
+  // to say anything about a list.
+  const [invitations, setInvitations] = useState<HostInvitation[] | null>(null);
   // Whether an anonymous first publish will be refused (adr-014 §2). The
   // editor needs this *before* the host presses Publish, so the gate can be
   // the first frame of the share sheet rather than a reaction to a 401.
@@ -60,17 +70,23 @@ export function useAuthSession() {
       .then(async (session) => {
         if (!active) return;
         if (!apply(session)) return;
-        const invitations = await fetchKeyring();
+        const entries = await fetchKeyring();
         if (!active) return;
-        for (const entry of invitations) {
+        const held: HostInvitation[] = [];
+        for (const entry of entries) {
           writeManageToken(entry.id, entry.manage_token);
-          recordHostInvitation({
+          const invitation = {
             id: entry.id,
             title: entry.title,
             published_at: entry.published_at,
             palette: entry.palette,
-          });
+          };
+          recordHostInvitation(invitation);
+          held.push(invitation);
         }
+        // After the tokens, never before: `useHostInvitationCounts` refires on
+        // the id set changing and reads each token from storage at that moment.
+        setInvitations(held);
       })
       .catch(() => {
         // Never a visible failure. A host who is signed out, on a deployment
@@ -99,6 +115,11 @@ export function useAuthSession() {
     // who wants that clears site data.
     setStatus("signed_out");
     setEmail(null);
+    // The keyring's answer goes with the session that authorized reading it.
+    // The invitations themselves do not disappear from the list: they were
+    // seeded into `inv-invitations` on the way in, and that index is exactly
+    // what this browser would have had if it had never signed in at all.
+    setInvitations(null);
   }, []);
 
   /** Delete the account (adr-014 §9). Returns how many invitations were kept,
@@ -110,8 +131,9 @@ export function useAuthSession() {
     const result = await deleteAccountRequest();
     setStatus("signed_out");
     setEmail(null);
+    setInvitations(null);
     return result;
   }, []);
 
-  return { status, email, publishGate, notifications, signOut, deleteAccount };
+  return { status, email, invitations, publishGate, notifications, signOut, deleteAccount };
 }

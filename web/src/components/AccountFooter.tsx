@@ -87,7 +87,11 @@ export function AccountFooter({
         <div className="lp-account-mail">
           <p>{notify.enabled ? t.notifyOnAccount : t.notifyOff}</p>
           <button type="button" className="lp-notify-all" onClick={notify.onToggle}>
-            {notify.enabled ? t.notifyTurnOff : t.notifyTurnOn}
+            {/* `notifyOptIn`, not "turn them back on": under opt-in a host
+                here may never have had reply email on, and nothing on this
+                surface can tell the two apart. The neutral label is true for
+                both; "back on" is false for one of them. */}
+            {notify.enabled ? t.notifyTurnOff : t.notifyOptIn}
           </button>
         </div>
       )}

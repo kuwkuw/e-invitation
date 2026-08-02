@@ -182,7 +182,9 @@ describe("AccountFooter reply notifications", () => {
       />,
     );
     expect(screen.getByText(auth.notifyOff)).toBeTruthy();
-    expect(screen.getByText(auth.notifyTurnOn)).toBeTruthy();
+    // Neutral, not "back on": under opt-in this footer cannot tell a host who
+    // turned mail off from one who never asked for it.
+    expect(screen.getByText(auth.notifyOptIn)).toBeTruthy();
   });
 
   it("toggles through the callback", () => {

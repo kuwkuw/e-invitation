@@ -18,6 +18,14 @@
 // receiving mail about their others — and the second click is the spam button,
 // which costs sender reputation for everything the product sends. Per-event
 // control is a later question; the revisit trigger is in the ADR.
+//
+// **Reply email is opt-in** (adr-015 §7, amended). The absence of a row is
+// *off*: nothing is sent to an account that has not asked for it. The original
+// decision was default-on, and what reversed it was not consent — this is
+// transactional mail to the account owner's own verified address about their
+// own event — but deliverability. The sending domain is new and has no
+// reputation, and a spam press on unasked-for mail costs inbox placement for
+// everything the product sends, guests' share links included.
 
 import { randomBytes } from "node:crypto";
 import { getDb } from "./db.js";
@@ -34,10 +42,11 @@ export interface NotificationPref {
 /** A host who should be told about replies to one invitation, with everything
  *  the rate limit (adr-015 §4) needs to decide whether to tell them now.
  *
- *  `unsub_token` is null until the account has a preference row, and
- *  `last_notified_at` until this invitation has produced a send. The sender
- *  mints the token with `ensurePref` immediately before it needs a link, so a
- *  token exists only for an account that has actually been mailed. */
+ *  `last_notified_at` is null until this invitation has produced a send.
+ *  `unsub_token` is typed nullable because the row shape allows it, but under
+ *  opt-in a target always has a preference row — it is what made it a target —
+ *  so in practice it is always present. The sender does not rely on that: it
+ *  reads the token back through `ensurePref`. */
 export interface NotificationTarget {
   user_id: string;
   invitation_id: string;
@@ -72,10 +81,12 @@ function nowIso(): string {
  *  targets, and notifies nobody — silently and forever, until someone
  *  republishes it while signed in (FR-11.4).
  *
- *  Both joins are LEFT: an absent preference row means "enabled" and an absent
- *  send row means "never notified". Only an explicit `enabled = 0` removes a
- *  host, so a default that is never written cannot drift from a default that
- *  is. */
+ *  **Only an explicit `enabled = 1` produces a target.** The prefs join stays
+ *  LEFT so the query reads as "the keyring, filtered", but the condition makes
+ *  an absent row exclude the host — which is the whole of opt-in, expressed
+ *  once, in the only place that decides who gets mail. The sends join is still
+ *  LEFT for its own reason: an absent row there means "never notified", which
+ *  is a state the rate limit needs rather than one that removes anybody. */
 export function notificationTargets(invitationId: string): NotificationTarget[] {
   const rows = getDb()
     .prepare(
@@ -90,7 +101,7 @@ export function notificationTargets(invitationId: string): NotificationTarget[] 
          LEFT JOIN notification_sends s
            ON s.user_id = k.user_id AND s.invitation_id = k.invitation_id
         WHERE k.invitation_id = ?
-          AND (p.enabled IS NULL OR p.enabled = 1)
+          AND p.enabled = 1
         ORDER BY k.created_at ASC`,
     )
     .all(invitationId) as unknown as NotificationTarget[];
@@ -124,6 +135,10 @@ export function getPref(userId: string): NotificationPref | null {
 
 /** This account's preference row, created with the defaults if absent.
  *
+ *  The default is **off**, so calling this can never start mail: it mints a
+ *  row and an unsubscribe token, not a subscription. `setNotificationsEnabled`
+ *  is the only thing that turns anything on.
+ *
  *  Idempotent, and never resets a setting: a host who turned notifications off
  *  and then triggers this again stays off. The insert is `DO NOTHING` rather
  *  than an upsert for exactly that reason. */
@@ -131,7 +146,7 @@ export function ensurePref(userId: string): NotificationPref {
   getDb()
     .prepare(
       "INSERT INTO notification_prefs (user_id, enabled, unsub_token, created_at)" +
-        " VALUES (?, 1, ?, ?) ON CONFLICT (user_id) DO NOTHING",
+        " VALUES (?, 0, ?, ?) ON CONFLICT (user_id) DO NOTHING",
     )
     .run(userId, randomBytes(16).toString("base64url"), nowIso());
   // Read back rather than trusting the insert: on conflict the stored row wins,
@@ -144,8 +159,10 @@ export function ensurePref(userId: string): NotificationPref {
 /** Turn reply email on or off for this account, across every invitation it
  *  holds and every one it publishes later.
  *
- *  Creates the row when there is none, because "off" is the case that has to
- *  be written down — the default it deviates from is the absence of a row. */
+ *  Creates the row when there is none, because under opt-in **"on" is the case
+ *  that has to be written down** — the default it deviates from is the absence
+ *  of a row. That sentence used to read the other way round, and inverting it
+ *  is the whole of the reversal on this side. */
 export function setNotificationsEnabled(userId: string, enabled: boolean): NotificationPref {
   ensurePref(userId);
   getDb()

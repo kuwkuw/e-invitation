@@ -576,6 +576,53 @@ PR 6 are operational state that exists nowhere else.
   block is the path to the settings screen this ADR keeps refusing.
 - **Bundle cost: +0.71 kB gzipped** (88.20 → 88.91), recorded under NFR-1.
 
+### Amended 2026-08-02 — reply email is opt-in
+
+Two days after this shipped. §7's first bullet said **default on**; it is now
+default off, and a host asks at publish.
+
+- **The reason is deliverability, not consent.** The consent case for opt-in is
+  weak and this ADR's original argument against it still holds: transactional
+  mail to the account owner's own verified address about their own event,
+  disclosed where it is caused, off in one click. What reversed it is that
+  `invinto.app` is an unwarmed sending domain with no reputation.
+  [05-deployment.md](../05-deployment.md) already flags Ukrainian inbox
+  placement as the one claim to verify rather than reason about, and a spam
+  press on mail nobody asked for costs inbox placement for **everything the
+  product sends** — including the share links guests unfurl, which
+  [07-monetization.md](../07-monetization.md) §3 calls the only affordable
+  acquisition channel. §7 weighed one host's surprise; it did not weigh the
+  sending domain.
+- **The invariant inverts, and it was load-bearing.** "Absence of a row means
+  enabled" was chosen so a default that is never written cannot drift from one
+  that is. That property is kept and the default flipped: the eligibility join
+  requires `enabled = 1`, and `ensurePref` mints a row that is *off*. Nothing
+  that merely touches the row can start mail — only `setNotificationsEnabled`
+  can. Accounts with no row go from on to off with no migration, which at this
+  scale is a choice rather than an oversight.
+- **The choice moved rather than the default merely flipping.** A switch a host
+  has to go and find is a switch nobody finds, and this ADR exists to close a
+  latency gap *"without the host thinking to check"*. The share panel already
+  rendered the block at publish; it stops reporting a default and starts
+  asking. "Turn emails back on" is gone from every surface: under opt-in
+  nothing can tell a host who turned mail off from one who never asked, and
+  "back on" is false for the second.
+- **`/manage/:id` now carries the control, which the notes above rejected.**
+  That objection — *"an event surface for an account-level setting"* — is not
+  overturned; it is outweighed, and it was decided under a different default.
+  With mail arriving by default the dashboard needed nothing: a host knew the
+  feature existed because they had received it, and the account footer was
+  enough to stop it. Under opt-in a host who declined at publish has no signal
+  the feature exists at all, and the dashboard is exactly where they go when
+  wondering about replies. The objection survives as the constraint on the
+  design rather than as a veto: the control **says in words that it covers
+  every invitation in the account**, because a switch that looks per-event and
+  acts account-wide is how a host silences three events by accident and
+  presses Spam — the outcome this amendment exists to avoid.
+- **Per-event control is still deferred**, with the trigger below intact. It
+  did not become more attractive; the scope line is a disclosure, not a
+  substitute.
+
 ## Revisit triggers
 
 - **Before PR 1: is this the right iteration at all?** adr-013 shipped the

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
@@ -9,7 +10,7 @@ import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
-import { loadHostInvitations } from "./hostInvitations";
+import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
 import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
 import { readManageToken } from "./manageTokens";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
@@ -68,13 +69,22 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [lang, setLang] = useState<Language>(loadUiLang);
   const t = LANDING[lang];
-  // Read once: the list only changes by publishing, which happens elsewhere.
-  const [mine] = useState(loadHostInvitations);
-  // Counts fill in after the list has already rendered, and a failure leaves
-  // the rows exactly as they are (adr-012 §6). `mine` is stable, so the ids
-  // handed to the hook are too.
-  const counts = useHostInvitationCounts(mine.map((m) => m.id));
   const account = useAuthSession();
+  // What this browser has published, and then the account's keyring laid over
+  // it once that answers. Reading the index once was enough before accounts —
+  // it only changed by publishing, which happens on another page — but the
+  // keyring arrives after this render, so a read alone left a host who signed
+  // in on a new device looking at an empty list until they reloaded.
+  const [local] = useState(loadHostInvitations);
+  const mine = useMemo(
+    () => mergeHostInvitations(local, account.invitations),
+    [local, account.invitations],
+  );
+  // Counts fill in after the list has already rendered, and a failure leaves
+  // the rows exactly as they are (adr-012 §6). The hook keys on the joined
+  // ids, so the keyring landing refetches exactly once and a re-render does
+  // not refetch at all.
+  const counts = useHostInvitationCounts(mine.map((m) => m.id));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const signedIn = account.status === "signed_in" && account.email !== null;
   // Two conditions, and both render the line **absent** rather than disabled
@@ -83,9 +93,13 @@ export function LandingPage() {
   // about nothing. It appears with the first published invitation.
   const canNotify = signedIn && account.notifications && mine.length > 0;
   const notify = useNotificationPref(canNotify);
-  // The list is seeded from the keyring on sign-in, so by the time it is
-  // non-empty for a signed-in host these are their account's invitations.
-  const replyCount = mine.reduce((total, invitation) => {
+  // What the *account* holds, which is what the deletion sheet is about. The
+  // list above can legitimately be wider: an invitation this browser published
+  // before it ever signed in is in no keyring, and deleting the account has
+  // nothing to do with it. Falls back to the list when the keyring has not
+  // answered, which is every signed-out case and therefore never rendered.
+  const held = account.invitations ?? mine;
+  const replyCount = held.reduce((total, invitation) => {
     const result = counts?.get(invitation.id);
     return total + (result?.counts ? result.counts.yes + result.counts.no : 0);
   }, 0);
@@ -116,6 +130,20 @@ export function LandingPage() {
       <header className="lp-nav">
         <span className="lp-brand">{t.brand}</span>
         <div className="lp-nav-right">
+          {/* The only sign-in outside the publish gate. Before it, a returning
+              host on a new phone could reach their events only by generating an
+              invitation they did not want and pressing Publish — the gate is at
+              publish (adr-014 §2), but a door on the landing page is not a gate.
+              Rendered only when signed out and configured: "loading" would flash
+              a link that then vanishes, and a deployment with no OAuth client
+              shows no account affordance at all (§7). It stays out of the
+              invitations card on purpose — an offer there would be an
+              advertisement where a host simply wants their list. */}
+          {account.status === "signed_out" && (
+            <a className="lp-nav-signin" href={googleSignInUrl("/")}>
+              {AUTH[lang].signInLink}
+            </a>
+          )}
           <LangSwitcher value={lang} onChange={handleLang} />
           <button type="button" className="lp-cta lp-cta-sm" onClick={startEditing}>
             {t.cta}
@@ -148,7 +176,7 @@ export function LandingPage() {
 
       {confirmingDelete && (
         <DeleteAccountSheet
-          invitationCount={mine.length}
+          invitationCount={held.length}
           replyCount={replyCount}
           onCopyAllLinks={copyAllManageLinks}
           onConfirm={() => {
