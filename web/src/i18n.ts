@@ -141,6 +141,11 @@ export interface AuthStrings {
    *  "turn emails back on" that opt-in made false: a host who never asked is
    *  not returning to anything, and no surface can tell them from one who is. */
   notifyOptIn: string;
+  /** The scope, said out loud on the manage page — a page about one event
+   *  carrying a switch that governs them all. Without it the control looks
+   *  per-invitation, and a host who silences one event and finds they silenced
+   *  three presses Spam, which is the outcome opt-in exists to avoid. */
+  notifyAllEvents: string;
   notifyTurnOff: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
@@ -195,6 +200,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyOff: "We won't email you about replies to any of your invitations.",
     notifyOffer: "Want an email when replies come in?",
     notifyOptIn: "Email me about replies",
+    notifyAllEvents: "Covers every invitation in your account, not just this one.",
     notifyTurnOff: "Turn off all emails",
     signOut: "Sign out",
     signInLink: "My invitations",
@@ -244,6 +250,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
     notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
     notifyOptIn: "Повідомляти про відповіді",
+    notifyAllEvents: "Стосується всіх запрошень у вашому акаунті, не лише цього.",
     notifyTurnOff: "Вимкнути всі листи",
     signOut: "Вийти",
     signInLink: "Мої запрошення",

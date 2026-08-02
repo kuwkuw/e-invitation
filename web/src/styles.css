@@ -1291,6 +1291,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .hm-primary:hover { background: #a04e27; }
 
+/* Reply email, below the responses it is about (adr-015 §7). Quiet enough that
+   it never competes with the headcount, and the scope line is quieter still —
+   it is a qualifier on the sentence above it, not a second message. */
+.hm-notify { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin: 26px 4px 0; padding-top: 18px; border-top: 1px solid #ece7dd; }
+.hm-notify-copy { flex: 1 1 240px; }
+.hm-notify-text { margin: 0; font-size: 0.85rem; color: #6b6659; }
+.hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: #a29a8b; }
+.hm-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 2px 4px; }
+.hm-notify-toggle:hover { color: #23211d; }
 .hm-brand { margin: 22px 0 0; text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
 
 /* Loading: hold the shape rather than spin. */
