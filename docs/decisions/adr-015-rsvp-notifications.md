@@ -623,6 +623,45 @@ default off, and a host asks at publish.
   did not become more attractive; the scope line is a disclosure, not a
   substitute.
 
+#### The control is a checkbox — design pass, 2026-08-02
+
+The reversal above shipped as words: the same quiet sentence with a text button,
+saying "want an email?" instead of "we'll email you". The design pass rejected
+that and it was right.
+
+- **Changing the copy without changing the kind of element was the error.**
+  Under default-on the sentence worked because the feature worked without it.
+  Under opt-in the same line is the only thing between the feature and its
+  non-existence, and it was still one quiet sentence in a stack of quiet ones.
+  The fix is [adr-010](adr-010-host-manage-link.md) §3.1: a control that spends
+  no fill costs the panel's hierarchy nothing.
+- **The tap target was the height of a button's text**, about 17px, on a
+  product whose hosts are on phones in a messenger. It is now the whole label,
+  44px. This is a condition for the offer being acceptable at all, not a
+  refinement of it.
+- **The scope was stated after the fact.** "Covers every invitation in your
+  account" appeared only in the *off* state, so a host agreed and was told
+  afterwards what they had agreed to. It now rides the state row inside the
+  offer.
+- **Two rows, two roles.** They were a sentence plus fine print; they are now a
+  **name** that never changes between states and a **state** that changes
+  entirely. The invariant name is what makes unchecking as easy as checking,
+  and it is why the verbs are gone: "turn off all emails" and "turn emails back
+  on" were only ever needed where no control carried the action.
+- **The glyph rule that falls out**, worth keeping: *a struck envelope states a
+  condition where nothing is pressable; a square carries state where something
+  is.* Two state glyphs in one row would contradict each other, so the envelope
+  retires from the share panel and the account footer and keeps its job on the
+  notification email and the unsubscribe page.
+
+One thing the pass proposed and this did **not** take: naming the account's
+invitation count on the dashboard ("for all *three* of your invitations"). It is
+better copy, and it self-disables at one invitation, but `/manage/:id` is
+authorized by a manage token while the count belongs to the session — a new
+cross-surface data dependency bought for a phrase. The pass's own fallback,
+"not just this one", names the boundary against what the host is looking at and
+needs nothing.
+
 ## Revisit triggers
 
 - **Before PR 1: is this the right iteration at all?** adr-013 shipped the
