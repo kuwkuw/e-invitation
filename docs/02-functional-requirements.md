@@ -298,6 +298,17 @@ are reading back the tokens it holds and authorizing a first publish.
   they left. Declining at Google is a distinct, non-error state from a failed
   handshake, which carries a coarse `state`/`exchange`/`identity` class for
   support.
+- FR-11.10 The returning-host list is served from the keyring for a signed-in
+  host, laid over what this browser already knew and without a reload: an event
+  published on one device appears on another that is already open, and a device
+  that has published nothing shows the account's events on first load. An
+  invitation this browser holds that the account does not — published before
+  signing in, or anonymously — stays on the list.
+- FR-11.11 The landing page carries one sign-in link for a host with no session
+  on this device, so reaching their events never requires publishing something
+  first. It is not a gate: nothing is refused and FR-11.5 is unchanged. It
+  renders only where sign-in is configured (FR-11.6), and only while signed
+  out. Declining at Google returns the host to where they started it.
 
 ## FR-12 Reply notifications
 

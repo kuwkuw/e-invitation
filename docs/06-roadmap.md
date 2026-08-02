@@ -362,7 +362,7 @@ external dependency and a DNS setup; what it bought is a loop that closes
 without the host thinking to check. The honest position is that the trigger
 still stands over whatever comes next.
 
-## Taken: the returning host on a new device
+## Shipped: the returning host on a new device
 
 Planned 2026-08-02. The operational candidate the previous version of this
 section named was taken and is done — the mail domain is configured
@@ -445,10 +445,20 @@ What is settled:
    `redirect_to`. The one server change is that cancelling sign-in returns
    where it started instead of to `/create`.
 
-Design precedes the UI as adr-009 §4 and adr-010 §9 require: the header link
-and the fresh-device state of the invitations card are drawn first.
+Shipped as **FR-11.10** and **FR-11.11**, in three code commits plus this docs
+pass: the keyring-first list, the declined-sign-in return path, and the link
+itself. adr-014's implementation notes carry the §5 amendment.
 
-## Also taken: reply notifications become opt-in
+**adr-010 §9's design-before-code rule was not followed, on purpose.** It was
+written for substantial new surfaces — the gate, the dashboard, the share
+panel — and the whole UI here is one muted text link in an existing header. The
+constraint it had to respect was already written down and already tested:
+`accountUi.test.tsx` holds adr-014 §10's ruling that the invitations card
+carries no sign-in offer, because that would be an advertisement in the place a
+host simply wants their list. The header was the only place left, which is
+most of what a mockup would have concluded.
+
+## Taken: reply notifications become opt-in
 
 adr-015 §7 shipped **default on** on 2026-07-31 and this reverses it two days
 later, which is worth stating plainly rather than folding into the section
