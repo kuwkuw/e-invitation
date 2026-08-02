@@ -322,10 +322,12 @@ otherwise learns about replies on a schedule unrelated to when guests sent
 them.
 
 - FR-12.1 When replies arrive for an invitation published while signed in, the
-  host is emailed at the Google-verified address from FR-11.1. **An account is
-  the eligibility rule**: an invitation published anonymously notifies nobody,
-  silently and permanently, until someone republishes it signed in (FR-11.4).
-  There is no second address and no verification flow of our own.
+  host is emailed at the Google-verified address from FR-11.1 **if they have
+  asked to be**. An account is the eligibility rule and asking is the second:
+  an invitation published anonymously notifies nobody, silently and
+  permanently, until someone republishes it signed in (FR-11.4), and an account
+  that has never opted in notifies nobody either. There is no second address
+  and no verification flow of our own.
 - FR-12.2 The email carries the invitation title, **a count, and a link** — no
   guest name, no attendance, no party size, no note. Guest data does not leave
   the system: what a third-party mail provider learns is that this host has an
@@ -350,13 +352,13 @@ them.
   not one message; honouring it per invitation earns the spam button instead,
   which costs deliverability for everything the product sends. Per-invitation
   control is deliberately deferred (adr-015 §7).
-- FR-12.7 The disclosure is made where it is caused: the share panel says which
-  address replies will go to, with the switch beside it, at the moment the host
-  publishes — not in a settings screen this app does not have, and not
-  discovered from the first email. **The control also has a durable home** in
-  the landing page's account footer, because a disclosure is a moment and a
-  preference needs an address; without it the only lasting way out would be to
-  go and find one of the emails. It is absent, never disabled, where the
+- FR-12.7 The **choice** is made where it is caused: the share panel asks, at
+  the moment the host publishes, whether replies should be emailed and to which
+  address — not in a settings screen this app does not have, and not discovered
+  from the first email. **The control also has a durable home** in the landing
+  page's account footer and on the host dashboard (FR-12.11), because a moment
+  is not an address; without them a host who declined at publish would have no
+  way back to the choice at all. It is absent, never disabled, where the
   deployment cannot send mail or the host has published nothing yet.
 - FR-12.8 `GET /unsubscribe/:token` never mutates — mail scanners and link
   prefetchers follow links without a human, so it renders a confirm step;
@@ -369,8 +371,18 @@ them.
   `GET /healthz` reports `notifications.configured` and
   `notifications.window_minutes`, and `/api/auth/session` reports
   `notifications` so the share panel knows whether to promise anything.
-
-## Routing map (web)
+- FR-12.10 Reply email is **opt-in**. The absence of a stored preference is
+  *off*, so publishing while signed in starts no mail on its own, and the host
+  is asked at publish rather than told. The reason is deliverability rather
+  than consent: the sending domain is new, and a spam press on unasked-for mail
+  costs inbox placement for every message the product sends, guests' share
+  links included (adr-015 §7, amended). Asking once covers the whole account,
+  including invitations published later.
+- FR-12.11 The host dashboard carries the same control, stating in words that
+  it governs every invitation in the account rather than the one on screen. It
+  is absent, never disabled, for a host with no session on this device: the
+  preference is session-authorized while `/manage/:id` is authorized by a
+  manage token, so a host who arrived on a pasted link cannot reach it.
 
 | Path | Page | Audience |
 | --- | --- | --- |

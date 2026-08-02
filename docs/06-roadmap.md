@@ -458,7 +458,7 @@ carries no sign-in offer, because that would be an advertisement in the place a
 host simply wants their list. The header was the only place left, which is
 most of what a mockup would have concluded.
 
-## Taken: reply notifications become opt-in
+## Shipped: reply notifications become opt-in
 
 adr-015 §7 shipped **default on** on 2026-07-31 and this reverses it two days
 later, which is worth stating plainly rather than folding into the section
@@ -492,6 +492,45 @@ above.
 5. **Account-wide, and labelled as such.** Per-event control stays deferred
    with adr-015 §7's trigger intact — one-click unsubscribe must still stop
    everything, so per-event is both layers rather than a replacement.
+
+Shipped as **FR-12.10** and **FR-12.11**, in three code commits plus this docs
+pass: the server default and its eligibility join, the publish-moment choice,
+and the dashboard control. adr-015 carries the §7 amendment.
+
+Two things this iteration is answerable for. **It contradicts a note in
+adr-015's own implementation record**, which rejected `/manage/:id` as "an
+event surface for an account-level setting" — the amendment argues that the
+objection was decided under default-on and is outweighed rather than
+overturned, and that the scope line is what it costs. And **the tests carried
+the reversal rather than being patched around it**: opting in is now visible in
+every case that expects mail, which is what makes the default readable from the
+test file instead of only from the schema.
+
+Not done, deliberately: no migration. An account with a stored answer keeps it
+either way; what changes is the accounts with **no** row, which were implicitly
+on and are now off. Preserving their old behaviour would mean writing `enabled
+= 1` rows for hosts who never asked for anything — inventing consent to
+preserve a default, which is the opposite of what this iteration is for. At
+production's account count the cost is a handful of hosts who opt in again.
+
+## No iteration currently taken
+
+Both sections above shipped on 2026-08-02, and the position at the top of them
+is unchanged by having done so: `views_per_publish` is 0.6,
+`new_hosts_per_publish` is 0, and neither number moved, because neither
+iteration was capable of moving it. One fixed a capability that was built and
+unreachable; the other stopped an unwarmed sending domain mailing people who
+had not asked. Both were worth doing and neither was growth.
+
+What did change is the ceiling: with Groq configured, the product survives
+roughly three times the traffic it could have a day earlier. That matters only
+if traffic arrives, which remains the one thing no feature in this backlog
+produces.
+
+The standing candidate is still **doing nothing yet** — publish real events,
+let the numbers accumulate, and read §5.1 when there is something to read. Of
+the two items below that would change anything, the share sheet is the only one
+that touches the loop the measurement is about.
 
 ## Candidate backlog
 
