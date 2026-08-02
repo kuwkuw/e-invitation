@@ -436,6 +436,15 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   callback burns the attacker's handshake instead of leaving it live, and an
   unknown state and a wrong browser answer identically. A cookie is the one half
   of the exchange an attacker cannot write into someone else's browser.
+- **The `redirect_to` guard is an allowlist now**, not a list of tricks (same
+  review). It refused `//evil.example` and the backslash variant, which is the
+  bypass everyone knows. A URL parser strips tabs and newlines from a string
+  *before* it decides what the string means, so `/⇥/evil.example` arrives at
+  `//evil.example` through any guard that reasons about leading slashes — and
+  the value lands in a `Location` header. The parameter only ever carries an
+  in-app path, so it is now matched against one: `/` followed by path
+  characters, with the leading pair still refused explicitly because the class
+  has to allow the separator.
 - **`GOOGLE_REDIRECT_URI` is optional** (PR 2). Unset, the callback URI is
   derived from the incoming request, which is what lets localhost development
   run with no second registration. Google's allowlist is the real control — a

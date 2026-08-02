@@ -6,13 +6,23 @@
 // them silently — a wrong `og:image` host stops unfurls with nothing in the
 // logs, and a wrong manage link lands in a host's inbox permanently.
 //
-// Nothing hardcodes the host: `trustProxy` is on, so `protocol` follows
-// `x-forwarded-proto`, and the canonical-host redirect (CANONICAL_HOST) has
-// already run by the time any handler executes — so the host in hand is the
-// one the operator configured, and there is no second place to read it from.
+// `CANONICAL_HOST` is the origin when it is set, and this reads it rather than
+// inferring it from the request. The redirect hook in app.ts does already turn
+// away every other host before a handler runs, so in practice the two agree —
+// but "the header is safe because something upstream checked it" is a property
+// that holds until someone moves the hook, and what depends on it here is a
+// link that lands in a host's inbox permanently. A guest can POST an RSVP with
+// any `Host` they like; asserting the origin costs a line and makes the
+// dependency enforced rather than documented.
+//
+// Unset — localhost, a test, a preview deployment — still derives from the
+// request, which is what makes development work with no configuration.
+// `trustProxy` is on, so `protocol` follows `x-forwarded-proto` there.
 
 import type { FastifyRequest } from "fastify";
 
 export function absoluteBase(request: FastifyRequest): string {
+  const canonical = process.env.CANONICAL_HOST;
+  if (canonical) return `https://${canonical}`;
   return `${request.protocol}://${request.headers.host ?? "localhost"}`;
 }

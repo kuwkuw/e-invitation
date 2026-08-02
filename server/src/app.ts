@@ -111,8 +111,10 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   registerInvitationRoutes(app);
   registerOgRoutes(app);
   // Outside /api (adr-015 §7) and therefore registered before the SPA
-  // fallback, which would otherwise serve the shell for this path.
-  registerUnsubscribeRoutes(app);
+  // fallback, which would otherwise serve the shell for this path. Awaited
+  // because it registers its routes inside a plugin, which is what keeps its
+  // form-body parser off every other endpoint.
+  await registerUnsubscribeRoutes(app);
 
   // Production: serve the built SPA from the same process. /i/:id stays a
   // dynamic route (OG meta injection); everything else non-/api falls back

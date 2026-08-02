@@ -537,6 +537,23 @@ PR 6 are operational state that exists nowhere else.
 - **`absoluteBase` was extracted** from `routes/og.ts` into `publicUrl.ts`,
   because the `og:image` host and the manage link in a host's inbox have to
   agree and a drifted copy breaks either one silently.
+- **`absoluteBase` now reads `CANONICAL_HOST` instead of the request's `Host`**
+  (hardened after a security review of the merged iteration). It originally
+  derived the origin from the header, on the grounds that app.ts's redirect hook
+  has already turned away every other host by the time a handler runs. True, and
+  the wrong thing to depend on: a guest can POST an RSVP with any `Host` they
+  like, what this builds is a link that sits in a host's inbox permanently, and
+  "safe because something upstream checks it" holds only until the hook moves.
+  With the variable set it is the origin; unset — localhost, a test — it still
+  derives from the request, which is what keeps development configuration-free.
+- **The one-click content-type parser is scoped to the two unsubscribe routes**
+  (same review). It was registered on the root instance, which taught every
+  endpoint in the app to accept a form body — and form-encoded is the only thing
+  a cross-site HTML form can post, so the `415` the rest of the app answers
+  those with is a free layer beneath `SameSite=Lax` and adr-014 §4's origin
+  checks. Parsers are encapsulated, so the fix is a plugin wrapper and one
+  `await` in app.ts. This feature needs exactly one exception and now takes
+  exactly one.
 - **Both surfaces shipped before their mockups**, recorded in §10. The
   unsubscribe page did not: it was designed first, as the convention intends,
   and neither did the account footer below.

@@ -98,6 +98,21 @@ describe("unsubscribe", () => {
       expect(res.statusCode).toBe(200);
     });
 
+    // The parser that makes the line above work is scoped to these two routes.
+    // On the root instance it would teach every endpoint in the app to accept a
+    // form body — and form-encoded is the only thing a cross-site HTML form can
+    // post, so the 415 everywhere else is a free layer beneath SameSite=Lax and
+    // the origin checks on the cookie-authorized mutations.
+    it("does not teach the rest of the app to accept a form body", async () => {
+      const elsewhere = await app.inject({
+        method: "POST",
+        url: "/api/auth/signout",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        payload: "anything=1",
+      });
+      expect(elsewhere.statusCode).toBe(415);
+    });
+
     it("is idempotent", async () => {
       const { user, token } = host();
 
