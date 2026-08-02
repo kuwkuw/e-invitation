@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
@@ -129,6 +130,20 @@ export function LandingPage() {
       <header className="lp-nav">
         <span className="lp-brand">{t.brand}</span>
         <div className="lp-nav-right">
+          {/* The only sign-in outside the publish gate. Before it, a returning
+              host on a new phone could reach their events only by generating an
+              invitation they did not want and pressing Publish — the gate is at
+              publish (adr-014 §2), but a door on the landing page is not a gate.
+              Rendered only when signed out and configured: "loading" would flash
+              a link that then vanishes, and a deployment with no OAuth client
+              shows no account affordance at all (§7). It stays out of the
+              invitations card on purpose — an offer there would be an
+              advertisement where a host simply wants their list. */}
+          {account.status === "signed_out" && (
+            <a className="lp-nav-signin" href={googleSignInUrl("/")}>
+              {AUTH[lang].signInLink}
+            </a>
+          )}
           <LangSwitcher value={lang} onChange={handleLang} />
           <button type="button" className="lp-cta lp-cta-sm" onClick={startEditing}>
             {t.cta}

@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { recordHostInvitation } from "../src/hostInvitations";
+import { AUTH, LANDING } from "../src/i18n";
 import { LandingPage } from "../src/LandingPage";
 import { forgetHeldManageTokens } from "../src/manageTokens";
 
@@ -24,14 +25,14 @@ function jsonResponse(body: unknown, status = 200) {
 
 /** Every call the landing page makes. Counts and notifications are decorative
  *  here — they must never decide whether the list appears. */
-function stubApi(options: { signedIn: boolean; keyring?: unknown[] }) {
+function stubApi(options: { signedIn: boolean; keyring?: unknown[]; configured?: boolean }) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/api/auth/session")) {
         return jsonResponse({
-          configured: true,
+          configured: options.configured ?? true,
           signed_in: options.signedIn,
           email: options.signedIn ? "host@example.com" : null,
           publish_gate: true,
@@ -118,5 +119,44 @@ describe("the returning host's landing list", () => {
     expect(await screen.findByText("Хрестини Даринки", inList)).toBeTruthy();
     // No keyring answered, so nothing claims this browser holds anything else.
     expect(screen.queryByText("Весілля Марії та Андрія", inList)).toBeNull();
+  });
+});
+
+describe("the landing sign-in link", () => {
+  const label = AUTH.uk.signInLink;
+
+  it("offers a signed-out host a way in that is not the publish gate", async () => {
+    stubApi({ signedIn: false });
+    renderLanding();
+
+    const link = await screen.findByText(label);
+    // Back to the landing page, not to /create: the host came here for their
+    // list, and the server guards this value before it reaches a Location.
+    expect(link.getAttribute("href")).toBe("/api/auth/google?redirect_to=%2F");
+  });
+
+  it("does not offer sign-in to a host already signed in", async () => {
+    stubApi({ signedIn: true, keyring: [keyringEntry] });
+    renderLanding();
+
+    await screen.findByText("Весілля Марії та Андрія", inList);
+    expect(screen.queryByText(label)).toBeNull();
+  });
+
+  it("shows nothing at all where there is no OAuth client", async () => {
+    // adr-014 §7: not a disabled control — there is no feature to offer.
+    stubApi({ signedIn: false, configured: false });
+    renderLanding();
+
+    await screen.findByText(LANDING.uk.heroTitle);
+    expect(screen.queryByText(label)).toBeNull();
+  });
+
+  it("renders no link while the session is still unknown", async () => {
+    // A link that appears and then vanishes for a signed-in host is worse than
+    // one that arrives a beat late.
+    stubApi({ signedIn: true, keyring: [] });
+    renderLanding();
+    expect(screen.queryByText(label)).toBeNull();
   });
 });

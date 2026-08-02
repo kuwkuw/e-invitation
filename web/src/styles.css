@@ -1025,6 +1025,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   align-items: center;
 }
 .lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--lp-ink); font-weight: 700; }
+/* Deliberately the quietest thing in the nav: "Create" stays the only accent on
+   the page, and a first-time visitor has no account to sign in to. Kept through
+   the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
+   for. Matches .lp-account-out, the other muted account control. */
+.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: #6b6659; text-decoration: none; padding: 2px 4px; }
+.lp-nav-signin:hover { color: #23211d; text-decoration: underline; }
 
 .lp-hero {
   padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);

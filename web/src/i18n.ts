@@ -135,6 +135,11 @@ export interface AuthStrings {
   notifyTurnOff: string;
   notifyTurnOn: string;
   signOut: string;
+  /** The landing page's only sign-in affordance, and the only one outside the
+   *  publish gate. Names the payoff rather than the act — a host does not know
+   *  an account holds their list, so "sign in" would be an instruction with no
+   *  reason attached. */
+  signInLink: string;
   crossDevice: string;
   emptySignedIn: string;
   invitationCount: string;
@@ -183,6 +188,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyTurnOff: "Turn off all emails",
     notifyTurnOn: "Turn emails back on",
     signOut: "Sign out",
+    signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
     emptySignedIn: "Your invitations will appear here — and stay, wherever you sign in.",
     invitationCount: "{n} invitations",
@@ -230,6 +236,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyTurnOff: "Вимкнути всі листи",
     notifyTurnOn: "Увімкнути листи",
     signOut: "Вийти",
+    signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
     emptySignedIn: "Тут з'являться ваші запрошення — і залишаться, куди б ви не увійшли.",
     invitationCount: "{n} запрошень",

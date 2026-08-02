@@ -198,9 +198,16 @@ export function deleteAccount(): Promise<AccountDeletion> {
   return withSession<AccountDeletion>("/api/account", { method: "DELETE" });
 }
 
+/** Where the flow begins. Exported so an affordance that is genuinely a link —
+ *  the landing page's — can be one, with a real href, rather than a button that
+ *  rebuilds this URL a second time. */
+export function googleSignInUrl(redirectTo: string): string {
+  return `/api/auth/google?redirect_to=${encodeURIComponent(redirectTo)}`;
+}
+
 /** A full-page navigation, not a fetch: the browser has to follow Google's
  *  redirect chain and come back with a `Set-Cookie`. The one place the app
  *  leaves its own origin, and the one navigation the router cannot own. */
 export function startGoogleSignIn(redirectTo: string): void {
-  window.location.assign(`/api/auth/google?redirect_to=${encodeURIComponent(redirectTo)}`);
+  window.location.assign(googleSignInUrl(redirectTo));
 }
