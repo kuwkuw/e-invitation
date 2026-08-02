@@ -46,6 +46,31 @@ export function loadHostInvitations(): HostInvitation[] {
   }
 }
 
+/**
+ * The account's keyring laid over whatever this browser already knew, newest
+ * first. `null` means the keyring has not answered — no session, or the fetch
+ * has not landed — and leaves the local list exactly as it is.
+ *
+ * Entries match by id and the keyring's copy wins: it is read off the record
+ * itself, so a title changed and republished on another device is current
+ * there and stale here.
+ *
+ * **A union, not a replacement.** The two sets legitimately differ: anything
+ * published by this browser before it ever signed in — or before accounts
+ * existed at all — sits in the local index and in no keyring. Rendering the
+ * keyring alone would hide invitations the host can see today, which is a
+ * worse failure than the staleness it fixes.
+ */
+export function mergeHostInvitations(
+  local: HostInvitation[],
+  keyring: HostInvitation[] | null,
+): HostInvitation[] {
+  if (!keyring) return local;
+  const byId = new Map(local.map((entry) => [entry.id, entry]));
+  for (const entry of keyring) byId.set(entry.id, entry);
+  return [...byId.values()].sort((a, b) => b.published_at.localeCompare(a.published_at));
+}
+
 /** Called on every publish. Republishing an invitation updates its entry in
  *  place — a new version is the same event, not a new one. */
 export function recordHostInvitation(entry: HostInvitation): void {
