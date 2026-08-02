@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -16,6 +17,7 @@ import {
   unlinkInvitation,
   upsertUser,
 } from "../src/accounts.js";
+import { browserKeyMatches, consumeOauthState, type OauthState } from "../src/auth/state.js";
 import { closeDb, getDb } from "../src/db.js";
 
 let dataDir: string;
@@ -180,5 +182,44 @@ describe("account store", () => {
     // EXISTS, so reopening must find the rows, not a fresh database.
     expect(getUser(user.id)?.email).toBe("host@example.com");
     expect(listKeyring(user.id).map((e) => e.invitation_id)).toEqual(["abc123"]);
+  });
+
+  // A database written before a column existed has to upgrade in place: the
+  // rows in it are the accounts of hosts who have already published. Same
+  // discipline as adr-013's metrics.json, which had to load and gain its new
+  // counters with the old ones intact.
+  it("adds browser_key to an oauth_states table that shipped without it", () => {
+    // node:sqlite through createRequire for the reason db.ts documents — vite
+    // does not recognise it as a builtin and would try to resolve a package.
+    const { DatabaseSync } = createRequire(import.meta.url)(
+      "node:sqlite",
+    ) as typeof import("node:sqlite");
+    const legacy = new DatabaseSync(join(dataDir, "app.db"));
+    legacy.exec(
+      "CREATE TABLE oauth_states (state TEXT PRIMARY KEY, nonce TEXT NOT NULL," +
+        " code_verifier TEXT NOT NULL, redirect_uri TEXT NOT NULL, redirect_to TEXT NOT NULL," +
+        " expires_at TEXT NOT NULL)",
+    );
+    legacy
+      .prepare("INSERT INTO oauth_states VALUES (?, ?, ?, ?, ?, ?)")
+      .run(
+        "state-1",
+        "nonce-1",
+        "verifier-1",
+        "https://invito.example.com/api/auth/google/callback",
+        "/create",
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+    legacy.close();
+
+    const columns = getDb().prepare("PRAGMA table_info(oauth_states)").all() as { name: string }[];
+    expect(columns.map((c) => c.name)).toContain("browser_key");
+
+    // The in-flight row survived the upgrade — and fails closed. Nothing can
+    // hash to the empty default, so a sign-in caught mid-redirect by the deploy
+    // is refused and retried rather than completed unbound.
+    const pending = consumeOauthState("state-1");
+    expect(pending?.redirect_to).toBe("/create");
+    expect(browserKeyMatches(pending as OauthState, "any-cookie-at-all")).toBe(false);
   });
 });

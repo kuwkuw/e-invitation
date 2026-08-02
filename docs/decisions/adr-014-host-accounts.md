@@ -125,8 +125,10 @@ Mechanics:
 - The account key is the Google **`sub`**, which is stable. Email is stored as
   data (for §7), never as the identity key — people change addresses.
 - The `id_token` is verified against Google's JWKS, with `iss`, `aud`, `exp`
-  and `nonce` checked. The `state` parameter is single-use and stored
-  server-side.
+  and `nonce` checked. The `state` parameter is single-use, stored server-side,
+  and **bound to the browser that started the flow** by a short-lived cookie
+  whose hash the state row carries — see the implementation notes for why
+  single-use alone was not enough.
 
 **What this costs, named:** a host without a Google account cannot publish.
 That is the real price of §2's hard gate, and it falls hardest in the market
@@ -417,6 +419,23 @@ Recorded as the PRs land, so the next reader does not rediscover them.
   has to repeat it byte-for-byte and re-deriving it at callback time from a
   different request is how that silently breaks behind a proxy. Reading a state
   deletes it, so single-use is structural rather than a check.
+- **Single-use was not browser-bound, and that was a hole** (fixed after PR 2,
+  found in a security review of the merged iteration). The original §3 rested on
+  the state being unguessable and good for exactly one callback. Both were true
+  and neither is the property that matters: an attacker can run the whole flow
+  with *their own* Google account, stop their browser from following the
+  callback, and get a victim to open that URL instead. Every check passes —
+  state resolves, `nonce` matches, the `id_token` is genuinely Google's — and
+  the victim's browser is handed a session for the attacker's account. The
+  victim then publishes, `linkInvitation` files it under the attacker's keyring,
+  and §5 hands the attacker its manage token: the responses, and the ability to
+  republish. The fix is the standard one and costs a column: the authorize leg
+  sets `inv_oauth` (httpOnly, `SameSite=Lax`, `Path=/api/auth`, 10 minutes) and
+  the row stores its sha256, hashed on the same reasoning as session ids above.
+  The callback consumes the state *before* checking the binding, so a planted
+  callback burns the attacker's handshake instead of leaving it live, and an
+  unknown state and a wrong browser answer identically. A cookie is the one half
+  of the exchange an attacker cannot write into someone else's browser.
 - **`GOOGLE_REDIRECT_URI` is optional** (PR 2). Unset, the callback URI is
   derived from the incoming request, which is what lets localhost development
   run with no second registration. Google's allowlist is the real control — a
