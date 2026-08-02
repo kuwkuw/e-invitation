@@ -1294,12 +1294,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Reply email, below the responses it is about (adr-015 §7). Quiet enough that
    it never competes with the headcount, and the scope line is quieter still —
    it is a qualifier on the sentence above it, not a second message. */
-.hm-notify { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin: 26px 4px 0; padding-top: 18px; border-top: 1px solid #ece7dd; }
-.hm-notify-copy { flex: 1 1 240px; }
-.hm-notify-text { margin: 0; font-size: 0.85rem; color: #6b6659; }
-.hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: #a29a8b; }
-.hm-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 2px 4px; }
-.hm-notify-toggle:hover { color: #23211d; }
+.hm-notify { margin-top: 20px; padding-top: 6px; border-top: 1px solid #e4ddd0; }
+@media (min-width: 900px) { .hm-notify .notify-check { max-width: 640px; } }
 .hm-brand { margin: 22px 0 0; text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
 
 /* Loading: hold the shape rather than spin. */
@@ -1538,14 +1534,30 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    line. Indented to the text column (15px icon + 8px gap) so the two still
    read as one block. The 40px height is a finger target; the negative margin
    keeps the label optically flush despite it. */
+/* Reply email, one control on all three surfaces (DS ShareOptIn). The
+   square is the affordance and costs nothing from the accent budget — panel
+   hierarchy counts fills, not affordances (adr-010 §3.1). The whole label is
+   the target and it is 44px: the version this replaced made the target the
+   height of a text button, ~17px, on a product whose hosts are on phones. */
+.notify-check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 7px 6px 7px 0; margin-left: -3px; border-radius: 8px; cursor: pointer; transition: background 0.12s; }
+.notify-check:hover { background: #faf8f4; }
+/* Off-screen rather than display:none, which would leave the control out of
+   the tab order and unreachable by keyboard. */
+.notify-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.notify-box { flex: 0 0 auto; width: 19px; height: 19px; margin-top: 1px; border: 1.7px solid #b7ae9e; border-radius: 5px; background: #ffffff; }
+/* Ink, never the accent: terracotta in this panel means "the public link", and
+   a drop of it anywhere else weakens the one distinction that protects a host
+   from pasting the wrong URL into a group chat. */
+.notify-box.is-on { display: flex; align-items: center; justify-content: center; border: none; background: #6b6659; }
+.notify-input:focus-visible + .notify-box { outline: 2px solid #b3592e; outline-offset: 2px; }
+.notify-copy { flex: 1; min-width: 0; }
+/* The name of the setting. Identical in both states, which is what makes
+   unchecking as easy as checking. */
+.notify-name { display: block; font-size: 0.86rem; font-weight: 600; color: #6b6659; line-height: 1.4; }
+/* Everything that changes, scope included. */
+.notify-state { display: block; font-size: 0.78rem; color: #a29a8b; line-height: 1.4; margin-top: 2px; overflow-wrap: anywhere; }
+
 .sp-notify { margin: 0 0 12px; }
-.sp-notify-row { display: flex; align-items: flex-start; gap: 8px; }
-.sp-notify-icon { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 3px; color: #b7ae9e; }
-.sp-notify-text { margin: 0; font-size: 0.8rem; color: #8d8577; line-height: 1.45; overflow-wrap: anywhere; }
-.sp-notify-email { color: #6b6659; font-weight: 600; }
-.sp-notify-action { padding-left: 23px; }
-.sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
-.sp-notify-toggle:hover { color: #7a5638; }
 
 /* Landing account footer + account deletion (adr-014 §9, DS
    "LandingSignedInStates"). The footer signs the invitations card because the
@@ -1564,10 +1576,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* 26px = the 16px glyph + its 10px gap, so the sentence starts under the
    address rather than under the envelope. */
-.lp-account-mail { margin-top: 5px; padding-left: 26px; }
-.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: #8d8577; }
-.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
-.lp-notify-all:hover { color: #7a5638; }
+.lp-account-mail { margin-top: 2px; padding-left: 23px; }
 @media (min-width: 900px) { .lp-account { padding: 11px 20px 12px; } }
 /* One line, in the faintest colour on the page: this is the payoff, not an
    announcement. */

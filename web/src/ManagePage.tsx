@@ -90,7 +90,11 @@ export function ManagePage({ id }: { id: string }) {
           <ReadyDashboard
             id={id}
             manage={manage}
-            notify={canNotify ? { ...notify, auth: AUTH[uiLang] } : null}
+            notify={
+              canNotify && account.email
+                ? { ...notify, email: account.email, auth: AUTH[uiLang] }
+                : null
+            }
             t={t}
           />
         )}
@@ -109,7 +113,7 @@ function ReadyDashboard({
   manage: ReturnType<typeof useHostManage>;
   /** Null for a host with no session on this device, or a deployment that
    *  cannot send mail. */
-  notify: { enabled: boolean; toggle: () => void; auth: AuthStrings } | null;
+  notify: { enabled: boolean; toggle: () => void; email: string; auth: AuthStrings } | null;
   t: ManageStrings;
 }) {
   const { published, summary, refreshing, refresh, newSinceLastVisit, seenAt } = manage;
@@ -173,7 +177,12 @@ function ReadyDashboard({
       {/* Below the responses, not above them: this page exists to show replies,
           and a preference about being told is a footnote to that. */}
       {notify && (
-        <NotifyControl enabled={notify.enabled} onToggle={notify.toggle} t={notify.auth} />
+        <NotifyControl
+          enabled={notify.enabled}
+          onToggle={notify.toggle}
+          email={notify.email}
+          t={notify.auth}
+        />
       )}
 
       <p className="hm-brand">INVITO</p>

@@ -160,95 +160,83 @@ describe("delete account confirmation", () => {
 describe("AccountFooter reply notifications", () => {
   const notifyOn = { enabled: true, onToggle: () => {} };
 
-  it("says what we send, without repeating the address above it", () => {
-    const { container } = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
-    );
-    const line = container.querySelector(".lp-account-mail p");
-    expect(line?.textContent).toBe(auth.notifyOnAccount);
-    // The address is on the row above; saying it twice in one block is the one
-    // change from the share panel's wording.
-    expect(line?.textContent).not.toContain("olena@example.com");
-    expect(screen.getByText(auth.notifyTurnOff)).toBeTruthy();
-  });
-
-  it("states the account-wide scope when off, and offers the way back", () => {
-    render(
+  function renderFooter(notify: { enabled: boolean; onToggle: () => void } | null, strings = auth) {
+    return render(
       <AccountFooter
         email="olena@example.com"
         onSignOut={() => {}}
-        notify={{ enabled: false, onToggle: () => {} }}
-        t={auth}
+        {...(notify ? { notify } : {})}
+        t={strings}
       />,
     );
-    expect(screen.getByText(auth.notifyOff)).toBeTruthy();
-    // Neutral, not "back on": under opt-in this footer cannot tell a host who
-    // turned mail off from one who never asked for it.
-    expect(screen.getByText(auth.notifyOptIn)).toBeTruthy();
+  }
+
+  it("names the setting and states what we send, without repeating the address", () => {
+    const { container } = renderFooter(notifyOn);
+    expect(container.querySelector(".notify-name")?.textContent).toBe(auth.notifyOptIn);
+    const state = container.querySelector(".notify-state");
+    expect(state?.textContent).toBe(auth.notifyStateOnAccount);
+    // The address is on the row above; saying it twice in one block is the one
+    // change from the share panel's wording.
+    expect(state?.textContent).not.toContain("olena@example.com");
+  });
+
+  // The name is the same in both states — which is what makes unchecking as
+  // easy as checking, and why the verbs it replaced are gone.
+  it("keeps the same name when off and moves only the state", () => {
+    const { container } = renderFooter({ enabled: false, onToggle: () => {} });
+    expect(container.querySelector(".notify-name")?.textContent).toBe(auth.notifyOptIn);
+    expect(container.querySelector(".notify-state")?.textContent).toBe(auth.notifyStateOffNow);
+    expect(container.querySelector(".notify-box.is-on")).toBeNull();
   });
 
   it("toggles through the callback", () => {
     const onToggle = vi.fn();
-    render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={{ enabled: true, onToggle }}
-        t={auth}
-      />,
-    );
-    fireEvent.click(screen.getByText(auth.notifyTurnOff));
+    const { container } = renderFooter({ enabled: true, onToggle });
+    fireEvent.click(container.querySelector(".notify-input") as HTMLElement);
     expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  // A real input, so the control is reachable by keyboard and announced as a
+  // checkbox. Off-screen rather than display:none, which would drop it out of
+  // the tab order.
+  it("is a real checkbox inside the label", () => {
+    const { container } = renderFooter(notifyOn);
+    const input = container.querySelector(".notify-check input[type=checkbox]") as HTMLInputElement;
+    expect(input).toBeTruthy();
+    expect(input.checked).toBe(true);
   });
 
   // Absent, never disabled: a dead control promises a feature that is not
   // there. This is the deployment-without-mail and the no-invitations-yet case.
   it("renders no line at all when there is nothing to promise", () => {
-    const { container } = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} t={auth} />,
-    );
+    const { container } = renderFooter(null);
     expect(container.querySelector(".lp-account-mail")).toBeNull();
-    expect(screen.queryByText(auth.notifyTurnOff)).toBeNull();
+    expect(container.querySelector(".notify-check")).toBeNull();
     // The identity row is untouched — this is the footer exactly as it was.
     expect(screen.getByText("olena@example.com")).toBeTruthy();
     expect(screen.getByText(auth.signOut)).toBeTruthy();
   });
 
-  // One glyph signs both rows: the same envelope struck through, rather than a
-  // second icon 20px away meaning something else.
-  it("strikes the envelope it already has instead of adding one", () => {
-    const on = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
-    );
+  // The envelope stopped carrying the state when the square started. Two state
+  // glyphs in one stack would argue with each other, so the strike is gone and
+  // the envelope is a label for the address in both states.
+  it("keeps one unstruck envelope whatever the state", () => {
+    const on = renderFooter(notifyOn);
     expect(on.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
     const onStrokes = on.container.querySelectorAll(".lp-account-id svg path").length;
     cleanup();
 
-    const off = render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={{ enabled: false, onToggle: () => {} }}
-        t={auth}
-      />,
-    );
+    const off = renderFooter({ enabled: false, onToggle: () => {} });
     expect(off.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
-    expect(off.container.querySelectorAll(".lp-account-id svg path").length).toBeGreaterThan(
-      onStrokes,
-    );
+    expect(off.container.querySelectorAll(".lp-account-id svg path").length).toBe(onStrokes);
   });
 
   it("carries the copy in Ukrainian too", () => {
-    const { container } = render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={notifyOn}
-        t={AUTH.uk}
-      />,
-    );
-    expect(container.querySelector(".lp-account-mail p")?.textContent).toBe(
-      "Ми напишемо вам, коли надійдуть відповіді.",
+    const { container } = renderFooter(notifyOn, AUTH.uk);
+    expect(container.querySelector(".notify-name")?.textContent).toBe("Повідомляти про відповіді");
+    expect(container.querySelector(".notify-state")?.textContent).toBe(
+      "Пишемо про всі ваші запрошення.",
     );
   });
 });

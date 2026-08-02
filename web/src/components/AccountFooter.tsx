@@ -1,4 +1,5 @@
 import type { AuthStrings } from "../i18n";
+import { NotifyCheckbox } from "./NotifyCheckbox";
 
 /**
  * Who this browser is signed in as, what we send them, and the way out
@@ -41,18 +42,14 @@ export function AccountFooter({
   notify?: { enabled: boolean; onToggle: () => void } | null;
   t: AuthStrings;
 }) {
-  const off = notify != null && !notify.enabled;
-
   return (
     <div className="lp-account">
       <div className="lp-account-id">
-        {/* One glyph for both rows. With mail off the *same* envelope is struck
-            rather than a second icon appearing: here the envelope means the
-            address, so a line across it means "we do not write to this
-            address" — the meaning the share panel already gives it, applied to
-            the same object. The sentence below states it in words, so the glyph
-            never carries the state alone; without that, a struck envelope
-            beside an address could read as "this address is broken". */}
+        {/* No strike any more. The envelope was carrying the state because
+            there was no control to carry it; with the checkbox below, two
+            state glyphs in one stack would argue. It stays as a label for the
+            address — which is all it ever needed to be — and the #fbfaf7
+            knockout the strike required goes with it. */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="6" width="16" height="12" rx="2" stroke="#b0a99a" strokeWidth="1.7" />
           <path
@@ -61,14 +58,6 @@ export function AccountFooter({
             strokeWidth="1.7"
             strokeLinecap="round"
           />
-          {off && (
-            <>
-              {/* The knockout is the footer's own background, not white — this
-                  block sits on #fbfaf7 where the share panel sits on white. */}
-              <path d="M4 19L20 5" stroke="#fbfaf7" strokeWidth="3.4" strokeLinecap="round" />
-              <path d="M4 19L20 5" stroke="#a29a8b" strokeWidth="1.7" strokeLinecap="round" />
-            </>
-          )}
         </svg>
         {/* Ellipsised, never wrapped — and "sign out" never shrinks to make room
             for it. */}
@@ -84,15 +73,17 @@ export function AccountFooter({
         // envelope signs. The action is on its own line for the reason the
         // share panel already learned: on a row that has spent its width on an
         // ellipsised address, a baseline-aligned button has nowhere to go.
+        // Indented to the address above rather than to the glyph, so the block
+        // reads as one vertical line of text the envelope signs. The state row
+        // carries no address here — it is 26px above, and saying it twice in
+        // one block would be the one thing this footer has always avoided.
         <div className="lp-account-mail">
-          <p>{notify.enabled ? t.notifyOnAccount : t.notifyOff}</p>
-          <button type="button" className="lp-notify-all" onClick={notify.onToggle}>
-            {/* `notifyOptIn`, not "turn them back on": under opt-in a host
-                here may never have had reply email on, and nothing on this
-                surface can tell the two apart. The neutral label is true for
-                both; "back on" is false for one of them. */}
-            {notify.enabled ? t.notifyTurnOff : t.notifyOptIn}
-          </button>
+          <NotifyCheckbox
+            checked={notify.enabled}
+            onToggle={notify.onToggle}
+            name={t.notifyOptIn}
+            state={notify.enabled ? t.notifyStateOnAccount : t.notifyStateOffNow}
+          />
         </div>
       )}
     </div>

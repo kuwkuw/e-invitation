@@ -2,7 +2,11 @@ import { useState } from "react";
 import { manageUrl, shareUrl } from "../../hooks/usePublishing";
 import type { UiStrings } from "../../i18n";
 import type { PublishResult } from "../../types";
-import { CheckIcon, LinkIcon, LockIcon, MailIcon, MailOffIcon } from "./icons";
+import { NotifyCheckbox } from "../NotifyCheckbox";
+import { CheckIcon, LinkIcon, LockIcon } from "./icons";
+
+/** A checkbox must have an onChange; the prop is optional on this panel. */
+const noop = () => {};
 
 interface Props {
   published: PublishResult;
@@ -68,7 +72,6 @@ export function SharePanel({
   const guestUrl = shareUrl(published.id);
   // One string per language, split at render, so translators see a whole
   // sentence and the address still gets its own treatment.
-  const [notifyOnBefore, notifyOnAfter] = t.auth.notifyOn.split("{email}");
   // Signed out, the block is always open: there it really is the only key, and
   // its weight is earned.
   const manageOpen = !signedIn || manageShown;
@@ -117,32 +120,24 @@ export function SharePanel({
           share link (adr-010 §3), and a third control competing for attention
           would spend that. */}
       {signedIn && notifyEmail && (
+        // The offer, at the moment it is caused. The envelope that used to
+        // carry the state is gone from here: the square carries it now, and
+        // two state glyphs in one row would argue with each other. The
+        // envelope keeps its job on the surfaces where nothing is pressable —
+        // the email footer and the unsubscribe page.
         <div className="sp-notify">
-          <div className="sp-notify-row">
-            <span className="sp-notify-icon">{notifyEnabled ? <MailIcon /> : <MailOffIcon />}</span>
-            <p className="sp-notify-text">
-              {notifyEnabled ? (
-                // Split rather than interpolated: the address is set in its own
-                // weight, and it must not be a link — it is a fact about where
-                // mail goes, not an address to click.
-                <>
-                  {notifyOnBefore}
-                  <span className="sp-notify-email">{notifyEmail}</span>
-                  {notifyOnAfter}
-                </>
-              ) : (
-                // An offer, not a report. Under opt-in this is where every
-                // host starts, and `notifyOff` states a decision that a host
-                // who has just published has not made.
-                t.auth.notifyOffer
-              )}
-            </p>
-          </div>
-          <div className="sp-notify-action">
-            <button type="button" className="sp-notify-toggle" onClick={onToggleNotify}>
-              {notifyEnabled ? t.auth.notifyTurnOff : t.auth.notifyOptIn}
-            </button>
-          </div>
+          <NotifyCheckbox
+            checked={notifyEnabled}
+            onToggle={onToggleNotify ?? noop}
+            name={t.auth.notifyOptIn}
+            // The address and the scope ride the state row, so a host accepts
+            // knowing both. Previously the scope was said only after they had
+            // already agreed, which is consent to something else.
+            state={(notifyEnabled ? t.auth.notifyStateOn : t.auth.notifyStateOffer).replace(
+              "{email}",
+              notifyEmail,
+            )}
+          />
         </div>
       )}
 
