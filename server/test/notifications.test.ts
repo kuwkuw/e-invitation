@@ -62,6 +62,13 @@ function signIn(googleSub = "google-sub-1") {
   return { user, cookies: { inv_session: createSession(user.id).id } };
 }
 
+/** Reply email is opt-in (adr-015 §7, amended): a host who has not asked is not
+ *  a target. Every case below that expects mail has to say so, which is the
+ *  point — the asking is now visible in the test, as it is in the product. */
+function optIn(userId: string) {
+  return setNotificationsEnabled(userId, true);
+}
+
 async function publish(
   title: string,
   cookies?: Record<string, string>,
@@ -79,9 +86,10 @@ describe("notification preferences", () => {
   // adr-015 §1: the keyring is the eligibility rule. Nothing else decides who
   // hears about an invitation, which is why these two cases come first.
   describe("who is eligible", () => {
-    it("makes the publishing host a target when they were signed in", async () => {
+    it("makes the publishing host a target once they ask for mail", async () => {
       const { user, cookies } = signIn();
       const published = await publish("Мій день народження", cookies);
+      optIn(user.id);
 
       const targets = notificationTargets(published.id);
       expect(targets).toHaveLength(1);
@@ -90,6 +98,17 @@ describe("notification preferences", () => {
         invitation_id: published.id,
         email: "google-sub-1@example.com",
       });
+    });
+
+    // The reversal, asserted where eligibility is actually decided: publishing
+    // while signed in supplies the address and nothing else. An unwarmed
+    // sending domain cannot afford mail nobody asked for.
+    it("starts no mail on publishing alone", async () => {
+      const { user, cookies } = signIn();
+      const published = await publish("Мій день народження", cookies);
+
+      expect(getPref(user.id)).toBeNull();
+      expect(notificationTargets(published.id)).toEqual([]);
     });
 
     // The stated cost of §1, and the common case wherever
@@ -106,31 +125,44 @@ describe("notification preferences", () => {
   });
 
   // The absence of a row is the default, not a missing default — the property
-  // the whole §7 design rests on.
+  // the whole §7 design rests on. Under opt-in that default is **off**, so this
+  // block is the one that inverted.
   describe("with no preference row", () => {
-    it("treats the host as enabled and never notified", () => {
+    it("notifies nobody at all", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
 
       expect(getPref(user.id)).toBeNull();
+      expect(notificationTargets("inv12345")).toEqual([]);
+    });
+
+    it("carries the never-notified state once the host opts in", () => {
+      const { user } = signIn();
+      linkInvitation(user.id, "inv12345");
+      const pref = optIn(user.id);
+
       expect(notificationTargets("inv12345")).toEqual([
         {
           user_id: user.id,
           invitation_id: "inv12345",
           email: "google-sub-1@example.com",
           last_notified_at: null,
-          unsub_token: null,
+          // Never null now: having an enabled row is what made this a target.
+          unsub_token: pref.unsub_token,
         },
       ]);
     });
   });
 
   describe("ensurePref", () => {
-    it("creates an enabled row with an unsubscribe token", () => {
+    it("creates a disabled row with an unsubscribe token", () => {
       const { user } = signIn();
       const pref = ensurePref(user.id);
 
-      expect(pref.enabled).toBe(true);
+      // Minting a row and a token is not a subscription. Only
+      // setNotificationsEnabled turns anything on, so no code path that merely
+      // touches this row can start mail.
+      expect(pref.enabled).toBe(false);
       expect(pref.unsub_token).toMatch(/^[\w-]{20,}$/);
       // The send bookkeeping lives elsewhere: this row is the account's
       // answer, not a record of what it has been told.
@@ -176,6 +208,7 @@ describe("notification preferences", () => {
     it("drops a disabled host out of the targets and restores them", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
+      optIn(user.id);
 
       setNotificationsEnabled(user.id, false);
       expect(notificationTargets("inv12345")).toEqual([]);
@@ -190,6 +223,7 @@ describe("notification preferences", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv11111");
       linkInvitation(user.id, "inv22222");
+      optIn(user.id);
 
       setNotificationsEnabled(user.id, false);
 
@@ -200,6 +234,18 @@ describe("notification preferences", () => {
       // anyone having to remember to write a row for it.
       linkInvitation(user.id, "inv33333");
       expect(notificationTargets("inv33333")).toEqual([]);
+    });
+
+    // The mirror of the case above, and the one opt-in makes worth stating: a
+    // host asks once, not once per event. Nothing writes a row at publish, so
+    // if this were per-invitation it would silently be per-nothing.
+    it("covers invitations published after the host opted in", () => {
+      const { user } = signIn();
+      linkInvitation(user.id, "inv11111");
+      optIn(user.id);
+
+      linkInvitation(user.id, "inv22222");
+      expect(notificationTargets("inv22222")).toHaveLength(1);
     });
 
     it("creates the row when turning off with none present", () => {
@@ -214,6 +260,7 @@ describe("notification preferences", () => {
     it("stamps the baseline the window and countNewSince both measure from", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
+      optIn(user.id);
 
       markNotified(user.id, "inv12345", "2026-07-31T10:00:00.000Z");
 
@@ -234,6 +281,7 @@ describe("notification preferences", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv11111");
       linkInvitation(user.id, "inv22222");
+      optIn(user.id);
 
       markNotified(user.id, "inv11111", "2026-07-31T10:00:00.000Z");
 
@@ -256,7 +304,11 @@ describe("notification preferences", () => {
 
     it("leaves a disabled host disabled", () => {
       const { user } = signIn();
+      linkInvitation(user.id, "inv12345");
+      optIn(user.id);
       setNotificationsEnabled(user.id, false);
+
+      // Stamping a send must not be a back door into the targets.
       markNotified(user.id, "inv12345");
       expect(notificationTargets("inv12345")).toEqual([]);
     });
@@ -271,7 +323,9 @@ describe("notification preferences", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv11111");
       linkInvitation(user.id, "inv22222");
-      const pref = ensurePref(user.id);
+      // Opted in, or there would be nothing for the button to stop and this
+      // would pass without testing anything.
+      const pref = optIn(user.id);
 
       expect(disableByUnsubToken(pref.unsub_token)).toBe(true);
       expect(notificationTargets("inv11111")).toEqual([]);
@@ -283,8 +337,10 @@ describe("notification preferences", () => {
       const second = signIn("google-sub-2");
       linkInvitation(first.user.id, "inv12345");
       linkInvitation(second.user.id, "inv12345");
+      optIn(first.user.id);
+      optIn(second.user.id);
 
-      disableByUnsubToken(ensurePref(first.user.id).unsub_token);
+      disableByUnsubToken(getPref(first.user.id)?.unsub_token ?? "");
 
       const left = notificationTargets("inv12345");
       expect(left).toHaveLength(1);
@@ -294,6 +350,7 @@ describe("notification preferences", () => {
     it("reports an unknown token without changing anything", () => {
       const { user } = signIn();
       linkInvitation(user.id, "inv12345");
+      optIn(user.id);
 
       expect(disableByUnsubToken("not-a-real-token")).toBe(false);
       expect(notificationTargets("inv12345")).toHaveLength(1);
@@ -304,7 +361,7 @@ describe("notification preferences", () => {
     it("leaves the keyring and the published record alone", async () => {
       const { user, cookies } = signIn();
       const published = await publish("Мій день народження", cookies);
-      const pref = ensurePref(user.id);
+      const pref = optIn(user.id);
 
       disableByUnsubToken(pref.unsub_token);
 
@@ -324,6 +381,8 @@ describe("notification preferences", () => {
       const second = signIn("google-sub-2");
       linkInvitation(first.user.id, "inv12345");
       linkInvitation(second.user.id, "inv12345");
+      optIn(first.user.id);
+      optIn(second.user.id);
 
       expect(notificationTargets("inv12345")).toHaveLength(2);
 

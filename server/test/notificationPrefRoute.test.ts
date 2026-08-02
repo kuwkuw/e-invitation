@@ -78,7 +78,9 @@ function put(enabled: boolean, cookies?: Record<string, string>) {
 }
 
 describe("notification preference endpoint", () => {
-  it("reports enabled for an account with no preference row yet", async () => {
+  // Reply email is opt-in (adr-015 §7, amended). The absence of a row is still
+  // the default rather than a stored value — the default itself inverted.
+  it("reports disabled for an account with no preference row yet", async () => {
     const { cookies } = signIn();
 
     const res = await app.inject({
@@ -88,7 +90,7 @@ describe("notification preference endpoint", () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ enabled: true });
+    expect(res.json()).toEqual({ enabled: false });
   });
 
   it("round-trips a change", async () => {
@@ -127,6 +129,9 @@ describe("notification preference endpoint", () => {
       const id = await publish(owner.cookies);
       const { linkInvitation } = await import("../src/accounts.js");
       linkInvitation(second.user.id, id);
+      // Both asked for mail, or turning one off would prove nothing.
+      await put(true, owner.cookies);
+      await put(true, second.cookies);
 
       await put(false, owner.cookies);
 
@@ -139,6 +144,7 @@ describe("notification preference endpoint", () => {
     it("refuses a cross-origin write", async () => {
       const { cookies } = signIn();
       const id = await publish(cookies);
+      await put(true, cookies);
 
       const res = await app.inject({
         method: "PUT",

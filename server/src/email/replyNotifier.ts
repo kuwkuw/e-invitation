@@ -94,9 +94,11 @@ async function notifyOne(
   newReplies: number,
   baseUrl: string,
 ): Promise<void> {
-  // The row is created here rather than at publish (§7): a token exists only
-  // for an account that is actually being mailed. `ensurePref` never
-  // re-enables, so touching the row cannot undo an unsubscribe.
+  // Under opt-in the row already exists — having it, enabled, is what made
+  // this account a target — so this is a read that reaches for the token. It
+  // stays `ensurePref` rather than `getPref` because it must not be able to
+  // return null here, and because `ensurePref` never re-enables: touching the
+  // row cannot undo an unsubscribe.
   const pref = ensurePref(userId);
 
   const invitation = record.versions[record.versions.length - 1];

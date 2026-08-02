@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createSession, linkInvitation, upsertUser } from "../src/accounts.js";
 import { buildApp } from "../src/app.js";
 import { closeDb } from "../src/db.js";
-import { ensurePref, getPref, notificationTargets } from "../src/notifications.js";
+import { getPref, notificationTargets, setNotificationsEnabled } from "../src/notifications.js";
 import { pageLanguage } from "../src/unsubscribePage.js";
 
 let app: FastifyInstance;
@@ -24,12 +24,16 @@ afterEach(async () => {
   rmSync(dataDir, { recursive: true, force: true });
 });
 
-/** A signed-in host holding one invitation, with a minted token. */
+/** A signed-in host holding one invitation, receiving reply email.
+ *
+ *  Opted in explicitly (adr-015 §7, amended): `ensurePref` alone now mints a
+ *  row that is *off*, and unsubscribing from something already off would leave
+ *  every case here asserting against the wrong page. */
 function host(googleSub = "google-sub-1") {
   const user = upsertUser(googleSub, `${googleSub}@example.com`);
   createSession(user.id);
   linkInvitation(user.id, "inv12345");
-  return { user, token: ensurePref(user.id).unsub_token };
+  return { user, token: setNotificationsEnabled(user.id, true).unsub_token };
 }
 
 const get = (url: string, headers?: Record<string, string>) =>

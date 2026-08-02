@@ -75,6 +75,19 @@ function signIn(googleSub = "google-sub-1") {
   return { user, cookies: { inv_session: createSession(user.id).id } };
 }
 
+/** A signed-in host who has asked for reply email (adr-015 §7, amended).
+ *
+ *  Opt-in itself is asserted in `notifications.test.ts`, where eligibility is
+ *  decided. Here it is setup: these cases are about the rate limit, the message
+ *  and the failure path, and spelling the opt-in out in each one would bury
+ *  what they actually check. The cases that expect *no* mail use plain
+ *  `signIn`, so the difference stays visible where it matters. */
+function signInWantingMail(googleSub = "google-sub-1") {
+  const session = signIn(googleSub);
+  setNotificationsEnabled(session.user.id, true);
+  return session;
+}
+
 async function publish(
   inv: Invitation,
   cookies?: Record<string, string>,
@@ -120,6 +133,21 @@ describe("reply notifications", () => {
     // §8: no credentials is a supported mode, and it costs nothing per RSVP.
     it("does no work at all when mail is unconfigured", async () => {
       const spy = stubSend();
+      const { cookies } = signInWantingMail();
+      let record = await publish(invitation("Мій день"), cookies);
+      record = reply(record, "Іван", new Date().toISOString());
+
+      await notifyNewReplies(record, BASE);
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    // adr-015 §7 as amended: publishing while signed in is not asking for
+    // mail. Distinct from the case below it — this host never chose, that one
+    // chose and changed their mind — and both must be silent.
+    it("sends nothing to a host who never asked for mail", async () => {
+      configureMail();
+      const spy = stubSend();
       const { cookies } = signIn();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
@@ -132,7 +160,7 @@ describe("reply notifications", () => {
     it("sends nothing to a host who turned notifications off", async () => {
       configureMail();
       const spy = stubSend();
-      const { user, cookies } = signIn();
+      const { user, cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       setNotificationsEnabled(user.id, false);
       record = reply(record, "Іван", new Date().toISOString());
@@ -145,7 +173,7 @@ describe("reply notifications", () => {
     it("sends nothing when there are no replies yet", async () => {
       configureMail();
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       const record = await publish(invitation("Мій день"), cookies);
 
       await notifyNewReplies(record, BASE);
@@ -158,7 +186,7 @@ describe("reply notifications", () => {
     it("mails the first reply immediately, counting every live reply", async () => {
       configureMail();
       const spy = stubSend();
-      const { user, cookies } = signIn();
+      const { user, cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", "2026-07-31T10:00:00.000Z");
       record = reply(record, "Олег", "2026-07-31T10:01:00.000Z");
@@ -176,7 +204,7 @@ describe("reply notifications", () => {
     it("stays silent for a reply inside the window", async () => {
       configureMail();
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
       await notifyNewReplies(record, BASE);
@@ -190,7 +218,7 @@ describe("reply notifications", () => {
     it("mails again after the window, counting only what is new", async () => {
       configureMail();
       const spy = stubSend();
-      const { user, cookies } = signIn();
+      const { user, cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", "2026-07-31T09:00:00.000Z");
       await notifyNewReplies(record, BASE);
@@ -214,7 +242,7 @@ describe("reply notifications", () => {
       configureMail();
       vi.stubEnv("NOTIFY_WINDOW_MINUTES", "0");
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
 
       record = reply(record, "Іван", new Date(Date.now() - 1000).toISOString());
@@ -229,7 +257,7 @@ describe("reply notifications", () => {
       configureMail();
       vi.stubEnv("NOTIFY_WINDOW_MINUTES", "not-a-number");
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
       await notifyNewReplies(record, BASE);
@@ -244,7 +272,7 @@ describe("reply notifications", () => {
     it("links to a bare manage URL and an unsubscribe token", async () => {
       configureMail();
       const spy = stubSend();
-      const { user, cookies } = signIn();
+      const { user, cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
 
@@ -263,7 +291,7 @@ describe("reply notifications", () => {
     it("names no guest, though the reply is in the record", async () => {
       configureMail();
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван Петренко", new Date().toISOString());
 
@@ -277,7 +305,7 @@ describe("reply notifications", () => {
     it("writes in the invitation's language", async () => {
       configureMail();
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("My birthday", "en"), cookies);
       record = reply(record, "Ivan", new Date().toISOString());
 
@@ -293,7 +321,7 @@ describe("reply notifications", () => {
     it("leaves the baseline unstamped so the next reply retries", async () => {
       configureMail();
       const spy = stubSend(new Response("nope", { status: 500 }));
-      const { user, cookies } = signIn();
+      const { user, cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
 
@@ -316,7 +344,7 @@ describe("reply notifications", () => {
           throw new Error("ENOTFOUND");
         }),
       );
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       let record = await publish(invitation("Мій день"), cookies);
       record = reply(record, "Іван", new Date().toISOString());
 
@@ -328,8 +356,8 @@ describe("reply notifications", () => {
   it("notifies both holders independently", async () => {
     configureMail();
     const spy = stubSend();
-    const first = signIn("google-sub-1");
-    const second = signIn("google-sub-2");
+    const first = signInWantingMail("google-sub-1");
+    const second = signInWantingMail("google-sub-2");
     let record = await publish(invitation("Мій день"), first.cookies);
     const { linkInvitation } = await import("../src/accounts.js");
     linkInvitation(second.user.id, record.id);
@@ -355,7 +383,7 @@ describe("reply notifications", () => {
           throw new Error("ENOTFOUND");
         }),
       );
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       const record = await publish(invitation("Мій день"), cookies);
 
       const res = await app.inject({
@@ -377,7 +405,7 @@ describe("reply notifications", () => {
     it("counts the reply that just arrived", async () => {
       configureMail();
       const spy = stubSend();
-      const { cookies } = signIn();
+      const { cookies } = signInWantingMail();
       const record = await publish(invitation("Мій день"), cookies);
 
       await app.inject({
