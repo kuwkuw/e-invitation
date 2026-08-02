@@ -114,12 +114,19 @@ const SCHEMA = `
     PRIMARY KEY (user_id, invitation_id)
   );
 
+  -- browser_key is the sha256 of the binding cookie the authorize leg set
+  -- (adr-014 §3). Without it the state is single-use but not *browser-bound*:
+  -- an attacker can complete their own handshake, hold the callback back, and
+  -- have a victim open it — signing that victim into the attacker's account.
+  -- Hashed for the same reason session ids are: a row here is then not a
+  -- usable half of the pair.
   CREATE TABLE IF NOT EXISTS oauth_states (
     state         TEXT PRIMARY KEY,
     nonce         TEXT NOT NULL,
     code_verifier TEXT NOT NULL,
     redirect_uri  TEXT NOT NULL,
     redirect_to   TEXT NOT NULL,
+    browser_key   TEXT NOT NULL DEFAULT '',
     expires_at    TEXT NOT NULL
   );
 `;
@@ -139,8 +146,27 @@ export function getDb(): DatabaseSync {
   opened.exec("PRAGMA journal_mode = WAL");
   opened.exec("PRAGMA foreign_keys = ON");
   opened.exec(SCHEMA);
+  migrate(opened);
   db = opened;
   return db;
+}
+
+/** Additive column migrations for a database that already exists — SCHEMA
+ *  above only ever creates tables that are absent, so a column added to a
+ *  shipped table has to be written twice: once there for a fresh deployment
+ *  and once here for one that is already running.
+ *
+ *  Idempotent, and ordered oldest first. There is no version table: SQLite
+ *  reports its own columns, which cannot drift from what is actually stored. */
+function migrate(database: DatabaseSync): void {
+  // oauth_states.browser_key binds an in-flight sign-in to the browser that
+  // started it. Rows written before the column existed carry '' and can never
+  // match a cookie, so a sign-in caught mid-redirect by the deploy fails and is
+  // retried — the fail-closed direction, and a 10-minute row at worst.
+  const columns = database.prepare("PRAGMA table_info(oauth_states)").all() as { name: string }[];
+  if (!columns.some((column) => column.name === "browser_key")) {
+    database.exec("ALTER TABLE oauth_states ADD COLUMN browser_key TEXT NOT NULL DEFAULT ''");
+  }
 }
 
 /** Drop the connection. Tests give each case its own DATA_DIR, and a cached

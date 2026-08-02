@@ -23,11 +23,38 @@ import {
   SESSION_COOKIE,
   setSessionCookie,
 } from "../auth/session.js";
-import { consumeOauthState, createOauthState } from "../auth/state.js";
+import {
+  browserKeyMatches,
+  consumeOauthState,
+  createOauthState,
+  newBrowserKey,
+} from "../auth/state.js";
 import { emailConfigured } from "../email/send.js";
 
 const DEFAULT_REDIRECT_TO = "/create";
 const CALLBACK_PATH = "/api/auth/google/callback";
+
+// Binds an in-flight sign-in to the browser that started it (adr-014 §3). The
+// state row holds only this value's hash, and the callback refuses anything it
+// cannot match — see auth/state.ts for the attack that single-use state does
+// not cover.
+const OAUTH_COOKIE = "inv_oauth";
+// The state row's own TTL. A binding that outlived the row it points at would
+// prove nothing, and an abandoned sign-in should not leave a cookie behind.
+const OAUTH_COOKIE_MAX_AGE_S = 10 * 60;
+
+/** `Path=/api/auth` so this rides the callback and no other request — the
+ *  narrower form of the reasoning that puts the session cookie on `/api`
+ *  (§4). `SameSite=Lax` still permits the top-level GET navigation Google's
+ *  redirect back is, which is the only request that needs it. */
+function oauthCookieOptions(request: FastifyRequest) {
+  return {
+    httpOnly: true,
+    secure: request.protocol === "https",
+    sameSite: "lax" as const,
+    path: "/api/auth",
+  };
+}
 
 export function registerAuthRoutes(app: FastifyInstance): void {
   // Start the flow. 503 rather than 404 when OAuth is unconfigured (§7): the
@@ -39,9 +66,19 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     if (!config) return reply.code(503).send({ error: "Sign-in is not configured." });
 
     const query = request.query as { redirect_to?: string };
+    // Minted before the row so the row can store its hash. A second sign-in
+    // started in the same browser overwrites this, and the older tab's callback
+    // then fails as "state" — the correct answer for a flow that browser has
+    // moved on from.
+    const browserKey = newBrowserKey();
     const state = createOauthState({
       redirectUri: callbackUri(request, config.redirectUri),
       redirectTo: safeRedirectPath(query.redirect_to),
+      browserKey,
+    });
+    reply.setCookie(OAUTH_COOKIE, browserKey, {
+      ...oauthCookieOptions(request),
+      maxAge: OAUTH_COOKIE_MAX_AGE_S,
     });
     return reply.redirect(
       authorizeUrl(config, {
@@ -62,6 +99,12 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     if (!config) return reply.code(503).send({ error: "Sign-in is not configured." });
 
     const query = request.query as { code?: string; state?: string; error?: string };
+    // Read before anything can return, and cleared on every path: this flow is
+    // over either way, and a binding left behind only survives to confuse the
+    // next attempt.
+    const browserKey = request.cookies?.[OAUTH_COOKIE];
+    reply.clearCookie(OAUTH_COOKIE, oauthCookieOptions(request));
+
     // The host pressed "cancel" on Google's screen. Not an error, and it must
     // not read like one.
     if (query.error) return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "declined"), 302);
@@ -71,7 +114,12 @@ export function registerAuthRoutes(app: FastifyInstance): void {
 
     // Single-use: reading it deletes it, so a replayed callback finds nothing.
     const pending = consumeOauthState(query.state);
-    if (!pending) {
+    // Consumed *before* the binding is checked, so a callback opened in the
+    // wrong browser burns the state rather than leaving it for whoever planted
+    // it to finish afterwards. Unknown state and wrong browser answer alike:
+    // both mean this browser did not start this sign-in, and telling them apart
+    // would only tell an attacker which half they got right.
+    if (!pending || !browserKeyMatches(pending, browserKey)) {
       return reply.redirect(withAuthResult(DEFAULT_REDIRECT_TO, "failed", "state"), 302);
     }
 

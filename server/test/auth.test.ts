@@ -66,7 +66,10 @@ function configureGoogle() {
 }
 
 /** Runs the first leg and returns the state and nonce Google would have been
- *  handed, so a callback test can produce a token that actually matches. */
+ *  handed, so a callback test can produce a token that actually matches — plus
+ *  the binding cookie the browser now holds, which every callback below has to
+ *  present. A callback without it is by definition not the browser that started
+ *  the flow (adr-014 §3). */
 async function beginSignIn(instance: FastifyInstance, redirectTo?: string) {
   const res = await instance.inject({
     method: "GET",
@@ -80,7 +83,20 @@ async function beginSignIn(instance: FastifyInstance, redirectTo?: string) {
     location,
     state: location.searchParams.get("state") as string,
     nonce: location.searchParams.get("nonce") as string,
+    browser: res.cookies.find((c) => c.name === "inv_oauth")?.value as string,
   };
+}
+
+/** The second leg, as the browser that started it. */
+function completeSignIn(
+  instance: FastifyInstance,
+  params: { state: string; browser: string; code?: string },
+) {
+  return instance.inject({
+    method: "GET",
+    url: `/api/auth/google/callback?code=${params.code ?? "auth-code"}&state=${params.state}`,
+    cookies: { inv_oauth: params.browser },
+  });
 }
 
 beforeEach(() => {
@@ -160,13 +176,10 @@ describe("google sign-in", () => {
   it("creates an account and a session on a valid callback", async () => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state, nonce } = await beginSignIn(app, "/manage/abc123");
+    const { state, nonce, browser } = await beginSignIn(app, "/manage/abc123");
     stubGoogle(signIdToken(validClaims({ nonce })));
 
-    const callback = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const callback = await completeSignIn(app, { state, browser });
     expect(callback.statusCode).toBe(302);
     // Back where the host started, not a generic landing.
     expect(callback.headers.location).toBe("/manage/abc123?auth=ok");
@@ -176,6 +189,8 @@ describe("google sign-in", () => {
     expect(cookie?.sameSite?.toLowerCase()).toBe("lax");
     // §4: the cookie must never ride /i/:id or the OG image request.
     expect(cookie?.path).toBe("/api");
+    // The binding has done its job and does not outlive the flow.
+    expect(callback.cookies.find((c) => c.name === "inv_oauth")?.value).toBe("");
 
     const session = await app.inject({
       method: "GET",
@@ -197,21 +212,63 @@ describe("google sign-in", () => {
   it("refuses a replayed state, so a callback works exactly once", async () => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state, nonce } = await beginSignIn(app);
+    const { state, nonce, browser } = await beginSignIn(app);
     stubGoogle(signIdToken(validClaims({ nonce })));
 
-    const first = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const first = await completeSignIn(app, { state, browser });
     expect(first.headers.location).toBe("/create?auth=ok");
 
-    const replay = await app.inject({
+    const replay = await completeSignIn(app, { state, browser });
+    expect(replay.headers.location).toBe("/create?auth=failed&auth_code=state");
+    expect(replay.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
+  });
+
+  // The state being single-use stops that replay. It does *not* stop an
+  // attacker who runs the flow with their own Google account, holds the
+  // callback back instead of letting their browser follow it, and gets a victim
+  // to open the URL: every check passes and the victim's browser is handed a
+  // session for the attacker's account. The victim publishes, the invitation is
+  // filed under the attacker's keyring, and §5 hands over its manage token.
+  // The binding cookie is the half an attacker cannot write into someone
+  // else's browser.
+  it("refuses a callback opened in a browser that did not start the flow", async () => {
+    configureGoogle();
+    app = await buildApp({ logger: false });
+    const { res, state, nonce, browser } = await beginSignIn(app);
+    stubGoogle(signIdToken(validClaims({ nonce })));
+
+    const binding = res.cookies.find((c) => c.name === "inv_oauth");
+    expect(binding?.httpOnly).toBe(true);
+    expect(binding?.sameSite?.toLowerCase()).toBe("lax");
+    // Rides the callback and nothing else.
+    expect(binding?.path).toBe("/api/auth");
+
+    // The victim's browser: it holds no binding for this flow.
+    const planted = await app.inject({
       method: "GET",
       url: `/api/auth/google/callback?code=auth-code&state=${state}`,
     });
-    expect(replay.headers.location).toBe("/create?auth=failed&auth_code=state");
-    expect(replay.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
+    expect(planted.headers.location).toBe("/create?auth=failed&auth_code=state");
+    expect(planted.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
+
+    // And it burned the state, so the browser that *did* start the flow cannot
+    // complete it afterwards either — a planted callback costs the attacker
+    // their handshake rather than leaving it live.
+    const retry = await completeSignIn(app, { state, browser });
+    expect(retry.headers.location).toBe("/create?auth=failed&auth_code=state");
+    expect(retry.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
+  });
+
+  it("refuses a callback carrying another browser's binding", async () => {
+    configureGoogle();
+    app = await buildApp({ logger: false });
+    const attacker = await beginSignIn(app);
+    const victim = await beginSignIn(app);
+    stubGoogle(signIdToken(validClaims({ nonce: attacker.nonce })));
+
+    const res = await completeSignIn(app, { state: attacker.state, browser: victim.browser });
+    expect(res.headers.location).toBe("/create?auth=failed&auth_code=state");
+    expect(res.cookies.find((c) => c.name === "inv_session")).toBeUndefined();
   });
 
   // Each of these is a token that passes every check but one. None may sign in.
@@ -231,13 +288,10 @@ describe("google sign-in", () => {
   ])("refuses %s", async (_label, claims) => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state, nonce } = await beginSignIn(app);
+    const { state, nonce, browser } = await beginSignIn(app);
     stubGoogle(signIdToken(claims(nonce)));
 
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const res = await completeSignIn(app, { state, browser });
     // Every one of these is the identity leg — the token came back from Google
     // and failed verification, so the class is the same and only the log says
     // which claim.
@@ -248,15 +302,12 @@ describe("google sign-in", () => {
   it("refuses a token signed by a key Google does not publish", async () => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state, nonce } = await beginSignIn(app);
+    const { state, nonce, browser } = await beginSignIn(app);
     // Signed with our key, but the JWKS advertises a different kid — what a
     // forged token looks like from here.
     stubGoogle(signIdToken(validClaims({ nonce }), "some-other-kid"));
 
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const res = await completeSignIn(app, { state, browser });
     expect(res.headers.location).toBe("/create?auth=failed&auth_code=identity");
   });
 
@@ -266,16 +317,13 @@ describe("google sign-in", () => {
   it("names the exchange leg when Google's token endpoint refuses", async () => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state } = await beginSignIn(app);
+    const { state, browser } = await beginSignIn(app);
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response("nope", { status: 400 })),
     );
 
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const res = await completeSignIn(app, { state, browser });
     expect(res.headers.location).toBe("/create?auth=failed&auth_code=exchange");
   });
 
@@ -300,25 +348,19 @@ describe("google sign-in", () => {
   ])("guards redirect_to %s", async (requested, expected) => {
     configureGoogle();
     app = await buildApp({ logger: false });
-    const { state, nonce } = await beginSignIn(app, requested);
+    const { state, nonce, browser } = await beginSignIn(app, requested);
     stubGoogle(signIdToken(validClaims({ nonce })));
 
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const res = await completeSignIn(app, { state, browser });
     expect(res.headers.location).toBe(`${expected}?auth=ok`);
   });
 });
 
 describe("sign-out", () => {
   async function signedInCookie(instance: FastifyInstance) {
-    const { state, nonce } = await beginSignIn(instance);
+    const { state, nonce, browser } = await beginSignIn(instance);
     stubGoogle(signIdToken(validClaims({ nonce })));
-    const callback = await instance.inject({
-      method: "GET",
-      url: `/api/auth/google/callback?code=auth-code&state=${state}`,
-    });
+    const callback = await completeSignIn(instance, { state, browser });
     return callback.cookies.find((c) => c.name === "inv_session")?.value as string;
   }
 
