@@ -339,6 +339,21 @@ describe("google sign-in", () => {
     expect(res.headers.location).toBe("/create?auth=declined");
   });
 
+  it("returns a cancelled sign-in to where it was started", async () => {
+    configureGoogle();
+    app = await buildApp({ logger: false });
+    // Started from the landing page rather than from the publish gate.
+    const { state } = await beginSignIn(app, "/");
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/auth/google/callback?error=access_denied&state=${state}`,
+    });
+
+    // Changing your mind must not drop you into an editor you never asked for.
+    expect(res.headers.location).toBe("/?auth=declined");
+  });
+
   // redirect_to comes off the query string and lands in a Location header.
   it.each([
     ["//evil.example", "/create"],
