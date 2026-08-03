@@ -1,6 +1,7 @@
 # 08 — Internet promotion: strategy and plan
 
-**Status:** strategy, nothing built · **Date:** 2026-08-03
+**Status:** strategy · **Date:** 2026-08-03 · §4.2 (the name) settled and
+propagated the same day; everything else is unbuilt
 
 This doc answers one question: how does this product get in front of people on
 the internet, given that [07-monetization.md](07-monetization.md) §3 proves the
@@ -133,10 +134,9 @@ current deployment would waste it, and in one case would do harm.
 
 ### 4.1 There is no SEO surface at all
 
-Verified against the live site, not inferred:
+Verified against the live site, not inferred (the `<title>` has since been
+fixed by §4.2's rename; everything below it still stands):
 
-- `<title>` is **"Invitation Studio"** — a name that appears nowhere in the
-  product, in neither target language.
 - `<html lang="en">` is hardcoded, on a product whose primary market is
   Ukrainian.
 - No meta description, no canonical, no `hreflang`, no favicon, no OG tags on
@@ -150,28 +150,43 @@ The whole of `web/index.html` is nine lines of boilerplate. A search engine
 crawling this today indexes an English-titled blank page. Any plan involving
 search is dead on arrival until this is fixed, and it is a small fix.
 
-### 4.2 The product has three names, and one of them is a competitor's
+### 4.2 The name — resolved: **Invinto**
 
-| Where | Name |
-| --- | --- |
-| [web/index.html](../web/index.html) | Invitation Studio |
-| [i18n.ts](../web/src/i18n.ts) `LANDING` | Запрошення / Zaproshennya |
-| [unsubscribePage.ts](../server/src/unsubscribePage.ts) | **INVITO** |
-| Domain ([05-deployment.md](05-deployment.md)) | invinto.app |
+**Settled 2026-08-03 and propagated; this section is kept as the rationale.**
 
-Three names across four surfaces is a promotion problem on its own — nobody can
-recommend a product they cannot name. But the specific collision is worse:
-**INVITO is an established competitor in exactly this niche and language**
-(§3.1, `invito.ua`, 1000+ couples, ranking for the target keywords). Promoting
-"INVITO" in a Ukrainian wedding community sends the traffic to them. The
-domain, `invinto.app`, reads as a typo of it.
+The product had been calling itself five things: `Invitation Studio`
+(`web/index.html` and the `UI.appTitle` string), `Запрошення` / `Zaproshennya`
+(the landing `LANDING.brand`), `Студія запрошень` (the Ukrainian `appTitle`),
+and `INVITO` (the guest, manage, crash and unsubscribe wordmarks, the email
+templates, and the `.ics` `PRODID`) — on the domain `invinto.app`. Nobody can
+recommend a product they cannot name.
 
-"Запрошення" is not a usable brand either — it is the generic Ukrainian noun
-for "invitation," unsearchable and untrademarkable.
+The `INVITO` wordmark was the dangerous one. **Invito is an established
+competitor in exactly this niche and language** (§3.1, `invito.ua`, 1000+
+couples, ranking for the target keywords), so promoting "INVITO" in a Ukrainian
+wedding community would have sent the traffic to them.
 
-**Pick one name and propagate it before spending effort on any channel.** This
-is the single highest-leverage item in this document, and it gets more
-expensive with every published share link that carries the old one.
+The resolution came from the domain. `invinto.app` was **a typo made at
+registration** — `invito` was intended — which turns out to be the luckiest
+accident available here: it is phonetically close enough to keep the wordmark's
+character, distinct enough not to be the competitor, and it is already the
+canonical host, already in the Google OAuth client, and already the verified
+sending domain (05-deployment.md). Every alternative would have cost a domain
+migration; this one cost a rename in the source.
+
+`Запрошення` was never a candidate — it is the generic Ukrainian noun for
+"invitation," unsearchable and untrademarkable.
+
+Two treatments, both now consistent, matching the existing visual system:
+
+| Treatment | Where | Value |
+| --- | --- | --- |
+| Letterspaced small-caps wordmark | guest CTA, guest-not-found, manage page, crash screen, unsubscribe page, email | `INVINTO` |
+| Title case | landing nav and footer, `appTitle`, page `<title>` | `Invinto` |
+
+The name is kept in Latin script in both languages on purpose. Transliterating
+to `Інвінто` for the Ukrainian UI would recreate the two-names problem this
+section exists to close, and the host types the Latin domain either way.
 
 ### 4.3 The publish gate is on in production
 
@@ -229,12 +244,13 @@ does not. Know which failure mode you are risking before §6.3.
 The blockers above are not a to-do list to work through in parallel with
 promotion. They gate it, and the order matters:
 
-**Name (4.2) → indexing safety (4.4) + SEO surface (4.1) → gate (4.3) →
+**~~Name (4.2)~~ → indexing safety (4.4) + SEO surface (4.1) → gate (4.3) →
 share sheet (4.5) → traffic.**
 
-The name comes first because every asset produced before it — every post, every
-share link, every indexed page — has to be redone after it. Indexing safety
-comes before anything that attracts a crawler.
+The name came first because every asset produced before it — every post, every
+share link, every indexed page — would have to be redone after it. That one is
+now done (§4.2). Indexing safety is next, because it comes before anything that
+attracts a crawler.
 
 ## 6. Channels
 
@@ -332,9 +348,9 @@ growth channel. Use it as a measurement instrument, then stop.
 
 Nothing here is a marketing task; all of it gates marketing. In the §5 order:
 
-1. **Settle the name** (§4.2) and propagate it to `web/index.html`, `i18n.ts`,
-   `unsubscribePage.ts`, the email templates, and the docs. Check availability
-   against `invito.ua` before committing.
+1. ~~**Settle the name**~~ — **done** (§4.2): `Invinto` / `INVINTO`,
+   propagated across `web/index.html`, `i18n.ts`, the four UI wordmarks,
+   `unsubscribePage.ts`, the email strings, the `.ics` `PRODID`, and the docs.
 2. **`noindex` on `/i/:id`** (§4.4). One meta tag. Must precede any traffic.
 3. **SEO surface** (§4.1): real bilingual title and description, `lang`
    matching the UI language, landing OG tags, favicon, a `web/public/` with a
@@ -345,9 +361,9 @@ Nothing here is a marketing task; all of it gates marketing. In the §5 order:
 7. **Add landing-page analytics** (§2) — privacy-respecting and self-hosted or
    Plausible-class, consistent with NFR-4. Without it Phase 1 cannot be read.
 
-*Exit criterion: one name everywhere; a stranger can go from landing page to a
-shared Viber link without signing in; `/robots.txt` is a real file; guest pages
-are `noindex`.*
+*Exit criterion: ~~one name everywhere~~ (done); a stranger can go from landing
+page to a shared Viber link without signing in; `/robots.txt` is a real file;
+guest pages are `noindex`.*
 
 ### Phase 1 — seed to a readable sample
 
@@ -407,7 +423,10 @@ hobby:
 
 ## 9. Open questions
 
-1. **What is the product called?** (§4.2) Blocks everything else.
+1. ~~**What is the product called?**~~ — answered: Invinto (§4.2). The
+   remaining piece is defensive, not blocking: `invito.ua` is a live business
+   with a similar name in the same niche, so a trademark search is worth doing
+   before the name is printed on anything expensive.
 2. Does the Ukrainian long tail (§3.3) actually search for a self-serve tool,
    or does it never occur to them that one exists? A market that does not know
    the category needs demonstration (§6.3), not SEO (§6.2) — and that changes

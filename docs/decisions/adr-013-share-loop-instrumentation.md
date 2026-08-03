@@ -21,7 +21,7 @@ project. Above **~0.7**, acquisition is effectively free and §5.2's one-time
 unlock works.
 
 **That loop is not wired.** `web/src/components/guest/` contains no link back
-to the product — the `gr-brand` INVITO wordmark on
+to the product — the `gr-brand` INVINTO wordmark on
 [GuestPage.tsx](../../web/src/GuestPage.tsx) is a static `div`.
 [metrics.ts](../../server/src/metrics.ts) counts generations, field
 regenerations, publishes, RSVPs and backgrounds, and nothing about `/i/:id`
@@ -172,7 +172,7 @@ judged in that screen rather than beside it.
 
 The design problem the mockup exists to settle is narrower than "what should
 the call to action look like". `styles.css` records the guest page's intent in
-its own comment, carried over from the DS `guest-rsvp` template: **"INVITO
+its own comment, carried over from the DS `guest-rsvp` template: **"INVINTO
 stays a whisper."** That is why the page reads as someone's invitation rather
 than as a product surface, and this iteration has to turn that same whisper
 into the only acquisition channel the economics can afford (§3 of
@@ -304,8 +304,8 @@ has traffic, and production currently has almost none.
   counted again on a later visit — a page that renders matters more than a
   counter that is exactly right, and the per-day `ip:id` set is the backstop.
 - **The call to action hides the wordmark from its accessible name.** The
-  `INVITO` span is `aria-hidden`, so the link reads as "create your own
-  invitation" rather than "INVITO create your own invitation" — the wordmark is
+  `INVINTO` span is `aria-hidden`, so the link reads as "create your own
+  invitation" rather than "INVINTO create your own invitation" — the wordmark is
   there to be seen, and the link is there to be an action.
 - **`?ref` parsing is deliberately incurious**: anything other than the one
   known value is `direct`, and stripping preserves every other query parameter.

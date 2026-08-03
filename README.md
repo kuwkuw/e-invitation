@@ -1,4 +1,4 @@
-# Invitation App
+# Invinto
 
 E-invitation web app: describe your event in one sentence → get an AI-generated, editable invitation, then publish it as a share link (with OG preview image) and collect RSVPs — no guest registration. Bilingual (Ukrainian/English).
 

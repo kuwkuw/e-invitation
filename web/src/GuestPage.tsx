@@ -61,7 +61,7 @@ export function GuestPage({ id }: { id: string }) {
     downloadFile(
       "invitation.ics",
       buildIcs({
-        uid: `${id}@invito`,
+        uid: `${id}@invinto`,
         title: copy.title,
         location: place || undefined,
         start: eventStart,

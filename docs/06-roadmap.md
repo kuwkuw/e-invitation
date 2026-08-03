@@ -199,7 +199,7 @@ What the ADR settled, and the implementation delivered:
 6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
    first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
    project — against the constraint `styles.css` already states in its own
-   words, *"INVITO stays a whisper"*: the wordmark keeps its exact current
+   words, *"INVINTO stays a whisper"*: the wordmark keeps its exact current
    values and gains one underlined line beneath it, in the same muted grey as
    "change answer". Four louder treatments were drawn and rejected, three
    against rules already written down.
@@ -534,11 +534,15 @@ that touches the loop the measurement is about.
 
 "Publish real events" is the part that was never planned, and
 [08-promotion.md](08-promotion.md) now plans it. Its finding is that promotion
-is not yet the bottleneck: the deployment serves `Invitation Studio` with no
-`robots.txt` and an English `lang` attribute, calls itself three different
+is not yet the bottleneck: the deployment served `Invitation Studio` with no
+`robots.txt` and an English `lang` attribute, called itself five different
 names — one of them a competitor's — and gates publishing behind Google
 sign-in, which is the loop the measurement is about. Its Phase 0 is a list of
 those blockers, and the share sheet above is one of them.
+
+The naming one is closed: everything is now **Invinto** / **INVINTO**, taking
+the spelling from the domain, which was a typo for the competitor's name and is
+therefore the one variant that is both already-paid-for and not theirs.
 
 ## Candidate backlog
 

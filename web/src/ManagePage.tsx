@@ -176,7 +176,7 @@ function ReadyDashboard({
         <NotifyControl enabled={notify.enabled} onToggle={notify.toggle} t={notify.auth} />
       )}
 
-      <p className="hm-brand">INVITO</p>
+      <p className="hm-brand">INVINTO</p>
     </>
   );
 }

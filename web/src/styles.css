@@ -545,7 +545,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the
    invitation is the hero, the reply is a quiet white card; the attending
-   toggle is the emotional center; INVITO stays a whisper. */
+   toggle is the emotional center; INVINTO stays a whisper. */
 
 .gr-page { min-height: 100dvh; background: #f6f5f2; padding: 22px 20px 18px; }
 .gr-status { text-align: center; color: #6b6659; margin-top: 48px; }
