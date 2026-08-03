@@ -532,6 +532,14 @@ let the numbers accumulate, and read §5.1 when there is something to read. Of
 the two items below that would change anything, the share sheet is the only one
 that touches the loop the measurement is about.
 
+"Publish real events" is the part that was never planned, and
+[08-promotion.md](08-promotion.md) now plans it. Its finding is that promotion
+is not yet the bottleneck: the deployment serves `Invitation Studio` with no
+`robots.txt` and an English `lang` attribute, calls itself three different
+names — one of them a competitor's — and gates publishing behind Google
+sign-in, which is the loop the measurement is about. Its Phase 0 is a list of
+those blockers, and the share sheet above is one of them.
+
 ## Candidate backlog
 
 - **Native share sheet at publish** — the host's share panel is copy-link only,

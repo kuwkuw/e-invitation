@@ -59,6 +59,11 @@ records the unit economics (~$0.002 per text-only event, $0.039 per AI
 background), why host frequency rules out consumer subscriptions, and why the
 guest-page share loop — currently uninstrumented — gates every option.
 
+Distribution is the other half of that question and is planned separately in
+[08-promotion.md](08-promotion.md): where the product is promoted, what it is
+competing against in the Ukrainian and English markets, and why the first phase
+is fixing the product's own promotability rather than buying traffic.
+
 ## Explicit non-goals
 
 - No full-image (diffusion) invitation generation — see

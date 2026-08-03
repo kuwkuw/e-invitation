@@ -13,6 +13,7 @@ architecture (arc42-inspired), and architecture decision records (ADRs).
 | [05-deployment.md](05-deployment.md) | Northflank deployment: one container, volume, env |
 | [06-roadmap.md](06-roadmap.md) | Next-iteration plan and candidate backlog |
 | [07-monetization.md](07-monetization.md) | Unit economics and pricing options — investigation, nothing built |
+| [08-promotion.md](08-promotion.md) | Internet promotion: market scan, channels, phased plan — strategy, nothing built |
 | [decisions/](decisions/) | ADRs — settled decisions and their rationale |
 
 Conventions:
