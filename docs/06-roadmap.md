@@ -540,9 +540,13 @@ names — one of them a competitor's — and gates publishing behind Google
 sign-in, which is the loop the measurement is about. Its Phase 0 is a list of
 those blockers, and the share sheet above is one of them.
 
-The naming one is closed: everything is now **Invinto** / **INVINTO**, taking
-the spelling from the domain, which was a typo for the competitor's name and is
-therefore the one variant that is both already-paid-for and not theirs.
+Two are closed. Naming: everything is now **Invinto** / **INVINTO**, taking the
+spelling from the domain, which was a typo for the competitor's name and is
+therefore the one variant that is both already-paid-for and not theirs — with
+the trademark exposure that leaves worked through in §10 there. And `/i/:id`
+now carries `noindex`, so the share page keeps unfurling in messengers without
+putting guests' names and addresses into Google once links start being pasted
+in public.
 
 ## Candidate backlog
 

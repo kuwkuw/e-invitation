@@ -78,7 +78,7 @@ unattributable past the first LLM call.
 
 ## 3. What we are competing against
 
-Scanned 2026-08-03; sources in §10. The two markets are not the same fight.
+Scanned 2026-08-03; sources in §11. The two markets are not the same fight.
 
 ### 3.1 Ukrainian market — done-for-you, expensive, slow
 
@@ -147,7 +147,7 @@ fixed by §4.2's rename; everything below it still stands):
   no `web/public/` directory at all.
 
 The whole of `web/index.html` is nine lines of boilerplate. A search engine
-crawling this today indexes an English-titled blank page. Any plan involving
+crawling this today indexes a correctly-titled blank page. Any plan involving
 search is dead on arrival until this is fixed, and it is a small fix.
 
 ### 4.2 The name — resolved: **Invinto**
@@ -209,12 +209,29 @@ Recommendation: **open the gate for the seeding phase.** The whole point of
 Phase 1 is a readable share-loop number, and the gate sits on the loop. It can
 close again once there is a sample.
 
-### 4.4 Guest pages are indexable, and promotion is what makes that bite
+### 4.4 Guest pages are indexable — **fixed 2026-08-03**
 
-`/i/:id` emits `og:*` and `twitter:card` but **no `robots` meta**. Published
-invitations carry real people's names, home addresses, and dates. Today nothing
-crawls them because nothing links to them; the moment promotion works, links
+`/i/:id` emitted `og:*` and `twitter:card` but **no `robots` meta**. Published
+invitations carry real people's names, home addresses, and dates. Nothing
+crawled them while nothing linked to them; the moment promotion works, links
 appear in public places and they become crawlable.
+
+"Reachable only by link" is what makes the page unlisted, not what keeps it out
+of Google. Search engines discover URLs from wherever they are pasted — a
+public Facebook group, an open Telegram channel, a forum thread — and a host
+pasting their own share link into a public group is a normal thing to do, not a
+mistake. The link being unguessable stops enumeration; it does not stop
+indexing.
+
+Now `<meta name="robots" content="noindex">`, alongside the OG tags. The two
+directives pull against each other and the resolution is worth stating, since
+the obvious "stronger" fix is the broken one: a `Disallow: /i/` in robots.txt
+would stop the messenger crawlers that FR-3.5's unfurl depends on, and would
+*also* leave the page indexable, because a crawler blocked from fetching never
+sees the `noindex` and Google will still list a URL it found elsewhere.
+**Crawlable-but-noindex** is the only combination that unfurls and stays
+unlisted. `server/test/og.test.ts` asserts both halves together so a future
+robots.txt cannot quietly break one.
 
 Ukrainian family events surfacing in Google search results is a trust incident
 and runs against NFR-4's minimal-data posture.
@@ -423,10 +440,8 @@ hobby:
 
 ## 9. Open questions
 
-1. ~~**What is the product called?**~~ — answered: Invinto (§4.2). The
-   remaining piece is defensive, not blocking: `invito.ua` is a live business
-   with a similar name in the same niche, so a trademark search is worth doing
-   before the name is printed on anything expensive.
+1. ~~**What is the product called?**~~ — answered: Invinto (§4.2). What remains
+   is the trademark exposure against `invito.ua`, worked through in §10.
 2. Does the Ukrainian long tail (§3.3) actually search for a self-serve tool,
    or does it never occur to them that one exists? A market that does not know
    the category needs demonstration (§6.3), not SEO (§6.2) — and that changes
@@ -438,7 +453,103 @@ hobby:
    stopping rule before the number starts moving, so it is not decided by
    whichever reading is most encouraging.
 
-## 10. Sources
+## 10. The name against `invito.ua`
+
+Not legal advice, and nothing here substitutes for a Ukrainian IP attorney at
+the point of filing. It is the fact-finding that decides whether an attorney is
+needed at all.
+
+### 10.1 The exposure is real but the direction of the risk is not obvious
+
+`INVINTO` and `INVITO` differ by one letter, in the same language, the same
+market, and the same service category. That is the configuration a
+likelihood-of-confusion test is built to catch, so the similarity should not be
+talked down.
+
+What *is* worth talking down is the fear of being sued. Enforcement follows
+commercial harm, and at twelve published events and no revenue there is none.
+The realistic risk is not a lawsuit — it is **building a brand and then having
+to abandon it**, and that cost grows with every share link, indexed page and
+messenger unfurl that carries the name.
+
+So the asymmetry runs the other way from the intuition: the cheap moment to
+find out is now, while the rename is fresh, not after Phase 1 has spent months
+putting the name in front of people.
+
+### 10.2 Ukraine is first-to-file, which cuts both ways
+
+Ukraine grants rights to the **first to file**, not the first to use,
+regardless of who was trading first. Two consequences, and the second is the
+one that gets missed:
+
+- If Invito has filed in the relevant class, they hold priority and `Invinto`
+  is challengeable.
+- If **nobody** has filed, the register is open — including to us. Prior use by
+  Invito would not by itself beat a filing.
+
+This is why the search below is worth an hour even in the happy case: it is not
+only a check for danger, it is a check for an option.
+
+### 10.3 What to search, and where — free, no lawyer needed
+
+The Ukrainian register is public and searchable without login at
+**<https://sis.nipo.gov.ua/>** (the old `sis.ukrpatent.org` now redirects
+there; the office was renamed from Ukrpatent to UANIPIO in 2022). Cross-check
+against **WIPO Global Brand Database** and **EUIPO TMview**, which cover
+international registrations designating Ukraine — a mark can bind here without
+appearing in a purely national search.
+
+Search for `invito`, `invinto`, and `інвіто`/`інвінто`, filtered to the classes
+this product would sit in:
+
+| Nice class | Covers | Relevance |
+| --- | --- | --- |
+| **42** | software as a service, hosting | The core one — this is a SaaS |
+| **41** | organising events, entertainment | Likely, given the subject matter |
+| 35 | advertising, business administration | Only if the organizer tier (07-monetization §5.3) happens |
+
+Record what is found — registered marks *and* pending applications, since a
+pending application carries the priority date that matters.
+
+*This was not run from the development environment: the register is a
+JavaScript interface that does not answer to a plain fetch. It is perhaps an
+hour of manual work and it is the input every decision below depends on.*
+
+### 10.4 What each outcome means
+
+- **No Invito registration in 42 or 41** — exposure is low, the register is
+  open, and the name can be used freely while the question of filing waits for
+  Phase 2.
+- **Invito registered in 42** — the real case. Get an attorney's read before
+  the name goes anywhere expensive. A one-letter difference in an identical
+  class is where a challenge would actually land.
+- **Invito registered only in 41** — ambiguous, and exactly the situation where
+  an hour of professional advice replaces a week of speculation.
+
+### 10.5 What to do regardless of the outcome
+
+Free, useful in every branch, and worth doing now:
+
+- **Always present the name with the domain** — `invinto.app`, not a bare
+  "Invinto". The domain is unambiguous where the word alone is not, and it is
+  what a host would type anyway.
+- **Do not converge visually.** Confusion is judged on the whole impression,
+  not the spelling alone. Keep clear of Invito's colours, typography and
+  layout — the letterspaced `INVINTO` wordmark (§4.2) already reads distinctly,
+  and that is worth protecting rather than drifting from.
+- **Do not position against them by name.** §3.3 already argues the wedge is
+  the long tail rather than weddings; that keeps the products visibly different,
+  which is the same argument in trademark terms.
+
+### 10.6 Recommendation
+
+Run 10.3 now; adopt 10.5 permanently; defer any filing decision to Phase 2,
+when the product either has a future worth protecting or does not. Reserve
+changing the name for the case where 10.4's middle branch turns up *and* the
+project commercialises — cheapest today, dearest later, which is precisely why
+the search comes first.
+
+## 11. Sources
 
 Live product figures read 2026-08-03 from `https://invinto.app/api/metrics` and
 `/healthz`. Competitor scan, same date:
@@ -450,3 +561,10 @@ Live product figures read 2026-08-03 from `https://invinto.app/api/metrics` and
 - <https://www.greetingsisland.com/ai-invitation-generator>
 - <https://venngage.com/ai-tools/invitation-generator>
 - <https://invitfull.com/> · <https://rsvpify.com/online-invitations/>
+
+Trademark registers and procedure (§10), checked 2026-08-03:
+
+- <https://sis.nipo.gov.ua/> — Ukrainian register, public, no login
+  (`sis.ukrpatent.org` 301s here)
+- <https://branddb.wipo.int/> · <https://www.tmdn.org/tmview/>
+- <https://www.wipo.int/classifications/nice/> — Nice classes 41 / 42
