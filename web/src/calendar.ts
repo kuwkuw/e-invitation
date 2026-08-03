@@ -158,7 +158,7 @@ export function buildIcs(options: {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//INVINTO//e-invitation//EN",
+    "PRODID:-//HOSTYMO//e-invitation//EN",
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${new Date()

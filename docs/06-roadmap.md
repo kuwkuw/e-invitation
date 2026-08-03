@@ -199,7 +199,7 @@ What the ADR settled, and the implementation delivered:
 6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
    first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
    project — against the constraint `styles.css` already states in its own
-   words, *"INVINTO stays a whisper"*: the wordmark keeps its exact current
+   words, *"HOSTYMO stays a whisper"*: the wordmark keeps its exact current
    values and gains one underlined line beneath it, in the same muted grey as
    "change answer". Four louder treatments were drawn and rejected, three
    against rules already written down.
@@ -540,13 +540,17 @@ names — one of them a competitor's — and gates publishing behind Google
 sign-in, which is the loop the measurement is about. Its Phase 0 is a list of
 those blockers, and the share sheet above is one of them.
 
-Two are closed. Naming: everything is now **Invinto** / **INVINTO**, taking the
-spelling from the domain, which was a typo for the competitor's name and is
-therefore the one variant that is both already-paid-for and not theirs — with
-the trademark exposure that leaves worked through in §10 there. And `/i/:id`
-now carries `noindex`, so the share page keeps unfurling in messengers without
-putting guests' names and addresses into Google once links start being pasted
-in public.
+Two are closed. **Naming: the product is now Hostymo** (`гостимо`, "we host"),
+after a first attempt that adopted the domain's registration typo and had to be
+withdrawn the same day — `invinto.com` turned out to be a live UK SaaS, and
+`.ua` domains require a matching trademark, which makes the competitor's
+`invito.ua` strong evidence of a registered mark one letter away. The
+post-mortem is §4.2 there; its lesson is that domain availability is not
+trademark clearance. The domain stays `invinto.app` for now, so the name and
+the address disagree on purpose — §10.7 carries what that costs and what closes
+it. And `/i/:id` now carries `noindex`, so the share page keeps unfurling in
+messengers without putting guests' names and addresses into Google once links
+start being pasted in public.
 
 ## Candidate backlog
 

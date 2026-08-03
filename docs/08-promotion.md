@@ -150,43 +150,83 @@ The whole of `web/index.html` is nine lines of boilerplate. A search engine
 crawling this today indexes a correctly-titled blank page. Any plan involving
 search is dead on arrival until this is fixed, and it is a small fix.
 
-### 4.2 The name — resolved: **Invinto**
+### 4.2 The name — resolved: **Hostymo**
 
-**Settled 2026-08-03 and propagated; this section is kept as the rationale.**
+**Settled 2026-08-03 and propagated.** It took two attempts on the same day and
+the discarded one is instructive, so both are recorded.
 
-The product had been calling itself five things: `Invitation Studio`
-(`web/index.html` and the `UI.appTitle` string), `Запрошення` / `Zaproshennya`
-(the landing `LANDING.brand`), `Студія запрошень` (the Ukrainian `appTitle`),
-and `INVITO` (the guest, manage, crash and unsubscribe wordmarks, the email
-templates, and the `.ics` `PRODID`) — on the domain `invinto.app`. Nobody can
-recommend a product they cannot name.
+**Where it started.** The product was calling itself five things:
+`Invitation Studio` (`web/index.html` and the `UI.appTitle` string),
+`Запрошення` / `Zaproshennya` (the landing `LANDING.brand`), `Студія запрошень`
+(the Ukrainian `appTitle`), and `INVITO` (the guest, manage, crash and
+unsubscribe wordmarks, the email templates, the `.ics` `PRODID`) — on the
+domain `invinto.app`. Nobody can recommend a product they cannot name.
 
-The `INVITO` wordmark was the dangerous one. **Invito is an established
-competitor in exactly this niche and language** (§3.1, `invito.ua`, 1000+
-couples, ranking for the target keywords), so promoting "INVITO" in a Ukrainian
+`INVITO` was the dangerous one: **Invito is an established competitor in this
+exact niche and language** (§3.1, `invito.ua`), so promoting it in a Ukrainian
 wedding community would have sent the traffic to them.
 
-The resolution came from the domain. `invinto.app` was **a typo made at
-registration** — `invito` was intended — which turns out to be the luckiest
-accident available here: it is phonetically close enough to keep the wordmark's
-character, distinct enough not to be the competitor, and it is already the
-canonical host, already in the Google OAuth client, and already the verified
-sending domain (05-deployment.md). Every alternative would have cost a domain
-migration; this one cost a rename in the source.
+**The first answer, and why it did not survive.** The domain looked like the
+resolution: `invinto.app` was a **typo made at registration** — `invito` was
+intended — and adopting the typo as the name cost only a source rename where
+every alternative cost a domain migration. Two facts then arrived that the
+first pass had not checked, and either alone would have been enough:
 
-`Запрошення` was never a candidate — it is the generic Ukrainian noun for
-"invitation," unsearchable and untrademarkable.
+1. **`invinto.com` is a live business** — a UK invoicing and expense SaaS, with
+   `@invintoapp` on Twitter and `@Invinto` on Facebook. Searching the bare word
+   returns them, not us. So the name was never clean either; it merely traded a
+   same-market collision for a same-spelling one.
+2. **`.ua` second-level domains require a registered Ukrainian trademark**
+   matching the word exactly. `invito.ua` exists, so `INVITO` is very probably
+   a **registered mark** in this market — and `INVINTO` is one inserted letter
+   from it, phonetically near-identical, conceptually the same (both are the
+   Latin *invito*, "I invite"), for the same services. That is the exact
+   configuration a confusion test is built to catch.
 
-Two treatments, both now consistent, matching the existing visual system:
+The lesson worth keeping: **domain availability is not trademark clearance, and
+a name is not checked until it has been searched against live businesses and a
+register.** The first pass checked neither.
+
+**What Hostymo is.** `гостимо` — "we host", "we receive guests". Chosen
+against the criteria the first attempt lacked:
+
+- No `invit-` root, so nothing in it is near `Invito`.
+- **Not a generic noun.** `Запрошення` was never a candidate for this reason —
+  it is simply the Ukrainian word for "invitation", unsearchable and
+  unregistrable. `Hostymo` is *suggestive* (it is about receiving guests, not
+  about invitations), which is both brandable and a defensible position on the
+  register.
+- **Stable transliteration.** `гостимо` → `hostymo` is unambiguous under the
+  official standard (`г`→`h`, `и`→`y`). Candidates like `завітай` were dropped
+  for failing this — it transliterates officially to `zavitai` but phonetically
+  to `zavitay`, which is the two-names problem again in a new costume.
+- **Free everywhere checked** — `.app`, `.com`, `.net`, `.org` unregistered,
+  `.com.ua` unresolved, and no company found under the name. `prosymo` was the
+  strongest rival on meaning and was dropped because **Prosimo** is a funded US
+  networking company one letter away: the same pattern, again.
+- It contains *host*, which is this product's own word for its user throughout
+  the codebase and the docs.
+
+The known cost: to an English ear `Hostymo` suggests web hosting. That is real
+and it is cheap here, because §3.2 already concludes English search is not a
+channel this product should contest.
+
+Two treatments, matching the existing visual system rather than flattening it:
 
 | Treatment | Where | Value |
 | --- | --- | --- |
-| Letterspaced small-caps wordmark | guest CTA, guest-not-found, manage page, crash screen, unsubscribe page, email | `INVINTO` |
-| Title case | landing nav and footer, `appTitle`, page `<title>` | `Invinto` |
+| Letterspaced small-caps wordmark | guest CTA, guest-not-found, manage page, crash screen, unsubscribe page, email | `HOSTYMO` |
+| Title case | landing nav and footer, `appTitle`, page `<title>` | `Hostymo` |
 
-The name is kept in Latin script in both languages on purpose. Transliterating
-to `Інвінто` for the Ukrainian UI would recreate the two-names problem this
-section exists to close, and the host types the Latin domain either way.
+Latin script in both languages on purpose: transliterating to `Гостимо` for the
+Ukrainian UI would reopen the two-names problem this section exists to close.
+
+**The name and the domain do not match, deliberately and temporarily.** The
+product is Hostymo; it is served from `invinto.app`. Renaming the source was
+about an hour; moving the domain means DNS, the Northflank binding, the Google
+OAuth redirect URI, and re-verifying the Resend sending domain — which restarts
+the warm-up that adr-015 §7 made reply mail opt-in over. §10.7 carries what
+this costs while it lasts and what closes it.
 
 ### 4.3 The publish gate is on in production
 
@@ -365,9 +405,10 @@ growth channel. Use it as a measurement instrument, then stop.
 
 Nothing here is a marketing task; all of it gates marketing. In the §5 order:
 
-1. ~~**Settle the name**~~ — **done** (§4.2): `Invinto` / `INVINTO`,
+1. ~~**Settle the name**~~ — **done** (§4.2): `Hostymo` / `HOSTYMO`,
    propagated across `web/index.html`, `i18n.ts`, the four UI wordmarks,
    `unsubscribePage.ts`, the email strings, the `.ics` `PRODID`, and the docs.
+   Still open behind it: the register search (§10.3) and the domain (§10.7).
 2. **`noindex` on `/i/:id`** (§4.4). One meta tag. Must precede any traffic.
 3. **SEO surface** (§4.1): real bilingual title and description, `lang`
    matching the UI language, landing OG tags, favicon, a `web/public/` with a
@@ -440,8 +481,9 @@ hobby:
 
 ## 9. Open questions
 
-1. ~~**What is the product called?**~~ — answered: Invinto (§4.2). What remains
-   is the trademark exposure against `invito.ua`, worked through in §10.
+1. ~~**What is the product called?**~~ — answered: Hostymo (§4.2). What remains
+   is the register search that neither name has had (§10.3) and the domain it
+   is served from (§10.7).
 2. Does the Ukrainian long tail (§3.3) actually search for a self-serve tool,
    or does it never occur to them that one exists? A market that does not know
    the category needs demonstration (§6.3), not SEO (§6.2) — and that changes
@@ -453,28 +495,30 @@ hobby:
    stopping rule before the number starts moving, so it is not decided by
    whichever reading is most encouraging.
 
-## 10. The name against `invito.ua`
+## 10. Trademark position
 
 Not legal advice, and nothing here substitutes for a Ukrainian IP attorney at
 the point of filing. It is the fact-finding that decides whether an attorney is
 needed at all.
 
-### 10.1 The exposure is real but the direction of the risk is not obvious
+### 10.1 What the rename did and did not settle
 
-`INVINTO` and `INVITO` differ by one letter, in the same language, the same
-market, and the same service category. That is the configuration a
-likelihood-of-confusion test is built to catch, so the similarity should not be
-talked down.
+Choosing `Hostymo` (§4.2) closed the two collisions the earlier names carried —
+`Invito`, a competitor in this exact market, and `Invinto`, a live UK invoicing
+SaaS that owns the word in search. Neither is adjacent to `Hostymo` in
+spelling, sound, or meaning.
 
-What *is* worth talking down is the fear of being sued. Enforcement follows
-commercial harm, and at twelve published events and no revenue there is none.
-The realistic risk is not a lawsuit — it is **building a brand and then having
-to abandon it**, and that cost grows with every share link, indexed page and
-messenger unfurl that carries the name.
+It does not follow that the name is clear. **Nothing has been searched against
+a register yet** — only against domains and live businesses, which is what
+§4.2's post-mortem says is insufficient. `Hostymo` is a better-founded guess
+than `Invinto` was, and it is still a guess. §10.3 is what turns it into a fact.
 
-So the asymmetry runs the other way from the intuition: the cheap moment to
-find out is now, while the rename is fresh, not after Phase 1 has spent months
-putting the name in front of people.
+What *is* worth talking down, whatever the register says, is the fear of being
+sued. Enforcement follows commercial harm, and at twelve published events with
+no revenue there is none. The realistic risk is **building a brand and then
+having to abandon it** — a cost that grows with every share link, indexed page
+and messenger unfurl. That is the asymmetry that made renaming twice in one day
+cheap and renaming after Phase 1 expensive.
 
 ### 10.2 Ukraine is first-to-file, which cuts both ways
 
@@ -482,13 +526,27 @@ Ukraine grants rights to the **first to file**, not the first to use,
 regardless of who was trading first. Two consequences, and the second is the
 one that gets missed:
 
-- If Invito has filed in the relevant class, they hold priority and `Invinto`
-  is challengeable.
-- If **nobody** has filed, the register is open — including to us. Prior use by
-  Invito would not by itself beat a filing.
+- A registered mark that is confusingly similar to ours holds priority over our
+  use, however long we have been using it.
+- If **nobody** has filed, the register is open — including to us.
 
-This is why the search below is worth an hour even in the happy case: it is not
-only a check for danger, it is a check for an option.
+There is a concrete instance of the first half already on the record. **`.ua`
+second-level domains require a registered Ukrainian trademark matching the
+domain word**, so `invito.ua` is strong evidence that `INVITO` is registered
+here. That is what disqualified `Invinto`, and it is a live demonstration that
+a competitor in this market does use the register.
+
+It also sets a marker for later: a `.ua` domain is not purchasable without a
+mark, so `hostymo.ua` is only reachable on the far side of a registration.
+`hostymo.com.ua` needs no trademark and was unregistered when checked.
+
+### 10.2b Why the register search is the same hour it always was
+
+`Hostymo` was checked against every major TLD and searched for live companies;
+all clear. That is the check the first attempt skipped, and it is still only
+half of one. Domain availability tells you nobody took the address. It tells
+you nothing about a mark registered by someone who never wanted the domain,
+which is the case that actually bites.
 
 ### 10.3 What to search, and where — free, no lawyer needed
 
@@ -499,8 +557,9 @@ against **WIPO Global Brand Database** and **EUIPO TMview**, which cover
 international registrations designating Ukraine — a mark can bind here without
 appearing in a purely national search.
 
-Search for `invito`, `invinto`, and `інвіто`/`інвінто`, filtered to the classes
-this product would sit in:
+Search for `hostymo` and `гостимо`, plus the near neighbours an examiner would
+pull in — `hostym`, `hosty`, `гостим` — filtered to the classes this product
+would sit in:
 
 | Nice class | Covers | Relevance |
 | --- | --- | --- |
@@ -513,41 +572,73 @@ pending application carries the priority date that matters.
 
 *This was not run from the development environment: the register is a
 JavaScript interface that does not answer to a plain fetch. It is perhaps an
-hour of manual work and it is the input every decision below depends on.*
+hour of manual work and it is the input every decision below depends on.* If
+the interface is the obstacle, Ukrainian IP firms advertise preliminary
+searches free or cheap as lead generation — one email buys an authoritative
+answer from someone qualified to give it.
 
 ### 10.4 What each outcome means
 
-- **No Invito registration in 42 or 41** — exposure is low, the register is
-  open, and the name can be used freely while the question of filing waits for
-  Phase 2.
-- **Invito registered in 42** — the real case. Get an attorney's read before
-  the name goes anywhere expensive. A one-letter difference in an identical
-  class is where a challenge would actually land.
-- **Invito registered only in 41** — ambiguous, and exactly the situation where
-  an hour of professional advice replaces a week of speculation.
+- **Nothing similar in 42 or 41** — the expected case on the evidence so far.
+  Exposure is low, the register is open, and filing waits for Phase 2.
+- **Something similar registered in 42** — get an attorney's read before the
+  name goes anywhere expensive. This is the branch that ended `Invinto`, and it
+  is why the search happens before Phase 1 rather than after.
+- **Something similar only in 41** — ambiguous, and exactly where an hour of
+  professional advice replaces a week of speculation.
+
+One point to raise with whoever runs it: class 42 covers **hosting services**
+by name, and `Hostymo` reads as *host* to an English speaker. In Ukrainian
+`гостимо` is about receiving guests and is suggestive rather than descriptive,
+which is the assessment that matters for a Ukrainian filing. It could land
+differently in an English-reading jurisdiction, so it is worth asking about
+before any international filing — not before a domestic one.
 
 ### 10.5 What to do regardless of the outcome
 
 Free, useful in every branch, and worth doing now:
 
-- **Always present the name with the domain** — `invinto.app`, not a bare
-  "Invinto". The domain is unambiguous where the word alone is not, and it is
-  what a host would type anyway.
-- **Do not converge visually.** Confusion is judged on the whole impression,
-  not the spelling alone. Keep clear of Invito's colours, typography and
-  layout — the letterspaced `INVINTO` wordmark (§4.2) already reads distinctly,
-  and that is worth protecting rather than drifting from.
+- **Do not converge visually** with Invito. Confusion is judged on the whole
+  impression, not the spelling — and having moved the name well clear, the
+  colours, typography and layout should stay clear too.
 - **Do not position against them by name.** §3.3 already argues the wedge is
   the long tail rather than weddings; that keeps the products visibly different,
   which is the same argument in trademark terms.
+- **Claim the handles now**, while the name is new and unused. `@invintoapp`
+  was already gone when the previous name was checked, which is the cheapest
+  possible reminder that social identities go before anyone thinks to want them.
 
 ### 10.6 Recommendation
 
 Run 10.3 now; adopt 10.5 permanently; defer any filing decision to Phase 2,
-when the product either has a future worth protecting or does not. Reserve
-changing the name for the case where 10.4's middle branch turns up *and* the
-project commercialises — cheapest today, dearest later, which is precisely why
-the search comes first.
+when the product either has a future worth protecting or does not.
+
+### 10.7 The name/domain gap, and what closes it
+
+Hostymo is served from `invinto.app`, deliberately (§4.2). Three costs while
+that holds, none fatal and all growing:
+
+1. **Word-of-mouth loses its address.** "Always present the name with the
+   domain" was the standing advice here, and it does not survive a brand and a
+   domain that share no letters. Until they agree, marketing copy has to spell
+   out both — "Hostymo, at invinto.app" — which is exactly the friction the
+   one-name decision was meant to end.
+2. **The domain keeps a collision the name shed.** `invinto.com` is a live UK
+   invoicing SaaS (§4.2), so the *address* still sits one TLD from another
+   company even though the name no longer does.
+3. **Email says one thing and links to another.** Reply notifications sign off
+   as `HOSTYMO` from `replies@invinto.app`. Mismatched sender identity is a
+   deliverability liability on an unwarmed domain, which is the exact fragility
+   adr-015 §7 made reply mail opt-in over.
+
+**`hostymo.app`, `hostymo.com` and `hostymo.com.ua` were all unregistered when
+checked (2026-08-03).** Registering them is roughly $15 a year and is not the
+migration — it only stops the name being taken while the decision waits. The
+migration itself is DNS, the Northflank binding, `CANONICAL_HOST`, the Google
+OAuth redirect URI, and re-verifying the Resend sending domain; old links keep
+working through the existing canonical-host redirect. Half a day, and it should
+happen **before Phase 1 puts the address in front of anyone** — after that,
+every posted link, indexed page and video caption carries the wrong host.
 
 ## 11. Sources
 

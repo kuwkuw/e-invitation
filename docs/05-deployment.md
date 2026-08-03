@@ -215,7 +215,7 @@ lands in spam, silently, for everyone.
      rejected while the other two settle, and tighten to `p=quarantine` once
      the reports are clean.
 3. **Runtime env**: `RESEND_API_KEY`, and `NOTIFY_FROM` on the verified domain
-   (e.g. `INVINTO <replies@invinto.app>`). Optionally
+   (e.g. `HOSTYMO <replies@invinto.app>`). Optionally
    `NOTIFY_WINDOW_MINUTES` — default 60, `0` means notify on every reply.
 4. **Notifications also need sign-in configured.** The address is the
    Google-verified one from adr-014; with no OAuth client there are no

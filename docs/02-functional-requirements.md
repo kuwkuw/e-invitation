@@ -93,7 +93,7 @@ implementation.
   ([adr-011](decisions/adr-011-client-router.md) §3).
 - FR-4.7 The guest page carries exactly one link back to the product
   ([GuestCta.tsx](../web/src/components/guest/GuestCta.tsx),
-  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVINTO
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the HOSTYMO
   wordmark plus one muted line, below the reply card, in the guest's chrome
   language (FR-6.3), present in both the form and post-RSVP states. It links to
   `/create?ref=guest` and never becomes a modal, a card, or an accent-coloured

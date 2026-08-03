@@ -7,7 +7,7 @@ import type { GuestStrings } from "../../i18n";
  * the economics can afford.
  *
  * The wordmark keeps the exact values it had as a static `gr-brand`. The DS
- * guest-rsvp template states the intent this has to respect — "INVINTO stays a
+ * guest-rsvp template states the intent this has to respect — "HOSTYMO stays a
  * whisper" — so the action is one muted line beneath it, in the same treatment
  * as `gr-change` elsewhere on the page. Nothing on the page gets louder; one
  * thing becomes legible as an action.
@@ -23,9 +23,9 @@ export function GuestCta({ t }: { t: GuestStrings }) {
   return (
     <Link className="gr-cta" to="/create?ref=guest">
       {/* Hidden from the accessible name so the link reads as its action —
-          "create your own invitation", not "INVINTO create your own …". */}
+          "create your own invitation", not "HOSTYMO create your own …". */}
       <span className="gr-cta-mark" aria-hidden="true">
-        INVINTO
+        HOSTYMO
       </span>
       <span className="gr-cta-line">{t.ctaLine}</span>
     </Link>
