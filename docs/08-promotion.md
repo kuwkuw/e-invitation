@@ -408,7 +408,8 @@ Nothing here is a marketing task; all of it gates marketing. In the §5 order:
 1. ~~**Settle the name**~~ — **done** (§4.2): `Hostymo` / `HOSTYMO`,
    propagated across `web/index.html`, `i18n.ts`, the four UI wordmarks,
    `unsubscribePage.ts`, the email strings, the `.ics` `PRODID`, and the docs.
-   Still open behind it: the register search (§10.3) and the domain (§10.7).
+   Register search run and clear (§10.3). Still open behind it: the domain,
+   which should move before this phase ends (§10.7).
 2. **`noindex` on `/i/:id`** (§4.4). One meta tag. Must precede any traffic.
 3. **SEO surface** (§4.1): real bilingual title and description, `lang`
    matching the UI language, landing OG tags, favicon, a `web/public/` with a
@@ -481,9 +482,9 @@ hobby:
 
 ## 9. Open questions
 
-1. ~~**What is the product called?**~~ — answered: Hostymo (§4.2). What remains
-   is the register search that neither name has had (§10.3) and the domain it
-   is served from (§10.7).
+1. ~~**What is the product called?**~~ — answered: Hostymo (§4.2), and the
+   register search came back clear (§10.3). What remains is not the name but
+   the address it is served from (§10.7).
 2. Does the Ukrainian long tail (§3.3) actually search for a self-serve tool,
    or does it never occur to them that one exists? A market that does not know
    the category needs demonstration (§6.3), not SEO (§6.2) — and that changes
@@ -508,10 +509,11 @@ Choosing `Hostymo` (§4.2) closed the two collisions the earlier names carried �
 SaaS that owns the word in search. Neither is adjacent to `Hostymo` in
 spelling, sound, or meaning.
 
-It does not follow that the name is clear. **Nothing has been searched against
-a register yet** — only against domains and live businesses, which is what
-§4.2's post-mortem says is insufficient. `Hostymo` is a better-founded guess
-than `Invinto` was, and it is still a guess. §10.3 is what turns it into a fact.
+**The register search has now been run, and returned nothing** (§10.3). With
+the domain and live-business checks that preceded it, `Hostymo` is the first
+name this product has had that was cleared before it was adopted rather than
+after. That is as far as evidence takes it without a lawyer, and it is far
+enough to build on.
 
 What *is* worth talking down, whatever the register says, is the fear of being
 sued. Enforcement follows commercial harm, and at twelve published events with
@@ -540,26 +542,39 @@ It also sets a marker for later: a `.ua` domain is not purchasable without a
 mark, so `hostymo.ua` is only reachable on the far side of a registration.
 `hostymo.com.ua` needs no trademark and was unregistered when checked.
 
-### 10.2b Why the register search is the same hour it always was
+The open register is the half of first-to-file that is easy to forget now that
+the danger half has cleared: nothing found means nothing blocks a filing
+either, and priority would run from the day one is made rather than from any
+amount of use. That does not make filing urgent — §10.6 still defers it — but
+it is the reason deferring is a choice rather than a default.
 
-`Hostymo` was checked against every major TLD and searched for live companies;
-all clear. That is the check the first attempt skipped, and it is still only
-half of one. Domain availability tells you nobody took the address. It tells
-you nothing about a mark registered by someone who never wanted the domain,
-which is the case that actually bites.
+### 10.3 The search — run 2026-08-03, no hits
 
-### 10.3 What to search, and where — free, no lawyer needed
+Searched on the Ukrainian national register, public and without login at
+**<https://sis.nipo.gov.ua/>** (the old `sis.ukrpatent.org` redirects there;
+the office was renamed from Ukrpatent to UANIPIO in 2022).
 
-The Ukrainian register is public and searchable without login at
-**<https://sis.nipo.gov.ua/>** (the old `sis.ukrpatent.org` now redirects
-there; the office was renamed from Ukrpatent to UANIPIO in 2022). Cross-check
-against **WIPO Global Brand Database** and **EUIPO TMview**, which cover
-international registrations designating Ukraine — a mark can bind here without
-appearing in a purely national search.
+**Result: nothing returned for `Hostymo`.** No registered mark, no pending
+application.
 
-Search for `hostymo` and `гостимо`, plus the near neighbours an examiner would
-pull in — `hostym`, `hosty`, `гостим` — filtered to the classes this product
-would sit in:
+Taken with the domain and live-business checks in §4.2, that is a clear-enough
+result to proceed on. Three things it does not cover, recorded so nobody later
+mistakes it for a professional clearance:
+
+1. **Cyrillic.** A Ukrainian mark for a Ukrainian word is at least as likely to
+   be filed as `ГОСТИМО` as `HOSTYMO`. If only the Latin form was searched, the
+   Cyrillic one is a five-minute repeat and the single most likely gap.
+2. **Similar rather than identical marks.** A keyword search finds the string
+   it is given. An examiner compares *confusingly similar* signs — which is how
+   `INVITO` would have caught `INVINTO`, and why the null result means "nothing
+   identical" rather than "nothing conflicting."
+3. **International registrations designating Ukraine**, which is what **WIPO
+   Global Brand Database** and **EUIPO TMview** cover. Neither was reachable
+   from the development environment (TMview's API resets the connection), so
+   this remains unchecked. It is the smallest of the three gaps and the least
+   likely to matter for a word of Ukrainian origin.
+
+Classes that would be searched, for whenever this is repeated properly:
 
 | Nice class | Covers | Relevance |
 | --- | --- | --- |
@@ -567,32 +582,28 @@ would sit in:
 | **41** | organising events, entertainment | Likely, given the subject matter |
 | 35 | advertising, business administration | Only if the organizer tier (07-monetization §5.3) happens |
 
-Record what is found — registered marks *and* pending applications, since a
-pending application carries the priority date that matters.
+If any of it is ever worth doing properly, Ukrainian IP firms advertise
+preliminary searches free or cheap as lead generation — one email buys an
+authoritative answer from someone qualified to give it, covering all three gaps
+at once. Worth spending only when there is something to protect, i.e. Phase 2.
 
-*This was not run from the development environment: the register is a
-JavaScript interface that does not answer to a plain fetch. It is perhaps an
-hour of manual work and it is the input every decision below depends on.* If
-the interface is the obstacle, Ukrainian IP firms advertise preliminary
-searches free or cheap as lead generation — one email buys an authoritative
-answer from someone qualified to give it.
+### 10.4 What the result means
 
-### 10.4 What each outcome means
+The null result puts us in the first of the three branches this section
+previously held open:
 
-- **Nothing similar in 42 or 41** — the expected case on the evidence so far.
-  Exposure is low, the register is open, and filing waits for Phase 2.
-- **Something similar registered in 42** — get an attorney's read before the
-  name goes anywhere expensive. This is the branch that ended `Invinto`, and it
-  is why the search happens before Phase 1 rather than after.
-- **Something similar only in 41** — ambiguous, and exactly where an hour of
-  professional advice replaces a week of speculation.
+- **Nothing similar in 42 or 41** — **this is where we landed.** Exposure is
+  low, the register is open, and the filing question defers to Phase 2.
+- ~~Something similar registered in 42~~ — the branch that ended `Invinto`, and
+  the reason the search now happens before a name is adopted rather than after.
+- ~~Something similar only in 41~~ — did not arise.
 
-One point to raise with whoever runs it: class 42 covers **hosting services**
-by name, and `Hostymo` reads as *host* to an English speaker. In Ukrainian
-`гостимо` is about receiving guests and is suggestive rather than descriptive,
-which is the assessment that matters for a Ukrainian filing. It could land
-differently in an English-reading jurisdiction, so it is worth asking about
-before any international filing — not before a domestic one.
+One point to raise with an attorney if there is ever an international filing —
+not a Ukrainian one: class 42 covers **hosting services** by name, and
+`Hostymo` reads as *host* to an English speaker. In Ukrainian `гостимо` is
+about receiving guests and is suggestive rather than descriptive, which is the
+assessment that governs a domestic filing. It could land differently in an
+English-reading jurisdiction.
 
 ### 10.5 What to do regardless of the outcome
 
@@ -610,8 +621,13 @@ Free, useful in every branch, and worth doing now:
 
 ### 10.6 Recommendation
 
-Run 10.3 now; adopt 10.5 permanently; defer any filing decision to Phase 2,
-when the product either has a future worth protecting or does not.
+~~Run 10.3~~ — done, no hits. Adopt 10.5 permanently. Defer any filing to
+Phase 2, when the product either has a future worth protecting or does not:
+first-to-file means a filing made later still takes priority from its own date,
+and there is nothing on the register racing us for this word.
+
+**The name is settled and the trademark question is closed until Phase 2.**
+What remains under this heading is not the name but the address — §10.7.
 
 ### 10.7 The name/domain gap, and what closes it
 

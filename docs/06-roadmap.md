@@ -546,9 +546,11 @@ withdrawn the same day — `invinto.com` turned out to be a live UK SaaS, and
 `.ua` domains require a matching trademark, which makes the competitor's
 `invito.ua` strong evidence of a registered mark one letter away. The
 post-mortem is §4.2 there; its lesson is that domain availability is not
-trademark clearance. The domain stays `invinto.app` for now, so the name and
-the address disagree on purpose — §10.7 carries what that costs and what closes
-it. And `/i/:id` now carries `noindex`, so the share page keeps unfurling in
+trademark clearance. Hostymo got the check neither predecessor did — the
+Ukrainian register, searched 2026-08-03, returned nothing — so the name is
+settled. The domain stays `invinto.app` for now, so the name and the address
+disagree on purpose; §10.7 carries what that costs and what closes it, and it
+should close before Phase 1 rather than after. And `/i/:id` now carries `noindex`, so the share page keeps unfurling in
 messengers without putting guests' names and addresses into Google once links
 start being pasted in public.
 
