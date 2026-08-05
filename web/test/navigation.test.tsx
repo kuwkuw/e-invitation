@@ -61,7 +61,7 @@ describe("navigation", () => {
     expect(share?.getAttribute("aria-label")).toBe(UI.uk.chat.share);
   });
 
-  it("opens an invitations row in the manage view", () => {
+  it("opens an invitations row in the manage view", async () => {
     recordHostInvitation({
       id: "abc123",
       title: "Подія",
@@ -70,7 +70,12 @@ describe("navigation", () => {
     });
     renderAt("/");
 
-    fireEvent.click(document.querySelector("a.lp-yours-row")!);
+    // The list is the view of whichever store owns the identity, so it waits
+    // for the session to say whether accounts exist at all. There is no fetch
+    // here, so that resolves to "no accounts" and the browser's list is the
+    // right one — but it can no longer render synchronously.
+    const row = await screen.findByText("Подія", { selector: ".lp-yours-title" });
+    fireEvent.click(row.closest("a.lp-yours-row")!);
 
     // This browser holds no token for it, so the manage view asks for the
     // manage link — reaching that state is what proves the row routed.

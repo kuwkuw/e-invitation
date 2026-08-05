@@ -3,6 +3,7 @@ import type {
   AccountDeletion,
   AuthSession,
   BackgroundRef,
+  ClaimResponse,
   CopyField,
   CountsRequestItem,
   CountsResponse,
@@ -173,6 +174,25 @@ export async function fetchKeyring(): Promise<KeyringEntry[]> {
 
 export async function signOut(): Promise<void> {
   await withSession<void>("/api/auth/signout", { method: "POST" });
+}
+
+/** How many invitations one claim request may carry, mirroring the server
+ *  schema's cap. Over it is a 400 that would cost the host every item in the
+ *  batch, so callers slice — and slicing loses nothing permanently: what is
+ *  claimed now is in the keyring next time, so the remainder moves up and the
+ *  next sign-in takes it. */
+export const CLAIM_LIMIT = 50;
+
+/** File the invitations this browser holds tokens for into the account's
+ *  keyring (adr-014 §5) — the step that makes a host's pre-account events
+ *  follow them to the next device. The session says whose keyring; each
+ *  token says the invitation is the caller's to file. */
+export function claimInvitations(items: { id: string; token: string }[]): Promise<ClaimResponse> {
+  return withSession<ClaimResponse>("/api/account/claim", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
 }
 
 /** Reply notifications for this account (adr-015 §7) — one switch covering

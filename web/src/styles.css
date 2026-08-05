@@ -1029,8 +1029,14 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
    for. Matches .lp-account-out, the other muted account control. */
-.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: #6b6659; text-decoration: none; padding: 2px 4px; }
+.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: #6b6659; text-decoration: none; padding: 2px 4px; white-space: nowrap; }
 .lp-nav-signin:hover { color: #23211d; text-decoration: underline; }
+/* The count rides the same colour, weight and size — it must not read as a
+   notification badge, which would promise unread things there are none of.
+   #6b6659 on white is 5.72:1; the quieter #8f887a would be 3.52:1 and fail AA,
+   and this line is now the host's only route to their own events. `nowrap`
+   above is what keeps the number from wrapping away from its label. */
+.lp-brand-mono { display: none; }
 
 .lp-hero {
   padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);
@@ -1121,6 +1127,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 @media (max-width: 800px) {
   .lp-nav .lp-cta { display: none; } /* mobile uses the sticky bottom bar instead */
+  /* And *only* .lp-cta. Hiding .lp-nav-signin here would remove the door in
+     exactly the case it exists for — a returning host on a new phone. */
+  /* With the count present the bar needs the room, so the wordmark gives up
+     size: it is the one element in the nav that does nothing — it leads
+     nowhere (we are on the landing page) and is not a control. Triggered by
+     the count rather than by width, because that is what consumes the space. */
+  .lp-nav-counted .lp-brand { font-size: 1.02rem; }
   .lp-steps-grid { grid-template-columns: 1fr; gap: 22px; }
   .lp-step { display: flex; gap: 16px; text-align: left; align-items: flex-start; }
   .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }
@@ -1137,6 +1150,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
     justify-content: center;
   }
   .lp-sticky-cta .lp-cta { width: 100%; max-width: 320px; padding: 13px 0; }
+}
+
+/* Below 370 the size concession is not enough — brand, count and the language
+   switcher still overflow — so the wordmark gives up its letters and becomes
+   its own first initial. Same reasoning, one step further: it is still the
+   only element in the bar that does nothing, and the count is now load-bearing.
+   Only when there is a count; without one the wordmark has the room. */
+@media (max-width: 370px) {
+  .lp-nav-counted .lp-brand-full { display: none; }
+  .lp-nav-counted .lp-brand-mono { display: inline; }
 }
 
 /* Host manage dashboard --------------------------------------------------- */
@@ -1591,6 +1614,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    catastrophe" at a host whose invitations are all about to survive. */
 .da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #a83f3f; cursor: pointer; padding: 4px 8px; }
 .da-confirm:hover { color: #8f3535; }
+/* Sign-out's confirm: the delete sheet's shape, never its colour. Red belongs
+   to account deletion alone or it stops meaning anything, so this stays the
+   same quiet #6b6659 the control in the card footer already is. */
+.so-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 4px 8px; }
+.so-confirm:hover { color: #23211d; }
 /* Quieter than sign-out, which is quieter than everything else on the card. */
 .lp-delete-account { margin: 10px 2px 0; }
 .lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: #a29a8b; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }

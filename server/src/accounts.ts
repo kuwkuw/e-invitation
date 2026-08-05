@@ -123,16 +123,26 @@ export function pruneExpiredSessions(): number {
   return Number(result.changes);
 }
 
-/** Record that this account published this invitation. Idempotent: a host
- *  republishing, or signing in again on a device that already linked it, must
- *  not accumulate rows or move the original link date. */
-export function linkInvitation(userId: string, invitationId: string): void {
-  getDb()
+/** Record that this account published — or claimed — this invitation.
+ *  Idempotent: a host republishing, or signing in again on a device that
+ *  already linked it, must not accumulate rows or move the original link date.
+ *
+ *  Returns whether a row was actually inserted. Callers that publish ignore it;
+ *  the claim route reports the count, because "3 invitations are now in your
+ *  account" is only true the first time and must not be said on every sign-in.
+ *
+ *  Linking is **not exclusive** and deliberately so: two browsers holding the
+ *  same manage token are two people the product cannot tell apart, and the
+ *  token keeps working for both either way (adr-014 §1). A keyring is a
+ *  convenience index over invitations, never a claim of sole ownership. */
+export function linkInvitation(userId: string, invitationId: string): boolean {
+  const result = getDb()
     .prepare(
       "INSERT INTO keyring (user_id, invitation_id, created_at) VALUES (?, ?, ?)" +
         " ON CONFLICT (user_id, invitation_id) DO NOTHING",
     )
     .run(userId, invitationId, nowIso());
+  return Number(result.changes) > 0;
 }
 
 /** Newest first — the returning-host list (FR-5.6) leads with what was just

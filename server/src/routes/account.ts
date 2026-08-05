@@ -7,11 +7,16 @@
 // paths it already had.
 
 import type { FastifyInstance } from "fastify";
-import { deleteUser, listKeyring } from "../accounts.js";
+import { deleteUser, linkInvitation, listKeyring } from "../accounts.js";
 import { clearSessionCookie, currentUser, originAllowed } from "../auth/session.js";
 import { getPref, setNotificationsEnabled } from "../notifications.js";
-import { type KeyringEntry, NotificationPrefRequest } from "../schemas.js";
-import { getRecord } from "../store.js";
+import {
+  ClaimRequest,
+  type ClaimResult,
+  type KeyringEntry,
+  NotificationPrefRequest,
+} from "../schemas.js";
+import { getRecord, tokenMatches } from "../store.js";
 
 export function registerAccountRoutes(app: FastifyInstance): void {
   app.get("/api/account/keyring", async (request, reply) => {
@@ -43,6 +48,47 @@ export function registerAccountRoutes(app: FastifyInstance): void {
       });
     }
     return { invitations };
+  });
+
+  // File the invitations this browser can prove it holds into the account's
+  // keyring — the step that makes signing in on a new device show the events a
+  // host published before they ever had an account.
+  //
+  // Without it the landing list is permanently two-class: rows the account
+  // knows, and rows only this browser knows, with no way for the second to
+  // ever become the first. The manage token is what settles that, and it is
+  // not a new authority — it is the same proof `/manage/:id` has always run
+  // on, checked here the same constant-time way (adr-014 §1).
+  //
+  // Per-item, like the batch counts (adr-012 §2): a stale token blanks its own
+  // row and no other, because a browser that has held tokens for a year will
+  // have some that no longer resolve, and one of them must not cost the host
+  // the rest of their events.
+  app.post("/api/account/claim", async (request, reply) => {
+    if (!originAllowed(request)) return reply.code(403).send({ error: "Cross-origin request." });
+    const user = currentUser(request);
+    if (!user) return reply.code(401).send({ error: "Sign in to continue." });
+
+    let body: ClaimRequest;
+    try {
+      body = ClaimRequest.parse(request.body);
+    } catch {
+      return reply.code(400).send({ error: "Expected { items: [{ id, token }] }." });
+    }
+
+    // The request body is a batch of credentials, exactly like the keyring
+    // response is (adr-012 §1) — nothing in between should retain it.
+    reply.header("Cache-Control", "no-store");
+
+    let linked = 0;
+    const results: ClaimResult[] = body.items.map((item) => {
+      const record = getRecord(item.id);
+      if (!record) return { id: item.id, status: "not_found" };
+      if (!tokenMatches(record, item.token)) return { id: item.id, status: "forbidden" };
+      if (linkInvitation(user.id, item.id)) linked += 1;
+      return { id: item.id, status: "ok" };
+    });
+    return { results, linked };
   });
 
   // adr-014 §9. Deleting an account removes the user, their sessions and their

@@ -56,9 +56,12 @@ describe("YourInvitations", () => {
     expect(container.querySelector("a.lp-yours-row")?.getAttribute("href")).toBe("/manage/id0");
   });
 
-  it("says the list is local rather than implying an account", () => {
-    render(<YourInvitations invitations={make(2)} t={t} />, { wrapper });
-    expect(screen.getByText("2 на цьому пристрої")).toBeTruthy();
+  // The list only renders without an account where accounts cannot exist
+  // (adr-014 §7), and there "on this device" contrasts with nothing — it would
+  // be noise about the only possible state (DS `LandingListIsAccount`).
+  it("carries no subtitle when the list is not the account's", () => {
+    const { container } = render(<YourInvitations invitations={make(2)} t={t} />, { wrapper });
+    expect(container.querySelector(".lp-yours-sub")).toBeNull();
   });
 
   it("renders every row fully before any counts arrive, with a sized slot", () => {

@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccountFooter } from "../src/components/AccountFooter";
 import { DeleteAccountSheet } from "../src/components/DeleteAccountSheet";
+import { SignOutSheet } from "../src/components/SignOutSheet";
 import { YourInvitations } from "../src/components/YourInvitations";
 import type { HostInvitation } from "../src/hostInvitations";
 import { AUTH, LANDING } from "../src/i18n";
@@ -76,8 +77,9 @@ describe("returning-host list", () => {
     expect(screen.getByText("olena@example.com")).toBeTruthy();
     expect(screen.getByText(auth.signOut)).toBeTruthy();
     expect(screen.getByText(auth.crossDevice)).toBeTruthy();
-    // The subtitle stops saying "on this device", because it no longer is.
-    expect(screen.queryByText(t.yoursCountOnThisDevice.replace("{n}", "2"))).toBeNull();
+    // The subtitle counts the account's invitations; the device it is being
+    // read on stopped being something the card talks about.
+    expect(screen.getByText(auth.invitationCount.replace("{n}", "2"))).toBeTruthy();
   });
 
   // The card has to survive an empty list, or a signed-in host with nothing
@@ -250,5 +252,74 @@ describe("AccountFooter reply notifications", () => {
     expect(container.querySelector(".lp-account-mail p")?.textContent).toBe(
       "Ми напишемо вам, коли надійдуть відповіді.",
     );
+  });
+});
+
+/**
+ * Sign-out confirmation (DS `LandingListIsAccount`, case 2).
+ *
+ * Sign-out could be immediate while the list was the browser's. Now it is the
+ * account's view, so signing out takes the list off the page while leaving
+ * every manage token in place — access unchanged, visibility gone. That is the
+ * most counter-intuitive event in the product, and the sheet exists to say so
+ * before it happens rather than after.
+ */
+describe("sign-out confirmation", () => {
+  function renderSheet(props: Partial<Parameters<typeof SignOutSheet>[0]> = {}) {
+    return render(
+      <SignOutSheet
+        invitationCount={3}
+        onCopyAllLinks={() => {}}
+        onConfirm={() => {}}
+        onCancel={() => {}}
+        t={auth}
+        {...props}
+      />,
+    );
+  }
+
+  it("says what stays and what goes, in that order", () => {
+    renderSheet();
+    expect(screen.getByText(auth.signOutKeepCount.replace("{n}", "3"))).toBeTruthy();
+    expect(screen.getByText(auth.signOutOnlyList.replace("{n}", "3"))).toBeTruthy();
+  });
+
+  // Nobody signing out fears losing data — the account survives — so the
+  // deletion sheet's third reassurance is deliberately absent here.
+  it("answers only the fears that actually arise", () => {
+    const { container } = renderSheet();
+    expect(container.querySelectorAll(".da-keep-list li")).toHaveLength(2);
+    expect(screen.queryByText(auth.deleteKeepReplies.replace("{n}", "0"))).toBeNull();
+  });
+
+  // Red belongs to account deletion alone, or it stops meaning anything.
+  it("keeps the confirm quiet rather than destructive", () => {
+    const { container } = renderSheet();
+    expect(container.querySelector(".da-confirm")).toBeNull();
+    expect(container.querySelector(".so-confirm")?.textContent).toBe(auth.signOut);
+  });
+
+  // A choice between two lasting states, not the interruption of an action.
+  it("names the state the wide button leads to", () => {
+    const { container } = renderSheet();
+    expect(container.querySelector(".da-cancel")?.textContent).toBe(auth.signOutStay);
+    expect(screen.queryByText(auth.cancel)).toBeNull();
+  });
+
+  // The one thing sign-out costs is convenient access, handed back first.
+  it("offers the keys before taking the list", () => {
+    const copied = vi.fn();
+    renderSheet({ onCopyAllLinks: copied });
+    fireEvent.click(screen.getByText(auth.copyAllLinks.replace("{n}", "3")));
+    expect(copied).toHaveBeenCalledOnce();
+    expect(screen.getByText(auth.copyAllLinksDone)).toBeTruthy();
+  });
+
+  it("does not promise a danger that is not there", () => {
+    renderSheet();
+    // The tokens are not erased here, unlike deletion — so the wording says
+    // they stay, and deletion's "save them first" must not appear.
+    expect(screen.getByText(auth.signOutKeysHere)).toBeTruthy();
+    expect(screen.queryByText(auth.saveKeysTitle)).toBeNull();
   });
 });
