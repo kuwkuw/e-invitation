@@ -33,7 +33,7 @@ describe("GuestCta", () => {
   it("reads as its action, not as the wordmark", () => {
     renderCta("en");
     // The mark is aria-hidden, so the accessible name is the thing the link
-    // actually does — "INVITO create your own invitation" would be noise.
+    // actually does — "HOSTYMO create your own invitation" would be noise.
     expect(screen.getByRole("link", { name: "Create your own invitation" })).toBeDefined();
   });
 
@@ -50,7 +50,7 @@ describe("GuestCta", () => {
     renderCta("uk");
     // Values inherited from .gr-brand — the DS guest-rsvp intent is that the
     // mark does not get louder when it gains a job (adr-013 §7).
-    const mark = screen.getByText("INVITO");
+    const mark = screen.getByText("HOSTYMO");
     expect(mark.className).toBe("gr-cta-mark");
     expect(mark.getAttribute("aria-hidden")).toBe("true");
   });

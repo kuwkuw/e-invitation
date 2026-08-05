@@ -51,9 +51,9 @@ beforeEach(() => {
 
 describe("tokenFromManageLink", () => {
   it("accepts a whole manage link, a bare token, and rejects anything else", () => {
-    expect(tokenFromManageLink(`https://invito.ua/manage/${ID}#t=${TOKEN}`)).toBe(TOKEN);
+    expect(tokenFromManageLink(`https://invinto.app/manage/${ID}#t=${TOKEN}`)).toBe(TOKEN);
     expect(tokenFromManageLink(`  ${TOKEN}  `)).toBe(TOKEN);
-    expect(tokenFromManageLink(`https://invito.ua/i/${ID}`)).toBeNull();
+    expect(tokenFromManageLink(`https://invinto.app/i/${ID}`)).toBeNull();
     expect(tokenFromManageLink("")).toBeNull();
     // A share link is the thing a host is most likely to paste by mistake.
     expect(tokenFromManageLink("not-a-token")).toBeNull();
@@ -133,7 +133,7 @@ describe("useHostManage", () => {
     expect(result.current.status).toBe("no_token");
 
     act(() => {
-      expect(result.current.applyManageLink(`https://invito.ua/manage/${ID}#t=${TOKEN}`)).toBe(
+      expect(result.current.applyManageLink(`https://invinto.app/manage/${ID}#t=${TOKEN}`)).toBe(
         true,
       );
     });
@@ -146,7 +146,7 @@ describe("useHostManage", () => {
     const { result } = renderHook(() => useHostManage(ID), { wrapper });
 
     act(() => {
-      expect(result.current.applyManageLink("https://invito.ua/i/abc123")).toBe(false);
+      expect(result.current.applyManageLink("https://invinto.app/i/abc123")).toBe(false);
     });
 
     expect(result.current.status).toBe("no_token");

@@ -47,18 +47,18 @@ const STRINGS: Record<Language, EmailStrings> = {
     subject: "{count} — {title}",
     lead: "Гості почали відповідати. Повний список — на сторінці запрошення.",
     cta: "Переглянути відповіді",
-    why: "Ви отримали цей лист, бо створили запрошення «{title}» в INVITO.",
+    why: "Ви отримали цей лист, бо створили запрошення «{title}» в HOSTYMO.",
     unsubscribe: "Не надсилати мені такі листи",
-    wordmark: "INVITO",
+    wordmark: "HOSTYMO",
   },
   en: {
     replyForms: ["new reply", "new replies", "new replies"],
     subject: "{count} — {title}",
     lead: "Guests have started replying. The full list is on your invitation page.",
     cta: "See the replies",
-    why: "You're getting this because you created the invitation “{title}” on INVITO.",
+    why: "You're getting this because you created the invitation “{title}” on HOSTYMO.",
     unsubscribe: "Turn these emails off",
-    wordmark: "INVITO",
+    wordmark: "HOSTYMO",
   },
 };
 

@@ -57,7 +57,7 @@ afterEach(async () => {
 
 function configureMail() {
   vi.stubEnv("RESEND_API_KEY", "re_test_key");
-  vi.stubEnv("NOTIFY_FROM", "INVITO <replies@invinto.app>");
+  vi.stubEnv("NOTIFY_FROM", "HOSTYMO <replies@invinto.app>");
 }
 
 function stubSend(response = new Response(JSON.stringify({ id: "msg-1" }))) {

@@ -199,7 +199,7 @@ What the ADR settled, and the implementation delivered:
 6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
    first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
    project — against the constraint `styles.css` already states in its own
-   words, *"INVITO stays a whisper"*: the wordmark keeps its exact current
+   words, *"HOSTYMO stays a whisper"*: the wordmark keeps its exact current
    values and gains one underlined line beneath it, in the same muted grey as
    "change answer". Four louder treatments were drawn and rejected, three
    against rules already written down.
@@ -531,6 +531,28 @@ The standing candidate is still **doing nothing yet** — publish real events,
 let the numbers accumulate, and read §5.1 when there is something to read. Of
 the two items below that would change anything, the share sheet is the only one
 that touches the loop the measurement is about.
+
+"Publish real events" is the part that was never planned, and
+[08-promotion.md](08-promotion.md) now plans it. Its finding is that promotion
+is not yet the bottleneck: the deployment served `Invitation Studio` with no
+`robots.txt` and an English `lang` attribute, called itself five different
+names — one of them a competitor's — and gates publishing behind Google
+sign-in, which is the loop the measurement is about. Its Phase 0 is a list of
+those blockers, and the share sheet above is one of them.
+
+Two are closed. **Naming: the product is now Hostymo** (`гостимо`, "we host"),
+after a first attempt that adopted the domain's registration typo and had to be
+withdrawn the same day — `invinto.com` turned out to be a live UK SaaS, and
+`.ua` domains require a matching trademark, which makes the competitor's
+`invito.ua` strong evidence of a registered mark one letter away. The
+post-mortem is §4.2 there; its lesson is that domain availability is not
+trademark clearance. Hostymo got the check neither predecessor did — the
+Ukrainian register, searched 2026-08-03, returned nothing — so the name is
+settled. The domain stays `invinto.app` for now, so the name and the address
+disagree on purpose; §10.7 carries what that costs and what closes it, and it
+should close before Phase 1 rather than after. And `/i/:id` now carries `noindex`, so the share page keeps unfurling in
+messengers without putting guests' names and addresses into Google once links
+start being pasted in public.
 
 ## Candidate backlog
 

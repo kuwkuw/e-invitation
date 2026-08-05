@@ -44,6 +44,19 @@ function ogMetaTags(record: PublishedRecord, base: string): string {
     `<meta property="og:image:width" content="${OG_WIDTH}">`,
     `<meta property="og:image:height" content="${OG_HEIGHT}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
+    // A published invitation carries real names, a home address and a date. It
+    // is unlisted, not private (adr-005) — which keeps it out of search only
+    // for as long as nobody links to it, and hosts paste share links into
+    // public groups and channels. This is the tag that actually keeps it out.
+    //
+    // It must stay a **meta tag** and must never become a `Disallow: /i/` in
+    // robots.txt, which reads like the stronger version of the same wish and
+    // is two kinds of wrong. Messenger crawlers respect robots.txt, so
+    // disallowing kills the unfurl FR-3.5 exists for; and a crawler that is
+    // blocked from fetching never sees this tag, leaving Google free to index
+    // the bare URL it found elsewhere. Crawlable-but-noindex is the only
+    // combination that both unfurls and stays unlisted.
+    `<meta name="robots" content="noindex">`,
   ].join("\n    ");
 }
 

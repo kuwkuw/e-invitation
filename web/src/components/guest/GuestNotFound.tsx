@@ -12,7 +12,7 @@ export function GuestNotFound({ body, t }: { body: string; t: GuestStrings }) {
       <h1 className="gr-notfound-title">{t.notFoundTitle}</h1>
       <p className="gr-notfound-body">{body}</p>
       <p className="gr-notfound-hint">{t.notFoundHint}</p>
-      <div className="gr-brand">INVITO</div>
+      <div className="gr-brand">HOSTYMO</div>
     </div>
   );
 }

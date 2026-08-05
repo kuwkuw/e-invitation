@@ -277,7 +277,7 @@ export const AUTH: Record<Language, AuthStrings> = {
 
 export const UI: Record<Language, UiStrings> = {
   en: {
-    appTitle: "Invitation Studio",
+    appTitle: "Hostymo",
     tagline: "Describe your event in one sentence — get an invitation you can edit and share.",
     placeholder:
       "e.g. Olena invites friends to her birthday dinner on August 12 at 6pm, Zatyshok cafe, Lviv",
@@ -394,7 +394,7 @@ export const UI: Record<Language, UiStrings> = {
     viewResponses: "View responses →",
   },
   uk: {
-    appTitle: "Студія запрошень",
+    appTitle: "Hostymo",
     tagline:
       "Опишіть подію одним реченням — отримайте запрошення, яке можна редагувати та надсилати.",
     placeholder:
@@ -575,7 +575,7 @@ export interface LandingStrings {
 
 export const LANDING: Record<Language, LandingStrings> = {
   en: {
-    brand: "Zaproshennya",
+    brand: "Hostymo",
     cta: "Create an invitation",
     heroTitle: "An invitation from one sentence",
     heroText: "Describe your event in words — get a beautiful invitation in a minute.",
@@ -591,7 +591,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
     finalTitle: "Ready to send your first invitation?",
-    footer: "Zaproshennya — simple, and Ukrainian at heart.",
+    footer: "Hostymo — simple, and Ukrainian at heart.",
     yoursTitle: "Your invitations",
     yoursTitleOne: "Your invitation",
     yoursOnThisDevice: "saved on this device",
@@ -612,7 +612,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     },
   },
   uk: {
-    brand: "Запрошення",
+    brand: "Hostymo",
     cta: "Створити запрошення",
     heroTitle: "Запрошення за одне речення",
     heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
@@ -629,7 +629,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpSummary: "18 прийдуть · 3 не прийдуть · 5 ще не відповіли",
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
     finalTitle: "Готові надіслати перше запрошення?",
-    footer: "Запрошення — просто і по-українськи.",
+    footer: "Hostymo — просто і по-українськи.",
     yoursTitle: "Ваші запрошення",
     yoursTitleOne: "Ваше запрошення",
     yoursOnThisDevice: "збережено на цьому пристрої",

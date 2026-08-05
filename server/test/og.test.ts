@@ -95,6 +95,23 @@ describe("og routes", () => {
     expect(page.body).toContain(`/api/invitations/${id}/og.png?v=1`);
   });
 
+  // The share page unfurls in messengers and stays out of search. Those pull
+  // in opposite directions — the tag that delists it is only seen by a crawler
+  // allowed to fetch the page — so both halves are asserted together, and the
+  // OG half is what a robots.txt `Disallow: /i/` would silently break.
+  it("keeps the share page crawlable but unindexed", async () => {
+    const published = await app.inject({
+      method: "POST",
+      url: "/api/invitations/publish",
+      payload: { invitation },
+    });
+    const { id } = published.json();
+
+    const page = await app.inject({ method: "GET", url: `/i/${id}` });
+    expect(page.body).toContain(`<meta name="robots" content="noindex">`);
+    expect(page.body).toContain(`og:image" content="`);
+  });
+
   // Copy is directly editable (FR-2.1), so a title is host-controlled text.
   // `String.replace` expands `$&` and friends inside a *string* replacement,
   // and it does so after escapeHtml has run — so the escaping cannot save us.

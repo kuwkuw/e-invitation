@@ -69,7 +69,7 @@ describe("parseEventStart", () => {
 describe("buildIcs", () => {
   it("emits a timed 2-hour floating-local event with escaped text", () => {
     const ics = buildIcs({
-      uid: "abc123@invito",
+      uid: "abc123@invinto",
       title: "День народження, свято",
       location: "Кафе «Затишок», Львів",
       start: { year: 2026, month: 8, day: 12, hour: 18, minute: 30 },
@@ -78,13 +78,13 @@ describe("buildIcs", () => {
     expect(ics).toContain("DTEND:20260812T203000");
     expect(ics).toContain("SUMMARY:День народження\\, свято");
     expect(ics).toContain("LOCATION:Кафе «Затишок»\\, Львів");
-    expect(ics).toContain("UID:abc123@invito");
+    expect(ics).toContain("UID:abc123@invinto");
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
   });
 
   it("emits an all-day event when there is no time", () => {
     const ics = buildIcs({
-      uid: "abc123@invito",
+      uid: "abc123@invinto",
       title: "Party",
       start: { year: 2026, month: 12, day: 31, hour: null, minute: 0 },
     });
@@ -95,7 +95,7 @@ describe("buildIcs", () => {
 
   it("rolls a late-evening event's end past midnight", () => {
     const ics = buildIcs({
-      uid: "x@invito",
+      uid: "x@invinto",
       title: "Party",
       start: { year: 2026, month: 8, day: 12, hour: 23, minute: 0 },
     });

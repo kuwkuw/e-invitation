@@ -61,7 +61,15 @@ export function GuestPage({ id }: { id: string }) {
     downloadFile(
       "invitation.ics",
       buildIcs({
-        uid: `${id}@invito`,
+        // Tracks the **domain**, not the brand — which is why it says invinto
+        // while the wordmark says HOSTYMO. RFC 5545 wants a UID that is
+        // globally unique, and the `@` half earns that by naming a host we
+        // control; a brand name guarantees nothing. Changing it re-issues every
+        // future .ics under a new identity, so a guest who already added the
+        // event and re-downloads gets a second one rather than an update —
+        // cheap to do while nobody has, and a reason not to churn it for
+        // cosmetic reasons. It moves if the domain moves.
+        uid: `${id}@invinto`,
         title: copy.title,
         location: place || undefined,
         start: eventStart,

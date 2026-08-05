@@ -54,7 +54,7 @@ const STRINGS: Record<Language, PageStrings> = {
       "Відповіді залишаються на сторінках ваших запрошень. Увімкнути листи знову можна в панелі після публікації.",
     deadTitle: "Це посилання вже не діє",
     deadBody: "Керувати листами можна в самому запрошенні — відкрийте його у своєму акаунті.",
-    back: "Повернутися до INVITO",
+    back: "Повернутися до HOSTYMO",
     other: "EN",
   },
   en: {
@@ -67,7 +67,7 @@ const STRINGS: Record<Language, PageStrings> = {
       "The replies stay on your invitation pages. You can turn emails back on from the share panel after you publish.",
     deadTitle: "This link no longer works",
     deadBody: "You can manage emails from your invitation — open it while signed in.",
-    back: "Back to INVITO",
+    back: "Back to HOSTYMO",
     other: "УКР",
   },
 };
@@ -166,7 +166,7 @@ export function renderUnsubscribePage(state: UnsubscribeState, language: Languag
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>${title} · INVITO</title>
+<title>${title} · HOSTYMO</title>
 <style>${STYLE}</style>
 </head>
 <body>
@@ -177,7 +177,7 @@ export function renderUnsubscribePage(state: UnsubscribeState, language: Languag
 ${hint}
 ${action}
 <a class="u-back" href="/">${t.back}</a>
-<div class="u-mark">INVITO</div>
+<div class="u-mark">HOSTYMO</div>
 </body>
 </html>`;
 }
