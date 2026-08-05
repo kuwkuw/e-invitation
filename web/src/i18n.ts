@@ -156,7 +156,21 @@ export interface AuthStrings {
   crossDevice: string;
   emptySignedIn: string;
   invitationCount: string;
-  onThisDevice: string;
+  /** The nav link once this browser holds tokens the account has not filed —
+   *  a fact about what is here, not an offer, and the only acknowledgement a
+   *  signed-out host gets that their events exist (DS `LandingListIsAccount`).
+   *  The separator carries a thin space (U+2009) either side, which is
+   *  typographic only — `.lp-nav-signin`'s `nowrap` is what actually keeps the
+   *  count from wrapping away from its label. Note it defeats exact text
+   *  matching in tests, which normalize the DOM's whitespace but not the
+   *  string being matched. */
+  navMyInvitationsCount: string;
+  signOutTitle: string;
+  signOutKeepCount: string;
+  signOutOnlyList: string;
+  signOutKeysHere: string;
+  signOutKeysBody: string;
+  signOutStay: string;
   deleteTitle: string;
   deleteHeadline: string;
   deleteKeepGuests: string;
@@ -207,7 +221,15 @@ export const AUTH: Record<Language, AuthStrings> = {
     crossDevice: "This list opens on any device you sign in on.",
     emptySignedIn: "Your invitations will appear here — and stay, wherever you sign in.",
     invitationCount: "{n} invitations",
-    onThisDevice: "on this device",
+    navMyInvitationsCount: "My invitations · {n}",
+    signOutTitle: "Sign out?",
+    signOutKeepCount: "Your {n} invitations stay exactly where they are.",
+    signOutOnlyList:
+      "Only the list goes away. The home page won't show your {n} invitations until you sign in again.",
+    signOutKeysHere: "Your keys stay — but keep them handy",
+    signOutKeysBody:
+      "This browser remembers all {n} manage links. Copy them somewhere safe and you won't need to sign in.",
+    signOutStay: "Stay signed in",
     deleteTitle: "Delete your account?",
     deleteHeadline: "Your {n} invitations stay exactly where they are.",
     deleteKeepGuests: "Guests can still open their links and reply",
@@ -257,7 +279,15 @@ export const AUTH: Record<Language, AuthStrings> = {
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
     emptySignedIn: "Тут з'являться ваші запрошення — і залишаться, куди б ви не увійшли.",
     invitationCount: "{n} запрошень",
-    onThisDevice: "на цьому пристрої",
+    navMyInvitationsCount: "Мої запрошення · {n}",
+    signOutTitle: "Вийти з акаунта?",
+    signOutKeepCount: "Ваші {n} запрошення нікуди не дінуться.",
+    signOutOnlyList:
+      "Зникає лише перелік. Головна більше не покаже ваші {n} запрошення — доки ви не увійдете знову.",
+    signOutKeysHere: "Ключі — на місці, але під рукою краще",
+    signOutKeysBody:
+      "Цей браузер пам'ятає всі {n} посилання для керування. Скопіюйте їх собі — і вхід буде не потрібен.",
+    signOutStay: "Залишитися в акаунті",
     deleteTitle: "Видалити акаунт?",
     deleteHeadline: "Ваші {n} запрошення нікуди не дінуться.",
     deleteKeepGuests: "Гості й далі відкриють свої посилання й дадуть відповідь",
@@ -558,8 +588,6 @@ export interface LandingStrings {
   // the one-invitation case has its own string rather than a naive plural.
   yoursTitle: string;
   yoursTitleOne: string;
-  yoursOnThisDevice: string;
-  yoursCountOnThisDevice: string;
   yoursPublished: string;
   yoursShowAll: string;
   // Per-row response counts (adr-012, FR-5.7). `yoursReplyForms` is the Slavic
@@ -594,8 +622,6 @@ export const LANDING: Record<Language, LandingStrings> = {
     footer: "Zaproshennya — simple, and Ukrainian at heart.",
     yoursTitle: "Your invitations",
     yoursTitleOne: "Your invitation",
-    yoursOnThisDevice: "saved on this device",
-    yoursCountOnThisDevice: "{n} on this device",
     yoursPublished: "Published {when}",
     yoursShowAll: "Show all {n}",
     yoursReplies: "{n} {form}",
@@ -632,8 +658,6 @@ export const LANDING: Record<Language, LandingStrings> = {
     footer: "Запрошення — просто і по-українськи.",
     yoursTitle: "Ваші запрошення",
     yoursTitleOne: "Ваше запрошення",
-    yoursOnThisDevice: "збережено на цьому пристрої",
-    yoursCountOnThisDevice: "{n} на цьому пристрої",
     yoursPublished: "Опубліковано {when}",
     yoursShowAll: "Показати всі {n}",
     yoursReplies: "{n} {form}",

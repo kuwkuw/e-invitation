@@ -5,6 +5,7 @@ import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { SignOutSheet } from "./components/SignOutSheet";
 import { YourInvitations } from "./components/YourInvitations";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
@@ -12,7 +13,7 @@ import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
 import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
-import { readManageToken } from "./manageTokens";
+import { allHeldManageTokens, readManageToken } from "./manageTokens";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
 
 // Ported from the "Тепла класика" landing direction designed in Claude Design.
@@ -86,7 +87,30 @@ export function LandingPage() {
   // not refetch at all.
   const counts = useHostInvitationCounts(mine.map((m) => m.id));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const signedIn = account.status === "signed_in" && account.email !== null;
+  // **The list is the view of whichever store owns the identity** (DS
+  // `LandingListIsAccount`). Publishing already requires an account, so a list
+  // rendered to someone without one is a second source of truth about "your
+  // events" that contradicts the first. Where accounts cannot exist at all
+  // (adr-014 §7) the rule points at the other store rather than making an
+  // exception: the identity is the browser, and the list is this browser's.
+  //
+  // "loading" shows nothing, which costs an unconfigured deployment one fetch
+  // before its list appears — the alternative is rendering a list and taking
+  // it away, and a flash of the host's own events is worse than a beat of
+  // nothing.
+  const showList = account.status === "unavailable" || signedIn;
+  // What this browser can prove is the host's, for the nav count. Read once,
+  // like the list: a signed-out browser gains no tokens while the landing page
+  // is open. Signed in it is not rendered, so the keyring seed cannot inflate
+  // it.
+  const [heldCount] = useState(() => allHeldManageTokens().size);
+  // Both the label and the layout concessions key off this, never off the
+  // count alone: where sign-in is unavailable the link does not render, and a
+  // wordmark that shrank to make room for a count nobody sees would be paying
+  // for nothing.
+  const showNavCount = account.status === "signed_out" && heldCount > 0;
   // Two conditions, and both render the line **absent** rather than disabled
   // (DS LandingAccountNotify): a deployment that cannot send mail must promise
   // nothing, and before the first invitation a preference about replies is
@@ -127,8 +151,16 @@ export function LandingPage() {
 
   return (
     <div className="landing">
-      <header className="lp-nav">
-        <span className="lp-brand">{t.brand}</span>
+      {/* `lp-nav-counted` is what lets the narrow rules find the count without
+          a `:has()`: with the number present the bar needs the wordmark's
+          space, and below 370 the wordmark gives up its letters entirely. */}
+      <header className={`lp-nav${showNavCount ? " lp-nav-counted" : ""}`}>
+        <span className="lp-brand">
+          <span className="lp-brand-full">{t.brand}</span>
+          {/* Derived, never a translated string: the monogram is the brand's
+              own first letter, so it follows the language automatically. */}
+          <span className="lp-brand-mono">{[...t.brand][0]}</span>
+        </span>
         <div className="lp-nav-right">
           {/* The only sign-in outside the publish gate. Before it, a returning
               host on a new phone could reach their events only by generating an
@@ -141,7 +173,16 @@ export function LandingPage() {
               advertisement where a host simply wants their list. */}
           {account.status === "signed_out" && (
             <a className="lp-nav-signin" href={googleSignInUrl("/")}>
-              {AUTH[lang].signInLink}
+              {/* The count is the page's one acknowledgement that a signed-out
+                  host's events exist, now that the card does not render for
+                  them. It is a fact, not an offer: it states what is already
+                  in this browser and disappears on sign-in because the list
+                  replaces it. A first-time visitor never sees it — zero
+                  tokens, so the branch does not render — which is what keeps
+                  the link costing them nothing. */}
+              {showNavCount
+                ? AUTH[lang].navMyInvitationsCount.replace("{n}", String(heldCount))
+                : AUTH[lang].signInLink}
             </a>
           )}
           <LangSwitcher value={lang} onChange={handleLang} />
@@ -152,27 +193,45 @@ export function LandingPage() {
       </header>
 
       {/* Reading order per the DS Returning template: header → your events →
-          pitch. A first-time visitor has an empty list and sees the page
-          exactly as before. */}
-      <YourInvitations
-        invitations={mine}
-        counts={counts}
-        signedIn={signedIn}
-        // Rendered inside the card, because the account exists for this list.
-        footer={
-          signedIn && account.email ? (
-            <AccountFooter
-              email={account.email}
-              onSignOut={account.signOut}
-              notify={canNotify ? { enabled: notify.enabled, onToggle: notify.toggle } : null}
-              t={AUTH[lang]}
-            />
-          ) : null
-        }
-        onDeleteAccount={signedIn ? () => setConfirmingDelete(true) : undefined}
-        t={t}
-        auth={AUTH[lang]}
-      />
+          pitch. Whoever the list is not for — a first-time visitor, and now a
+          signed-out host on a deployment that has accounts — sees the page
+          begin at the pitch. */}
+      {showList && (
+        <YourInvitations
+          invitations={mine}
+          counts={counts}
+          signedIn={signedIn}
+          // Rendered inside the card, because the account exists for this list.
+          footer={
+            signedIn && account.email ? (
+              <AccountFooter
+                email={account.email}
+                // Sign-out now takes the list off the page while leaving every
+                // token in place, so it asks first (DS `LandingListIsAccount`).
+                onSignOut={() => setConfirmingSignOut(true)}
+                notify={canNotify ? { enabled: notify.enabled, onToggle: notify.toggle } : null}
+                t={AUTH[lang]}
+              />
+            ) : null
+          }
+          onDeleteAccount={signedIn ? () => setConfirmingDelete(true) : undefined}
+          t={t}
+          auth={AUTH[lang]}
+        />
+      )}
+
+      {confirmingSignOut && (
+        <SignOutSheet
+          invitationCount={held.length}
+          onCopyAllLinks={copyAllManageLinks}
+          onConfirm={() => {
+            void account.signOut();
+            setConfirmingSignOut(false);
+          }}
+          onCancel={() => setConfirmingSignOut(false)}
+          t={AUTH[lang]}
+        />
+      )}
 
       {confirmingDelete && (
         <DeleteAccountSheet

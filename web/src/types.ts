@@ -135,6 +135,25 @@ export interface KeyringResponse {
   invitations: KeyringEntry[];
 }
 
+/** Filing this browser's invitations into the account's keyring on sign-in
+ *  (adr-014 §5). Mirrors the server's `ClaimResult`/`ClaimResponse` by hand
+ *  (NFR-8). Per-item statuses, so one token that no longer resolves cannot
+ *  cost the host the rest of the batch. */
+export type ClaimResultStatus = "ok" | "forbidden" | "not_found";
+
+export interface ClaimResult {
+  id: string;
+  status: ClaimResultStatus;
+}
+
+export interface ClaimResponse {
+  results: ClaimResult[];
+  /** Rows actually inserted — not items that succeeded. Re-claiming what the
+   *  account already holds is a no-op, and only this number can tell the host
+   *  something changed without saying so on every sign-in. */
+  linked: number;
+}
+
 /** What deleting an account returns (adr-014 §9). The invitations are
  *  deliberately retained: guests hold their share links, the RSVPs are the
  *  guests' data, and the manage token survives on the record. */

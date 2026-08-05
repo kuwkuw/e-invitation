@@ -137,9 +137,16 @@ implementation.
   Only an exact name match collapses, so two guests sharing a name stay
   visible as two rows rather than silently merging.
 - FR-5.6 The share panel offers the manage link as an explicitly subordinate,
-  masked action beside the public share link, and the landing page lists the
-  invitations published from this browser (`inv-invitations`, browser-local,
-  no secrets) so a returning host finds their events by name.
+  masked action beside the public share link, and the landing page lists a
+  returning host's invitations so they find their events by name. **The list is
+  the view of whichever store owns the identity** (adr-014 §1, amended): the
+  account's keyring where accounts exist, and only for a signed-in host; the
+  browser's own `inv-invitations` (browser-local, no secrets) where sign-in is
+  unavailable, since there is no other identity there. Signed out with accounts
+  available, the page carries no list — only the nav link, bearing the count of
+  invitations this browser holds tokens for, which is a statement about local
+  state rather than an offer. No access changes with it: every manage token
+  survives and `/manage/:id` is unaffected.
 - FR-5.7 **Per-row response counts on the returning-host list.**
   `POST /api/invitations/counts` ([adr-012](decisions/adr-012-batch-response-counts.md))
   answers a batch of `{id, token, seen_at?}` items — the app's first request
@@ -386,7 +393,7 @@ them.
 
 | Path | Page | Audience |
 | --- | --- | --- |
-| `/` | Landing page; lists this browser's invitations with response counts when it has any (FR-5.6, FR-5.7) | Public |
+| `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7) | Public |
 | `/create` | Editor (generate → edit → publish → share). `?ref=guest` attributes the session (FR-7.3) and is stripped from the URL at mount | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |

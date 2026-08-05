@@ -19,11 +19,17 @@ const VISIBLE = 3;
  * pitch but never louder than it. "Create" stays the only accent button on
  * the page.
  *
- * Signed out, the subtitle says "on this device" and the block is exactly what
- * it has always been — no sign-in offer, because that would be an
- * advertisement in the place a host simply wants their list (adr-014, DS
- * `LandingSignedInStates`). Signed in, the same list comes from the account,
- * the card gains an account footer, and one faint line says it travels.
+ * **The list is the view of whichever store owns the identity** (DS
+ * `LandingListIsAccount`). Where accounts exist it is the account's, and the
+ * caller renders this only for a signed-in host; where they cannot exist
+ * (adr-014 §7) the identity is the browser and the list is this browser's.
+ * There is no in-between state, so nothing here contrasts the two: signed in
+ * the head carries a count, the card gains an account footer and one faint
+ * line says the list travels — otherwise the card is just the list.
+ *
+ * A sign-in offer in this card stays forbidden either way: it would be an
+ * advertisement where a host simply wants their list (`LandingSignedInStates`).
+ * The door is in the nav, and only the nav.
  */
 export function YourInvitations({
   invitations,
@@ -69,13 +75,14 @@ export function YourInvitations({
     <section className="lp-yours">
       <div className="lp-yours-head">
         <h2>{single ? t.yoursTitleOne : t.yoursTitle}</h2>
-        <span className="lp-yours-sub">
-          {signedIn
-            ? auth.invitationCount.replace("{n}", String(invitations.length))
-            : single
-              ? t.yoursOnThisDevice
-              : t.yoursCountOnThisDevice.replace("{n}", String(invitations.length))}
-        </span>
+        {/* Only signed in. Where the list renders without an account at all
+            (adr-014 §7) there is nothing to contrast with, so "on this device"
+            would be noise about the only possible state. */}
+        {signedIn && (
+          <span className="lp-yours-sub">
+            {auth.invitationCount.replace("{n}", String(invitations.length))}
+          </span>
+        )}
       </div>
 
       <div className="lp-yours-card">

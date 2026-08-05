@@ -12,22 +12,50 @@ function jsonResponse(body: unknown, status = 200) {
   } as Response;
 }
 
-/** Routes the two calls the hook makes, so a test can vary either. */
-function stubApi(handlers: { session: unknown; keyring?: unknown; keyringStatus?: number }) {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+/** Routes the calls the hook makes, so a test can vary any of them.
+ *  `keyringAfterClaim` answers the *second* read — the one a successful claim
+ *  triggers — so a test can show the account gaining what was just filed. */
+function stubApi(handlers: {
+  session: unknown;
+  keyring?: unknown;
+  keyringStatus?: number;
+  keyringAfterClaim?: unknown;
+  claim?: unknown;
+  claimStatus?: number;
+}) {
+  let keyringReads = 0;
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = String(input);
     if (url.includes("/api/auth/session")) return jsonResponse(handlers.session);
+    if (url.includes("/api/account/claim")) {
+      return jsonResponse(
+        handlers.claim ?? { results: [], linked: 0 },
+        handlers.claimStatus ?? 200,
+      );
+    }
     if (url.includes("/api/account/keyring")) {
-      return jsonResponse(handlers.keyring ?? { invitations: [] }, handlers.keyringStatus ?? 200);
+      keyringReads += 1;
+      const after = handlers.keyringAfterClaim;
+      const body =
+        keyringReads > 1 && after !== undefined ? after : (handlers.keyring ?? { invitations: [] });
+      return jsonResponse(body, handlers.keyringStatus ?? 200);
     }
     if (url.includes("/api/auth/signout")) return jsonResponse(null, 204);
-    if (url.includes("/api/account") && !url.includes("keyring")) {
+    if (url.includes("/api/account") && !url.includes("keyring") && !url.includes("claim")) {
       return jsonResponse({ deleted: true, invitations_retained: 2 });
     }
     throw new Error(`unexpected fetch: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
+}
+
+/** The body of the claim request, or null if none was made. */
+function claimedItems(
+  fetchMock: ReturnType<typeof stubApi>,
+): { id: string; token: string }[] | null {
+  const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/api/account/claim"));
+  return call ? JSON.parse(String(call[1]?.body)).items : null;
 }
 
 const entry = {
@@ -83,6 +111,76 @@ describe("useAuthSession", () => {
     expect(loadHostInvitations()).toEqual([
       { id: entry.id, title: entry.title, published_at: entry.published_at, palette: "warm" },
     ]);
+  });
+
+  // Claiming (adr-014 §5) is what stops the landing list being two-class: an
+  // invitation published before the host ever signed in is knowable only in
+  // this browser until something files it into the account.
+  it("files a token the account does not know about, then re-reads the keyring", async () => {
+    localStorage.setItem(manageTokenKey(entry.id), entry.manage_token);
+    const fetchMock = stubApi({
+      session: { configured: true, signed_in: true, email: "host@example.com" },
+      keyring: { invitations: [] },
+      claim: { results: [{ id: entry.id, status: "ok" }], linked: 1 },
+      keyringAfterClaim: { invitations: [entry] },
+    });
+
+    const { result } = renderHook(() => useAuthSession());
+    await waitFor(() => expect(result.current.invitations).toHaveLength(1));
+
+    expect(claimedItems(fetchMock)).toEqual([{ id: entry.id, token: entry.manage_token }]);
+    // The re-read is what makes the row real: title and palette live on the
+    // record, not in this browser's token.
+    expect(loadHostInvitations()).toEqual([
+      { id: entry.id, title: entry.title, published_at: entry.published_at, palette: "warm" },
+    ]);
+  });
+
+  it("sends no claim when the account already holds everything", async () => {
+    localStorage.setItem(manageTokenKey(entry.id), entry.manage_token);
+    const fetchMock = stubApi({
+      session: { configured: true, signed_in: true, email: "host@example.com" },
+      keyring: { invitations: [entry] },
+    });
+
+    const { result } = renderHook(() => useAuthSession());
+    await waitFor(() => expect(result.current.invitations).toHaveLength(1));
+
+    // The ordinary sign-in holds nothing new and must cost no extra request.
+    expect(claimedItems(fetchMock)).toBeNull();
+  });
+
+  it("never sends an id the server would reject the whole batch for", async () => {
+    localStorage.setItem(manageTokenKey(entry.id), entry.manage_token);
+    // A hand-edited or half-written key. One of these in the body is a 400,
+    // and a 400 costs the host every other invitation in the batch.
+    localStorage.setItem("inv-manage:../etc/passwd", "junk");
+    const fetchMock = stubApi({
+      session: { configured: true, signed_in: true, email: "host@example.com" },
+      keyring: { invitations: [] },
+      claim: { results: [{ id: entry.id, status: "ok" }], linked: 1 },
+      keyringAfterClaim: { invitations: [entry] },
+    });
+
+    renderHook(() => useAuthSession());
+    await waitFor(() => expect(claimedItems(fetchMock)).not.toBeNull());
+    expect(claimedItems(fetchMock)).toEqual([{ id: entry.id, token: entry.manage_token }]);
+  });
+
+  it("never surfaces a failed claim as a broken sign-in", async () => {
+    localStorage.setItem(manageTokenKey(entry.id), entry.manage_token);
+    stubApi({
+      session: { configured: true, signed_in: true, email: "host@example.com" },
+      keyring: { invitations: [] },
+      claimStatus: 500,
+    });
+
+    const { result } = renderHook(() => useAuthSession());
+    // The session is good and the keyring read succeeded; one filing did not.
+    await waitFor(() => expect(result.current.status).toBe("signed_in"));
+    await waitFor(() => expect(result.current.invitations).toEqual([]));
+    // And the host keeps every token they had — the next sign-in retries.
+    expect(readManageToken(entry.id)).toBe(entry.manage_token);
   });
 
   it("still serves tokens in memory when storage is blocked", async () => {

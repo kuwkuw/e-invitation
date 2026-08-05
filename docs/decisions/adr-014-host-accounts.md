@@ -75,6 +75,28 @@ owns the invitation":
   working forever, for hosts who never sign in. Auth never revokes a
   capability.
 
+**Amended (DS `LandingListIsAccount`): the landing list is now account-only
+where accounts exist.** Publishing already requires a session, so a list
+rendered to someone without one was a second source of truth about "your
+events" contradicting the first. The rule replacing it is *the list is the view
+of whichever store owns the identity*: the account where accounts exist, and —
+where they cannot (§7) — this browser, because there is no other identity
+there. The in-between state, signed out with a list, exists nowhere.
+
+The invariant above is narrowed rather than abandoned, and the distinction is
+load-bearing: **no capability is revoked.** No manage token is cleared,
+`/manage/:id` opens exactly as before, guest links are untouched, and a host
+who kept their manage link never notices. What a signed-out host loses is the
+*enumeration* — and the page says so rather than pretending: the nav link
+carries the count of what this browser holds, which is a fact about local state
+and not an offer, and it disappears on sign-in because the list replaces it.
+
+Two consequences follow. Sign-out now removes something visible while changing
+no access, so it gets a confirmation sheet (the delete-account sheet's shape,
+without its red). And claiming (§5, amended) stops being an optimisation: the
+count promises that signing in shows these events, which is only true because
+sign-in files them into the keyring.
+
 ### 2. The gate is at publish — and the baseline is measured before it ships
 
 `POST /api/invitations/publish` requires a session for a **first** publish.
@@ -187,6 +209,30 @@ Two refinements fall out for free:
 - The keyring is fetched once per session, not per route. The landing page's
   "never waits" rule (adr-012 §6) applies unchanged: rows render from local
   state, and a failed keyring fetch is silence.
+
+**Amended: the traffic runs both ways.** Seeding alone leaves the landing list
+permanently two-class — rows the account knows, and rows only this browser
+knows, with nothing able to turn the second into the first. An invitation
+published before the host ever signed in, or reached by a manage link, would
+then never follow them to a second device, which is the one thing accounts
+were added for. So `POST /api/account/claim` files what this browser can prove
+it holds into the keyring: the session says whose keyring, and each item's
+manage token says the invitation is the caller's to file. That token is not a
+new authority — it is the same proof `/manage/:id` has always run on, checked
+the same constant-time way — so this adds a join and never a capability.
+
+Three properties keep it honest. It is **per-item** (adr-012 §2): a browser
+that has held tokens for a year has some that no longer resolve, and one of
+them must not cost the host the rest. It is **idempotent**, and reports rows
+actually inserted rather than items that succeeded, so "N invitations are now
+in your account" can only be said the once. And linking is **not exclusive** —
+two browsers holding the same manage link are two people the product cannot
+tell apart, and the token goes on working for both either way (§1), so
+claiming must not be a race one of them loses.
+
+The client claims on load rather than at the moment of sign-in, which also
+repairs a browser that gained a token *after* signing in, and it costs a
+request only when there is something to file.
 
 **This reverses adr-012's boundary, deliberately.** That ADR closed with "the
 server still has no idea which invitations belong to one host, and this

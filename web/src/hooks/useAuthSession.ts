@@ -1,18 +1,73 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  CLAIM_LIMIT,
+  claimInvitations,
   deleteAccount as deleteAccountRequest,
   fetchAuthSession,
   fetchKeyring,
   signOut as signOutRequest,
 } from "../api";
 import { type HostInvitation, recordHostInvitation } from "../hostInvitations";
-import { writeManageToken } from "../manageTokens";
-import type { AuthSession } from "../types";
+import { allHeldManageTokens, writeManageToken } from "../manageTokens";
+import type { AuthSession, KeyringEntry } from "../types";
 
 /** What the app knows about the host's account. `configured: false` is a
  *  deployment with no OAuth client (adr-014 §7) and must render no sign-in
  *  affordance at all — not a disabled one. */
 export type AuthStatus = "loading" | "unavailable" | "signed_out" | "signed_in";
+
+/** Write the account's tokens into the keys the app already runs on, and hand
+ *  back the list. Order matters to the caller, not here: every consumer reads
+ *  a token out of storage, so the write has to land before anything is told
+ *  the id exists. */
+function seedFromKeyring(entries: KeyringEntry[]): HostInvitation[] {
+  const held: HostInvitation[] = [];
+  for (const entry of entries) {
+    writeManageToken(entry.id, entry.manage_token);
+    const invitation = {
+      id: entry.id,
+      title: entry.title,
+      published_at: entry.published_at,
+      palette: entry.palette,
+    };
+    recordHostInvitation(invitation);
+    held.push(invitation);
+  }
+  return held;
+}
+
+/** File the tokens this browser holds into the account, and say whether
+ *  anything was actually new. Never throws: a claim that fails is not a
+ *  sign-in that failed — the session is good, the keyring read already
+ *  succeeded, and the host keeps every token they had. The next sign-in
+ *  retries by construction, because an unclaimed id is still unclaimed. */
+async function claimUnfiled(unclaimed: Map<string, string>): Promise<boolean> {
+  try {
+    const items = [...unclaimed].slice(0, CLAIM_LIMIT).map(([id, token]) => ({ id, token }));
+    return (await claimInvitations(items)).linked > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** What the account holds, after filing anything this browser can prove is
+ *  the host's and the account has not recorded yet.
+ *
+ *  The claim is what stops the landing list being permanently two-class: an
+ *  invitation published before the host ever signed in, or reached by manage
+ *  link, is knowable only in this browser until something files it. Doing it
+ *  here rather than at sign-in means it also repairs a browser that gained a
+ *  token after signing in, and it costs a request only when there is something
+ *  to file. */
+async function keyringAfterClaim(): Promise<KeyringEntry[]> {
+  const entries = await fetchKeyring();
+  const unclaimed = allHeldManageTokens();
+  for (const entry of entries) unclaimed.delete(entry.id);
+  if (unclaimed.size === 0) return entries;
+  // Re-read only when something was actually filed. The ordinary sign-in holds
+  // nothing new and must cost no extra round trip.
+  return (await claimUnfiled(unclaimed)) ? fetchKeyring() : entries;
+}
 
 /**
  * The signed-in host's account, and the one thing it does: seed this browser
@@ -32,6 +87,9 @@ export type AuthStatus = "loading" | "unavailable" | "signed_out" | "signed_in";
  * a blocked store, the way `manageTokens.ts` already makes the tokens survive
  * one. Every other consumer keeps its account-unawareness — only the landing
  * list learns.
+ *
+ * The traffic now runs both ways: the keyring seeds the browser, and what the
+ * browser holds is filed back into the keyring (`keyringAfterClaim`).
  */
 export function useAuthSession() {
   const [status, setStatus] = useState<AuthStatus>("loading");
@@ -70,23 +128,11 @@ export function useAuthSession() {
       .then(async (session) => {
         if (!active) return;
         if (!apply(session)) return;
-        const entries = await fetchKeyring();
+        const entries = await keyringAfterClaim();
         if (!active) return;
-        const held: HostInvitation[] = [];
-        for (const entry of entries) {
-          writeManageToken(entry.id, entry.manage_token);
-          const invitation = {
-            id: entry.id,
-            title: entry.title,
-            published_at: entry.published_at,
-            palette: entry.palette,
-          };
-          recordHostInvitation(invitation);
-          held.push(invitation);
-        }
         // After the tokens, never before: `useHostInvitationCounts` refires on
         // the id set changing and reads each token from storage at that moment.
-        setInvitations(held);
+        setInvitations(seedFromKeyring(entries));
       })
       .catch(() => {
         // Never a visible failure. A host who is signed out, on a deployment

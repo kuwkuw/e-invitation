@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { recordHostInvitation } from "../src/hostInvitations";
 import { AUTH, LANDING } from "../src/i18n";
 import { LandingPage } from "../src/LandingPage";
-import { forgetHeldManageTokens } from "../src/manageTokens";
+import { forgetHeldManageTokens, manageTokenKey } from "../src/manageTokens";
 
 /**
  * The seed-to-render path (adr-014 §5, as amended).
@@ -106,7 +106,11 @@ describe("the returning host's landing list", () => {
     expect(screen.getByText("Хрестини Даринки", inList)).toBeTruthy();
   });
 
-  it("renders the local list unchanged for a signed-out host", async () => {
+  // The list is the view of whichever store owns the identity (DS
+  // `LandingListIsAccount`). Publishing already requires an account, so a list
+  // rendered to someone without one is a second source of truth about "your
+  // events" that contradicts the first.
+  it("does not show the list to a signed-out host where accounts exist", async () => {
     recordHostInvitation({
       id: "zzz999",
       title: "Хрестини Даринки",
@@ -116,9 +120,29 @@ describe("the returning host's landing list", () => {
     stubApi({ signedIn: false });
     renderLanding();
 
+    // The page is the first-time visitor's page: it begins at the pitch.
+    await screen.findByText(LANDING.uk.heroTitle);
+    expect(screen.queryByText("Хрестини Даринки", inList)).toBeNull();
+    expect(document.querySelector(".lp-yours")).toBeNull();
+  });
+
+  // §7: no OAuth client means no accounts, so there is no "signed out" state
+  // to be in — the identity is the browser and the list is the browser's. The
+  // rule does not make an exception here, it points at the other store.
+  it("shows the browser's list where accounts cannot exist", async () => {
+    recordHostInvitation({
+      id: "zzz999",
+      title: "Хрестини Даринки",
+      published_at: "2026-06-01T00:00:00.000Z",
+      palette: "festive",
+    });
+    stubApi({ signedIn: false, configured: false });
+    renderLanding();
+
     expect(await screen.findByText("Хрестини Даринки", inList)).toBeTruthy();
-    // No keyring answered, so nothing claims this browser holds anything else.
-    expect(screen.queryByText("Весілля Марії та Андрія", inList)).toBeNull();
+    // And no subtitle: with no account to contrast against, "on this device"
+    // would describe the only state there is.
+    expect(document.querySelector(".lp-yours-sub")).toBeNull();
   });
 });
 
@@ -133,6 +157,44 @@ describe("the landing sign-in link", () => {
     // Back to the landing page, not to /create: the host came here for their
     // list, and the server guards this value before it reaches a Location.
     expect(link.getAttribute("href")).toBe("/api/auth/google?redirect_to=%2F");
+  });
+
+  // The card no longer renders for them, so the door is the only place the
+  // page can admit their events exist. A fact about what is already in this
+  // browser, not an offer — and it disappears on sign-in because the list
+  // replaces it (DS `LandingListIsAccount`, case 1).
+  it("counts what this browser holds once the card is gone", async () => {
+    localStorage.setItem(manageTokenKey("zzz999"), "0123456789abcdef0123456789abcdef");
+    localStorage.setItem(manageTokenKey("yyy888"), "fedcba9876543210fedcba9876543210");
+    stubApi({ signedIn: false });
+    renderLanding();
+
+    // Asserted on the raw text, not through a text matcher: the separator is
+    // thin-spaced (U+2009) and RTL normalizes whitespace in the DOM but not in
+    // the string it is matched against, so an exact query could never pass.
+    const link = await screen.findByText(label, { exact: false });
+    expect(link.textContent).toBe(AUTH.uk.navMyInvitationsCount.replace("{n}", "2"));
+  });
+
+  it("shows a first-time visitor the plain link, never a zero", async () => {
+    // Nothing held, so the branch carrying the number does not render at all —
+    // which is what keeps the link costing a newcomer no attention.
+    stubApi({ signedIn: false });
+    renderLanding();
+
+    expect(await screen.findByText(label)).toBeTruthy();
+    expect(document.querySelector(".lp-nav-counted")).toBeNull();
+  });
+
+  it("makes no room for a count it does not render", async () => {
+    // Where sign-in is unavailable there is no link and so no count — and the
+    // wordmark must not give up size for something nobody sees.
+    localStorage.setItem(manageTokenKey("zzz999"), "0123456789abcdef0123456789abcdef");
+    stubApi({ signedIn: false, configured: false });
+    renderLanding();
+
+    await screen.findByText(LANDING.uk.heroTitle);
+    expect(document.querySelector(".lp-nav-counted")).toBeNull();
   });
 
   it("does not offer sign-in to a host already signed in", async () => {

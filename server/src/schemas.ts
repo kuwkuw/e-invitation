@@ -225,6 +225,43 @@ export type KeyringEntry = z.infer<typeof KeyringEntry>;
 export const KeyringResponse = z.object({ invitations: z.array(KeyringEntry) });
 export type KeyringResponse = z.infer<typeof KeyringResponse>;
 
+// Claiming invitations this browser holds tokens for into the signed-in
+// account's keyring. Two credentials, and neither is sufficient alone: the
+// session says *whose* keyring, the manage token says the invitation is the
+// caller's to file. That is the same proof `/manage/:id` runs on — holding the
+// token is what ownership has always meant here (adr-005, adr-010 §2) — so
+// this adds a join, never a new authority.
+//
+// Capped at 50 rather than the batch-counts 25: tokens accumulate under
+// `inv-manage:<id>` and are never pruned, while `hostInvitations.ts` keeps
+// only the last 20 rows, so the token set is the larger of the two. The
+// multi-token oracle adr-012 §5 bounds is bounded differently here anyway —
+// this endpoint requires a session, which the counts endpoint does not.
+export const ClaimRequest = z.object({
+  items: z.array(z.object({ id: InvitationId, token: z.string() })).max(50),
+});
+export type ClaimRequest = z.infer<typeof ClaimRequest>;
+
+// Same vocabulary as adr-012's per-item statuses, deliberately: an unknown or
+// refused id yields a status only, so one stale token cannot fail the batch
+// around it. Kept as its own enum rather than shared with `CountsResultStatus`
+// so the two can diverge without a rename reaching the other endpoint.
+export const ClaimResultStatus = z.enum(["ok", "forbidden", "not_found"]);
+export type ClaimResultStatus = z.infer<typeof ClaimResultStatus>;
+
+export const ClaimResult = z.object({ id: InvitationId, status: ClaimResultStatus });
+export type ClaimResult = z.infer<typeof ClaimResult>;
+
+// `linked` counts rows that were actually inserted, not items that succeeded:
+// re-claiming what the account already holds is an ordinary no-op, and the UI
+// needs the difference to say "N invitations are now in your account" without
+// saying it on every sign-in.
+export const ClaimResponse = z.object({
+  results: z.array(ClaimResult),
+  linked: z.number(),
+});
+export type ClaimResponse = z.infer<typeof ClaimResponse>;
+
 // Reply notifications for one of an account's invitations (adr-015 §7). The
 // whole preference is one boolean: there is no digest schedule, no verbosity
 // and no second address to choose, by design.

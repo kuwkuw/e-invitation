@@ -20,6 +20,8 @@
 // a bearer secret, and this is the browser. It is the same exposure adr-005
 // accepted, reached through one door instead of five.
 
+import { isInvitationId } from "./invitationId";
+
 const tokens = new Map<string, string>();
 const seen = new Map<string, string>();
 
@@ -60,6 +62,44 @@ export function heldManageTokens(ids: string[]): Map<string, string> {
   for (const id of ids) {
     const token = readManageToken(id);
     if (token) held.set(id, token);
+  }
+  return held;
+}
+
+/** Every invitation this browser can prove it holds, whatever put the token
+ *  there — a publish, a `#t=` manage link, or the keyring seed.
+ *
+ *  Both layers, because they answer different halves: the map is the only one
+ *  that works with storage blocked, and `localStorage` is the only one that
+ *  survives the tab. Unlike `heldManageTokens`, nothing supplies the ids — the
+ *  point is to find tokens the caller does not already know about, which is
+ *  what claiming on sign-in (adr-014 §5) is for. A publish leaves both a token
+ *  and an `inv-invitations` row; a visited manage link leaves only the token,
+ *  and that invitation is no less the host's.
+ *
+ *  Ids are validated, not trusted: a hand-edited or half-written key would
+ *  otherwise put a malformed id in a request body and 400 the whole batch,
+ *  costing the host every other invitation in it. */
+export function allHeldManageTokens(): Map<string, string> {
+  const held = new Map<string, string>(tokens);
+  const prefix = manageTokenKey("");
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      // `inv-manage-seen:<id>` does not match: the prefix ends in the colon
+      // that only the token key has after "manage".
+      if (!key?.startsWith(prefix)) continue;
+      const id = key.slice(prefix.length);
+      if (held.has(id)) continue;
+      const token = safeRead(key);
+      if (token) held.set(id, token);
+    }
+  } catch {
+    // Blocked storage leaves the in-memory layer, which is the right answer
+    // for a signed-in host and an empty one for everybody else.
+  }
+  for (const id of held.keys()) {
+    if (!isInvitationId(id)) held.delete(id);
   }
   return held;
 }
