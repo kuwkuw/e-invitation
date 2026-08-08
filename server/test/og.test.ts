@@ -2,7 +2,13 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  OG_PNG_CACHE_LIMIT,
+  recallOgPng,
+  rememberOgPng,
+  resetOgPngCache,
+} from "../src/og/cache.js";
 import { OG_PALETTES, OG_TYPOGRAPHY, renderOgPng } from "../src/og/render.js";
 import { DesignTokens, type Invitation } from "../src/schemas.js";
 
@@ -56,6 +62,49 @@ describe("og rendering", () => {
       }
     }
   }, 60_000);
+});
+
+// Driven with dummy buffers rather than through the route: the property under
+// test is the eviction, and filling the cache for real would mean rendering
+// OG_PNG_CACHE_LIMIT + 1 PNGs, which the suite above already needs 60s for at
+// twelve.
+describe("og png cache", () => {
+  beforeEach(() => {
+    resetOgPngCache();
+  });
+
+  const png = (n: number) => Buffer.from([n]);
+
+  it("returns what it was given, and misses on an unknown key", () => {
+    rememberOgPng("abc:1", png(1));
+    expect(recallOgPng("abc:1")).toEqual(png(1));
+    // Republishing mints a new key rather than invalidating the old one.
+    expect(recallOgPng("abc:2")).toBeUndefined();
+  });
+
+  it("evicts the least recently used entry once over the limit", () => {
+    for (let i = 0; i <= OG_PNG_CACHE_LIMIT; i++) {
+      rememberOgPng(`inv-${i}:1`, png(i));
+    }
+    // One over the limit: the first key inserted is the one that went.
+    expect(recallOgPng("inv-0:1")).toBeUndefined();
+    expect(recallOgPng(`inv-${OG_PNG_CACHE_LIMIT}:1`)).toEqual(png(OG_PNG_CACHE_LIMIT));
+  });
+
+  it("keeps an entry that is still being read", () => {
+    rememberOgPng("popular:1", png(0));
+    for (let i = 1; i < OG_PNG_CACHE_LIMIT; i++) {
+      rememberOgPng(`inv-${i}:1`, png(i));
+      // A hit refreshes recency, so the oldest *insertion* is not the oldest
+      // *use* — without that, a link everyone is opening would be evicted by
+      // one-off renders of links nobody is.
+      expect(recallOgPng("popular:1")).toEqual(png(0));
+    }
+    rememberOgPng("newcomer:1", png(99));
+    rememberOgPng("newest:1", png(98));
+    expect(recallOgPng("popular:1")).toEqual(png(0));
+    expect(recallOgPng("inv-1:1")).toBeUndefined();
+  });
 });
 
 describe("og routes", () => {

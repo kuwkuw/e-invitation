@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
+import { recallOgPng, rememberOgPng } from "../og/cache.js";
 import { OG_HEIGHT, OG_WIDTH, renderOgPng } from "../og/render.js";
 import { absoluteBase } from "../publicUrl.js";
 import { type Invitation, InvitationId } from "../schemas.js";
@@ -12,10 +13,6 @@ function latestVersion(record: PublishedRecord): Invitation {
   if (!invitation) throw new Error(`record ${record.id} has no versions`);
   return invitation;
 }
-
-// PNG cache keyed by id:version — a published snapshot is immutable, so a
-// rendered image never goes stale; republishing bumps the version.
-const pngCache = new Map<string, Buffer>();
 
 function lookup(params: unknown): PublishedRecord | null {
   const id = InvitationId.safeParse((params as { id?: string }).id);
@@ -51,11 +48,13 @@ export function registerOgRoutes(app: FastifyInstance): void {
   app.get("/api/invitations/:id/og.png", async (request, reply) => {
     const record = lookup(request.params);
     if (!record) return reply.code(404).send({ error: "Invitation not found." });
+    // Keyed id:version — a published snapshot is immutable, so a rendered
+    // image never goes stale; republishing bumps the version (og/cache.ts).
     const key = `${record.id}:${record.versions.length}`;
-    let png = pngCache.get(key);
+    let png = recallOgPng(key);
     if (!png) {
       png = await renderOgPng(latestVersion(record));
-      pngCache.set(key, png);
+      rememberOgPng(key, png);
     }
     return reply
       .header("Content-Type", "image/png")
