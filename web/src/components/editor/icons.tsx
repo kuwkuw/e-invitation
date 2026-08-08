@@ -13,8 +13,8 @@ export const BackIcon = () => (
   </svg>
 );
 
-export const ShareIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+export const ShareIcon = ({ size = 14 }: { size?: number } = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
       d="M12 15V4M8 8l4-4 4 4"
       stroke="currentColor"
