@@ -9,7 +9,8 @@ FR-11, 2026-07-31 when the share loop got the docs pass it had been owed since
 its code landed and RSVP notifications (adr-015) shipped as FR-12, and
 2026-08-02 when production was read against
 [07-monetization.md](07-monetization.md) §5.1 for the first time and the next
-iteration was taken. This
+iteration was taken, and 2026-08-08 when six days of the standing "wait for
+numbers" candidate were read back and the share sheet was taken. This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -23,7 +24,8 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Seven iterations have shipped since:
+Ten iterations have shipped since (the last three were missing from this list
+until 2026-08-08 — the sections below always carried them):
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -41,6 +43,11 @@ Seven iterations have shipped since:
   Shipped as FR-11.
 - **Reply notifications** — [adr-015](decisions/adr-015-rsvp-notifications.md),
   below. Shipped as FR-12.
+- **The returning host on a new device** — below. Shipped as FR-11.10–11.11,
+  no new ADR.
+- **Reply notifications become opt-in** — below. Shipped as FR-12.10–12.11,
+  amending adr-015 §7.
+- **The native share sheet at publish** — below. Shipped as FR-3.6, no new ADR.
 
 ## Shipped: the host can come back
 
@@ -513,33 +520,104 @@ on and are now off. Preserving their old behaviour would mean writing `enabled
 preserve a default, which is the opposite of what this iteration is for. At
 production's account count the cost is a handful of hosts who opt in again.
 
+## Shipped: the native share sheet at publish
+
+Planned and shipped 2026-08-08. The previous version of this file made **doing
+nothing** the standing candidate — publish real events, let the numbers
+accumulate, read §5.1 when there is something to read. Six days later that is
+readable as an experiment, and this is its result:
+
+| | 2026-08-02 | 2026-08-08 |
+|---|---|---|
+| generations | 20 | 21 |
+| publishes | 10 | 12 |
+| RSVPs | 11 | 11 |
+| guest-page views | 6 | **6** |
+| referred generations | 0 | 0 |
+| `views_per_publish` | 0.6 | **0.5** |
+
+Two invitations were published in six days and **neither was opened by
+anybody**. `views_per_publish` fell only because the denominator moved. Waiting
+did not produce the measurement, and there is no version of continuing to wait
+that produces it either — so of the two backlog items that touch anything, the
+one on the loop being measured was taken.
+
+The gap it closes is an asymmetry that had been sitting in the code since the
+guest page shipped: [GuestPage.tsx](../web/src/GuestPage.tsx) calls
+`navigator.share` with a clipboard fallback, and
+[SharePanel.tsx](../web/src/components/editor/SharePanel.tsx) was
+`onCopyLink` and nothing else. The **guest** — the least invested person in the
+loop — got the native sheet, while the host, at the one moment the whole
+product turns on, got "copy, leave the app, find Viber, paste". Intent 4 in
+[01-vision.md](01-vision.md) is messenger-native sharing and
+[07-monetization.md](07-monetization.md) §3 names that channel the only
+affordable one.
+
+What is settled, shipped as **FR-3.6**:
+
+1. **The primary action becomes Share where the browser can share**, with
+   copying stepping down to an outline button beneath it. Not a replacement:
+   pasting the link somewhere that is not a chat is ordinary, and this branch
+   is not mobile-only — desktop Safari and Windows Chrome both share natively.
+2. **The panel's hierarchy is a rule about count, not about which action is
+   filled.** [adr-010](decisions/adr-010-host-manage-link.md) §3 keeps the
+   manage link subordinate with one filled accent; there is still exactly one,
+   and both public controls sit above the divider. The secondary is neutral
+   chrome rather than the manage block's warm `.sp-ghost`, so the two copy
+   buttons never read as a pair.
+3. **A dismissed sheet is a decision, not a failure.** Only a genuine error
+   falls back to the clipboard. The guest page copies on any rejection, which
+   pops "Copied!" over a deliberate cancel — that behaviour was not carried
+   across, and the guest side keeps it for now rather than being changed in an
+   iteration that is not about it.
+4. **The sheet carries the title as published**, not as edited since. The
+   editor keeps running after a publish, and what the link resolves to does not
+   change until the host republishes.
+5. **Never the manage token**, which is a bearer secret whose targets here
+   would be group chats. Held by a test rather than by care.
+6. **The capability is read once, in the hook**, so the panel stays
+   presentational and `canShare: false` — jsdom, and every browser without the
+   API — is the panel exactly as it shipped.
+
+One commit plus this docs pass. **adr-010 §9's design-before-code rule was not
+followed**, on the precedent the FR-11.10 section set two iterations ago: it is
+written for substantial new surfaces, and this is one button added to an
+existing block whose governing constraint was already written down and already
+tested. The constraint here is the filled-accent count, held by
+`SharePanel.test.tsx`, and the new cases assert it in the new state rather than
+around it.
+
+**What this iteration is answerable for**: it cannot manufacture guests. It
+removes friction at the step where the loop measurably breaks, and the numbers
+above are the reason to believe that step is where it breaks — but n is 12
+publishes lifetime, the two most recent may well have been our own testing, and
+a share sheet does not move `new_hosts_per_publish` by itself. This doc's four
+previous warnings about building for hosts who are not here yet all still
+stand.
+
 ## No iteration currently taken
 
-Both sections above shipped on 2026-08-02, and the position at the top of them
-is unchanged by having done so: `views_per_publish` is 0.6,
-`new_hosts_per_publish` is 0, and neither number moved, because neither
-iteration was capable of moving it. One fixed a capability that was built and
-unreachable; the other stopped an unwarmed sending domain mailing people who
-had not asked. Both were worth doing and neither was growth.
+The share sheet shipped 2026-08-08 and the position above is unchanged by it:
+`views_per_publish` is 0.5, `new_hosts_per_publish` is 0, and the product still
+needs published events real guests open. What changed is that the cheapest
+plausible cause of the publish→view gap is no longer in the product.
 
-What did change is the ceiling: with Groq configured, the product survives
-roughly three times the traffic it could have a day earlier. That matters only
-if traffic arrives, which remains the one thing no feature in this backlog
-produces.
-
-The standing candidate is still **doing nothing yet** — publish real events,
-let the numbers accumulate, and read §5.1 when there is something to read. Of
-the two items below that would change anything, the share sheet is the only one
-that touches the loop the measurement is about.
+The reading to take next is not another feature: it is whether
+`views_per_publish` moves off 0.5 for publishes made after this. If it does not,
+the friction was never the explanation and the honest conclusion in §5.1 gets
+closer.
 
 ## Candidate backlog
 
-- **Native share sheet at publish** — the host's share panel is copy-link only,
-  while the guest page already uses `navigator.share`. Intent 4 in
-  [01-vision.md](01-vision.md) is messenger-native sharing, and at the highest
-  value moment in the product a mobile host has to copy, leave the app, find
-  Viber and paste. About one PR, and it sits directly on the only acquisition
-  channel [07-monetization.md](07-monetization.md) §3 says is affordable.
+- **The RSVP prompt is the only field anyone rewrites.** `/api/metrics` reads
+  `field_regenerations: {"rsvp_prompt": 6}` — every field regeneration in the
+  product's lifetime, no exceptions, at a `regenerate_rate` of 0.29.
+  [01-vision.md](01-vision.md) calls that rate the primary copy-quality signal,
+  and this is the first time it has said anything specific. `COPY_SYSTEM` in
+  [copy.ts](../server/src/pipeline/copy.ts) gives `details_line` an explicit
+  rule and gives `rsvp_prompt` nothing beyond its schema description, which is
+  a plausible cause. Smallest item on this list: a prompt change and a test.
+  Caveat: six events could be one host with a habit.
 - **Invitation gallery on the landing page** — a visitor cannot see what they
   would get without typing a sentence first. The token map is deterministic
   ([adr-003](decisions/adr-003-no-image-generation.md)), so samples cost no LLM
@@ -562,6 +640,9 @@ that touches the loop the measurement is about.
   this item narrows rather than disappears.
 - **Per-key metering/credits** — stays rejected-for-now (adr-006); revisit
   only if the free-tier + rate-limit model proves too tight for real traffic.
+- ~~**Native share sheet at publish**~~ — shipped as FR-3.6; see the section
+  above. The panel's hierarchy survived it, which was the only thing this item
+  had ever been waiting on.
 - ~~**Share-loop instrumentation**~~ — shipped as FR-4.7 and FR-7.3–7.5; see
   [adr-013](decisions/adr-013-share-loop-instrumentation.md) and the section
   above. What it produces is now waiting on traffic, not on code.

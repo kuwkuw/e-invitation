@@ -2,12 +2,16 @@ import { useState } from "react";
 import { manageUrl, shareUrl } from "../../hooks/usePublishing";
 import type { UiStrings } from "../../i18n";
 import type { PublishResult } from "../../types";
-import { CheckIcon, LinkIcon, LockIcon, MailIcon, MailOffIcon } from "./icons";
+import { CheckIcon, LinkIcon, LockIcon, MailIcon, MailOffIcon, ShareIcon } from "./icons";
 
 interface Props {
   published: PublishResult;
   onCopyLink: () => void;
   copied: boolean;
+  /** Whether this browser can open a native share sheet. False — jsdom, and
+   *  every browser without the API — is the panel exactly as it shipped. */
+  canShare?: boolean;
+  onShare?: () => void;
   onCopyManageLink: () => void;
   manageCopied: boolean;
   /** A signed-in host's account holds the manage link for them (adr-014 §5),
@@ -49,11 +53,19 @@ interface Props {
  * button, no selection. The risk appears with the copy button, and so does the
  * warning. **The copy button never exists on screen without it**: every state,
  * every width, both languages.
+ *
+ * Where the browser can share natively the public block gains a second control
+ * and the primary becomes Share. That does not spend the hierarchy: both are
+ * the *public* link, above the divider, and the count of filled accents stays
+ * one. Copy steps down to an outline in neutral chrome — deliberately not the
+ * manage block's warm `.sp-ghost`, so the two never read as a pair.
  */
 export function SharePanel({
   published,
   onCopyLink,
   copied,
+  canShare = false,
+  onShare,
   onCopyManageLink,
   manageCopied,
   signedIn = false,
@@ -94,10 +106,25 @@ export function SharePanel({
         <LinkIcon />
         <span className="sp-link-value">{guestUrl}</span>
       </div>
-      <button type="button" className="sp-primary" onClick={onCopyLink}>
-        {copied ? t.copied : t.copyLink}
-      </button>
-      <p className="sp-hint">{t.shareHint}</p>
+      {canShare && onShare ? (
+        <>
+          <button type="button" className="sp-primary" onClick={onShare}>
+            <ShareIcon size={17} />
+            {t.shareInvitation}
+          </button>
+          <button type="button" className="sp-secondary" onClick={onCopyLink}>
+            {copied ? t.copied : t.copyLink}
+          </button>
+          <p className="sp-hint">{t.shareInvitationHint}</p>
+        </>
+      ) : (
+        <>
+          <button type="button" className="sp-primary" onClick={onCopyLink}>
+            {copied ? t.copied : t.copyLink}
+          </button>
+          <p className="sp-hint">{t.shareHint}</p>
+        </>
+      )}
 
       <div className="sp-divider" />
 

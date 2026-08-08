@@ -86,6 +86,70 @@ describe("SharePanel", () => {
   });
 });
 
+// 01-vision intent 4: sharing is messenger-native. Where the browser has a
+// share sheet the panel offers it, and everywhere else it is untouched — every
+// case above runs with `canShare` unset and is the proof of the second half.
+describe("native share", () => {
+  function renderShareable(overrides: Partial<Parameters<typeof SharePanel>[0]> = {}) {
+    return renderPanel({ canShare: true, onShare: () => {}, t: UI.en, ...overrides });
+  }
+
+  it("makes the share sheet the primary action and keeps copy beneath it", () => {
+    const { container } = renderShareable();
+    expect(container.querySelector(".sp-primary")?.textContent).toContain(UI.en.shareInvitation);
+    expect(container.querySelector(".sp-secondary")?.textContent).toBe(UI.en.copyLink);
+  });
+
+  // The rule the panel is built on is a count, not a label (adr-010 §3): one
+  // filled accent, and the manage action still an outline in its own block.
+  it("does not add a second filled accent", () => {
+    const { container } = renderShareable({ signedIn: true, manageShown: true });
+    expect(container.querySelectorAll(".sp-primary")).toHaveLength(1);
+    expect(container.querySelector(".sp-secondary")?.className).not.toContain("sp-ghost");
+    expect(container.querySelector(".sp-ghost")?.textContent).toBe(UI.en.copyManageLink);
+  });
+
+  // The hint describes the primary button. Promising a paste when nothing is
+  // pasted is the kind of copy that survives because nobody re-reads it.
+  it("stops telling the host to paste once nothing is pasted", () => {
+    renderShareable();
+    expect(screen.getByText(UI.en.shareInvitationHint)).toBeTruthy();
+    expect(screen.queryByText(UI.en.shareHint)).toBeNull();
+  });
+
+  it("keeps the two actions on separate callbacks", () => {
+    const onShare = vi.fn();
+    const onCopyLink = vi.fn();
+    renderShareable({ onShare, onCopyLink });
+
+    fireEvent.click(screen.getByText(UI.en.shareInvitation));
+    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(onCopyLink).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText(UI.en.copyLink));
+    expect(onCopyLink).toHaveBeenCalledTimes(1);
+    expect(onShare).toHaveBeenCalledTimes(1);
+  });
+
+  it("still confirms the copy from its demoted position", () => {
+    renderShareable({ copied: true });
+    expect(screen.getByText(UI.en.copied).className).toContain("sp-secondary");
+  });
+
+  it("leaves the panel alone where the browser cannot share", () => {
+    const { container } = renderPanel({ t: UI.en });
+    expect(container.querySelector(".sp-primary")?.textContent).toBe(UI.en.copyLink);
+    expect(container.querySelector(".sp-secondary")).toBeNull();
+    expect(screen.getByText(UI.en.shareHint)).toBeTruthy();
+  });
+
+  it("carries both labels in Ukrainian", () => {
+    const { container } = renderShareable({ t: UI.uk });
+    expect(container.querySelector(".sp-primary")?.textContent).toContain(UI.uk.shareInvitation);
+    expect(container.querySelector(".sp-secondary")?.textContent).toBe(UI.uk.copyLink);
+  });
+});
+
 // adr-014 §5 / DS `ShareSignedIn`. The hierarchy above must survive intact;
 // what changes is how much work it takes to reach the manage link.
 describe("signed in", () => {

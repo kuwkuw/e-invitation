@@ -89,6 +89,11 @@ export interface UiStrings {
   shareHint: string;
   copyLink: string;
   copied: string;
+  /** Used in place of `copyLink`/`shareHint` where the browser has a native
+   *  share sheet. Both change together: the hint describes what the primary
+   *  button does, and "paste it into Viber" is wrong once nothing is pasted. */
+  shareInvitation: string;
+  shareInvitationHint: string;
   manageLinkLabel: string;
   manageLinkWarning: string;
   manageLinkMasked: string;
@@ -413,6 +418,8 @@ export const UI: Record<Language, UiStrings> = {
     shareHint: "Paste it into Viber, Telegram or WhatsApp",
     copyLink: "Copy the link",
     copied: "Copied!",
+    shareInvitation: "Share the invitation",
+    shareInvitationHint: "Straight to Viber, Telegram or WhatsApp",
     manageLinkLabel: "Manage link",
     manageLinkWarning:
       "For you only — don't send it to a chat. Anyone who opens it sees every response.",
@@ -532,6 +539,8 @@ export const UI: Record<Language, UiStrings> = {
     shareHint: "Вставте у Viber, Telegram або WhatsApp",
     copyLink: "Скопіювати посилання",
     copied: "Скопійовано!",
+    shareInvitation: "Поділитися запрошенням",
+    shareInvitationHint: "Одразу у Viber, Telegram або WhatsApp",
     manageLinkLabel: "Посилання для керування",
     manageLinkWarning:
       "Лише для вас — не надсилайте його в чат. Хто відкриє, побачить усі відповіді.",
