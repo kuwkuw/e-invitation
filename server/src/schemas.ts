@@ -270,3 +270,52 @@ export type NotificationPrefRequest = z.infer<typeof NotificationPrefRequest>;
 
 export const NotificationPref = z.object({ enabled: z.boolean() });
 export type NotificationPref = z.infer<typeof NotificationPref>;
+
+// Host feedback (adr-016) --------------------------------------------------
+
+// Which host surface the message was written on. A closed enum for the same
+// reason `GenerateSource` is one (adr-013 §3): it separates somebody looking
+// at the product from somebody running a live event, and it cannot be
+// decomposed into *which* event. An invitation id here would rebuild the host
+// graph adr-012 §3 and adr-005 both refused, and would arrive attached to free
+// text, which is a worse version of the same thing.
+//
+// The editor is absent on purpose (adr-016 §4) — `/create` is the three-second
+// path the product is built around — and so is the guest page: a guest came
+// for someone else's wedding.
+export const FeedbackPage = z.enum(["landing", "manage"]);
+export type FeedbackPage = z.infer<typeof FeedbackPage>;
+
+// One message, one direction. No subject, no rating, no contact field, no
+// attachment (adr-016 §1–2). The 2000-character cap is half the rate limit:
+// it bounds a single row, while `LIMIT_FEEDBACK_PER_DAY` bounds how many.
+export const FeedbackRequest = z.object({
+  message: z.string().trim().min(1).max(2000),
+  page: FeedbackPage,
+  // The UI language the host was reading, which says which audience is
+  // speaking to a product whose thesis is Ukrainian-first. Known without
+  // asking, like `page`.
+  lang: Language,
+});
+export type FeedbackRequest = z.infer<typeof FeedbackRequest>;
+
+// What an operator reads back (adr-016 §6). `email` is joined off `users` at
+// read time, behind the operator credential — the feedback table stores only
+// `user_id`, so it is worthless if lifted on its own. Null for a message sent
+// signed out, and null again once that account is deleted (§8: deletion
+// detaches the row rather than removing it).
+export const FeedbackEntry = z.object({
+  id: z.string(),
+  message: z.string(),
+  page: FeedbackPage,
+  lang: Language,
+  email: z.string().nullable(),
+  created_at: z.string(),
+});
+export type FeedbackEntry = z.infer<typeof FeedbackEntry>;
+
+export const FeedbackList = z.object({
+  items: z.array(FeedbackEntry),
+  total: z.number(),
+});
+export type FeedbackList = z.infer<typeof FeedbackList>;

@@ -403,6 +403,66 @@ them.
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
 
+## FR-13 Host feedback
+
+**Status: built** — [adr-016](decisions/adr-016-host-feedback.md),
+`POST|GET /api/feedback` ([feedback.ts](../server/src/feedback.ts),
+[routes/feedback.ts](../server/src/routes/feedback.ts),
+[FeedbackSheet.tsx](../web/src/components/FeedbackSheet.tsx))
+
+The first channel that runs *from* a host to us. Every other signal the product
+has is a counter it increments about itself: FR-7 can say that two invitations
+were published and never opened, and cannot say whether the host never sent the
+link, sent it and nobody tapped, or published a test. It also reaches the one
+person FR-11's publish gate makes invisible — a host who bounces at the Google
+button leaves no trace but a generation that never became a publish.
+
+- FR-13.1 A host can write one free-text message (≤2000 characters) and send
+  it. There is no subject, no category, no rating and no attachment: a category
+  is a question asked before the one the host came to answer, and a rating at
+  this volume yields a number that means nothing while costing the sentence
+  nobody predicted ([adr-016](decisions/adr-016-host-feedback.md) §1).
+- FR-13.2 **Sending requires no account.** Signed in, the message is attributed
+  to the account and we can reply; signed out, it is stored anonymously and
+  stays that way. Which of the two is happening is stated on the form *before*
+  sending, so nobody discovers afterwards that their message was anonymous.
+  There is no "your email" field — FR-11.1's Google-verified address is the one
+  identity this product holds.
+- FR-13.3 The message carries **only** the surface it was written on
+  (`landing` | `manage`) and the UI language. No invitation id, no URL, no
+  referrer, no IP, no user agent. `page` is a closed enum for the reason
+  `source` is one in FR-7.3: an id would rebuild the host graph FR-5.7 and the
+  capability-token model both refuse to build, and here it would arrive
+  attached to free text.
+- FR-13.4 The form has two durable homes — the landing footer and the host
+  dashboard — and appears in neither uninvited. The editor is deliberately
+  excluded: `/create` is the three-second path the product is built around, and
+  a feedback prompt there competes with the one action the page exists for. The
+  guest page is excluded because a guest is somebody else's invitee.
+- FR-13.5 Rate-limited per IP per day (`LIMIT_FEEDBACK_PER_DAY`, default 5, 0
+  disables), on the same allowance mechanism as FR-9. No CAPTCHA and no
+  third-party spam service: the allowance plus the length cap is proportionate
+  at this traffic, and the first correction is an env var rather than a
+  dependency.
+- FR-13.6 A failed send never loses what the host wrote — the message stays in
+  the field with the reason beside it, and the daily allowance says *tomorrow*
+  rather than "try again in a moment". A successful send confirms in place;
+  this sheet is the only receipt a feedback message has.
+- FR-13.7 An operator reads the messages at `GET /api/feedback`, authorized by
+  `FEEDBACK_TOKEN` in an `x-feedback-token` header, compared in constant time.
+  **With no token configured the endpoint answers 404** — a deployment that
+  never set up a reader does not advertise that a reader exists. There is no
+  admin UI. The account's address is joined at read time behind that
+  credential; the feedback table stores only a user id.
+- FR-13.8 The message body is stored in exactly one place. The per-submission
+  log line carries the row id, surface, language, whether it was attributed and
+  the message *length* — never the text — so one `DELETE` removes what a host
+  wrote.
+- FR-13.9 Deleting an account (FR-11.7) **detaches** that host's feedback
+  rather than deleting it: the message is about the product and the identity is
+  incidental to it. The row survives with no name on it, alongside the
+  invitations and RSVPs FR-11.7 already keeps.
+
 | Path | Page | Audience |
 | --- | --- | --- |
 | `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7) | Public |
@@ -433,6 +493,19 @@ them.
 `/unsubscribe` sits **outside `/api`** on purpose: the session cookie is scoped
 `Path=/api`, and this URL arrives from an inbox where a mail provider may fetch
 it on the reader's behalf.
+
+### Feedback endpoints (FR-13)
+
+| Endpoint | Purpose | Authorized by |
+| --- | --- | --- |
+| `POST /api/feedback` | Send one message | — (session optional, and only to attribute; origin check on the write) |
+| `GET /api/feedback` | Read what hosts wrote | `FEEDBACK_TOKEN` in `x-feedback-token` (`404` when unconfigured) |
+
+The write is the only endpoint in the product that is **authorized by nothing**
+and is not a guest action. That is FR-13.2 rather than an oversight: requiring
+an account would collect answers only from hosts who got past the publish gate,
+which is the thing the channel most needs to hear about. The read is the first
+endpoint authorized by an **operator** credential rather than a host's.
 
 ## Not yet built (backlog)
 

@@ -993,3 +993,69 @@ export const CRASH: Record<Language, Record<CrashAudience, CrashStrings>> = {
     },
   },
 };
+
+// Host feedback (adr-016). Its own table because two unrelated surfaces render
+// it — the landing footer and the host dashboard — and neither owns it.
+export interface FeedbackStrings {
+  /** The trigger, on both surfaces. Names the direction rather than the act:
+   *  "feedback" alone reads as a survey, and this is a message to people. */
+  link: string;
+  title: string;
+  intro: string;
+  placeholder: string;
+  /** Who we would be replying to, said **before** sending rather than
+   *  discovered afterwards (adr-016 §2). `{email}` is the signed-in address. */
+  signedInAs: string;
+  /** The signed-out case. It states the limit plainly and does not offer a
+   *  sign-in: this sheet is often open *because* something about accounts went
+   *  wrong, and answering that with another sign-in button would be the
+   *  product arguing with the person trying to tell it something. */
+  anonymous: string;
+  send: string;
+  sending: string;
+  cancel: string;
+  thanksTitle: string;
+  thanksBody: string;
+  close: string;
+  /** The allowance in §5, in the host's language — the server's 429 prose is
+   *  English-only, so it is mapped rather than shown, as failureMessage.ts
+   *  already does for the LLM endpoints. */
+  errorLimited: string;
+  errorGeneric: string;
+}
+
+export const FEEDBACK: Record<Language, FeedbackStrings> = {
+  en: {
+    link: "Write to us",
+    title: "Tell us what you think",
+    intro:
+      "What worked, what annoyed you, what's missing. It goes straight to the people who build this.",
+    placeholder: "Anything at all…",
+    signedInAs: "Signed in as {email} — we can write back.",
+    anonymous: "This is sent anonymously, so we won't be able to reply.",
+    send: "Send",
+    sending: "Sending…",
+    cancel: "Not now",
+    thanksTitle: "Thank you",
+    thanksBody: "We read every message.",
+    close: "Close",
+    errorLimited: "That's enough for one day — write to us again tomorrow.",
+    errorGeneric: "That didn't send. Try again in a moment.",
+  },
+  uk: {
+    link: "Напишіть нам",
+    title: "Розкажіть, що думаєте",
+    intro: "Що спрацювало, що дратує, чого бракує. Це читають ті, хто робить цей застосунок.",
+    placeholder: "Будь-що…",
+    signedInAs: "Ви увійшли як {email} — ми зможемо відповісти.",
+    anonymous: "Повідомлення надсилається анонімно, тож відповісти ми не зможемо.",
+    send: "Надіслати",
+    sending: "Надсилаємо…",
+    cancel: "Не зараз",
+    thanksTitle: "Дякуємо",
+    thanksBody: "Ми читаємо кожне повідомлення.",
+    close: "Закрити",
+    errorLimited: "На сьогодні досить — напишіть нам завтра.",
+    errorGeneric: "Не вдалося надіслати. Спробуйте за мить.",
+  },
+};

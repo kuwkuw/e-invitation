@@ -1639,3 +1639,37 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .lp-delete-account { margin: 10px 2px 0; }
 .lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: #a29a8b; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
 .lp-delete-link:hover { color: #a83f3f; }
+
+/* Host feedback (adr-016). The sheet reuses the ag-* shell — a fourth
+   container for a fourth kind of moment would be a new visual idea for no new
+   reason — so what is defined here is only the field, the two lines of state
+   around it, and the trigger.
+
+   The trigger is a text link in the two footers and nothing more (§4): it must
+   read as available rather than as asked-for, or a host arrives at a page
+   about their own event and finds the product talking about itself. */
+.fb-link { border: none; background: none; font: inherit; font-size: inherit; color: inherit; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 3px; opacity: 0.85; }
+.fb-link:hover { opacity: 1; }
+/* In the landing footer the sentence and the link share one centred line; on a
+   narrow screen they stack rather than hyphenate. */
+.lp-footer { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 14px; }
+/* On the dashboard it sits beside the wordmark, inheriting its grey and its
+   letter-spacing — with the spacing cancelled on the link itself, which is
+   words rather than a mark. */
+.hm-feedback { margin-left: 12px; letter-spacing: 0; font-weight: 500; }
+.fb-input { width: 100%; box-sizing: border-box; min-height: 116px; resize: vertical; padding: 13px 14px; border: 1px solid #ddd6c8; border-radius: 14px; background: #fff; font: inherit; font-size: 0.95rem; line-height: 1.5; color: #23211d; }
+.fb-input::placeholder { color: #b0a99a; }
+.fb-input:focus { outline: none; border-color: #b3592e; box-shadow: 0 0 0 3px rgba(179, 89, 46, 0.12); }
+/* Whether we can write back, stated before the send rather than after it. The
+   faintest text on the sheet: it is a fact the host should have, not a thing
+   to decide about. */
+.fb-identity { margin: 9px 2px 14px; font-size: 0.79rem; color: #a29a8b; line-height: 1.45; }
+/* The one red on this sheet, and text only — nothing here is destructive, it
+   simply did not send. */
+.fb-error { margin: 0 2px 12px; font-size: 0.82rem; color: #a83f3f; line-height: 1.45; }
+.fb-send { width: 100%; height: 54px; border: none; border-radius: 16px; background: #b3592e; color: #fff; font: inherit; font-weight: 700; font-size: 1.02rem; box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3); cursor: pointer; }
+.fb-send:hover:not(:disabled) { background: #9f4d26; }
+/* Disabled is the empty field's normal state, not an error, so it goes quiet
+   rather than red — and loses the shadow, which is what made it read as the
+   thing to press. */
+.fb-send:disabled { background: #e8ded1; color: #a29a8b; box-shadow: none; cursor: default; }

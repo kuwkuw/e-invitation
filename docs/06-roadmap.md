@@ -10,7 +10,10 @@ its code landed and RSVP notifications (adr-015) shipped as FR-12, and
 2026-08-02 when production was read against
 [07-monetization.md](07-monetization.md) §5.1 for the first time and the next
 iteration was taken, and 2026-08-08 when six days of the standing "wait for
-numbers" candidate were read back and the share sheet was taken. This
+numbers" candidate were read back and the share sheet was taken, and
+2026-08-09 when the product got its first channel for being told something
+rather than counting itself
+([adr-016](decisions/adr-016-host-feedback.md), FR-13). This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -24,7 +27,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Ten iterations have shipped since (the last three were missing from this list
+Eleven iterations have shipped since (three of them were missing from this list
 until 2026-08-08 — the sections below always carried them):
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
@@ -48,6 +51,8 @@ until 2026-08-08 — the sections below always carried them):
 - **Reply notifications become opt-in** — below. Shipped as FR-12.10–12.11,
   amending adr-015 §7.
 - **The native share sheet at publish** — below. Shipped as FR-3.6, no new ADR.
+- **Host feedback** — [adr-016](decisions/adr-016-host-feedback.md), below.
+  Shipped as FR-13.
 
 ## Shipped: the host can come back
 
@@ -595,12 +600,87 @@ a share sheet does not move `new_hosts_per_publish` by itself. This doc's four
 previous warnings about building for hosts who are not here yet all still
 stand.
 
+## Shipped: a way for a host to tell us something
+
+Planned and shipped 2026-08-09, settled in
+[ADR-016](decisions/adr-016-host-feedback.md) (accepted) and shipped as
+**FR-13**. It follows the share sheet by one day and does not disturb the
+reading that section leaves open — `views_per_publish` off 0.5 is still the
+number to watch, and this changes nothing that feeds it.
+
+It was taken because it is **the one item on the list that gets smaller rather
+than larger the fewer hosts there are**, which is the test this doc's five
+standing warnings imply and which no previous iteration has applied to itself.
+Every other candidate below assumes an audience. This one assumes the opposite:
+at 12 publishes, 6 views and 0 referred generations, the product's entire
+instrument is counters it increments about itself, and none of them can tell
+apart the four reasons a published invitation goes unopened. A host who says
+one sentence about why outranks the whole of `metrics.json` at this n.
+
+The sharper gap is [adr-014](decisions/adr-014-host-accounts.md)'s. §2 put a
+sign-in in front of publishing on a recorded risk — adr-005 argued signup
+before demonstrated value kills the funnel — and the gate's cost is currently
+read off `publish_rate` against the frozen baseline, which is 0.6 against 0.47
+on three publishes. **A host who bounces at the Google button leaves no trace
+at all.** The person whose opinion would settle that revisit trigger is exactly
+the one the product could not hear from.
+
+What the ADR settles:
+
+1. **One message, one direction, no inbox.** No thread, no ticket, no rating
+   scale — a 1–5 widget at this volume produces an average nobody can read
+   while costing the sentence nobody predicted. The product already has too
+   many numbers.
+2. **Sending requires no account** (§2), which is the whole point rather than a
+   convenience: a form that demanded one would collect answers only from hosts
+   who got past the thing being asked about. Signed in we can reply, signed out
+   we cannot, and the form says which **before** the send. No "your email"
+   field — that would be a second unverified identity on a page that promises
+   nothing.
+3. **The context is captured, never asked, and is a closed enum** — `landing` |
+   `manage`, plus the UI language. No invitation id, no URL, no IP. Same form
+   and same reason as adr-013 §3's `source`: an id here would rebuild the host
+   graph adr-012 and adr-005 both refused, arriving attached to free text.
+4. **Two durable homes, and the editor is not one of them** (§4). `/create` is
+   the three-second path the product is built around. The cost is stated rather
+   than hidden: the feedback we would most like — from somebody stuck
+   mid-generation — is what this placement does not collect, and it is the
+   first revisit trigger.
+5. **The read is an operator's, and invisible without a token** (§6).
+   `FEEDBACK_TOKEN` unset answers **404**, not 401 — the keyless-boot
+   convention pointed in the direction that also costs an attacker information.
+   No admin UI: a screen for an audience of one is the failure mode this
+   iteration is answerable to.
+6. **The message has one copy** (§7). The log line carries its length, never
+   its body, so one `DELETE` removes what a host wrote.
+7. **Deleting an account detaches feedback rather than destroying it** (§8),
+   extending adr-014 §9's rule to a third case: the message is about the
+   product and the identity is incidental to it.
+
+One branch: the ADR, the server (schema, table, store, route, allowance), the
+client (hook, sheet, both triggers, bilingual strings), tests in both
+workspaces, and this docs pass — written in the same pass rather than an
+iteration late, which is the convention that slipped once and has held since.
+
+**adr-010 §9's design-before-code rule was not followed**, on the precedent
+FR-11.10 and FR-3.6 set: it is written for substantial new surfaces, and this
+is a text link in two footers opening the `ag-*` sheet shell three other
+moments already use. A fourth container would have been a new visual idea for
+no new kind of moment.
+
+**What this iteration is answerable for.** It cannot manufacture hosts either,
+and a box nobody writes in is worse than no box — so the ADR makes "the
+operator stops reading it" an explicit revisit trigger with removal as the
+remedy. What it changes is that the next time this doc reads production, the
+numbers may not be the only thing to read.
+
 ## No iteration currently taken
 
 The share sheet shipped 2026-08-08 and the position above is unchanged by it:
 `views_per_publish` is 0.5, `new_hosts_per_publish` is 0, and the product still
 needs published events real guests open. What changed is that the cheapest
-plausible cause of the publish→view gap is no longer in the product.
+plausible cause of the publish→view gap is no longer in the product, and — as
+of 2026-08-09 — that a host now has somewhere to say what the counters cannot.
 
 The reading to take next is not another feature: it is whether
 `views_per_publish` moves off 0.5 for publishes made after this. If it does not,
@@ -625,7 +705,10 @@ closer.
   search asset the product could have. Larger, and unclaimed.
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
-  to ask.
+  to ask. Three items on this list are gated on exactly that, and FR-13 is now
+  the channel a host would ask through.
+- ~~**A way for a host to tell us something**~~ — shipped as FR-13; see
+  [adr-016](decisions/adr-016-host-feedback.md) and the section above.
 - ~~**Notify the host on a new RSVP**~~ — shipped as FR-12; see
   [adr-015](decisions/adr-015-rsvp-notifications.md) and the section above.
   [adr-014](decisions/adr-014-host-accounts.md) §8 supplied the address and

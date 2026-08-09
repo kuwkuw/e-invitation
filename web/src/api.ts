@@ -10,6 +10,7 @@ import type {
   CountsResult,
   DesignTokens,
   EventBrief,
+  FeedbackInput,
   GenerateSource,
   Invitation,
   KeyringEntry,
@@ -208,6 +209,20 @@ export function setNotificationPref(enabled: boolean): Promise<NotificationPref>
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ enabled }),
+  });
+}
+
+/** Host feedback (adr-016). Sent with `credentials` because a session, **if
+ *  there is one**, attributes the message — but there is no 401 here and no
+ *  sign-in prompt: sending requires no account, since the hosts most worth
+ *  hearing from are the ones who bounced at the publish gate (§2). The server
+ *  reads the cookie if it arrives and stores an anonymous row if it does
+ *  not. */
+export function sendFeedback(input: FeedbackInput): Promise<{ ok: boolean }> {
+  return withSession<{ ok: boolean }>("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
   });
 }
 

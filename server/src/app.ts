@@ -14,6 +14,7 @@ import { TASK_ROUTES } from "./llm/routing.js";
 import { markBaseline } from "./metrics.js";
 import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
+import { registerFeedbackRoutes } from "./routes/feedback.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
 import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
@@ -108,6 +109,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
+  registerFeedbackRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
   // Outside /api (adr-015 §7) and therefore registered before the SPA
