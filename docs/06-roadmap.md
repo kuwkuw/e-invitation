@@ -595,17 +595,59 @@ a share sheet does not move `new_hosts_per_publish` by itself. This doc's four
 previous warnings about building for hosts who are not here yet all still
 stand.
 
-## No iteration currently taken
+## No iteration currently taken — accumulating
 
-The share sheet shipped 2026-08-08 and the position above is unchanged by it:
-`views_per_publish` is 0.5, `new_hosts_per_publish` is 0, and the product still
-needs published events real guests open. What changed is that the cheapest
-plausible cause of the publish→view gap is no longer in the product.
+Taken deliberately on 2026-08-08, after the share sheet shipped and went live.
+Not the same posture as the "doing nothing" the section above just reported the
+failure of: that was a wait with no question attached, and this one is a wait on
+a specific number with a threshold written down before the data arrives.
 
-The reading to take next is not another feature: it is whether
-`views_per_publish` moves off 0.5 for publishes made after this. If it does not,
-the friction was never the explanation and the honest conclusion in §5.1 gets
-closer.
+**The mark.** The share sheet reached production at 2026-08-08, and the counters
+at that moment were:
+
+| | at the mark |
+|---|---|
+| generations | 21 |
+| publishes | 12 |
+| RSVPs | 11 |
+| guest-page views | 6 |
+| referred generations | 0 |
+
+Every publish from here is one where the host had a native share sheet, so the
+post-share-sheet period reads as `(views_now − 6) / (publishes_now − 12)`.
+
+**Why that arithmetic and not a second baseline.** `markBaseline`
+([metrics.ts](../server/src/metrics.ts)) has exactly one slot and is idempotent,
+and adr-014 §7 already spent it on the auth gate — a freeze the ADR calls
+load-bearing, so it must not be overwritten. Generalizing `baseline` into a list
+was considered and rejected as disproportionate: the counters are monotonic and
+durable, so a mark written down here yields identical numbers for no code, no
+change to the `/api/metrics` shape, and no risk to the frozen comparison. Both
+approaches fail the same way and only the same way — if `metrics.json` is ever
+lost with the volume, the "before" goes with it either way.
+
+**What would count as an answer**, registered now so that whatever shows up
+later cannot be read as confirmation of whatever was hoped for:
+
+- **Under 1.0 views per post-mark publish** — the sheet changed nothing. An
+  invitation goes to a group, so a link that reaches anyone at all should clear
+  one view per publish. Friction was not the explanation, and §5.1's honest
+  conclusion gets closer.
+- **1.0 to 3.0** — ambiguous, keep accumulating and do not spend an iteration
+  on the strength of it.
+- **Above 3.0** — share links are reaching actual groups, and the publish→view
+  gap was substantially friction.
+
+The comparison is against 0.5 lifetime, or 0.8 over the post-auth-gate window
+(4 views / 5 publishes), so the honest "before" is somewhere in **0.5–0.8**.
+
+**How long this wait is, stated rather than discovered.** A ratio on one or two
+publishes is noise; ten post-mark publishes is the minimum worth reading. At the
+observed rate — 2 publishes in the six days before the mark — that is roughly a
+month, and it assumes the rate holds. That figure is itself the finding: the
+binding constraint is publish volume, not any feature in the backlog below. If
+the month passes with three publishes, the thing to change is where events come
+from, not what the editor does.
 
 ## Candidate backlog
 
