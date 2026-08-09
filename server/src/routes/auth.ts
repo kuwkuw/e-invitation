@@ -1,9 +1,12 @@
 // Google sign-in (adr-014 §3, §4). Four routes, all under /api so the session
-// cookie's Path scope covers them and nothing else.
+// cookie's Path scope covers them and nothing else: start the flow, take the
+// callback, report the session, sign out.
 //
-// This PR wires the flow and nothing more: signing in creates an account and a
-// session, and changes no other behaviour. The keyring endpoint (§5) and the
-// publish gate (§2) come next.
+// Signing in mints an account and a session and grants nothing else. What a
+// session goes on to authorize lives elsewhere — reading back the keyring
+// (§5) in routes/account.ts, and authorizing a *first* publish (§2) in
+// routes/invitations.ts. The manage token remains the credential every
+// host-facing endpoint checks.
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { createSession, deleteSession, upsertUser } from "../accounts.js";
