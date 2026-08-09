@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ApiError, publishInvitation, startGoogleSignIn } from "../api";
 import { clearDraft, hasDraft, saveDraft } from "../draft";
 import { recordHostInvitation } from "../hostInvitations";
@@ -74,9 +74,20 @@ export function usePublishing(
     return hasDraft() ? "returning" : null;
   });
   const [manageShown, setManageShown] = useState(false);
+  // Whether this browser can hand the link to another app. Read once — it
+  // cannot change for the life of the page — and read here rather than in the
+  // panel, so the panel stays presentational and the tests can drive it.
+  const [canShare] = useState(
+    () => typeof navigator !== "undefined" && typeof navigator.share === "function",
+  );
+  // The title *as published*, not as currently edited. The share sheet names
+  // the invitation the link resolves to, and a host who keeps typing after
+  // publishing has not changed that until they republish.
+  const publishedTitle = useRef("");
 
   const finish = useCallback((result: PublishResult, invitation: Invitation) => {
     setPublished(result);
+    publishedTitle.current = invitation.copy.title;
     // Read back by /manage/:id, so the host keeps access after this tab is
     // gone. The accessor swallows a blocked store on its own — a publish that
     // already succeeded server-side must not fail on a bookkeeping write.
@@ -169,6 +180,33 @@ export function usePublishing(
     setTimeout(() => setCopied(false), 2000);
   }
 
+  /**
+   * Hand the guest link to the messenger the host actually uses — the panel's
+   * primary action wherever the browser has a share sheet (01-vision intent 4).
+   * Until this existed, the highest-value moment in the product ended with
+   * "copy, leave the app, find Viber, paste", while the guest page — the least
+   * invested person in the loop — had had the native sheet since it shipped.
+   *
+   * `copyLink` stays beneath it rather than being replaced: pasting the link
+   * somewhere that is not a chat is a normal thing to want.
+   */
+  async function shareLink() {
+    if (!published) return;
+    try {
+      // A browser without `navigator.share` throws here and lands in the
+      // fallback, so the capability check is not load-bearing for correctness.
+      await navigator.share({ title: publishedTitle.current, url: shareUrl(published.id) });
+    } catch (error) {
+      // Dismissing the sheet is a decision, not a failure. Copying anyway —
+      // which is what the guest page does — answers a question the host just
+      // declined to answer, and pops "Copied!" over a deliberate cancel.
+      // Duck-typed: browsers reject with a `DOMException` here, and whether
+      // that is an `Error` subclass is not worth depending on.
+      if ((error as Error | undefined)?.name === "AbortError") return;
+      await copyLink();
+    }
+  }
+
   /** Separate from `copyLink` on purpose: separate action, separate
    *  confirmation, and the confirmation repeats the warning. */
   async function copyManageLink() {
@@ -194,10 +232,14 @@ export function usePublishing(
      *  guards, never without it (DS `ShareSignedIn`). */
     manageShown,
     toggleManageShown: () => setManageShown((open) => !open),
+    /** Whether the panel offers the share sheet as its primary action. False
+     *  everywhere else, where the panel is exactly what it has always been. */
+    canShare,
     share,
     signInAndPublish,
     resume,
     dismissGate,
+    shareLink,
     copyLink,
     copyManageLink,
   };

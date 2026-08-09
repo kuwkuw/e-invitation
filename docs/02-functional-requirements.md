@@ -65,6 +65,18 @@ implementation.
   /api/invitations/:id/og.png` renders a 1200×630 PNG server-side from the
   design tokens ([render.ts](../server/src/og/render.ts)); `GET /i/:id` serves
   the SPA shell with `og:*` meta injected for crawlers.
+- FR-3.6 Where the browser has `navigator.share`, the share panel's primary
+  action opens the native share sheet with the **guest** link, and copying
+  steps down to a secondary button beside it
+  ([SharePanel.tsx](../web/src/components/editor/SharePanel.tsx)); everywhere
+  else the panel is copy-only as before. The sheet carries the title *as
+  published*, never the manage token (FR-3.3) — its targets are the group
+  chats that link must not reach. Dismissing the sheet does nothing: only a
+  genuine failure falls back to the clipboard, so a cancel is never answered
+  with "Copied!". The panel's one-filled-accent hierarchy
+  ([adr-010](decisions/adr-010-host-manage-link.md) §3) is a rule about count
+  and survives unchanged; both buttons act on the public link and sit above
+  the divider.
 
 ## FR-4 Guest page & RSVP
 

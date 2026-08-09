@@ -126,6 +126,8 @@ export default function App() {
           published={publishing.published}
           onCopyLink={publishing.copyLink}
           copied={publishing.copied}
+          canShare={publishing.canShare}
+          onShare={publishing.shareLink}
           onCopyManageLink={publishing.copyManageLink}
           manageCopied={publishing.manageCopied}
           signedIn={account.status === "signed_in"}
