@@ -256,6 +256,49 @@ than made nullable for this.
   That is a real failure mode and it is why the token is in `.env.example`
   beside the feature rather than in a runbook.
 
+## 9. Design pass (E-invitation DS templates) — done, and it came after the code
+
+Per adr-009 §4 and adr-010 §9. The mockup is `templates/feedback-sheet` in the
+E-invitation DS project — `FeedbackMain`, `FeedbackStates`, `FeedbackSpec` —
+and it **landed after implementation, not before**. That is a departure from
+the rule, and the interesting part is not the departure but what it caught.
+
+The skip was justified on the precedent FR-11.10 and FR-3.6 set: adr-010 §9 is
+written for substantial new surfaces, and this is a text link in two footers
+opening the `ag-*` sheet shell that three other moments already use. **That
+reasoning was two-thirds right.** The composition really was covered by
+precedent — no new container, no new screen, no new state machine. But the
+field and the button *inside* the borrowed shell were new, and all three of
+their departures from the system survived code review:
+
+| Shipped in the first commit | Corrected |
+|---|---|
+| `.fb-input` border `#ddd6c8` | `#e4ddd0` — `#ddd6c8` is `.ag-google`'s **button** border, not any field's |
+| Focus as a 3px `box-shadow` glow ring | Border thickening with compensating padding — the app's one focus idiom (`.gr-input:focus`) |
+| `.fb-send` at `height: 54px` | `56px`, i.e. `.ag-retry` exactly — a third button height inside the same sheet meant nothing |
+
+The field is now `.gr-input` + `.gr-note` value for value, and the button is
+`.ag-retry` plus a disabled state. `FeedbackSpec` records both derivations so
+the next surface does not re-derive them.
+
+**The honest lesson for the precedent**, which FR-11.10 and FR-3.6 both invoke
+and which the next iteration will invoke again: those two really did add no new
+values — one muted text link, one button that already existed in the panel
+beside it. This one reused a *container* and drew new *contents*, and the rule
+catches exactly that. The test for skipping design-first is not "is the shell
+already there" but **"does anything inside it need a value that is not already
+written down"**. In mitigation, the app already carried three unrelated field
+treatments before this (`.gr-input`, `.hm-paste`, and two editor `textarea`
+rules), so what happened here widened existing drift rather than breaking a
+clean system — which is a reason to keep the spec card, not a reason to relax
+the rule.
+
+The `.design-sync` **component pipeline stays untouched** — no re-sync, no
+`dtsPropsFor` or `conventions.md` edit — on adr-010 §9's own precedent: that
+pipeline's trigger is a change to token enums, copy fields or
+`InvitationPreview`'s props, and this iteration changes none of the three. The
+templates are reference mockups only.
+
 ## Revisit triggers
 
 - **The landing footer collects nothing for a month while hosts are clearly

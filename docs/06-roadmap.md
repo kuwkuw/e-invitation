@@ -662,11 +662,30 @@ client (hook, sheet, both triggers, bilingual strings), tests in both
 workspaces, and this docs pass — written in the same pass rather than an
 iteration late, which is the convention that slipped once and has held since.
 
-**adr-010 §9's design-before-code rule was not followed**, on the precedent
-FR-11.10 and FR-3.6 set: it is written for substantial new surfaces, and this
-is a text link in two footers opening the `ag-*` sheet shell three other
-moments already use. A fourth container would have been a new visual idea for
-no new kind of moment.
+**adr-010 §9's design-before-code rule was not followed, and this time that was
+a mistake** — a small one, caught and corrected in the same iteration, and
+worth writing down because it corrects a precedent this doc has now invoked
+three times.
+
+The skip was justified as FR-11.10 and FR-3.6 justified theirs: the rule is for
+substantial new surfaces, and this is a text link in two footers opening the
+`ag-*` sheet shell three other moments already use. The composition part held —
+no new container, no new screen. But the **field and button inside** the
+borrowed shell were newly drawn, and shipped with a border colour taken from a
+button, a focus treatment (a glow ring) that exists nowhere else in the app,
+and a third button height inside a sheet that already had one. The mockup was
+authored immediately after, as `templates/feedback-sheet` (Main / States /
+Spec), and those three are what it caught; `styles.css` now takes the field
+from `templates/guest-rsvp` and the button from `templates/auth-gate`, value
+for value, with `FeedbackSpec` recording both derivations.
+
+The correction to the precedent, for the next iteration that reaches for it:
+FR-11.10 and FR-3.6 added **no new values** — one muted link, one button that
+already existed beside it. The test is not "is the shell already there" but
+**"does anything inside it need a value that is not already written down."**
+Mitigating, and recorded rather than used as an excuse: the app already carried
+three unrelated field treatments before this one, so this widened existing
+drift rather than breaking a clean system.
 
 **What this iteration is answerable for.** It cannot manufacture hosts either,
 and a box nobody writes in is worse than no box — so the ADR makes "the
