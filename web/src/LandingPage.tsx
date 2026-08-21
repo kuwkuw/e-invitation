@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
@@ -14,6 +14,7 @@ import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
 import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
 import { allHeldManageTokens, readManageToken } from "./manageTokens";
+import { langFromSearch, routeMeta, useDocumentMeta } from "./seo";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
 
 // Ported from the "Тепла класика" landing direction designed in Claude Design.
@@ -68,8 +69,24 @@ const responses = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const [lang, setLang] = useState<Language>(loadUiLang);
+  const location = useLocation();
+  // `?lang=` wins over the stored preference, because it is the more specific
+  // answer: someone following an English link asked for English *now*, and a
+  // crawler has no stored preference at all — the parameter is the only way
+  // the English home page has an address to be indexed under (adr-016 §5).
+  const urlLang = langFromSearch(location.search);
+  const [lang, setLang] = useState<Language>(() => urlLang ?? loadUiLang());
   const t = LANDING[lang];
+  // Arriving on an English link makes English this browser's preference too,
+  // or the first click through to /create would silently switch back.
+  useEffect(() => {
+    if (urlLang) saveUiLang(urlLang);
+  }, [urlLang]);
+  // `*` renders this component for every unknown path (AppRoutes), which is a
+  // kindness to a person and a duplicate of the home page to a crawler.
+  useDocumentMeta(
+    routeMeta(location.pathname === "/" ? "landing" : "notFound", lang, location.search),
+  );
   const account = useAuthSession();
   // What this browser has published, and then the account's keyring laid over
   // it once that answers. Reading the index once was enough before accounts —
@@ -147,6 +164,13 @@ export function LandingPage() {
   function handleLang(next: Language) {
     setLang(next);
     saveUiLang(next);
+    // Keep the URL the address of what is on screen: the English landing page
+    // is `/?lang=en` and the Ukrainian one is `/`, which is what the canonical
+    // and hreflang tags on both of them promise. `replace` because a language
+    // toggle is not a place the back button should have to walk through, and
+    // `navigate` rather than history.replaceState — nothing goes behind the
+    // router (adr-011 §4). Only on `/`: an unknown path has no language pair.
+    if (location.pathname === "/") navigate(next === "en" ? "/?lang=en" : "/", { replace: true });
   }
 
   return (

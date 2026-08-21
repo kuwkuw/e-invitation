@@ -622,7 +622,10 @@ closer.
   would get without typing a sentence first. The token map is deterministic
   ([adr-003](decisions/adr-003-no-image-generation.md)), so samples cost no LLM
   call. Both a conversion surface and the only plausible Ukrainian-language
-  search asset the product could have. Larger, and unclaimed.
+  search asset the product could have. Larger, and unclaimed. FR-13 makes it
+  *possible* for that asset to rank — the landing page can now be indexed and
+  says what it is — but adds no content of its own; this item is still where
+  the content would come from.
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.
@@ -643,6 +646,15 @@ closer.
 - ~~**Native share sheet at publish**~~ — shipped as FR-3.6; see the section
   above. The panel's hierarchy survived it, which was the only thing this item
   had ever been waiting on.
+- ~~**Public discoverability**~~ — shipped as FR-13; see
+  [adr-016](decisions/adr-016-public-discoverability.md). Organic search is the
+  second of the two zero-cost channels
+  [07-monetization.md](07-monetization.md) §3 allows, and the only one that
+  reaches a host nobody has invited yet. What it delivers is the *floor*: the
+  landing page is indexable in both languages with copy written for a listing,
+  and every private surface — the editor, dashboards, guest pages — is
+  `noindex` without losing a single messenger unfurl. What it does not deliver
+  is anything to rank *for*; that is the gallery item above.
 - ~~**Share-loop instrumentation**~~ — shipped as FR-4.7 and FR-7.3–7.5; see
   [adr-013](decisions/adr-013-share-loop-instrumentation.md) and the section
   above. What it produces is now waiting on traffic, not on code.

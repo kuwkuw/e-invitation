@@ -684,6 +684,64 @@ export const LANDING: Record<Language, LandingStrings> = {
   },
 };
 
+// Search-result copy (adr-016). Written for a listing rather than for the
+// page, which is why it names the occasions the landing headline does not —
+// and why it is separate from LANDING rather than reusing `heroTitle`.
+//
+// **Mirrors `SEO_STRINGS` in `server/src/seo.ts` by hand**, the way
+// `types.ts` mirrors `schemas.ts`. The server's copy is the one a crawler
+// reads (it is in the shell before any JS runs); this copy is what a
+// client-side navigation leaves in the tab and in the head afterwards. They
+// must say the same thing — change both in the same pass.
+export type SeoPage = "landing" | "create" | "manage" | "notFound";
+
+export const SEO: Record<Language, Record<SeoPage, { title: string; description: string }>> = {
+  uk: {
+    landing: {
+      title: "INVITO — електронні запрошення онлайн за одне речення",
+      description:
+        "Опишіть подію одним реченням — отримайте готове запрошення на весілля, " +
+        "день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.",
+    },
+    create: {
+      title: "Створити запрошення — INVITO",
+      description:
+        "Опишіть подію своїми словами — редактор напише текст, підбере дизайн " +
+        "і дасть посилання для гостей із підтвердженням присутності.",
+    },
+    manage: {
+      title: "Відповіді гостей — INVITO",
+      description: "Хто прийде на вашу подію — відповіді гостей на ваше запрошення.",
+    },
+    notFound: {
+      title: "Сторінку не знайдено — INVITO",
+      description: "Такої сторінки немає. Створіть запрошення на головній.",
+    },
+  },
+  en: {
+    landing: {
+      title: "INVITO — online invitations with RSVP, from one sentence",
+      description:
+        "Describe your event in one sentence and get a ready-made invitation for a wedding, " +
+        "birthday or party. Share the link in any messenger and collect guest replies.",
+    },
+    create: {
+      title: "Create an invitation — INVITO",
+      description:
+        "Describe your event in your own words — the editor writes the copy, picks a design, " +
+        "and gives you a share link that collects RSVPs.",
+    },
+    manage: {
+      title: "Guest replies — INVITO",
+      description: "Who is coming to your event — the replies to your invitation.",
+    },
+    notFound: {
+      title: "Page not found — INVITO",
+      description: "There is no such page. Start an invitation from the home page.",
+    },
+  },
+};
+
 // Guest-facing strings follow the invitation's language (brief.language),
 // independent of the host's UI toggle.
 export interface GuestStrings {

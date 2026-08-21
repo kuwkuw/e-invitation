@@ -14,6 +14,7 @@ import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostManage } from "./hooks/useHostManage";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { AUTH, type AuthStrings, loadUiLang, MANAGE, type ManageStrings, saveUiLang } from "./i18n";
+import { routeMeta, useDocumentMeta } from "./seo";
 import type { Language } from "./types";
 
 /**
@@ -27,6 +28,10 @@ import type { Language } from "./types";
 export function ManagePage({ id }: { id: string }) {
   const [uiLang, setUiLang] = useState<Language>(loadUiLang);
   const t = MANAGE[uiLang];
+  // `noindex, nofollow`: this is a host's guest list, and the links out of it
+  // are their own invitation and manage URLs. The title stays generic for the
+  // same reason — a tab in a shared screen share should not name the event.
+  useDocumentMeta(routeMeta("manage", uiLang));
   const manage = useHostManage(id);
   // The one thing on this page that is *not* authorized by the manage token
   // (adr-015 §7): reply email is a property of an account, and this page can be

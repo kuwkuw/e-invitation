@@ -403,9 +403,60 @@ them.
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
 
+## FR-13 Public discoverability
+
+**Status: built** — [adr-016](decisions/adr-016-public-discoverability.md),
+`GET /robots.txt`, `GET /sitemap.xml`, per-path head metadata
+([seo.ts](../server/src/seo.ts), [web/src/seo.ts](../web/src/seo.ts))
+
+Organic search is the second of the two channels `07-monetization.md` §3 allows
+at approximately zero acquisition cost, and the only one that reaches a host
+nobody has invited yet. FR-4.7 and FR-7.3–7.5 took the first (the share loop);
+this takes the other, without putting a single guest's event in a search
+result.
+
+- FR-13.1 Every path the server answers carries a head written for that path:
+  a title, a description, a crawl instruction and a share card. The SPA ships
+  one document, so these are **replaced** in it per request rather than added
+  to — `og:title` is first-one-wins in every unfurler that matters, and an
+  appended card would show every share link as the marketing page.
+- FR-13.2 The landing page is the one page offered for indexing, with a
+  self-referencing canonical, `WebSite`/`WebApplication` structured data and a
+  1200×630 share card at `/og-cover.png`. The editor, the host dashboard,
+  published invitations and unknown paths are `noindex` and name no canonical.
+  `X-Robots-Tag` repeats the instruction in a header on every such response.
+- FR-13.3 A published invitation stays shareable and unindexable at the same
+  time. No unfurler consults `robots`, so the `og:*` tags of FR-3.5 are
+  unaffected by the `noindex` beside them, and the host's date, venue and
+  family name stay out of search results.
+- FR-13.4 `robots.txt` closes `/api`, `/manage/` and `/unsubscribe/`, and
+  **explicitly allows the OG image path** ahead of the `/api` rule. It does not
+  close `/i/`: messenger link crawlers honour robots.txt, so disallowing that
+  path would stop every published link unfurling rather than keeping it out of
+  the index — which `noindex` already does, and can only do if the page is
+  fetched.
+- FR-13.5 `sitemap.xml` lists the landing page in both languages, each with the
+  full reciprocal `hreflang` set. Nothing the crawl policy closes appears in
+  it. Both files are generated per request, because the origin they must state
+  absolutely is a deployment fact (`CANONICAL_HOST`, a preview URL, localhost).
+- FR-13.6 The English landing page has an address of its own, `/?lang=en`. The
+  UI toggle (FR-6) is a browser preference and a crawler holds none, so without
+  it the English site could not be indexed at all. `/` is Ukrainian, the two
+  declare each other as alternates, `?lang=uk` canonicalises back to `/`, and
+  `x-default` is the Ukrainian form. The parameter wins over the stored
+  preference and becomes it, so following an English link and then starting an
+  invitation stays English.
+- FR-13.7 A client-side navigation updates the title, description, robots and
+  canonical to match the screen — the server's head is correct for the URL that
+  was fetched, not for the one the router moved to. `og:*` is deliberately left
+  alone: no unfurler runs JavaScript.
+- FR-13.8 The app declares an icon set, a web manifest and a theme colour, so
+  it has a name and a mark in a browser tab, a search listing, a shared link
+  and on a phone's home screen.
+
 | Path | Page | Audience |
 | --- | --- | --- |
-| `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7) | Public |
+| `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7). `?lang=en` is the English page's own address (FR-13.6) | Public |
 | `/create` | Editor (generate → edit → publish → share). `?ref=guest` attributes the session (FR-7.3) and is stripped from the URL at mount | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |
@@ -429,6 +480,19 @@ them.
 | `PUT /api/account/notifications` | Turn it on or off | Session cookie + origin check |
 | `GET /unsubscribe/:token` | Confirm step — never mutates | Unsubscribe token |
 | `POST /unsubscribe/:token` | Turn reply email off; RFC 8058 one-click posts here | Unsubscribe token (no origin check — one-click is cross-origin by definition) |
+
+### Discoverability endpoints (FR-13)
+
+| Endpoint | Purpose | Authorized by |
+| --- | --- | --- |
+| `GET /robots.txt` | Crawl policy; names the sitemap absolutely | — (public) |
+| `GET /sitemap.xml` | The landing page in both languages, with `hreflang` | — (public) |
+| `GET /og-cover.png` | Site-level share card, 1200×630 (static, `web/public/`) | — (public) |
+
+Both generated files state an absolute origin, which is why they are routes
+rather than static files — and why they are registered ahead of the SPA
+fallback, which would otherwise answer a crawler's request for a policy with an
+HTML page.
 
 `/unsubscribe` sits **outside `/api`** on purpose: the session cookie is scoped
 `Path=/api`, and this URL arrives from an inbox where a mail provider may fetch

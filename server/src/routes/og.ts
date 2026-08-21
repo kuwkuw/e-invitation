@@ -5,6 +5,7 @@ import { recallOgPng, rememberOgPng } from "../og/cache.js";
 import { OG_HEIGHT, OG_WIDTH, renderOgPng } from "../og/render.js";
 import { absoluteBase } from "../publicUrl.js";
 import { type Invitation, InvitationId } from "../schemas.js";
+import { escapeHtml, type HeadMeta, headTags, renderShell } from "../seo.js";
 import { getRecord, type PublishedRecord } from "../store.js";
 
 // versions is non-empty by construction (createRecord seeds version 1).
@@ -19,29 +20,35 @@ function lookup(params: unknown): PublishedRecord | null {
   return id.success ? getRecord(id.data) : null;
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function ogMetaTags(record: PublishedRecord, base: string): string {
+/** What a messenger unfurls and what a search crawler is told to do, for one
+ *  published invitation.
+ *
+ *  **`noindex, nofollow`, and no canonical.** A guest page carries a host's
+ *  date, venue, guest list prompt and often their family name; the id is
+ *  unguessable (adr-005) precisely so that only the people handed the link can
+ *  read it, and a search result would hand it to everyone else. The tags
+ *  above it are untouched by that: no unfurler consults `robots`, which is
+ *  what lets one page be shareable and unindexable at the same time. Keeping
+ *  `/i/` crawlable in `robots.txt` is the other half of it — see `seo.ts`. */
+function invitationMeta(record: PublishedRecord, base: string): HeadMeta {
   const invitation = latestVersion(record);
-  const title = escapeHtml(invitation.copy.title);
-  const description = escapeHtml(invitation.copy.details_line.replace(/\n+/g, " · "));
-  // Version in the query busts messenger link-preview caches on republish.
-  const image = `${base}/api/invitations/${record.id}/og.png?v=${record.versions.length}`;
-  return [
-    `<meta property="og:type" content="website">`,
-    `<meta property="og:title" content="${title}">`,
-    `<meta property="og:description" content="${description}">`,
-    `<meta property="og:image" content="${image}">`,
-    `<meta property="og:image:width" content="${OG_WIDTH}">`,
-    `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-    `<meta name="twitter:card" content="summary_large_image">`,
-  ].join("\n    ");
+  return {
+    lang: invitation.brief.language,
+    title: invitation.copy.title,
+    description: invitation.copy.details_line.replace(/\n+/g, " · "),
+    robots: "noindex, nofollow",
+    canonical: null,
+    // A card still has one right place to link back to, even unindexed.
+    url: `${base}/i/${record.id}`,
+    // Version in the query busts messenger link-preview caches on republish.
+    image: `${base}/api/invitations/${record.id}/og.png?v=${record.versions.length}`,
+    imageWidth: OG_WIDTH,
+    imageHeight: OG_HEIGHT,
+    alternates: [],
+    // The invitation's own language is the host's choice, not a variant of
+    // this page in another one; and nothing here is meant for an index.
+    jsonLd: null,
+  };
 }
 
 export function registerOgRoutes(app: FastifyInstance): void {
@@ -69,32 +76,35 @@ export function registerOgRoutes(app: FastifyInstance): void {
   app.get("/i/:id", async (request, reply) => {
     const record = lookup(request.params);
     if (!record) return reply.code(404).send({ error: "Invitation not found." });
-    const meta = ogMetaTags(record, absoluteBase(request));
+    const meta = invitationMeta(record, absoluteBase(request));
     const spaShell = join(process.cwd(), "..", "web", "dist", "index.html");
     let html: string;
     if (existsSync(spaShell)) {
-      // The replacement is a **function** on purpose. With a string,
-      // `String.replace` expands `$&`, `` $` ``, `$'` and `$1` inside it — and
-      // that expansion happens after escapeHtml has run, so a host who types
-      // `$&` as their invitation title (copy is directly editable, FR-2.1)
-      // would get the matched `</head>` injected into their own meta tag,
-      // closing the head early and mangling the card messengers unfurl. A
-      // replacer's return value is used verbatim.
-      html = readFileSync(spaShell, "utf8").replace("</head>", () => `    ${meta}\n  </head>`);
+      // **Replaced, not appended.** The shell ships with the landing page's
+      // card in it (adr-016 §2), and `og:title` is first-one-wins in every
+      // unfurler that matters — appending here would show every share link as
+      // the marketing page. `renderShell` swaps the marked block out.
+      html = renderShell(readFileSync(spaShell, "utf8"), meta);
     } else {
-      const invitation = latestVersion(record);
       html = `<!doctype html>
-<html lang="${invitation.brief.language}">
+<html lang="${meta.lang}">
   <head>
     <meta charset="utf-8">
-    <title>${escapeHtml(invitation.copy.title)}</title>
-    ${meta}
+    ${headTags(meta)}
   </head>
   <body>
-    <p><a href="http://localhost:5173/i/${record.id}">${escapeHtml(invitation.copy.title)}</a></p>
+    <p><a href="http://localhost:5173/i/${record.id}">${escapeHtml(meta.title)}</a></p>
   </body>
 </html>`;
     }
-    return reply.header("Content-Type", "text/html; charset=utf-8").send(html);
+    return (
+      reply
+        .header("Content-Type", "text/html; charset=utf-8")
+        // The same instruction in a header, for a crawler that indexes without
+        // parsing the document. Belt and braces on the one page where getting
+        // it wrong publishes a stranger's home address.
+        .header("X-Robots-Tag", meta.robots)
+        .send(html)
+    );
   });
 }

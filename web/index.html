@@ -1,12 +1,65 @@
 <!doctype html>
-<html lang="en">
+<!-- lang is the shell's default, not a fixed fact: the server rewrites it per
+     request for `?lang=en` and for a guest page in the other language
+     (server/src/seo.ts). Ukrainian is the default because a bare `/` serves
+     the Ukrainian landing page. -->
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invitation Studio</title>
+    <meta name="theme-color" content="#b3592e" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Font families are @imported from src/styles.css (Cyrillic-capable set). -->
+    <!-- The same Google Fonts URL that src/styles.css `@import`s, requested here
+         as well and on purpose. The @import has to stay: the Claude Design sync
+         renders styles.css as a standalone closure and would lose the families
+         without it (.design-sync/NOTES.md). But an @import is only discovered
+         *after* the stylesheet that contains it has been fetched and parsed, so
+         on its own it serialises html -> css -> fonts.css -> font files and
+         holds first paint for a round trip it did not need. A `<link>` here
+         starts the same request while the app CSS is still downloading; the
+         @import then resolves from cache and costs nothing. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&amp;family=Manrope:wght@400..800&amp;family=Marck+Script&amp;display=swap"
+    />
+
+    <!-- Everything between these markers is the Ukrainian landing page's head,
+         and it is what the *server* replaces per path before sending the shell
+         (server/src/seo.ts `replaceSeoBlock`). One document serves four
+         screens, so these tags are right for exactly one of them; a share link
+         must not unfurl as the marketing page, and an editor or a host's
+         dashboard must not be indexed as one.
+
+         Replaced rather than appended because `og:title` is first-one-wins in
+         every unfurler that matters. Do not hand-edit: `server/test/seo.test.ts`
+         pins this block to what the server generates for `/`. -->
+    <!--seo:start--><title>INVITO — електронні запрошення онлайн за одне речення</title>
+    <meta name="description" content="Опишіть подію одним реченням — отримайте готове запрошення на весілля, день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://invinto.app/">
+    <link rel="alternate" hreflang="uk" href="https://invinto.app/">
+    <link rel="alternate" hreflang="en" href="https://invinto.app/?lang=en">
+    <link rel="alternate" hreflang="x-default" href="https://invinto.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="INVITO">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:title" content="INVITO — електронні запрошення онлайн за одне речення">
+    <meta property="og:description" content="Опишіть подію одним реченням — отримайте готове запрошення на весілля, день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.">
+    <meta property="og:image" content="https://invinto.app/og-cover.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://invinto.app/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="INVITO — електронні запрошення онлайн за одне речення">
+    <meta name="twitter:description" content="Опишіть подію одним реченням — отримайте готове запрошення на весілля, день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.">
+    <meta name="twitter:image" content="https://invinto.app/og-cover.png">
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://invinto.app/#website","url":"https://invinto.app/","name":"INVITO","description":"Опишіть подію одним реченням — отримайте готове запрошення на весілля, день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.","inLanguage":["uk","en"]},{"@type":"WebApplication","@id":"https://invinto.app/#app","name":"INVITO","url":"https://invinto.app/","description":"Опишіть подію одним реченням — отримайте готове запрошення на весілля, день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.","applicationCategory":"LifestyleApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript.","inLanguage":["uk","en"],"isPartOf":{"@id":"https://invinto.app/#website"},"offers":{"@type":"Offer","price":"0","priceCurrency":"UAH"}}]}</script><!--seo:end-->
   </head>
   <body>
     <div id="root"></div>

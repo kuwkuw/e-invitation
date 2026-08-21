@@ -16,6 +16,7 @@ import { useNotificationPref } from "./hooks/useNotificationPref";
 import { usePublishing } from "./hooks/usePublishing";
 import { useReferralSource } from "./hooks/useReferralSource";
 import { loadUiLang, saveUiLang, UI } from "./i18n";
+import { routeMeta, useDocumentMeta } from "./seo";
 import type { CopyField, Language } from "./types";
 
 /**
@@ -31,6 +32,11 @@ export default function App() {
   const [uiLang, setUiLang] = useState<Language>(loadUiLang);
   const [selectedField, setSelectedField] = useState<CopyField | null>(null);
   const t = UI[uiLang];
+  // The tab has to say where you are after a client-side navigation from the
+  // landing page, and the head has to stop claiming `/`'s canonical. The
+  // editor itself is `noindex` (adr-016 §3) — it renders nothing until the app
+  // boots and has nothing a search result could quote.
+  useDocumentMeta(routeMeta("create", uiLang));
 
   // Where this session came from (adr-013). Read and stripped by the router at
   // mount; held for the whole session so a generation several chat turns later

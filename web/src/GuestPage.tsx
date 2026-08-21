@@ -13,6 +13,7 @@ import { usePublishedInvitation } from "./hooks/usePublishedInvitation";
 import { useRsvpForm } from "./hooks/useRsvpForm";
 import { useViewBeacon } from "./hooks/useViewBeacon";
 import { GUEST } from "./i18n";
+import { useDocumentMeta } from "./seo";
 import type { Language } from "./types";
 
 // Public page behind the share link: the invitation plus an RSVP form.
@@ -32,6 +33,25 @@ export function GuestPage({ id }: { id: string }) {
   // (the app's primary audience) for the loading/error shell.
   const chromeLang = langOverride ?? published?.invitation.brief.language ?? "uk";
   const t = GUEST[chromeLang];
+
+  // Shareable and unindexable at the same time (adr-016 §3). The server
+  // already served this page `noindex` with the invitation's own title in it;
+  // this keeps that true after a client-side navigation, and keeps the tab
+  // naming the event rather than the marketing page. `lang` follows the
+  // invitation's language, not the chrome toggle — the invitation is the
+  // page's content, the chrome around it is a preference. Null until it
+  // loads, so nothing overwrites the shell with a placeholder.
+  useDocumentMeta(
+    published
+      ? {
+          lang: published.invitation.brief.language,
+          title: published.invitation.copy.title,
+          description: published.invitation.copy.details_line.replace(/\n+/g, " · "),
+          robots: "noindex, nofollow",
+          canonical: null,
+        }
+      : null,
+  );
 
   function handleLang(lang: Language) {
     setLangOverride(lang);
