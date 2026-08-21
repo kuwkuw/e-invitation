@@ -22,7 +22,7 @@ import type { Language } from "./schemas.js";
  *  the wordmark in `email/strings.ts` and `unsubscribePage.ts` — the landing
  *  page's "Запрошення"/"Zaproshennya" is a translated headline, not the name
  *  a search result should carry. */
-export const SITE_NAME = "INVITO";
+export const SITE_NAME = "INVINTO";
 
 /** 1200×630, the same canvas the per-invitation card uses (`og/render.ts`).
  *  Static and committed rather than rendered: the marketing card never varies,

@@ -18,9 +18,10 @@ import { langFromSearch, routeMeta, useDocumentMeta } from "./seo";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
 
 // Ported from the "Тепла класика" landing direction designed in Claude Design.
-// Chrome copy is bilingual (LANDING strings); the hero composes the real
-// InvitationPreview component with three sample events whose content stays
-// Ukrainian on purpose — invitations are showcased content, not chrome.
+// Chrome copy is bilingual (LANDING strings) — with the wordmark as the one
+// exception, because a name is not copy (adr-016 §9). The hero composes the
+// real InvitationPreview component with three sample events whose content
+// stays Ukrainian on purpose — invitations are showcased content, not chrome.
 
 const samples: { copy: InvitationCopy; design: DesignTokens }[] = [
   {
@@ -181,8 +182,10 @@ export function LandingPage() {
       <header className={`lp-nav${showNavCount ? " lp-nav-counted" : ""}`}>
         <span className="lp-brand">
           <span className="lp-brand-full">{t.brand}</span>
-          {/* Derived, never a translated string: the monogram is the brand's
-              own first letter, so it follows the language automatically. */}
+          {/* Derived, never its own string: the monogram is the brand's first
+              letter. It used to be what kept a *translated* wordmark's initial
+              honest; the name is one word in both languages now (adr-016 §9),
+              and deriving it still beats a second place to edit the name. */}
           <span className="lp-brand-mono">{[...t.brand][0]}</span>
         </span>
         <div className="lp-nav-right">

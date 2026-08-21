@@ -24,7 +24,7 @@ function requestOf(spy: ReturnType<typeof vi.fn>): {
 
 function configure() {
   vi.stubEnv("RESEND_API_KEY", "re_test_key");
-  vi.stubEnv("NOTIFY_FROM", "INVITO <replies@invinto.app>");
+  vi.stubEnv("NOTIFY_FROM", "INVINTO <replies@invinto.app>");
 }
 
 function notification(overrides: Partial<Parameters<typeof renderReplyNotification>[0]> = {}) {
@@ -126,7 +126,7 @@ describe("reply notification", () => {
     // Asserted on the HTML: the text part wraps at 68 characters, so a whole
     // sentence is not on one line there by construction.
     expect(notification({ language: "en", title: "My birthday" }).html).toContain(
-      "You&#39;re getting this because you created the invitation “My birthday” on INVITO.",
+      "You&#39;re getting this because you created the invitation “My birthday” on INVINTO.",
     );
     expect(notification().html).toContain("Ви отримали цей лист");
     expect(notification({ language: "en", title: "My birthday" }).text).toContain(
@@ -225,7 +225,7 @@ describe("sendEmail", () => {
       expect(request.url).toBe("https://api.resend.com/emails");
       expect(request.headers.Authorization).toBe("Bearer re_test_key");
       expect(request.body).toMatchObject({
-        from: "INVITO <replies@invinto.app>",
+        from: "INVINTO <replies@invinto.app>",
         to: ["host@example.com"],
         subject: "3 нові відповіді",
         html: "<p>hi</p>",

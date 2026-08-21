@@ -43,7 +43,7 @@ const cover = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"
     <rect width="86" height="60" rx="8" fill="${ACCENT_WASH}" stroke="${ACCENT}" stroke-width="4"/>
     <path d="M3 6 43 34 83 6" fill="none" stroke="${ACCENT}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <text x="212" y="205" font-family="Playfair Display" font-weight="700" font-size="72" fill="${INK}" letter-spacing="6">INVITO</text>
+  <text x="212" y="205" font-family="Playfair Display" font-weight="700" font-size="72" fill="${INK}" letter-spacing="6">INVINTO</text>
   <text x="96" y="330" font-family="Playfair Display" font-weight="700" font-size="66" fill="${INK}">Запрошення за одне речення</text>
   <text x="96" y="404" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">Опишіть подію словами — отримайте гарне запрошення,</text>
   <text x="96" y="452" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">поділіться посиланням і збирайте відповіді гостей.</text>

@@ -105,7 +105,7 @@ implementation.
   ([adr-011](decisions/adr-011-client-router.md) §3).
 - FR-4.7 The guest page carries exactly one link back to the product
   ([GuestCta.tsx](../web/src/components/guest/GuestCta.tsx),
-  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVITO
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVINTO
   wordmark plus one muted line, below the reply card, in the guest's chrome
   language (FR-6.3), present in both the form and post-RSVP states. It links to
   `/create?ref=guest` and never becomes a modal, a card, or an accent-coloured
@@ -453,6 +453,13 @@ result.
 - FR-13.8 The app declares an icon set, a web manifest and a theme colour, so
   it has a name and a mark in a browser tab, a search listing, a shared link
   and on a phone's home screen.
+- FR-13.9 The product has **one** name, **INVINTO**, and it is the domain's
+  spelling. It reads the same in the landing wordmark, on the guest page, on
+  the host dashboard, in reply email, on the unsubscribe page, in `.ics` files
+  and in every search title. A search listing has room for one name and shows
+  it beside the URL, so a wordmark that disagrees with the address bar reads as
+  someone else's site ([adr-016](decisions/adr-016-public-discoverability.md)
+  §9). This is the one string on the landing page that is not translated.
 
 | Path | Page | Audience |
 | --- | --- | --- |

@@ -205,10 +205,12 @@ What the ADR settled, and the implementation delivered:
    store change.
 6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
    first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
-   project — against the constraint `styles.css` already states in its own
+   project — against the constraint `styles.css` already stated in its own
    words, *"INVITO stays a whisper"*: the wordmark keeps its exact current
    values and gains one underlined line beneath it, in the same muted grey as
-   "change answer". Four louder treatments were drawn and rejected, three
+   "change answer". (The wordmark is **INVINTO** since
+   [adr-016](decisions/adr-016-public-discoverability.md) §9, and the comment
+   now phrases the same rule without a name. The rule is unchanged.) Four louder treatments were drawn and rejected, three
    against rules already written down.
 
 Four PRs — the beacon endpoint, the client beacon, the call to action, and

@@ -20,9 +20,12 @@ No description, no canonical, no crawl instruction, no share card, no icon, no
 are not the same problem:
 
 **1. The product is not findable.** A search result for the home page would be
-titled "Invitation Studio" — a name that appears nowhere else in the product
-(the wordmark is INVITO, the landing headline is «Запрошення») — with a snippet
-Google would have to invent from the page body. `07-monetization.md` §3 sets
+titled "Invitation Studio" — a name that appeared nowhere else in the product.
+The product had, at this point, **four** names: `Invitation Studio` in the
+shell, `INVITO` on the guest page, in email and on the unsubscribe page,
+«Запрошення»/"Zaproshennya" as the landing wordmark, and `invinto.app` in the
+address bar. The snippet, meanwhile, was whatever Google chose to invent from
+the page body. `07-monetization.md` §3 sets
 the constraint that decides this: a private host organizes one or two events a
 year, so lifetime value is approximately one transaction and acquisition cost
 must be approximately zero. [adr-013](adr-013-share-loop-instrumentation.md)
@@ -187,6 +190,33 @@ stylesheet containing it has been fetched and parsed, which serialises
 html → css → fonts.css → font files and holds first paint for a round trip it
 did not need. A `<link>` in the head starts the same request while the app CSS
 is still downloading; the `@import` then resolves from cache. Both, on purpose.
+
+### 9. One name, and it is the domain's
+
+Writing copy for a search listing forced the question the product had been able
+to avoid: what is it called? A listing has room for exactly one name, and it
+sits next to the URL, where a mismatch is the first thing a reader sees.
+
+The name is **INVINTO**, everywhere: the landing wordmark, the guest page, the
+host dashboard, the crash screen, `.ics` files, reply email, the unsubscribe
+page, the manifest, the icons, the share card and every search title. It is the
+domain's spelling because that is the one name the product cannot restyle
+later — links published to `invinto.app` outlive any copy decision, and a
+wordmark that disagrees with the address bar reads as someone else's site.
+
+This retires the translated landing wordmark («Запрошення» / "Zaproshennya").
+`LANDING.brand` stays in the i18n table, holding the same value in both
+languages, rather than moving out to a constant: the page reads its chrome from
+that table, and a name kept half in i18n and half beside it is how a product
+ends up with four of them. The `lp-brand-mono` monogram keeps deriving its
+letter from the wordmark — it no longer has a translation to track, but
+deriving still beats a second place to edit the name.
+
+Earlier records are left as written. [adr-013](adr-013-share-loop-instrumentation.md)
+quotes the DS `guest-rsvp` template verbatim ("INVITO stays a whisper") and
+06-roadmap repeats it; rewriting a quotation to match a later decision would
+make the record say something it did not say. Both carry a pointer here
+instead.
 
 ## Consequences
 

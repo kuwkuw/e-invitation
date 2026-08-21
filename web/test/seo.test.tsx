@@ -32,7 +32,7 @@ describe("routeMeta", () => {
     const meta = routeMeta("landing", "uk");
     expect(meta.robots).toBe("index, follow");
     expect(meta.canonical).toBe(`${window.location.origin}/`);
-    expect(meta.title).toContain("INVITO");
+    expect(meta.title).toContain("INVINTO");
   });
 
   // The canonical follows the URL, not the language on screen: a returning
@@ -75,12 +75,12 @@ describe("applyDocumentMeta", () => {
   it("writes the title, description, robots and language", () => {
     applyDocumentMeta({
       lang: "en",
-      title: "Create an invitation — INVITO",
+      title: "Create an invitation — INVINTO",
       description: "A description.",
       robots: "noindex, follow",
       canonical: null,
     });
-    expect(document.title).toBe("Create an invitation — INVITO");
+    expect(document.title).toBe("Create an invitation — INVINTO");
     expect(document.documentElement.lang).toBe("en");
     expect(document.head.querySelector('meta[name="description"]')?.getAttribute("content")).toBe(
       "A description.",

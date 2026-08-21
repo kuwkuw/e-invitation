@@ -25,7 +25,7 @@ describe("shellMeta", () => {
     expect(meta.robots).toBe("index, follow");
     expect(meta.canonical).toBe(`${BASE}/`);
     expect(meta.url).toBe(`${BASE}/`);
-    expect(meta.title).toContain("INVITO");
+    expect(meta.title).toContain("INVINTO");
     expect(meta.jsonLd).toContain("WebApplication");
   });
 
@@ -34,7 +34,7 @@ describe("shellMeta", () => {
   it("serves the English landing page under ?lang=en", () => {
     const meta = shellMeta("/", "lang=en", BASE);
     expect(meta.lang).toBe("en");
-    expect(meta.title).toBe("INVITO — online invitations with RSVP, from one sentence");
+    expect(meta.title).toBe("INVINTO — online invitations with RSVP, from one sentence");
     expect(meta.canonical).toBe(`${BASE}/?lang=en`);
   });
 
@@ -320,7 +320,7 @@ describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
     const page = await app.inject({ method: "GET", url: `/i/${id}` });
     expect(page.body.match(/property="og:title"/g)).toHaveLength(1);
     expect(page.body).toContain(`og:title" content="${invitation.copy.title}"`);
-    expect(page.body).not.toContain("INVITO — електронні запрошення");
+    expect(page.body).not.toContain("INVINTO — електронні запрошення");
     // Shareable and unindexable at once: a guest page carries a host's date,
     // venue and family name, and no unfurler consults `robots`.
     expect(page.body).toContain('name="robots" content="noindex, nofollow"');
