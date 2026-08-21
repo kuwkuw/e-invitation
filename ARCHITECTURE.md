@@ -42,9 +42,9 @@ PR as the schema.
 `CANONICAL_HOST` redirect hook (`app.ts:49-55`), `/healthz` (`app.ts:101`), then six route modules:
 auth, account, invitations, og, seo, unsubscribe (`app.ts:112-123`). When `web/dist/index.html`
 exists it also serves the built SPA from the same process and falls back to the shell for non-`/api`
-GET/HEAD (`app.ts:131-159`), dressing that shell with the path's own head metadata
-(`seo.ts` `shellMeta`/`renderShell`, adr-016) — so production is a single container
-(`Dockerfile:17-33`, `DATA_DIR=/data`).
+GET/HEAD, dressing that shell with the path's own head metadata and keeping or stripping the
+landing page's build-time prerendered body (`seo.ts` `shellMeta`/`renderShell`/`selectPrerender`,
+adr-016 §2, §10) — so production is a single container (`Dockerfile:17-33`, `DATA_DIR=/data`).
 Persistence is split: published invitations are one JSON file per id (`server/src/store.ts:1-4,26`),
 and accounts/sessions live in SQLite (`server/src/db.ts`). Both assume a single process — NFR-7
 (`docs/03-non-functional-requirements.md:166-181`) states the deployment must not scale above one

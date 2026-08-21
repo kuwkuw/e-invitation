@@ -218,6 +218,55 @@ quotes the DS `guest-rsvp` template verbatim ("INVITO stays a whisper") and
 make the record say something it did not say. Both carry a pointer here
 instead.
 
+### 10. The landing page ships its copy as HTML (amended 2026-08-21)
+
+Everything above controls what a crawler is *told* about a page. It does not
+put anything *in* one, and three weeks after this ADR shipped the site was
+still absent from Google — `site:invinto.app` returned nothing. The immediate
+cause was discovery, not markup (see the runbook: nothing had submitted the
+domain), but measuring the live site to be sure turned up the second problem
+this section fixes: a non-JS fetch of `https://invinto.app/` returned **zero
+words of body text**. A perfect title and description over an empty
+`<div id="root">`.
+
+Google does render JavaScript. It renders it in a **second pass, on a queue**,
+and the budget for that pass is allocated by how much a domain has already
+earned — which for a new domain with no inbound links is the least there is.
+Bing is weaker again, and the crawlers behind AI answers weaker still. So the
+one page written to be found was, to the crawler that finds it first, blank.
+
+`web/src/prerender.ts` generates the landing copy as static HTML and a Vite
+plugin injects it into `#root` at build time. Three properties make this small
+enough to be worth doing:
+
+- **It is generated from `LANDING`, not written out.** The copy keeps exactly
+  one source. This is the opposite of the SEO strings in §6, which are mirrored
+  by hand — and the difference is deliberate: those are two sentences that a
+  crawler must have *before* any build step can matter, while this is the whole
+  page, and a hand-copied page would be stale by its second edit.
+- **It is not hydration.** `createRoot` replaces the container's children on
+  first render, so React never compares the two. The prerender therefore does
+  not have to match React's output — it has to *say the same things in the same
+  classes*, so the swap is invisible. That is what keeps this from dragging in
+  `react-dom/server`, an SSR bundle, and a second build target for a page whose
+  content is a strings table.
+- **It is a subset.** The hero's sample invitations, the step glyphs, the
+  mocked RSVP rows and the returning-host list are all left out: decoration,
+  or per-visitor state that belongs to nobody until the app boots. What is kept
+  is every heading, every line of prose and the occasion words — everything a
+  search result could quote.
+
+Two things fall out of it that were not the goal. The calls to action become
+real `<a href="/create">` links, so the crawl has an edge to follow where it
+previously had a `<button>` it could not press. And a visitor on a slow
+connection reads the page while the bundle is still downloading, instead of
+watching an empty screen — the landing page now works with JavaScript off.
+
+The blocks are emitted **once per language** and the server keeps the one the
+request asked for (`selectPrerender`). Stripping matters more than selecting:
+without it a guest opening a share link would watch the marketing hero sit
+there until React replaced it with their invitation.
+
 ## Consequences
 
 - The landing page is indexable in two languages with copy written for a
@@ -242,10 +291,9 @@ instead.
 
 ### Deliberately not in scope
 
-- **Prerendering or SSR of page content.** The head is server-rendered; the
-  body is not. The landing page is the only page meant for a search result, and
-  Google renders JavaScript. If the rendered-page report ever shows the body
-  missing, that is the trigger to revisit — not before.
+- ~~**Prerendering or SSR of page content.**~~ — the trigger fired; see §10.
+  Full React SSR is still out: the body of every page *except* the landing page
+  stays client-rendered, and nothing hydrates.
 - **A blog, occasion landing pages, or a template gallery.** Pages built to
   rank for "запрошення на весілля" are a content strategy, not a change to the
   app, and there is no traffic yet to say which occasion is worth one.
@@ -262,5 +310,8 @@ instead.
   traffic — the answer is content (occasion pages), not more tags.
 - A host asks for a public, indexable event page. That reopens §3 and adr-005
   together, and it is a product decision before it is a technical one.
-- The rendered-page report shows the landing body empty to Googlebot — then
-  prerendering the landing route becomes real work, not a hypothetical.
+- ~~The rendered-page report shows the landing body empty to Googlebot~~ —
+  fired 2026-08-21, before Googlebot ever arrived; see §10.
+- A page other than `/` turns out to need its body in the HTML. That would be a
+  new argument, because §10 rests on the landing page being static marketing
+  copy — `/create` and `/manage/:id` are neither static nor public.

@@ -453,6 +453,15 @@ result.
 - FR-13.8 The app declares an icon set, a web manifest and a theme colour, so
   it has a name and a mark in a browser tab, a search listing, a shared link
   and on a phone's home screen.
+- FR-13.10 The landing page's copy is served as HTML in the body, not only
+  rendered by the app. A crawler that does not run JavaScript — or runs it on a
+  queue days later, which is what Google does for a new domain — otherwise
+  reads a title and a description over an empty container. Generated from the
+  same strings the page renders, so the two cannot disagree, and stripped on
+  every other path: a guest opening a share link must never see the marketing
+  page underneath their invitation
+  ([adr-016](decisions/adr-016-public-discoverability.md) §10). A side effect
+  is that the landing page now reads with JavaScript disabled.
 - FR-13.9 The product has **one** name, **INVINTO**, and it is the domain's
   spelling. It reads the same in the landing wordmark, on the guest page, on
   the host dashboard, in reply email, on the unsubscribe page, in `.ics` files

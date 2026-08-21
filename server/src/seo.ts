@@ -147,6 +147,11 @@ function escapeJsonLd(json: string): string {
   return json.replaceAll("<", "\\u003c");
 }
 
+/** The languages the shell can be built for. Mirrors `Language` in
+ *  `schemas.ts`; `OG_LOCALES` below is keyed by it, so a third language fails
+ *  to compile there rather than silently going unstripped here. */
+const LANGUAGES = ["uk", "en"] as const satisfies readonly Language[];
+
 const OG_LOCALES: Record<Language, string> = { uk: "uk_UA", en: "en_US" };
 
 /** The head block for one page: the tags a crawler reads and the tags a
@@ -410,9 +415,50 @@ export function sitemapXml(base: string): string {
   ].join("\n");
 }
 
-/** The shell, dressed for one page: its head block swapped in and its `<html
- *  lang>` corrected. The two callers — the SPA fallback and `/i/:id` — differ
- *  only in where their `HeadMeta` comes from. */
-export function renderShell(html: string, meta: HeadMeta): string {
-  return replaceHtmlLang(replaceSeoBlock(html, headTags(meta)), meta.lang);
+/** Keep one language's prerendered landing copy, drop the rest.
+ *
+ *  The built shell carries the landing page's copy as real HTML inside `#root`,
+ *  once per language (adr-016 §10, `web/src/prerender.ts`). Exactly one of
+ *  those is right for any given request and the others are worse than nothing:
+ *  a guest opening a share link would watch the marketing hero sit there until
+ *  React replaced it with their invitation.
+ *
+ *  `null` strips both, which is every path that is not the landing page. A
+ *  shell built without the plugin has no markers and comes back untouched. */
+export function selectPrerender(html: string, lang: Language | null): string {
+  let out = html;
+  for (const candidate of LANGUAGES) {
+    const open = `<!--pre:${candidate}-->`;
+    const close = `<!--/pre:${candidate}-->`;
+    const start = out.indexOf(open);
+    if (start === -1) continue;
+    const end = out.indexOf(close, start);
+    if (end === -1) continue;
+    // Unwrapped (markers removed, copy kept) or excised entirely. Slicing
+    // rather than `String.replace`, so no `$` sequence in a headline can
+    // expand into the surrounding markup.
+    const inner = candidate === lang ? out.slice(start + open.length, end) : "";
+    out = out.slice(0, start) + inner + out.slice(end + close.length);
+  }
+  return out;
+}
+
+/** Which language's landing copy this path should ship, if any. Only `/` has
+ *  any: it is the one page written to be read before the app boots. */
+export function prerenderLanguage(path: string, lang: Language): Language | null {
+  return path === "/" ? lang : null;
+}
+
+/** The shell, dressed for one page: head block swapped in, `<html lang>`
+ *  corrected, and the prerendered body kept or stripped. The two callers — the
+ *  SPA fallback and `/i/:id` — differ in where their `HeadMeta` comes from and
+ *  in whether they want a prerender; a guest page never does, which is why the
+ *  parameter defaults to none. */
+export function renderShell(
+  html: string,
+  meta: HeadMeta,
+  prerender: Language | null = null,
+): string {
+  const dressed = replaceHtmlLang(replaceSeoBlock(html, headTags(meta)), meta.lang);
+  return selectPrerender(dressed, prerender);
 }
