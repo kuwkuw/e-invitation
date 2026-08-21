@@ -19,7 +19,7 @@ import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
 import { registerSeoRoutes } from "./routes/seo.js";
 import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
-import { renderShell, shellMeta } from "./seo.js";
+import { prerenderLanguage, renderShell, shellMeta } from "./seo.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -147,7 +147,14 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
         // landing page's.
         const [path = "/", search = ""] = request.url.split("?");
         const meta = shellMeta(path, search, absoluteBase(request));
-        const html = renderShell(readFileSync(join(webDist, "index.html"), "utf8"), meta);
+        const html = renderShell(
+          readFileSync(join(webDist, "index.html"), "utf8"),
+          meta,
+          // The landing page ships its copy as real HTML in the body, so a
+          // crawler that has not run the app still reads a page rather than an
+          // empty div (adr-016 §10). Every other path strips it.
+          prerenderLanguage(path, meta.lang),
+        );
         reply.header("Content-Type", "text/html; charset=utf-8");
         // Only where it says no. A header repeating the default would be noise
         // on the one page that wants indexing; on the pages that do not, it is

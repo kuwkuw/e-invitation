@@ -1028,6 +1028,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .lp-cta:hover { background: #9d4d26; }
 .lp-cta-sm { font-size: 0.95rem; padding: 11px 22px; }
+/* The prerendered landing CTA is a real <a> so a crawler has an edge to follow
+   and a visitor can act before React mounts (adr-016 §10); React swaps in the
+   <button> that owns the navigation. Two declarations are the whole difference
+   between the two elements under this class. */
+a.lp-cta { display: inline-block; text-decoration: none; }
 
 .lp-nav {
   position: sticky;

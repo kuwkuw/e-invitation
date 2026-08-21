@@ -7,16 +7,22 @@ import type { Invitation } from "../src/schemas.js";
 import {
   DEFAULT_ORIGIN,
   headTags,
+  prerenderLanguage,
   replaceHtmlLang,
   replaceSeoBlock,
   robotsTxt,
   SEO_MARKER_END,
   SEO_MARKER_START,
+  selectPrerender,
   shellMeta,
   sitemapXml,
 } from "../src/seo.js";
 
 const BASE = "https://invinto.app";
+/** The landing hero, as `web/src/i18n.ts` has it. Named once here because the
+ *  server workspace cannot import the client's copy — the point of the test is
+ *  that this string reaches the served body at all, not what it says. */
+const LANDING_UK_HERO = "Запрошення за одне речення";
 
 describe("shellMeta", () => {
   it("indexes the landing page and points it at itself", () => {
@@ -107,6 +113,44 @@ describe("head block replacement", () => {
   it("rewrites the document language", () => {
     expect(replaceHtmlLang(shell, "en")).toContain('<html lang="en">');
     expect(replaceHtmlLang('<html lang="uk" data-x="1">', "en")).toContain('lang="en"');
+  });
+});
+
+// The landing page ships its copy as real HTML in the body (adr-016 §10),
+// once per language, and exactly one of those is right for any request. The
+// others are worse than nothing: a guest opening a share link would watch the
+// marketing hero sit there until React replaced it with their invitation.
+describe("prerendered landing copy", () => {
+  const shell = `<div id="root"><!--pre:uk-->ВІТАЄМО<!--/pre:uk--><!--pre:en-->WELCOME<!--/pre:en--></div>`;
+
+  it("keeps the language asked for and drops the other", () => {
+    expect(selectPrerender(shell, "uk")).toBe('<div id="root">ВІТАЄМО</div>');
+    expect(selectPrerender(shell, "en")).toBe('<div id="root">WELCOME</div>');
+  });
+
+  it("strips every block when no language is asked for", () => {
+    expect(selectPrerender(shell, null)).toBe('<div id="root"></div>');
+  });
+
+  // A shell built without the Vite plugin has no markers at all.
+  it("leaves a shell without markers alone", () => {
+    const bare = '<div id="root"></div>';
+    expect(selectPrerender(bare, "uk")).toBe(bare);
+  });
+
+  // Slicing rather than String.replace, so no `$` sequence in a headline can
+  // expand into the surrounding markup.
+  it("does not expand $-sequences in the kept copy", () => {
+    const dollars = `<div id="root"><!--pre:uk-->$& $\` $' $1 $$<!--/pre:uk--></div>`;
+    expect(selectPrerender(dollars, "uk")).toBe(`<div id="root">$& $\` $' $1 $$</div>`);
+  });
+
+  it("prerenders the landing page and nothing else", () => {
+    expect(prerenderLanguage("/", "uk")).toBe("uk");
+    expect(prerenderLanguage("/", "en")).toBe("en");
+    for (const path of ["/create", "/manage/abc123xy", "/i/abc123xy", "/nonsense"]) {
+      expect(prerenderLanguage(path, "uk")).toBeNull();
+    }
   });
 });
 
@@ -258,11 +302,43 @@ describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
     rmSync(dataDir, { recursive: true, force: true });
   });
 
+  /** What a crawler that never runs the app actually reads: the body with its
+   *  scripts and tags stripped out. */
+  function bodyWords(html: string): string {
+    const body = html.slice(html.indexOf("<body"));
+    return body
+      .replace(/<script[\s\S]*?<\/script>/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   it("serves the landing page indexable, in Ukrainian", async () => {
     const res = await app.inject({ method: "GET", url: "/" });
     expect(res.body).toContain('<meta name="robots" content="index, follow">');
     expect(res.body).toContain('<html lang="uk">');
     expect(res.headers["x-robots-tag"]).toBeUndefined();
+  });
+
+  // The failure this closes: a perfect title and description over an empty
+  // `<div id="root">`, which is all the shell was before adr-016 §10.
+  it("serves the landing copy as readable HTML, not an empty root", async () => {
+    const uk = await app.inject({ method: "GET", url: "/" });
+    expect(bodyWords(uk.body)).toContain(LANDING_UK_HERO);
+    expect(bodyWords(uk.body).split(" ").length).toBeGreaterThan(50);
+    // And a real link to the editor, which a `<button>` never gives a crawler.
+    expect(uk.body).toContain('href="/create"');
+
+    const en = await app.inject({ method: "GET", url: "/?lang=en" });
+    expect(bodyWords(en.body)).toContain("An invitation from one sentence");
+    expect(en.body).not.toContain(LANDING_UK_HERO);
+  });
+
+  it("gives every other path an empty body to render into", async () => {
+    for (const url of ["/create", "/manage/abc123xy", "/nonsense"]) {
+      const res = await app.inject({ method: "GET", url });
+      expect(bodyWords(res.body)).toBe("");
+    }
   });
 
   it("serves the English landing page under ?lang=en", async () => {
@@ -324,6 +400,10 @@ describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
     // Shareable and unindexable at once: a guest page carries a host's date,
     // venue and family name, and no unfurler consults `robots`.
     expect(page.body).toContain('name="robots" content="noindex, nofollow"');
+    // And no marketing hero underneath it: a guest opening a share link must
+    // not watch the landing page sit there until React replaces it.
+    expect(page.body).not.toContain(LANDING_UK_HERO);
+    expect(bodyWords(page.body)).toBe("");
     expect(page.headers["x-robots-tag"]).toBe("noindex, nofollow");
     expect(page.body).not.toContain('rel="canonical"');
   });
