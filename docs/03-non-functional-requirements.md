@@ -191,3 +191,10 @@
 - Design tokens stay closed enums — widening them to free-form strings is a
   breaking architectural change, not a tweak
   ([adr-003](decisions/adr-003-no-image-generation.md)).
+- Search copy exists twice — `SEO_STRINGS` in `server/src/seo.ts` and `SEO` in
+  `web/src/i18n.ts` — and must change in the same PR, for the same reason as
+  the schema mirror above. The server's copy is what a crawler reads; the
+  client's is what survives a route change
+  ([adr-016](decisions/adr-016-public-discoverability.md) §6). The committed
+  head block in `web/index.html` is generated, not hand-written:
+  `server/test/seo.test.ts` fails if it drifts from what the module produces.

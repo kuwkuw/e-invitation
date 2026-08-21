@@ -40,7 +40,7 @@ export function CrashScreen({ audience }: { audience: CrashAudience }) {
           {t.reload}
         </button>
       </div>
-      <p className="cr-brand">INVITO</p>
+      <p className="cr-brand">INVINTO</p>
     </div>
   );
 }

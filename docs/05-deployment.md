@@ -106,6 +106,36 @@ optional, though; both are below.
 6. Verify: `https://invinto.app/healthz`, publish an invitation and check the
    share link + `og:image` URL both use `https://invinto.app`, and confirm the
    old `*.code.run/i/:id` link `301`s.
+7. **Check `robots.txt` and `sitemap.xml` name the canonical host.** Both are
+   generated per request from the same origin as `og:image`
+   ([adr-016](decisions/adr-016-public-discoverability.md) §4), so setting
+   `CANONICAL_HOST` is what makes them correct — before it, they advertise the
+   `*.code.run` address and a crawler indexes the site under a domain that will
+   later redirect away.
+
+## Search visibility (adr-016)
+
+Nothing to configure — the app serves its own crawl policy, sitemap and
+per-path metadata. Two operator steps sit outside it, both optional and neither
+in the codebase:
+
+1. **Search Console.** Add `https://invinto.app` as a property, verify it with
+   the DNS `TXT` record (the domain is already managed at the registrar for
+   step 2 above), and submit `https://invinto.app/sitemap.xml`. Verification
+   tokens are deliberately not hard-coded into the app — a token belongs to one
+   property, and the DNS method leaves the deployment identical.
+2. **Re-check after any domain move.** `CANONICAL_HOST` is what every absolute
+   URL derives from; moving it means re-verifying the new property and
+   resubmitting the sitemap, and the old domain's `301`s carry the ranking
+   across.
+
+Two rules in `server/src/seo.ts` are load-bearing and easy to "tidy" into an
+outage, so they are stated here as well as there: `robots.txt` must keep
+`Allow: /api/invitations/*/og.png` **above** `Disallow: /api/`, and it must not
+disallow `/i/`. Messenger link crawlers honour robots.txt — either change stops
+every published share link unfurling (FR-3.5), silently, with nothing in the
+logs. Guest pages stay out of search results via `noindex`, which is a header
+and a meta tag on those pages, not a crawl rule.
 
 ## Host sign-in with Google (adr-014)
 
@@ -215,7 +245,7 @@ lands in spam, silently, for everyone.
      rejected while the other two settle, and tighten to `p=quarantine` once
      the reports are clean.
 3. **Runtime env**: `RESEND_API_KEY`, and `NOTIFY_FROM` on the verified domain
-   (e.g. `INVITO <replies@invinto.app>`). Optionally
+   (e.g. `INVINTO <replies@invinto.app>`). Optionally
    `NOTIFY_WINDOW_MINUTES` — default 60, `0` means notify on every reply.
 4. **Notifications also need sign-in configured.** The address is the
    Google-verified one from adr-014; with no OAuth client there are no
