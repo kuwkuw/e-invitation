@@ -305,6 +305,20 @@ pipeline's trigger is a change to token enums, copy fields or
 `InvitationPreview`'s props, and this iteration changes none of the three. The
 templates are reference mockups only.
 
+**The mockups that predate the rename keep the old name, and now say so.**
+`templates/feedback-sheet` was authored after
+[adr-016](adr-016-public-discoverability.md) §9 and uses INVINTO, but the
+eleven template sets before it still render INVITO and `invito.ua`. Sweeping
+them was considered and **rejected on §9's own rule** — *"earlier records are
+left as written… rewriting a quotation to match a later decision would make the
+record say something it did not say"* — which is the same reason adr-013 and
+06-roadmap keep their INVITO quotations. §9 gives those two a pointer here
+instead; the design project had no equivalent, so this iteration added one:
+`templates/brand-name/BrandName.dc.html`, a card stating the current name, the
+former one, and that a mockup dated before 2026-08-09 is to be read with the
+wordmark and domain substituted. One card rather than fifty rewrites, and the
+records stay records.
+
 ## Revisit triggers
 
 - **The landing footer collects nothing for a month while hosts are clearly
