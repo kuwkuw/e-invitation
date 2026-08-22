@@ -23,6 +23,7 @@ import {
   type ManageStrings,
   saveUiLang,
 } from "./i18n";
+import { routeMeta, useDocumentMeta } from "./seo";
 import type { Language } from "./types";
 
 /**
@@ -36,6 +37,10 @@ import type { Language } from "./types";
 export function ManagePage({ id }: { id: string }) {
   const [uiLang, setUiLang] = useState<Language>(loadUiLang);
   const t = MANAGE[uiLang];
+  // `noindex, nofollow`: this is a host's guest list, and the links out of it
+  // are their own invitation and manage URLs. The title stays generic for the
+  // same reason — a tab in a shared screen share should not name the event.
+  useDocumentMeta(routeMeta("manage", uiLang));
   const manage = useHostManage(id);
   // The one thing on this page that is *not* authorized by the manage token
   // (adr-015 §7): reply email is a property of an account, and this page can be
@@ -108,7 +113,7 @@ export function ManagePage({ id }: { id: string }) {
         )}
       </div>
 
-      {/* Feedback's second durable home (adr-016 §4). Only under a dashboard
+      {/* Feedback's second durable home (adr-017 §4). Only under a dashboard
           that actually loaded: the four failure states above are prompts to
           fix something, and a "write to us" beside them would read as the
           product giving up. It carries no invitation id — `page: "manage"` is
@@ -216,7 +221,7 @@ function ReadyDashboard({
           belongs to the host's event, and the one line about the product that
           renders it sits at the very bottom in the wordmark's own grey. */}
       <p className="hm-brand">
-        INVITO
+        INVINTO
         <button type="button" className="fb-link hm-feedback" onClick={onFeedback}>
           {feedbackLabel}
         </button>

@@ -1,4 +1,4 @@
-// Host feedback (adr-016): the one channel that runs from a host to us.
+// Host feedback (adr-017): the one channel that runs from a host to us.
 //
 // Two endpoints with two different audiences and two different credentials.
 // The write is open — no session required, because the hosts most worth

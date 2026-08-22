@@ -271,7 +271,7 @@ export type NotificationPrefRequest = z.infer<typeof NotificationPrefRequest>;
 export const NotificationPref = z.object({ enabled: z.boolean() });
 export type NotificationPref = z.infer<typeof NotificationPref>;
 
-// Host feedback (adr-016) --------------------------------------------------
+// Host feedback (adr-017) --------------------------------------------------
 
 // Which host surface the message was written on. A closed enum for the same
 // reason `GenerateSource` is one (adr-013 §3): it separates somebody looking
@@ -280,14 +280,14 @@ export type NotificationPref = z.infer<typeof NotificationPref>;
 // graph adr-012 §3 and adr-005 both refused, and would arrive attached to free
 // text, which is a worse version of the same thing.
 //
-// The editor is absent on purpose (adr-016 §4) — `/create` is the three-second
+// The editor is absent on purpose (adr-017 §4) — `/create` is the three-second
 // path the product is built around — and so is the guest page: a guest came
 // for someone else's wedding.
 export const FeedbackPage = z.enum(["landing", "manage"]);
 export type FeedbackPage = z.infer<typeof FeedbackPage>;
 
 // One message, one direction. No subject, no rating, no contact field, no
-// attachment (adr-016 §1–2). The 2000-character cap is half the rate limit:
+// attachment (adr-017 §1–2). The 2000-character cap is half the rate limit:
 // it bounds a single row, while `LIMIT_FEEDBACK_PER_DAY` bounds how many.
 export const FeedbackRequest = z.object({
   message: z.string().trim().min(1).max(2000),
@@ -299,7 +299,7 @@ export const FeedbackRequest = z.object({
 });
 export type FeedbackRequest = z.infer<typeof FeedbackRequest>;
 
-// What an operator reads back (adr-016 §6). `email` is joined off `users` at
+// What an operator reads back (adr-017 §6). `email` is joined off `users` at
 // read time, behind the operator credential — the feedback table stores only
 // `user_id`, so it is worthless if lifted on its own. Null for a message sent
 // signed out, and null again once that account is deleted (§8: deletion

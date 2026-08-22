@@ -1,6 +1,12 @@
-# ADR-016 — A feedback channel from the host to us
+# ADR-017 — A feedback channel from the host to us
 
-**Status:** accepted · **Date:** 2026-08-09 · Lands as **FR-13**. Reads the
+**Status:** accepted · **Date:** 2026-08-09 · Lands as **FR-14**.
+**Numbered 017, not 016**: this was drafted as adr-016/FR-13 while
+[adr-016](adr-016-public-discoverability.md) was being built on another branch,
+and the two claimed the same pair of ids. Discoverability merged to `main`
+first, so it keeps them and this record moved — an id that has shipped is a
+reference other documents already carry, and the unmerged branch is the cheaper
+of the two to renumber. Nothing about either decision changed. Reads the
 posture [06-roadmap](../06-roadmap.md) has now stated five times — that
 building for hosts who are not here yet is this project's failure mode — and
 argues that this is the one item on the list that gets *smaller* rather than

@@ -6,7 +6,7 @@ import { FEEDBACK } from "../src/i18n";
 import { LandingPage } from "../src/LandingPage";
 
 /**
- * Host feedback (adr-016), client side.
+ * Host feedback (adr-017), client side.
  *
  * Three properties carry the weight, and none of them is "the POST fires":
  *

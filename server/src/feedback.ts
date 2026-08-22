@@ -1,4 +1,4 @@
-// Host feedback state (adr-016): what a host wrote to us, and the operator's
+// Host feedback state (adr-017): what a host wrote to us, and the operator's
 // read of it.
 //
 // It sits on db.ts beside accounts.ts and notifications.ts, and the dependency
@@ -33,7 +33,7 @@ export interface NewFeedback {
   page: FeedbackPage;
   lang: Language;
   /** The signed-in account, or null for a message sent signed out — which is
-   *  an ordinary case, not a degraded one (adr-016 §2). */
+   *  an ordinary case, not a degraded one (adr-017 §2). */
   userId: string | null;
 }
 
@@ -57,7 +57,7 @@ export function addFeedback(entry: NewFeedback): Feedback {
   return row;
 }
 
-/** Everything a host has written, newest first (adr-016 §6).
+/** Everything a host has written, newest first (adr-017 §6).
  *
  *  The address is **joined here rather than stored** — the same shape adr-014
  *  §1 established for the keyring, where the join is the exposure and it

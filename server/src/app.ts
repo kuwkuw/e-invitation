@@ -12,12 +12,15 @@ import { emailConfigured } from "./email/send.js";
 import { guardrailsSnapshot } from "./guardrails.js";
 import { TASK_ROUTES } from "./llm/routing.js";
 import { markBaseline } from "./metrics.js";
+import { absoluteBase } from "./publicUrl.js";
 import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerFeedbackRoutes } from "./routes/feedback.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
+import { registerSeoRoutes } from "./routes/seo.js";
 import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
+import { prerenderLanguage, renderShell, shellMeta } from "./seo.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -112,6 +115,9 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   registerFeedbackRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
+  // Before the SPA fallback, which answers every non-/api path and would hand
+  // a crawler an HTML page where it asked for a crawl policy (adr-016 §4).
+  registerSeoRoutes(app);
   // Outside /api (adr-015 §7) and therefore registered before the SPA
   // fallback, which would otherwise serve the shell for this path. Awaited
   // because it registers its routes inside a plugin, which is what keeps its
@@ -135,9 +141,28 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
       // the path `/`, `/create` and `/manage/:id` arrive on.
       const wantsShell = request.method === "GET" || request.method === "HEAD";
       if (wantsShell && !request.url.startsWith("/api")) {
-        return reply
-          .header("Content-Type", "text/html; charset=utf-8")
-          .send(readFileSync(join(webDist, "index.html"), "utf8"));
+        // One document serves four screens, so the head it ships with is right
+        // for at most one of them. `shellMeta` decides what this path should
+        // have said and `renderShell` swaps it in before the shell leaves
+        // (adr-016 §2) — a crawler that never runs the app still gets this
+        // page's title, description and crawl instruction rather than the
+        // landing page's.
+        const [path = "/", search = ""] = request.url.split("?");
+        const meta = shellMeta(path, search, absoluteBase(request));
+        const html = renderShell(
+          readFileSync(join(webDist, "index.html"), "utf8"),
+          meta,
+          // The landing page ships its copy as real HTML in the body, so a
+          // crawler that has not run the app still reads a page rather than an
+          // empty div (adr-016 §10). Every other path strips it.
+          prerenderLanguage(path, meta.lang),
+        );
+        reply.header("Content-Type", "text/html; charset=utf-8");
+        // Only where it says no. A header repeating the default would be noise
+        // on the one page that wants indexing; on the pages that do not, it is
+        // the instruction a crawler reads without parsing any HTML at all.
+        if (meta.robots.startsWith("noindex")) reply.header("X-Robots-Tag", meta.robots);
+        return reply.send(html);
       }
       return reply.code(404).send({ error: "Not found." });
     });

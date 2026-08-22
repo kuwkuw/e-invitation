@@ -120,7 +120,7 @@ const SCHEMA = `
   -- have a victim open it — signing that victim into the attacker's account.
   -- Hashed for the same reason session ids are: a row here is then not a
   -- usable half of the pair.
-  -- Host feedback (adr-016). The first table here that stores user-authored
+  -- Host feedback (adr-017). The first table here that stores user-authored
   -- prose rather than identifiers, tokens and counts, which is what §7 and §8
   -- are for: the message has exactly one copy — the log line carries its
   -- length and never its body — and one DELETE removes it.

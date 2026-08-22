@@ -23,7 +23,7 @@
   signed-in share panel and the account surfaces. No Google SDK: the handshake
   is a server-side redirect flow, which is what kept that number to five
   kilobytes. **+1.1 kB is host feedback**
-  ([adr-016](decisions/adr-016-host-feedback.md), FR-13) — a hook, one sheet,
+  ([adr-017](decisions/adr-017-host-feedback.md), FR-14) — a hook, one sheet,
   two triggers and bilingual strings, no dependency; reusing the `ag-*` sheet
   shell is most of why it is one kilobyte.
 - **This figure had drifted before the feedback iteration re-measured it**: the
@@ -95,8 +95,8 @@
   be a larger step than adr-013 §2 declined to take for a metric, and it is
   declined for the same reason. The unsubscribe page echoes nothing at all:
   every string on it is ours and the token never appears in its body.
-- **The product now stores prose a host wrote to us** (FR-13,
-  [adr-016](decisions/adr-016-host-feedback.md)) — the first thing here that is
+- **The product now stores prose a host wrote to us** (FR-14,
+  [adr-017](decisions/adr-017-host-feedback.md)) — the first thing here that is
   neither an identifier, a token, a count, nor invitation content. Three things
   keep that line short: a feedback row carries **no invitation id, URL, IP or
   user agent**, only a two-value surface enum and the UI language; the message
@@ -108,7 +108,7 @@
 - **Deleting an account** (FR-11.7) removes the user, sessions and keyring and
   keeps every published invitation and RSVP: guests hold those share links, the
   RSVP rows are the guests' data, and the manage token survives on the record.
-  Feedback that account sent is **detached, not deleted** (FR-13.9): the
+  Feedback that account sent is **detached, not deleted** (FR-14.9): the
   message is about the product and the identity is incidental to it, so the row
   survives with no name on it.
 - Host authority = possession of the `manage_token` (128-bit random hex),
@@ -213,3 +213,10 @@
 - Design tokens stay closed enums — widening them to free-form strings is a
   breaking architectural change, not a tweak
   ([adr-003](decisions/adr-003-no-image-generation.md)).
+- Search copy exists twice — `SEO_STRINGS` in `server/src/seo.ts` and `SEO` in
+  `web/src/i18n.ts` — and must change in the same PR, for the same reason as
+  the schema mirror above. The server's copy is what a crawler reads; the
+  client's is what survives a route change
+  ([adr-016](decisions/adr-016-public-discoverability.md) §6). The committed
+  head block in `web/index.html` is generated, not hand-written:
+  `server/test/seo.test.ts` fails if it drifts from what the module produces.

@@ -20,7 +20,7 @@ Everything else at the root is non-package: `docs/` (specs + 15 ADRs), `scripts/
 Three boundaries named in the task brief do not exist in this tree:
 
 - **No FastAPI / Python.** There is no `.py` file in the repo; the API is Fastify, built in
-  `server/src/app.ts:26` and listened on in `server/src/index.ts:8`.
+  `server/src/app.ts:24` and listened on in `server/src/index.ts:8`.
 - **No LiteLLM gateway.** No sidecar, no service, no dependency. "LiteLLM" appears only in two
   comments (`server/src/llm/openaiCompat.ts:3,48`) describing what the in-process adapter replaced,
   and in `docs/decisions/adr-002`/`adr-007`.
@@ -38,11 +38,13 @@ zod schemas, not a generated or shared artifact — a deliberate constraint, not
 NFR-8 (`docs/03-non-functional-requirements.md:185-186`) requires the mirror to change in the same
 PR as the schema.
 
-**Backend (`server/`).** `buildApp` (`server/src/app.ts:21`) registers cors + cookie, a
-`CANONICAL_HOST` redirect hook (`app.ts:46-52`), `/healthz` (`app.ts:98`), then five route modules:
-auth, account, invitations, og, unsubscribe (`app.ts:109-117`). When `web/dist/index.html` exists it
-also serves the built SPA from the same process and falls back to the shell for non-`/api` GET/HEAD
-(`app.ts:122-142`) — so production is a single container (`Dockerfile:17-33`, `DATA_DIR=/data`).
+**Backend (`server/`).** `buildApp` (`server/src/app.ts:24`) registers cors + cookie, a
+`CANONICAL_HOST` redirect hook (`app.ts:49-55`), `/healthz` (`app.ts:101`), then six route modules:
+auth, account, invitations, og, seo, unsubscribe (`app.ts:112-123`). When `web/dist/index.html`
+exists it also serves the built SPA from the same process and falls back to the shell for non-`/api`
+GET/HEAD, dressing that shell with the path's own head metadata and keeping or stripping the
+landing page's build-time prerendered body (`seo.ts` `shellMeta`/`renderShell`/`selectPrerender`,
+adr-016 §2, §10) — so production is a single container (`Dockerfile:17-33`, `DATA_DIR=/data`).
 Persistence is split: published invitations are one JSON file per id (`server/src/store.ts:1-4,26`),
 and accounts/sessions live in SQLite (`server/src/db.ts`). Both assume a single process — NFR-7
 (`docs/03-non-functional-requirements.md:166-181`) states the deployment must not scale above one
@@ -63,7 +65,7 @@ unkeyed provider.
 **Renderers (two, unshared).** `web/src/components/InvitationPreview.tsx:17` maps design tokens to
 CSS class names defined in `web/src/styles.css:938-979`. `server/src/og/render.ts:149` builds a
 satori vdom with its own hard-coded style maps (`render.ts:13-32`) and rasterizes via resvg. Grep
-confirms the isolation: `og/render.ts` is imported only by `server/src/routes/og.ts:4` and its test;
+confirms the isolation: `og/render.ts` is imported only by `server/src/routes/og.ts:5` and its test;
 `InvitationPreview` is imported only by files under `web/src` and `web/test`.
 
 ## Data flow — the generation pipeline
@@ -99,7 +101,7 @@ The pipeline is **three model calls, not five**, and only the middle two are par
 
 Downstream of the pipeline, publish snapshots the whole `Invitation` into
 `PublishedRecord.versions[]` (`store.ts:11-18,44`), and the OG PNG is rendered lazily from the
-latest version at request time, cached by `id:version` (`routes/og.ts:53-57`) in the bounded LRU at
+latest version at request time, cached by `id:version` (`routes/og.ts:60-65`) in the bounded LRU at
 `server/src/og/cache.ts`. Snapshots are immutable, so a cached PNG never goes stale and republishing
 mints a new key rather than invalidating the old one.
 
@@ -118,14 +120,14 @@ Per-context divergence, checked one context at a time:
 | Context | Entry | What it actually renders |
 |---|---|---|
 | Editor preview | `components/editor/PreviewPanel.tsx:71` | All 6 copy fields, `background`, plus `activeField`/`onFieldClick` — the only caller that makes fields tappable (`InvitationPreview.tsx:26-37`) |
-| Guest page | `GuestPage.tsx:92` | Same component, 3 props only (`copy`, `design`, `background`). With no `onFieldClick`, `fieldProps` returns a bare `className` (`InvitationPreview.tsx:27`) — read-only by omission, not by a flag |
+| Guest page | `GuestPage.tsx:112` | Same component, 3 props only (`copy`, `design`, `background`). With no `onFieldClick`, `fieldProps` returns a bare `className` (`InvitationPreview.tsx:27`) — read-only by omission, not by a flag |
 | OG image | `og/render.ts:221-239` | **Title, greeting, `details_line` only.** No `body`, `rsvp_prompt` or `closing`; no `background`. Ornaments are generated SVG shapes, not the CSS `content` glyphs (`render.ts:41-42` vs `styles.css:969-971`); `banner` drops the ornament row (`render.ts:235`), matching `styles.css:961` |
 | Export | — | **No renderer involvement.** The two export paths are data files: RSVP CSV (`web/src/csv.ts`, called at `ManagePage.tsx:11`) and the guest `.ics` (`web/src/calendar.ts:151`, called at `GuestPage.tsx:2`), both written out by `web/src/download.ts:3`. Neither reads `DesignTokens` |
 
 Two consumers not in the task's list of four, found by grep:
 
-- `LandingPage.tsx:261` renders `InvitationPreview` for three hard-coded sample invitations
-  (`LandingPage.tsx:24`) — a real fourth in-app context.
+- `LandingPage.tsx:285` renders `InvitationPreview` for three hard-coded sample invitations
+  (`LandingPage.tsx:25`) — a real fourth in-app context.
 - `scripts/build-design-cards.mjs:26-35` re-emits the card DOM as a hand-written HTML string against
   the same class names, reading `styles.css` directly. A third copy of the markup.
 

@@ -13,7 +13,7 @@ iteration was taken, and 2026-08-08 when six days of the standing "wait for
 numbers" candidate were read back and the share sheet was taken, and
 2026-08-09 when the product got its first channel for being told something
 rather than counting itself
-([adr-016](decisions/adr-016-host-feedback.md), FR-13). This
+([adr-017](decisions/adr-017-host-feedback.md), FR-14). This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -27,7 +27,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Eleven iterations have shipped since (three of them were missing from this list
+Twelve iterations have shipped since (three of them were missing from this list
 until 2026-08-08 — the sections below always carried them):
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
@@ -51,8 +51,11 @@ until 2026-08-08 — the sections below always carried them):
 - **Reply notifications become opt-in** — below. Shipped as FR-12.10–12.11,
   amending adr-015 §7.
 - **The native share sheet at publish** — below. Shipped as FR-3.6, no new ADR.
-- **Host feedback** — [adr-016](decisions/adr-016-host-feedback.md), below.
-  Shipped as FR-13.
+- **Public discoverability** — [adr-016](decisions/adr-016-public-discoverability.md).
+  Shipped as FR-13; recorded in the backlog below rather than in a section of
+  its own.
+- **Host feedback** — [adr-017](decisions/adr-017-host-feedback.md), below.
+  Shipped as FR-14.
 
 ## Shipped: the host can come back
 
@@ -210,10 +213,12 @@ What the ADR settled, and the implementation delivered:
    store change.
 6. **One call to action**, replacing the static `gr-brand` wordmark. Designed
    first per adr-010 §9 — `templates/guest-rsvp-extras/GuestCta` in the DS
-   project — against the constraint `styles.css` already states in its own
+   project — against the constraint `styles.css` already stated in its own
    words, *"INVITO stays a whisper"*: the wordmark keeps its exact current
    values and gains one underlined line beneath it, in the same muted grey as
-   "change answer". Four louder treatments were drawn and rejected, three
+   "change answer". (The wordmark is **INVINTO** since
+   [adr-016](decisions/adr-016-public-discoverability.md) §9, and the comment
+   now phrases the same rule without a name. The rule is unchanged.) Four louder treatments were drawn and rejected, three
    against rules already written down.
 
 Four PRs — the beacon endpoint, the client beacon, the call to action, and
@@ -603,10 +608,19 @@ stand.
 ## Shipped: a way for a host to tell us something
 
 Planned and shipped 2026-08-09, settled in
-[ADR-016](decisions/adr-016-host-feedback.md) (accepted) and shipped as
-**FR-13**. It follows the share sheet by one day and does not disturb the
+[ADR-017](decisions/adr-017-host-feedback.md) (accepted) and shipped as
+**FR-14**. It follows the share sheet by one day and does not disturb the
 reading that section leaves open — `views_per_publish` off 0.5 is still the
 number to watch, and this changes nothing that feeds it.
+
+It was **built in parallel with public discoverability** (adr-016, FR-13) on a
+separate branch, and the two drafted themselves onto the same pair of ids.
+Discoverability merged first and keeps them; this renumbered from 016/13 to
+017/14 on the merge, because an id that has shipped is already referenced by
+other documents while an unmerged branch's is referenced only by itself. Worth
+one line here because the two iterations are otherwise unrelated and a reader
+finding adr-017 dated the same day as adr-016 should not have to wonder which
+came first: discoverability did, by a merge rather than by a decision.
 
 It was taken because it is **the one item on the list that gets smaller rather
 than larger the fewer hosts there are**, which is the test this doc's five
@@ -721,13 +735,16 @@ closer.
   would get without typing a sentence first. The token map is deterministic
   ([adr-003](decisions/adr-003-no-image-generation.md)), so samples cost no LLM
   call. Both a conversion surface and the only plausible Ukrainian-language
-  search asset the product could have. Larger, and unclaimed.
+  search asset the product could have. Larger, and unclaimed. FR-13 makes it
+  *possible* for that asset to rank — the landing page can now be indexed and
+  says what it is — but adds no content of its own; this item is still where
+  the content would come from.
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
-  to ask. Three items on this list are gated on exactly that, and FR-13 is now
+  to ask. Three items on this list are gated on exactly that, and FR-14 is now
   the channel a host would ask through.
-- ~~**A way for a host to tell us something**~~ — shipped as FR-13; see
-  [adr-016](decisions/adr-016-host-feedback.md) and the section above.
+- ~~**A way for a host to tell us something**~~ — shipped as FR-14; see
+  [adr-017](decisions/adr-017-host-feedback.md) and the section above.
 - ~~**Notify the host on a new RSVP**~~ — shipped as FR-12; see
   [adr-015](decisions/adr-015-rsvp-notifications.md) and the section above.
   [adr-014](decisions/adr-014-host-accounts.md) §8 supplied the address and
@@ -745,6 +762,15 @@ closer.
 - ~~**Native share sheet at publish**~~ — shipped as FR-3.6; see the section
   above. The panel's hierarchy survived it, which was the only thing this item
   had ever been waiting on.
+- ~~**Public discoverability**~~ — shipped as FR-13; see
+  [adr-016](decisions/adr-016-public-discoverability.md). Organic search is the
+  second of the two zero-cost channels
+  [07-monetization.md](07-monetization.md) §3 allows, and the only one that
+  reaches a host nobody has invited yet. What it delivers is the *floor*: the
+  landing page is indexable in both languages with copy written for a listing,
+  and every private surface — the editor, dashboards, guest pages — is
+  `noindex` without losing a single messenger unfurl. What it does not deliver
+  is anything to rank *for*; that is the gallery item above.
 - ~~**Share-loop instrumentation**~~ — shipped as FR-4.7 and FR-7.3–7.5; see
   [adr-013](decisions/adr-013-share-loop-instrumentation.md) and the section
   above. What it produces is now waiting on traffic, not on code.

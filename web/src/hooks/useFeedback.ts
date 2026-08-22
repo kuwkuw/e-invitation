@@ -6,7 +6,7 @@ export type FeedbackStatus = "editing" | "sending" | "sent";
 export type FeedbackError = "limited" | "generic";
 
 /**
- * One message from the host to us (adr-016).
+ * One message from the host to us (adr-017).
  *
  * State lives here rather than in the sheet for the reason every other piece
  * of this app's state does: the components stay composition, and this is what

@@ -10,7 +10,7 @@ import { listFeedback } from "../src/feedback.js";
 import { resetGuardrails } from "../src/guardrails.js";
 
 /**
- * Host feedback (adr-016).
+ * Host feedback (adr-017).
  *
  * The properties worth holding are not "a row is written". They are the four
  * decisions that would be quietly reversible without a test: sending needs no
@@ -105,7 +105,7 @@ describe("sending feedback", () => {
   });
 
   describe("what a message may say about where it came from", () => {
-    // adr-016 §3, and the reason `page` is an enum rather than a URL: an
+    // adr-017 §3, and the reason `page` is an enum rather than a URL: an
     // invitation id would rebuild the host graph adr-012 §3 and adr-005 both
     // refused, arriving attached to free text.
     it("refuses a page outside the closed enum", async () => {
@@ -241,7 +241,7 @@ describe("the operator's read (§6)", () => {
   });
 });
 
-// adr-016 §8, extending adr-014 §9's rule that deleting an account removes the
+// adr-017 §8, extending adr-014 §9's rule that deleting an account removes the
 // account and not the work. Feedback is the third case: the message is about
 // the product and the identity is incidental to it, so the row survives
 // without a name on it. Erasing it would throw away the only signal this

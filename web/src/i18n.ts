@@ -579,6 +579,12 @@ export function saveUiLang(lang: Language): void {
 
 // Landing-page marketing copy. The sample invitations in the hero stay
 // Ukrainian on purpose — they're showcased content, not chrome.
+//
+// `brand` is the one string here that is **not** translated: the product has
+// one name and it is the domain's (adr-016 §9). It stays in the table rather
+// than becoming a constant because `LandingStrings` is what the page reads,
+// and a name that lives half in i18n and half beside it is how the two-name
+// problem started.
 export interface LandingStrings {
   brand: string;
   cta: string;
@@ -612,7 +618,7 @@ export interface LandingStrings {
 
 export const LANDING: Record<Language, LandingStrings> = {
   en: {
-    brand: "Zaproshennya",
+    brand: "INVINTO",
     cta: "Create an invitation",
     heroTitle: "An invitation from one sentence",
     heroText: "Describe your event in words — get a beautiful invitation in a minute.",
@@ -628,7 +634,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
     finalTitle: "Ready to send your first invitation?",
-    footer: "Zaproshennya — simple, and Ukrainian at heart.",
+    footer: "INVINTO — simple, and Ukrainian at heart.",
     yoursTitle: "Your invitations",
     yoursTitleOne: "Your invitation",
     yoursPublished: "Published {when}",
@@ -647,7 +653,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     },
   },
   uk: {
-    brand: "Запрошення",
+    brand: "INVINTO",
     cta: "Створити запрошення",
     heroTitle: "Запрошення за одне речення",
     heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
@@ -664,7 +670,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpSummary: "18 прийдуть · 3 не прийдуть · 5 ще не відповіли",
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
     finalTitle: "Готові надіслати перше запрошення?",
-    footer: "Запрошення — просто і по-українськи.",
+    footer: "INVINTO — просто і по-українськи.",
     yoursTitle: "Ваші запрошення",
     yoursTitleOne: "Ваше запрошення",
     yoursPublished: "Опубліковано {when}",
@@ -680,6 +686,64 @@ export const LANDING: Record<Language, LandingStrings> = {
       yesterday: "вчора",
       daysAgo: "{n} {form} тому",
       dayForms: ["день", "дні", "днів"],
+    },
+  },
+};
+
+// Search-result copy (adr-016). Written for a listing rather than for the
+// page, which is why it names the occasions the landing headline does not —
+// and why it is separate from LANDING rather than reusing `heroTitle`.
+//
+// **Mirrors `SEO_STRINGS` in `server/src/seo.ts` by hand**, the way
+// `types.ts` mirrors `schemas.ts`. The server's copy is the one a crawler
+// reads (it is in the shell before any JS runs); this copy is what a
+// client-side navigation leaves in the tab and in the head afterwards. They
+// must say the same thing — change both in the same pass.
+export type SeoPage = "landing" | "create" | "manage" | "notFound";
+
+export const SEO: Record<Language, Record<SeoPage, { title: string; description: string }>> = {
+  uk: {
+    landing: {
+      title: "INVINTO — електронні запрошення онлайн за одне речення",
+      description:
+        "Опишіть подію одним реченням — отримайте готове запрошення на весілля, " +
+        "день народження чи корпоратив, поділіться посиланням і збирайте відповіді гостей.",
+    },
+    create: {
+      title: "Створити запрошення — INVINTO",
+      description:
+        "Опишіть подію своїми словами — редактор напише текст, підбере дизайн " +
+        "і дасть посилання для гостей із підтвердженням присутності.",
+    },
+    manage: {
+      title: "Відповіді гостей — INVINTO",
+      description: "Хто прийде на вашу подію — відповіді гостей на ваше запрошення.",
+    },
+    notFound: {
+      title: "Сторінку не знайдено — INVINTO",
+      description: "Такої сторінки немає. Створіть запрошення на головній.",
+    },
+  },
+  en: {
+    landing: {
+      title: "INVINTO — online invitations with RSVP, from one sentence",
+      description:
+        "Describe your event in one sentence and get a ready-made invitation for a wedding, " +
+        "birthday or party. Share the link in any messenger and collect guest replies.",
+    },
+    create: {
+      title: "Create an invitation — INVINTO",
+      description:
+        "Describe your event in your own words — the editor writes the copy, picks a design, " +
+        "and gives you a share link that collects RSVPs.",
+    },
+    manage: {
+      title: "Guest replies — INVINTO",
+      description: "Who is coming to your event — the replies to your invitation.",
+    },
+    notFound: {
+      title: "Page not found — INVINTO",
+      description: "There is no such page. Start an invitation from the home page.",
     },
   },
 };
@@ -994,7 +1058,7 @@ export const CRASH: Record<Language, Record<CrashAudience, CrashStrings>> = {
   },
 };
 
-// Host feedback (adr-016). Its own table because two unrelated surfaces render
+// Host feedback (adr-017). Its own table because two unrelated surfaces render
 // it — the landing footer and the host dashboard — and neither owns it.
 export interface FeedbackStrings {
   /** The trigger, on both surfaces. Names the direction rather than the act:
@@ -1004,7 +1068,7 @@ export interface FeedbackStrings {
   intro: string;
   placeholder: string;
   /** Who we would be replying to, said **before** sending rather than
-   *  discovered afterwards (adr-016 §2). `{email}` is the signed-in address. */
+   *  discovered afterwards (adr-017 §2). `{email}` is the signed-in address. */
   signedInAs: string;
   /** The signed-out case. It states the limit plainly and does not offer a
    *  sign-in: this sheet is often open *because* something about accounts went

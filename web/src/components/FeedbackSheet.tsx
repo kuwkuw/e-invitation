@@ -3,7 +3,7 @@ import type { FeedbackStrings } from "../i18n";
 import type { FeedbackPage, Language } from "../types";
 
 /**
- * The feedback form (adr-016), as a sheet over whichever page opened it.
+ * The feedback form (adr-017), as a sheet over whichever page opened it.
  *
  * It borrows the `ag-*` sheet shell rather than inventing a second one: the
  * sign-in gate, the sign-out confirmation and the delete confirmation are all
@@ -15,7 +15,7 @@ import type { FeedbackPage, Language } from "../types";
  * no rating: a category is a question the host has to answer before they get
  * to the one they came to answer, and a rating at this volume produces a
  * number that means nothing while costing the sentence nobody predicted
- * (adr-016 §1).
+ * (adr-017 §1).
  *
  * The identity line is stated **before** sending, in both directions, so
  * whether we can write back is never something a host finds out afterwards.
@@ -31,7 +31,7 @@ export function FeedbackSheet({
   t,
 }: {
   /** Which surface opened it — captured, never asked, and never an invitation
-   *  id (adr-016 §3). */
+   *  id (adr-017 §3). */
   page: FeedbackPage;
   lang: Language;
   /** The signed-in address, or null when there is none. Null is an ordinary

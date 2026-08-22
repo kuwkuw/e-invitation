@@ -7,6 +7,12 @@ unchanged from [adr-005](adr-005-capability-tokens.md).
 
 ## Context
 
+> **Naming note (2026-08).** This record predates the rename to **INVINTO**;
+> "INVITO" below is the wordmark as it read at the time, quotations from the DS
+> `guest-rsvp` template included. The component and its behaviour are unchanged
+> — see [adr-016](adr-016-public-discoverability.md) §9.
+
+
 [07-monetization.md](../07-monetization.md) §3 established the constraint that
 decides everything about this product commercially: a private host organizes
 one or two events a year, so lifetime value is approximately one transaction,

@@ -186,13 +186,13 @@ export interface NotificationPref {
   enabled: boolean;
 }
 
-/** Which host surface a feedback message was written on (adr-016 §3). Mirrors
+/** Which host surface a feedback message was written on (adr-017 §3). Mirrors
  *  the server's `FeedbackPage` by hand (NFR-8). A closed enum, like
  *  `GenerateSource`: it separates somebody looking at the product from
  *  somebody running a live event, and it can never say *which* event. */
 export type FeedbackPage = "landing" | "manage";
 
-/** What the host sends us (adr-016 §1). One message and two things we already
+/** What the host sends us (adr-017 §1). One message and two things we already
  *  know — no subject, no rating, no contact field. */
 export interface FeedbackInput {
   message: string;

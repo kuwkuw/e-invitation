@@ -9,7 +9,7 @@
 // pipeline would be free.
 //
 // One allowance here guards something that costs no tokens at all: host
-// feedback (adr-016 §5). What this module implements is "a per-IP daily
+// feedback (adr-017 §5). What this module implements is "a per-IP daily
 // allowance with a UTC rollover", which is exactly the control that endpoint
 // needs, and a second copy of it elsewhere would be two places to fix a
 // rollover bug. The cost is real and merely not measured in dollars — it is
@@ -28,7 +28,7 @@ const LIMIT_ENV: Record<LimitedTask, { env: string; fallback: number }> = {
   // Low because saying five separate things about one product in one day is
   // already an unusual amount to have to say, and because the alternative
   // controls — a CAPTCHA, a spam service — are external dependencies this
-  // scale does not justify (adr-016 §5).
+  // scale does not justify (adr-017 §5).
   feedback: { env: "LIMIT_FEEDBACK_PER_DAY", fallback: 5 },
 };
 

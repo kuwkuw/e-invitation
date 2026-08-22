@@ -561,7 +561,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the
    invitation is the hero, the reply is a quiet white card; the attending
-   toggle is the emotional center; INVITO stays a whisper. */
+   toggle is the emotional center; the wordmark stays a whisper. */
 
 .gr-page { min-height: 100dvh; background: #f6f5f2; padding: 22px 20px 18px; }
 .gr-status { text-align: center; color: #6b6659; margin-top: 48px; }
@@ -1028,6 +1028,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .lp-cta:hover { background: #9d4d26; }
 .lp-cta-sm { font-size: 0.95rem; padding: 11px 22px; }
+/* The prerendered landing CTA is a real <a> so a crawler has an edge to follow
+   and a visitor can act before React mounts (adr-016 §10); React swaps in the
+   <button> that owns the navigation. Two declarations are the whole difference
+   between the two elements under this class. */
+a.lp-cta { display: inline-block; text-decoration: none; }
 
 .lp-nav {
   position: sticky;
@@ -1640,7 +1645,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: #a29a8b; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
 .lp-delete-link:hover { color: #a83f3f; }
 
-/* Host feedback (adr-016). The sheet reuses the ag-* shell — a fourth
+/* Host feedback (adr-017). The sheet reuses the ag-* shell — a fourth
    container for a fourth kind of moment would be a new visual idea for no new
    reason — so what is defined here is only the field, the two lines of state
    around it, and the trigger.

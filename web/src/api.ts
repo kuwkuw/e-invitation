@@ -212,7 +212,7 @@ export function setNotificationPref(enabled: boolean): Promise<NotificationPref>
   });
 }
 
-/** Host feedback (adr-016). Sent with `credentials` because a session, **if
+/** Host feedback (adr-017). Sent with `credentials` because a session, **if
  *  there is one**, attributes the message — but there is no 401 here and no
  *  sign-in prompt: sending requires no account, since the hosts most worth
  *  hearing from are the ones who bounced at the publish gate (§2). The server

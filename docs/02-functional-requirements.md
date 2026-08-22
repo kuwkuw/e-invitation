@@ -105,7 +105,7 @@ implementation.
   ([adr-011](decisions/adr-011-client-router.md) §3).
 - FR-4.7 The guest page carries exactly one link back to the product
   ([GuestCta.tsx](../web/src/components/guest/GuestCta.tsx),
-  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVITO
+  [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVINTO
   wordmark plus one muted line, below the reply card, in the guest's chrome
   language (FR-6.3), present in both the form and post-RSVP states. It links to
   `/create?ref=guest` and never becomes a modal, a card, or an accent-coloured
@@ -403,9 +403,76 @@ them.
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
 
-## FR-13 Host feedback
+## FR-13 Public discoverability
 
-**Status: built** — [adr-016](decisions/adr-016-host-feedback.md),
+**Status: built** — [adr-016](decisions/adr-016-public-discoverability.md),
+`GET /robots.txt`, `GET /sitemap.xml`, per-path head metadata
+([seo.ts](../server/src/seo.ts), [web/src/seo.ts](../web/src/seo.ts))
+
+Organic search is the second of the two channels `07-monetization.md` §3 allows
+at approximately zero acquisition cost, and the only one that reaches a host
+nobody has invited yet. FR-4.7 and FR-7.3–7.5 took the first (the share loop);
+this takes the other, without putting a single guest's event in a search
+result.
+
+- FR-13.1 Every path the server answers carries a head written for that path:
+  a title, a description, a crawl instruction and a share card. The SPA ships
+  one document, so these are **replaced** in it per request rather than added
+  to — `og:title` is first-one-wins in every unfurler that matters, and an
+  appended card would show every share link as the marketing page.
+- FR-13.2 The landing page is the one page offered for indexing, with a
+  self-referencing canonical, `WebSite`/`WebApplication` structured data and a
+  1200×630 share card at `/og-cover.png`. The editor, the host dashboard,
+  published invitations and unknown paths are `noindex` and name no canonical.
+  `X-Robots-Tag` repeats the instruction in a header on every such response.
+- FR-13.3 A published invitation stays shareable and unindexable at the same
+  time. No unfurler consults `robots`, so the `og:*` tags of FR-3.5 are
+  unaffected by the `noindex` beside them, and the host's date, venue and
+  family name stay out of search results.
+- FR-13.4 `robots.txt` closes `/api`, `/manage/` and `/unsubscribe/`, and
+  **explicitly allows the OG image path** ahead of the `/api` rule. It does not
+  close `/i/`: messenger link crawlers honour robots.txt, so disallowing that
+  path would stop every published link unfurling rather than keeping it out of
+  the index — which `noindex` already does, and can only do if the page is
+  fetched.
+- FR-13.5 `sitemap.xml` lists the landing page in both languages, each with the
+  full reciprocal `hreflang` set. Nothing the crawl policy closes appears in
+  it. Both files are generated per request, because the origin they must state
+  absolutely is a deployment fact (`CANONICAL_HOST`, a preview URL, localhost).
+- FR-13.6 The English landing page has an address of its own, `/?lang=en`. The
+  UI toggle (FR-6) is a browser preference and a crawler holds none, so without
+  it the English site could not be indexed at all. `/` is Ukrainian, the two
+  declare each other as alternates, `?lang=uk` canonicalises back to `/`, and
+  `x-default` is the Ukrainian form. The parameter wins over the stored
+  preference and becomes it, so following an English link and then starting an
+  invitation stays English.
+- FR-13.7 A client-side navigation updates the title, description, robots and
+  canonical to match the screen — the server's head is correct for the URL that
+  was fetched, not for the one the router moved to. `og:*` is deliberately left
+  alone: no unfurler runs JavaScript.
+- FR-13.8 The app declares an icon set, a web manifest and a theme colour, so
+  it has a name and a mark in a browser tab, a search listing, a shared link
+  and on a phone's home screen.
+- FR-13.10 The landing page's copy is served as HTML in the body, not only
+  rendered by the app. A crawler that does not run JavaScript — or runs it on a
+  queue days later, which is what Google does for a new domain — otherwise
+  reads a title and a description over an empty container. Generated from the
+  same strings the page renders, so the two cannot disagree, and stripped on
+  every other path: a guest opening a share link must never see the marketing
+  page underneath their invitation
+  ([adr-016](decisions/adr-016-public-discoverability.md) §10). A side effect
+  is that the landing page now reads with JavaScript disabled.
+- FR-13.9 The product has **one** name, **INVINTO**, and it is the domain's
+  spelling. It reads the same in the landing wordmark, on the guest page, on
+  the host dashboard, in reply email, on the unsubscribe page, in `.ics` files
+  and in every search title. A search listing has room for one name and shows
+  it beside the URL, so a wordmark that disagrees with the address bar reads as
+  someone else's site ([adr-016](decisions/adr-016-public-discoverability.md)
+  §9). This is the one string on the landing page that is not translated.
+
+## FR-14 Host feedback
+
+**Status: built** — [adr-017](decisions/adr-017-host-feedback.md),
 `POST|GET /api/feedback` ([feedback.ts](../server/src/feedback.ts),
 [routes/feedback.ts](../server/src/routes/feedback.ts),
 [FeedbackSheet.tsx](../web/src/components/FeedbackSheet.tsx))
@@ -417,55 +484,54 @@ link, sent it and nobody tapped, or published a test. It also reaches the one
 person FR-11's publish gate makes invisible — a host who bounces at the Google
 button leaves no trace but a generation that never became a publish.
 
-- FR-13.1 A host can write one free-text message (≤2000 characters) and send
+- FR-14.1 A host can write one free-text message (≤2000 characters) and send
   it. There is no subject, no category, no rating and no attachment: a category
   is a question asked before the one the host came to answer, and a rating at
   this volume yields a number that means nothing while costing the sentence
-  nobody predicted ([adr-016](decisions/adr-016-host-feedback.md) §1).
-- FR-13.2 **Sending requires no account.** Signed in, the message is attributed
+  nobody predicted ([adr-017](decisions/adr-017-host-feedback.md) §1).
+- FR-14.2 **Sending requires no account.** Signed in, the message is attributed
   to the account and we can reply; signed out, it is stored anonymously and
   stays that way. Which of the two is happening is stated on the form *before*
   sending, so nobody discovers afterwards that their message was anonymous.
   There is no "your email" field — FR-11.1's Google-verified address is the one
   identity this product holds.
-- FR-13.3 The message carries **only** the surface it was written on
+- FR-14.3 The message carries **only** the surface it was written on
   (`landing` | `manage`) and the UI language. No invitation id, no URL, no
   referrer, no IP, no user agent. `page` is a closed enum for the reason
   `source` is one in FR-7.3: an id would rebuild the host graph FR-5.7 and the
   capability-token model both refuse to build, and here it would arrive
   attached to free text.
-- FR-13.4 The form has two durable homes — the landing footer and the host
+- FR-14.4 The form has two durable homes — the landing footer and the host
   dashboard — and appears in neither uninvited. The editor is deliberately
   excluded: `/create` is the three-second path the product is built around, and
   a feedback prompt there competes with the one action the page exists for. The
   guest page is excluded because a guest is somebody else's invitee.
-- FR-13.5 Rate-limited per IP per day (`LIMIT_FEEDBACK_PER_DAY`, default 5, 0
+- FR-14.5 Rate-limited per IP per day (`LIMIT_FEEDBACK_PER_DAY`, default 5, 0
   disables), on the same allowance mechanism as FR-9. No CAPTCHA and no
   third-party spam service: the allowance plus the length cap is proportionate
   at this traffic, and the first correction is an env var rather than a
   dependency.
-- FR-13.6 A failed send never loses what the host wrote — the message stays in
+- FR-14.6 A failed send never loses what the host wrote — the message stays in
   the field with the reason beside it, and the daily allowance says *tomorrow*
   rather than "try again in a moment". A successful send confirms in place;
   this sheet is the only receipt a feedback message has.
-- FR-13.7 An operator reads the messages at `GET /api/feedback`, authorized by
+- FR-14.7 An operator reads the messages at `GET /api/feedback`, authorized by
   `FEEDBACK_TOKEN` in an `x-feedback-token` header, compared in constant time.
   **With no token configured the endpoint answers 404** — a deployment that
   never set up a reader does not advertise that a reader exists. There is no
   admin UI. The account's address is joined at read time behind that
   credential; the feedback table stores only a user id.
-- FR-13.8 The message body is stored in exactly one place. The per-submission
+- FR-14.8 The message body is stored in exactly one place. The per-submission
   log line carries the row id, surface, language, whether it was attributed and
   the message *length* — never the text — so one `DELETE` removes what a host
   wrote.
-- FR-13.9 Deleting an account (FR-11.7) **detaches** that host's feedback
+- FR-14.9 Deleting an account (FR-11.7) **detaches** that host's feedback
   rather than deleting it: the message is about the product and the identity is
   incidental to it. The row survives with no name on it, alongside the
   invitations and RSVPs FR-11.7 already keeps.
-
 | Path | Page | Audience |
 | --- | --- | --- |
-| `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7) | Public |
+| `/` | Landing page; lists a signed-in host's invitations with response counts — or this browser's where sign-in is unavailable (FR-5.6, FR-5.7). `?lang=en` is the English page's own address (FR-13.6) | Public |
 | `/create` | Editor (generate → edit → publish → share). `?ref=guest` attributes the session (FR-7.3) and is stripped from the URL at mount | Host |
 | `/manage/:id` | Response dashboard; needs the manage token (FR-5.4) | Host |
 | `/i/:id` | Published invitation + RSVP form | Guest |
@@ -489,6 +555,19 @@ button leaves no trace but a generation that never became a publish.
 | `PUT /api/account/notifications` | Turn it on or off | Session cookie + origin check |
 | `GET /unsubscribe/:token` | Confirm step — never mutates | Unsubscribe token |
 | `POST /unsubscribe/:token` | Turn reply email off; RFC 8058 one-click posts here | Unsubscribe token (no origin check — one-click is cross-origin by definition) |
+
+### Discoverability endpoints (FR-13)
+
+| Endpoint | Purpose | Authorized by |
+| --- | --- | --- |
+| `GET /robots.txt` | Crawl policy; names the sitemap absolutely | — (public) |
+| `GET /sitemap.xml` | The landing page in both languages, with `hreflang` | — (public) |
+| `GET /og-cover.png` | Site-level share card, 1200×630 (static, `web/public/`) | — (public) |
+
+Both generated files state an absolute origin, which is why they are routes
+rather than static files — and why they are registered ahead of the SPA
+fallback, which would otherwise answer a crawler's request for a policy with an
+HTML page.
 
 `/unsubscribe` sits **outside `/api`** on purpose: the session cookie is scoped
 `Path=/api`, and this URL arrives from an inbox where a mail provider may fetch
