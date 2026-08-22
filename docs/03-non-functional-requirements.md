@@ -12,8 +12,10 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **91.4 kB gzipped** (284.6 kB raw), plus 10.6 kB gzipped of CSS, measured
-  with `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
+  **92.4 kB gzipped** (287.5 kB raw), plus 10.6 kB gzipped of CSS and 3.1 kB
+  gzipped of `index.html` — the last of those is the prerendered landing copy
+  (FR-13.10), which was 0.4 kB before it. Measured with
+  `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
   ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
   share-loop client (adr-013), **+0.7 kB is reply notifications**
@@ -22,16 +24,21 @@
   ([adr-014](decisions/adr-014-host-accounts.md)) — the sign-in gate, the
   signed-in share panel and the account surfaces. No Google SDK: the handshake
   is a server-side redirect flow, which is what kept that number to five
-  kilobytes. **+1.1 kB is host feedback**
+  kilobytes. **+1.1 kB is public discoverability**
+  ([adr-016](decisions/adr-016-public-discoverability.md), FR-13) — the
+  per-path metadata and `?lang=` handling, plus the prerendered shell counted
+  separately above. **+1.0 kB is host feedback**
   ([adr-017](decisions/adr-017-host-feedback.md), FR-14) — a hook, one sheet,
   two triggers and bilingual strings, no dependency; reusing the `ag-*` sheet
   shell is most of why it is one kilobyte.
 - **This figure had drifted before the feedback iteration re-measured it**: the
-  line above read 88.9 kB while the build produced 90.3 kB, because the two
-  iterations before it changed the client and did not re-measure. Recorded
-  rather than quietly corrected, since the convention this bullet ends with is
-  what slipped. There is no automated budget check — measure and record the
-  delta when adding a runtime dependency.
+  line above read 88.9 kB while the build produced 90.3 kB, because two
+  iterations had changed the client without re-measuring. Recorded rather than
+  quietly corrected, since the convention this bullet ends with is what
+  slipped. Both deltas above were then measured against a clean build of the
+  branch each landed on, rather than inferred from the total. There is no
+  automated budget check — measure and record the delta when adding a runtime
+  dependency.
 
 ## NFR-2 Cost
 
