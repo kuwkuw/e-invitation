@@ -15,6 +15,7 @@ import { markBaseline } from "./metrics.js";
 import { absoluteBase } from "./publicUrl.js";
 import { registerAccountRoutes } from "./routes/account.js";
 import { registerAuthRoutes } from "./routes/auth.js";
+import { registerFeedbackRoutes } from "./routes/feedback.js";
 import { registerInvitationRoutes } from "./routes/invitations.js";
 import { registerOgRoutes } from "./routes/og.js";
 import { registerSeoRoutes } from "./routes/seo.js";
@@ -111,6 +112,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
+  registerFeedbackRoutes(app);
   registerInvitationRoutes(app);
   registerOgRoutes(app);
   // Before the SPA fallback, which answers every non-/api path and would hand

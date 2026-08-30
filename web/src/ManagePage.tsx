@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FeedbackSheet } from "./components/FeedbackSheet";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { HeadcountCard } from "./components/manage/HeadcountCard";
 import { AlertIcon, DownloadIcon, KeyIcon, RefreshIcon } from "./components/manage/icons";
@@ -13,7 +14,15 @@ import { downloadFile } from "./download";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useHostManage } from "./hooks/useHostManage";
 import { useNotificationPref } from "./hooks/useNotificationPref";
-import { AUTH, type AuthStrings, loadUiLang, MANAGE, type ManageStrings, saveUiLang } from "./i18n";
+import {
+  AUTH,
+  type AuthStrings,
+  FEEDBACK,
+  loadUiLang,
+  MANAGE,
+  type ManageStrings,
+  saveUiLang,
+} from "./i18n";
 import { routeMeta, useDocumentMeta } from "./seo";
 import type { Language } from "./types";
 
@@ -41,6 +50,7 @@ export function ManagePage({ id }: { id: string }) {
   const account = useAuthSession();
   const canNotify = account.status === "signed_in" && account.notifications;
   const notify = useNotificationPref(canNotify);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   function handleLang(lang: Language) {
     setUiLang(lang);
@@ -96,10 +106,30 @@ export function ManagePage({ id }: { id: string }) {
             id={id}
             manage={manage}
             notify={canNotify ? { ...notify, auth: AUTH[uiLang] } : null}
+            onFeedback={() => setFeedbackOpen(true)}
+            feedbackLabel={FEEDBACK[uiLang].link}
             t={t}
           />
         )}
       </div>
+
+      {/* Feedback's second durable home (adr-017 §4). Only under a dashboard
+          that actually loaded: the four failure states above are prompts to
+          fix something, and a "write to us" beside them would read as the
+          product giving up. It carries no invitation id — `page: "manage"` is
+          the whole of what the message says about where it came from (§3). */}
+      {feedbackOpen && (
+        <FeedbackSheet
+          page="manage"
+          lang={uiLang}
+          // A host on a pasted manage link has no session here, which is
+          // ordinary: unlike the notification control above, feedback needs no
+          // account.
+          email={account.status === "signed_in" ? account.email : null}
+          onClose={() => setFeedbackOpen(false)}
+          t={FEEDBACK[uiLang]}
+        />
+      )}
     </div>
   );
 }
@@ -108,6 +138,8 @@ function ReadyDashboard({
   id,
   manage,
   notify,
+  onFeedback,
+  feedbackLabel,
   t,
 }: {
   id: string;
@@ -115,6 +147,10 @@ function ReadyDashboard({
   /** Null for a host with no session on this device, or a deployment that
    *  cannot send mail. */
   notify: { enabled: boolean; toggle: () => void; auth: AuthStrings } | null;
+  /** Unconditional, unlike `notify`: feedback needs no account and no mail
+   *  credentials, so there is no deployment where this is absent. */
+  onFeedback: () => void;
+  feedbackLabel: string;
   t: ManageStrings;
 }) {
   const { published, summary, refreshing, refresh, newSinceLastVisit, seenAt } = manage;
@@ -181,7 +217,15 @@ function ReadyDashboard({
         <NotifyControl enabled={notify.enabled} onToggle={notify.toggle} t={notify.auth} />
       )}
 
-      <p className="hm-brand">INVINTO</p>
+      {/* Below even the notification footnote, beside the wordmark: this page
+          belongs to the host's event, and the one line about the product that
+          renders it sits at the very bottom in the wordmark's own grey. */}
+      <p className="hm-brand">
+        INVINTO
+        <button type="button" className="fb-link hm-feedback" onClick={onFeedback}>
+          {feedbackLabel}
+        </button>
+      </p>
     </>
   );
 }

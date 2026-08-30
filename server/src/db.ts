@@ -120,6 +120,33 @@ const SCHEMA = `
   -- have a victim open it — signing that victim into the attacker's account.
   -- Hashed for the same reason session ids are: a row here is then not a
   -- usable half of the pair.
+  -- Host feedback (adr-017). The first table here that stores user-authored
+  -- prose rather than identifiers, tokens and counts, which is what §7 and §8
+  -- are for: the message has exactly one copy — the log line carries its
+  -- length and never its body — and one DELETE removes it.
+  --
+  -- user_id is nullable and ON DELETE **SET NULL**, not CASCADE, and that is
+  -- the decision rather than a default. Sending requires no session (§2): the
+  -- hosts most worth hearing from are the ones who bounced at the publish
+  -- gate, and a form that demanded an account would collect answers only from
+  -- people who got past the thing being asked about. When an account is later
+  -- deleted, adr-014 §9's rule — deletion removes the account, not the work —
+  -- lands here as detachment: the host withdrew from the product, they did not
+  -- retract what they told us about it.
+  --
+  -- No IP, no user agent, no referrer, no invitation id. The page and lang
+  -- columns are closed enums, validated in schemas.ts.
+  CREATE TABLE IF NOT EXISTS feedback (
+    id         TEXT PRIMARY KEY,
+    user_id    TEXT REFERENCES users(id) ON DELETE SET NULL,
+    message    TEXT NOT NULL,
+    page       TEXT NOT NULL,
+    lang       TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  -- The only read there is: newest first, unfiltered (§6).
+  CREATE INDEX IF NOT EXISTS feedback_created_at ON feedback(created_at DESC);
+
   CREATE TABLE IF NOT EXISTS oauth_states (
     state         TEXT PRIMARY KEY,
     nonce         TEXT NOT NULL,

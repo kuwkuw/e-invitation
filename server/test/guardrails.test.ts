@@ -134,6 +134,10 @@ describe("daily budget circuit breaker", () => {
         generations_per_ip_per_day: 10,
         regenerations_per_ip_per_day: 30,
         backgrounds_per_ip_per_day: 3,
+        // Not an LLM cost, and reported here anyway: adr-017 §5 puts host
+        // feedback on this module's per-IP allowance rather than copying the
+        // rollover into a second file.
+        feedback_per_ip_per_day: 5,
       },
       budget: { daily_usd: 2, spent_today_usd: 0.5, exhausted: false },
     });

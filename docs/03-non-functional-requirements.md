@@ -12,7 +12,9 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **88.9 kB gzipped** (275.1 kB raw), measured with
+  **92.4 kB gzipped** (287.5 kB raw), plus 10.6 kB gzipped of CSS and 3.1 kB
+  gzipped of `index.html` — the last of those is the prerendered landing copy
+  (FR-13.10), which was 0.4 kB before it. Measured with
   `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
   ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
@@ -22,7 +24,21 @@
   ([adr-014](decisions/adr-014-host-accounts.md)) — the sign-in gate, the
   signed-in share panel and the account surfaces. No Google SDK: the handshake
   is a server-side redirect flow, which is what kept that number to five
-  kilobytes. There is no automated budget check — measure and record the delta when adding a runtime dependency.
+  kilobytes. **+1.1 kB is public discoverability**
+  ([adr-016](decisions/adr-016-public-discoverability.md), FR-13) — the
+  per-path metadata and `?lang=` handling, plus the prerendered shell counted
+  separately above. **+1.0 kB is host feedback**
+  ([adr-017](decisions/adr-017-host-feedback.md), FR-14) — a hook, one sheet,
+  two triggers and bilingual strings, no dependency; reusing the `ag-*` sheet
+  shell is most of why it is one kilobyte.
+- **This figure had drifted before the feedback iteration re-measured it**: the
+  line above read 88.9 kB while the build produced 90.3 kB, because two
+  iterations had changed the client without re-measuring. Recorded rather than
+  quietly corrected, since the convention this bullet ends with is what
+  slipped. Both deltas above were then measured against a clean build of the
+  branch each landed on, rather than inferred from the total. There is no
+  automated budget check — measure and record the delta when adding a runtime
+  dependency.
 
 ## NFR-2 Cost
 
@@ -86,9 +102,22 @@
   be a larger step than adr-013 §2 declined to take for a metric, and it is
   declined for the same reason. The unsubscribe page echoes nothing at all:
   every string on it is ours and the token never appears in its body.
+- **The product now stores prose a host wrote to us** (FR-14,
+  [adr-017](decisions/adr-017-host-feedback.md)) — the first thing here that is
+  neither an identifier, a token, a count, nor invitation content. Three things
+  keep that line short: a feedback row carries **no invitation id, URL, IP or
+  user agent**, only a two-value surface enum and the UI language; the message
+  body has **exactly one copy**, because the log line records its length and
+  never its text, so one `DELETE` removes it; and sending needs no account, so
+  most rows name nobody. An address appears only when the sender was signed in,
+  and it is **joined at read time** behind the operator token rather than
+  stored beside the message.
 - **Deleting an account** (FR-11.7) removes the user, sessions and keyring and
   keeps every published invitation and RSVP: guests hold those share links, the
   RSVP rows are the guests' data, and the manage token survives on the record.
+  Feedback that account sent is **detached, not deleted** (FR-14.9): the
+  message is about the product and the identity is incidental to it, so the row
+  survives with no name on it.
 - Host authority = possession of the `manage_token` (128-bit random hex),
   compared in constant time (`timingSafeEqual`). It is returned only at
   publish time and never included in public payloads. **An account does not

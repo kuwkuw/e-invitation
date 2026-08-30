@@ -7,8 +7,16 @@
 // An allowance is consumed when the request is admitted (before the LLM
 // call), so failed generations count too — otherwise hammering a failing
 // pipeline would be free.
+//
+// One allowance here guards something that costs no tokens at all: host
+// feedback (adr-017 §5). What this module implements is "a per-IP daily
+// allowance with a UTC rollover", which is exactly the control that endpoint
+// needs, and a second copy of it elsewhere would be two places to fix a
+// rollover bug. The cost is real and merely not measured in dollars — it is
+// the operator's attention and the table's size. The module keeps its name:
+// "operator-cost" stays true of everything else in it.
 
-export type LimitedTask = "generation" | "regeneration" | "background";
+export type LimitedTask = "generation" | "regeneration" | "background" | "feedback";
 
 // Read lazily so tests (and operators) can change limits via env without a
 // rebuild. 0 disables a guardrail. Backgrounds are an order of magnitude
@@ -17,6 +25,11 @@ const LIMIT_ENV: Record<LimitedTask, { env: string; fallback: number }> = {
   generation: { env: "LIMIT_GENERATIONS_PER_DAY", fallback: 10 },
   regeneration: { env: "LIMIT_REGENERATIONS_PER_DAY", fallback: 30 },
   background: { env: "LIMIT_BACKGROUNDS_PER_DAY", fallback: 3 },
+  // Low because saying five separate things about one product in one day is
+  // already an unusual amount to have to say, and because the alternative
+  // controls — a CAPTCHA, a spam service — are external dependencies this
+  // scale does not justify (adr-017 §5).
+  feedback: { env: "LIMIT_FEEDBACK_PER_DAY", fallback: 5 },
 };
 
 function limitFor(task: LimitedTask): number {
@@ -36,12 +49,15 @@ function today(): string {
   return new Date().toISOString().slice(0, 10); // UTC day
 }
 
-interface IpUsage {
-  day: string;
-  generation: number;
-  regeneration: number;
-  background: number;
-}
+// Derived from LimitedTask rather than listing the tasks again: adding one
+// used to mean editing this shape and the zeroed literal below in step with
+// LIMIT_ENV, and two of the three would compile perfectly well out of sync.
+type IpUsage = { day: string } & Record<LimitedTask, number>;
+
+const NO_USAGE = Object.fromEntries(Object.keys(LIMIT_ENV).map((task) => [task, 0])) as Record<
+  LimitedTask,
+  number
+>;
 
 const ipUsage = new Map<string, IpUsage>();
 let usageDay = today();
@@ -66,7 +82,7 @@ export function consumeIpAllowance(ip: string, task: LimitedTask): boolean {
   const limit = limitFor(task);
   if (limit === 0) return true;
   rollover();
-  const usage = ipUsage.get(ip) ?? { day: usageDay, generation: 0, regeneration: 0, background: 0 };
+  const usage = ipUsage.get(ip) ?? { day: usageDay, ...NO_USAGE };
   if (usage[task] >= limit) return false;
   usage[task] += 1;
   ipUsage.set(ip, usage);
@@ -97,6 +113,7 @@ export function guardrailsSnapshot() {
       generations_per_ip_per_day: limitFor("generation"),
       regenerations_per_ip_per_day: limitFor("regeneration"),
       backgrounds_per_ip_per_day: limitFor("background"),
+      feedback_per_ip_per_day: limitFor("feedback"),
     },
     budget: {
       daily_usd: budget,

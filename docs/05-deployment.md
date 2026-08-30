@@ -261,6 +261,32 @@ lands in spam, silently, for everyone.
    `#t=` fragment, its unsubscribe link opens a confirm page without
    unsubscribing, and pressing the button turns replies off across the account.
 
+## Host feedback (adr-017)
+
+Nothing to configure for hosts to *send* — `POST /api/feedback` is on in every
+deployment, needs no account and no external service. What needs configuring is
+the operator's read, and forgetting it is the feature's real failure mode: a
+box nobody reads is worse than no box at all.
+
+1. **Set `FEEDBACK_TOKEN`** in the runtime env to any long random string
+   (`openssl rand -base64 24`). Without it `GET /api/feedback` answers **404**,
+   so the messages accumulate and nobody sees them.
+2. **Read it with `curl`** — there is no admin UI, on purpose (adr-017 §6):
+
+   ```sh
+   curl -s -H "x-feedback-token: $FEEDBACK_TOKEN" https://invinto.app/api/feedback
+   ```
+
+   Each item carries the message, which surface it was written on, the UI
+   language, and an `email` — the signed-in sender's, or `null` for a message
+   sent anonymously, which is an ordinary case rather than a broken one.
+3. **Optionally tighten `LIMIT_FEEDBACK_PER_DAY`** (default 5 per IP per day,
+   `0` disables). It is the only spam control there is; the first correction to
+   abuse is this number, not a CAPTCHA dependency.
+4. **A reply, when there is an address, is sent by hand** from a mailbox of
+   your own. The product never mails a feedback sender, and the form promises
+   only that we *can* write back — never that we will.
+
 ## Local smoke test
 
 ```sh

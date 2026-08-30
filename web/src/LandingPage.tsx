@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
+import { FeedbackSheet } from "./components/FeedbackSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { SignOutSheet } from "./components/SignOutSheet";
@@ -12,7 +13,7 @@ import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
-import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
+import { AUTH, FEEDBACK, LANDING, loadUiLang, saveUiLang } from "./i18n";
 import { allHeldManageTokens, readManageToken } from "./manageTokens";
 import { langFromSearch, routeMeta, useDocumentMeta } from "./seo";
 import type { DesignTokens, InvitationCopy, Language } from "./types";
@@ -106,6 +107,8 @@ export function LandingPage() {
   const counts = useHostInvitationCounts(mine.map((m) => m.id));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const feedbackStrings = FEEDBACK[lang];
   const signedIn = account.status === "signed_in" && account.email !== null;
   // **The list is the view of whichever store owns the identity** (DS
   // `LandingListIsAccount`). Publishing already requires an account, so a list
@@ -339,7 +342,29 @@ export function LandingPage() {
         </button>
       </section>
 
-      <footer className="lp-footer">{t.footer}</footer>
+      {/* One of feedback's two durable homes (adr-017 §4). In the footer
+          because that is where a product's "talk to us" has always been and
+          because it must never interrupt: it is the last thing on the page,
+          under the last call to action, and nothing about it is offered
+          before the host has seen what the product does. */}
+      <footer className="lp-footer">
+        <span>{t.footer}</span>
+        <button type="button" className="fb-link" onClick={() => setFeedbackOpen(true)}>
+          {feedbackStrings.link}
+        </button>
+      </footer>
+
+      {feedbackOpen && (
+        <FeedbackSheet
+          page="landing"
+          lang={lang}
+          // Null when signed out, which is most of this page's traffic and an
+          // ordinary case: sending needs no account (adr-017 §2).
+          email={signedIn ? account.email : null}
+          onClose={() => setFeedbackOpen(false)}
+          t={feedbackStrings}
+        />
+      )}
 
       <div className="lp-sticky-cta">
         <button type="button" className="lp-cta" onClick={startEditing}>
