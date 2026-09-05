@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildIcs, parseEventStart } from "../src/calendar";
+import { buildIcs, isPastEventStart, parseEventStart } from "../src/calendar";
 
 // The host wrote the invitation in July 2026.
 const now = new Date(2026, 6, 22);
@@ -63,6 +63,32 @@ describe("parseEventStart", () => {
     expect(parseEventStart("12.08", "12pm", now)).toMatchObject({ hour: 12, minute: 0 });
     expect(parseEventStart("12.08", "sometime", now)).toMatchObject({ hour: null });
     expect(parseEventStart("12.08", null, now)).toMatchObject({ hour: null });
+  });
+});
+
+describe("isPastEventStart", () => {
+  const start = (year: number, month: number, day: number, hour: number | null = null) => ({
+    year,
+    month,
+    day,
+    hour,
+    minute: 0,
+  });
+
+  it("flags a day that is already over", () => {
+    expect(isPastEventStart(start(2025, 8, 12), now)).toBe(true);
+    expect(isPastEventStart(start(2026, 7, 21), now)).toBe(true);
+  });
+
+  it("leaves today and everything after it alone", () => {
+    expect(isPastEventStart(start(2026, 7, 22), now)).toBe(false);
+    expect(isPastEventStart(start(2026, 7, 23), now)).toBe(false);
+    expect(isPastEventStart(start(2027, 1, 10), now)).toBe(false);
+  });
+
+  it("compares by day, so an event that started hours ago is still today's", () => {
+    const evening = new Date(2026, 6, 22, 23, 30);
+    expect(isPastEventStart(start(2026, 7, 22, 18), evening)).toBe(false);
   });
 });
 

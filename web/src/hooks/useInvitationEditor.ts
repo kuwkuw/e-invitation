@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
-import { parseEventStart } from "../calendar";
+import { isPastEventStart, parseEventStart } from "../calendar";
 import { failureMessage } from "../failureMessage";
 import type { ChatStrings } from "../i18n";
 import type { CopyField, DesignTokens, GenerateSource, Invitation } from "../types";
@@ -40,6 +40,10 @@ export function useInvitationEditor(
   // Asked at most once per editor session — a date the host doesn't have yet
   // is a legitimate save-the-date, so this nudges and then stays quiet.
   const datePrompted = useRef(false);
+  // The same rule for a date that reads fine but has gone by. Its own flag:
+  // a host who answers the missing-date nudge with a stale year has a new
+  // problem, and hearing about it is the point of having asked.
+  const pastDatePrompted = useRef(false);
 
   function say(text: string) {
     setMessages((m) => [...m, { role: "assistant", text }]);
@@ -60,9 +64,19 @@ export function useInvitationEditor(
       // placeholder, so the card looks complete and the host is never told.
       // A date too vague to parse costs the guest the same thing as no date
       // at all — GuestActions hides add-to-calendar — so both get the nudge.
-      if (!datePrompted.current && !parseEventStart(inv.brief.date, inv.brief.time)) {
-        datePrompted.current = true;
-        say(chat.dateNudge);
+      // A date already gone by is the same silence with the opposite cause:
+      // it renders, it exports to a calendar, and nothing about the finished
+      // card says the year is last year's. Neither prompt blocks anything —
+      // the host is told once and stays in charge of the date (FR-1.7/1.8).
+      const start = parseEventStart(inv.brief.date, inv.brief.time);
+      if (!start) {
+        if (!datePrompted.current) {
+          datePrompted.current = true;
+          say(chat.dateNudge);
+        }
+      } else if (isPastEventStart(start) && !pastDatePrompted.current) {
+        pastDatePrompted.current = true;
+        say(chat.pastDateNudge);
       }
       setPhase("active");
     } catch (error) {

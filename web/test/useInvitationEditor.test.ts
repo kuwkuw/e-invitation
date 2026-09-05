@@ -142,6 +142,73 @@ describe("useInvitationEditor", () => {
     expect(nudges).toHaveLength(1);
   });
 
+  it("warns when the date reads cleanly but has already gone by", async () => {
+    // An explicit stale year is the one way past today's date gets this far:
+    // brief.ts copies the year the host wrote, and a year-less date is rolled
+    // forward by the parser. The card renders it looking perfectly finished.
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated("August 12, 2020"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner on August 12, 2020");
+    });
+
+    expect(result.current.messages.slice(-2)).toEqual([
+      { role: "assistant", text: chat.doneMsg },
+      { role: "assistant", text: chat.pastDateNudge },
+    ]);
+    // The prompt is a nudge, not a gate: the invitation is still there to edit
+    // and publish (FR-1.8).
+    expect(result.current.phase).toBe("active");
+    expect(result.current.invitation).not.toBeNull();
+  });
+
+  it("says nothing about a date still ahead", async () => {
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner");
+    });
+
+    expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.doneMsg });
+  });
+
+  it("warns about a stale date only once across refinements", async () => {
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated("12.08.2020"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner");
+    });
+    await act(async () => {
+      await result.current.send("make it formal");
+    });
+
+    const nudges = result.current.messages.filter((m) => m.text === chat.pastDateNudge);
+    expect(nudges).toHaveLength(1);
+  });
+
+  it("still warns about a stale year the host answered the date prompt with", async () => {
+    vi.spyOn(api, "generateInvitation")
+      .mockResolvedValueOnce(dated(null))
+      .mockResolvedValueOnce(dated("12.08.2020"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner");
+    });
+    await act(async () => {
+      await result.current.send("on 12.08.2020");
+    });
+
+    // Two prompts, two problems — the second one is new information, so the
+    // once-per-session rule is per prompt rather than per date.
+    expect(
+      result.current.messages.filter((m) => m.role === "assistant").map((m) => m.text),
+    ).toEqual([chat.doneMsg, chat.dateNudge, chat.doneMsg, chat.pastDateNudge]);
+  });
+
   it("accumulates the description so later turns refine the same event", async () => {
     const generate = vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
     const { result } = renderHook(() => useInvitationEditor(chat));

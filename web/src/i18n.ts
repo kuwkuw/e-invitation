@@ -38,6 +38,9 @@ export interface ChatStrings {
   /** Asked once when the generated brief carries no date a calendar can read
    *  — the one missing fact the host gets no other signal about. */
   dateNudge: string;
+  /** Asked once when the brief's date reads cleanly but has already gone by —
+   *  almost always a stale year, and the card looks just as finished with it. */
+  pastDateNudge: string;
   failMsg: string;
   editingLabel: string;
   actionRegenerate: string;
@@ -380,6 +383,8 @@ export const UI: Record<Language, UiStrings> = {
       doneMsg: "Done — tap any part of the invitation to tweak it.",
       dateNudge:
         "When exactly is it? Add the date and I'll put it on the card — then guests can save the event to their calendar.",
+      pastDateNudge:
+        "That date has already gone by — is the year right? Tell me the new one and I'll update the card.",
       failMsg: "Something went wrong. Please try again.",
       editingLabel: "Editing",
       actionRegenerate: "Regenerate",
@@ -501,6 +506,8 @@ export const UI: Record<Language, UiStrings> = {
       doneMsg: "Готово — торкніться будь-якої частини запрошення, щоб змінити її.",
       dateNudge:
         "А коли саме це буде? Додайте дату — я впишу її в запрошення, і гості зможуть зберегти подію в календар.",
+      pastDateNudge:
+        "Ця дата вже минула — рік точно правильний? Скажіть новий, і я оновлю запрошення.",
       failMsg: "Щось пішло не так. Спробуйте ще раз.",
       editingLabel: "Редагування",
       actionRegenerate: "Перегенерувати",

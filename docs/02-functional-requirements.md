@@ -31,6 +31,17 @@ implementation.
   plus the copy stage's write-around-it rule otherwise leave the host with a
   card that looks complete. The prompt never blocks generating or publishing: a
   save-the-date without a day is a valid invitation.
+- FR-1.8 When the brief's date *does* read as a day, but that day has already
+  gone by, the chat says so once — same place, same rules as FR-1.7
+  ([calendar.ts](../web/src/calendar.ts) `isPastEventStart`). Only an explicit
+  year reaches here: FR-1.2 has the model copy the date as the host wrote it,
+  and a year-less date is rolled forward to its next occurrence, so this is
+  almost always a stale year. Nothing else in the product would mention it —
+  the copy stage writes the date into the card, the card looks finished, and
+  add-to-calendar (FR-4.5) will put last year in a guest's calendar without
+  complaint. The comparison is by calendar day, so an event that started
+  earlier today is not past. Like FR-1.7 it blocks nothing: the host owns the
+  date, and is told once rather than stopped.
 
 ## FR-2 Edit and regenerate per field
 
