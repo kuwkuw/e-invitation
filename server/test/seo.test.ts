@@ -13,6 +13,7 @@ import {
   robotsTxt,
   SEO_MARKER_END,
   SEO_MARKER_START,
+  SITE_IMAGE_PATHS,
   selectPrerender,
   shellMeta,
   sitemapXml,
@@ -74,6 +75,23 @@ describe("shellMeta", () => {
     expect(meta.canonical).toBeNull();
     expect(meta.url).toBeNull();
     expect(meta.jsonLd).toBeNull();
+  });
+
+  // The card is copy, and a share link is how the landing page mostly travels:
+  // an English page unfurling a Ukrainian headline sends the one page written
+  // for English readers into a chat in a script they followed a link to avoid.
+  it("unfurls each language with its own share card", () => {
+    expect(shellMeta("/", "", BASE).image).toBe(`${BASE}${SITE_IMAGE_PATHS.uk}`);
+    expect(shellMeta("/", "lang=en", BASE).image).toBe(`${BASE}${SITE_IMAGE_PATHS.en}`);
+    expect(SITE_IMAGE_PATHS.uk).not.toBe(SITE_IMAGE_PATHS.en);
+  });
+
+  // Both files are committed build artifacts (adr-016 §3) — a path here with
+  // no PNG behind it unfurls as a broken image on every share, silently.
+  it("has a committed PNG behind every card path", () => {
+    for (const path of Object.values(SITE_IMAGE_PATHS)) {
+      expect(existsSync(join(import.meta.dirname, "../../web/public", path))).toBe(true);
+    }
   });
 
   it("gives each shell route its own title", () => {

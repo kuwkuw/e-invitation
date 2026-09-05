@@ -1,13 +1,15 @@
 // Renders the committed brand PNGs from the SVG sources next to them:
-// the share card (og-cover.png, 1200×630) and the PWA/touch icons.
+// the share cards (og-cover.png / og-cover-en.png, 1200×630) and the PWA/touch
+// icons.
 //
 //   node scripts/build-brand-assets.mjs
 //
 // Run it after editing web/public/favicon.svg or the cover layout below, and
 // commit the output. Generated rather than drawn so the icons cannot drift
 // from the favicon, and committed rather than rendered per request because
-// neither image varies: a crawler fetching /og-cover.png should get a static
-// file, not a satori render (adr-016 §3).
+// none of these images varies *per request*: a crawler fetching /og-cover.png
+// should get a static file, not a satori render (adr-016 §3). They do vary per
+// language, which is a fixed, countable set — two files, not a renderer.
 //
 // resvg comes from the server workspace, which already carries it for the
 // per-invitation OG renderer, as do the vendored TTFs — the runtime
@@ -31,11 +33,39 @@ const ACCENT_WASH = "#f7efe3";
 const INK = "#4a3728";
 const MUTED = "#6b6659";
 
+/** The headline, the two subhead lines and the three occasion chips, per
+ *  language — mirroring `LANDING.heroTitle`/`heroText`/`chips` in
+ *  `web/src/i18n.ts` by hand, the way `web/src/seo.ts` mirrors `SEO_STRINGS`.
+ *  A card is a raster, so it cannot import the table it agrees with; what it
+ *  can do is sit next to the one place that lists both languages side by side.
+ *
+ *  Ukrainian stays the unsuffixed file: `/` is the Ukrainian landing page and
+ *  the primary market (01-vision), and `?lang=en` is the English page's own
+ *  address (adr-016 §5) — so it gets its own card rather than unfurling in a
+ *  language its reader followed a link to avoid. */
+const COVER_COPY = {
+  uk: {
+    headline: "Запрошення за одне речення",
+    lines: [
+      "Опишіть подію словами — отримайте гарне запрошення,",
+      "поділіться посиланням і збирайте відповіді гостей.",
+    ],
+    chips: ["весілля", "день народження", "корпоратив"],
+  },
+  en: {
+    headline: "An invitation from one sentence",
+    lines: [
+      "Describe your event in words — get a beautiful invitation,",
+      "share the link and collect your guests' replies.",
+    ],
+    chips: ["wedding", "birthday", "team event"],
+  },
+};
+
 /** 1200×630 — the OG canvas WhatsApp, Telegram and Viber all crop to ~1.91:1,
- *  the same one og/render.ts uses for a published invitation. Ukrainian copy:
- *  this card is what a link to the *product* unfurls as, and the product's
- *  first market is Ukrainian (01-vision). */
-const cover = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+ *  the same one og/render.ts uses for a published invitation. */
+const cover = ({ headline, lines, chips }) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${BG}"/>
   <rect x="48" y="48" width="1104" height="534" rx="28" fill="${CARD}" stroke="#e4ddd0" stroke-width="2"/>
   <rect x="48" y="48" width="1104" height="10" rx="5" fill="${ACCENT}"/>
@@ -44,14 +74,15 @@ const cover = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"
     <path d="M3 6 43 34 83 6" fill="none" stroke="${ACCENT}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
   <text x="212" y="205" font-family="Playfair Display" font-weight="700" font-size="72" fill="${INK}" letter-spacing="6">INVINTO</text>
-  <text x="96" y="330" font-family="Playfair Display" font-weight="700" font-size="66" fill="${INK}">Запрошення за одне речення</text>
-  <text x="96" y="404" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">Опишіть подію словами — отримайте гарне запрошення,</text>
-  <text x="96" y="452" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">поділіться посиланням і збирайте відповіді гостей.</text>
+  <text x="96" y="330" font-family="Playfair Display" font-weight="700" font-size="66" fill="${INK}">${headline}</text>
+  <text x="96" y="404" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">${lines[0]}</text>
+  <text x="96" y="452" font-family="Manrope" font-weight="400" font-size="34" fill="${MUTED}">${lines[1]}</text>
   <g transform="translate(96 496)">
-    ${["весілля", "день народження", "корпоратив"]
+    ${chips
       .map((word, i, all) => {
-        // Manrope 700 at 26px averages ~15.5px per Cyrillic glyph; the chips
-        // are decoration, so an estimate that never overflows beats measuring.
+        // Manrope 700 at 26px averages ~15.5px per glyph in either script; the
+        // chips are decoration, so an estimate that never overflows beats
+        // measuring.
         const chip = (w) => w.length * 15.5 + 44;
         const x = all.slice(0, i).reduce((sum, w) => sum + chip(w) + 20, 0);
         return (
@@ -89,7 +120,8 @@ const faviconSvg = await readFile(join(publicDir, "favicon.svg"), "utf8");
 // canvas; the viewBox is 0 0 64 64, which the transform above assumes.
 const faviconInner = faviconSvg.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
 
-await render(cover, 1200, "og-cover.png");
+await render(cover(COVER_COPY.uk), 1200, "og-cover.png");
+await render(cover(COVER_COPY.en), 1200, "og-cover-en.png");
 await render(faviconSvg, 180, "apple-touch-icon.png");
 await render(faviconSvg, 192, "icon-192.png");
 await render(faviconSvg, 512, "icon-512.png");

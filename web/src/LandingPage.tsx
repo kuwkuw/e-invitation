@@ -12,61 +12,43 @@ import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
-import { AUTH, LANDING, loadUiLang, saveUiLang } from "./i18n";
+import { AUTH, type DemoGuest, LANDING, loadUiLang, type SampleId, saveUiLang } from "./i18n";
 import { allHeldManageTokens, readManageToken } from "./manageTokens";
 import { langFromSearch, routeMeta, useDocumentMeta } from "./seo";
-import type { DesignTokens, InvitationCopy, Language } from "./types";
+import type { DesignTokens, Language } from "./types";
 
 // Ported from the "Тепла класика" landing direction designed in Claude Design.
 // Chrome copy is bilingual (LANDING strings) — with the wordmark as the one
 // exception, because a name is not copy (adr-016 §9). The hero composes the
-// real InvitationPreview component with three sample events whose content
-// stays Ukrainian on purpose — invitations are showcased content, not chrome.
+// real InvitationPreview component with three sample events, and their words
+// are bilingual too: the samples are what an English visitor arriving on
+// `/?lang=en` is there to judge (see the note over `LANDING`).
+//
+// Split by kind rather than by sample: the words are in `LANDING.samples`,
+// the design tokens are here, and the id is the join. Tokens are presentation
+// — the same three directions in both languages — so translating them would
+// mean two ways to say "romantic script".
 
-const samples: { copy: InvitationCopy; design: DesignTokens }[] = [
-  {
-    copy: {
-      title: "Ми одружуємось!",
-      greeting: "Любі рідні та друзі,",
-      body: "Запрошуємо вас розділити з нами найщасливіший день нашого життя.",
-      details_line: "6 червня, 15:00 — Сад «Оранжерея», Одеса",
-      rsvp_prompt: "Підтвердіть присутність до 20 травня.",
-      closing: "Марія та Андрій",
-    },
-    design: { palette: "romantic", typography: "script", layout: "classic", ornament: "floral" },
-  },
-  {
-    copy: {
-      title: "Софійці — 5 років!",
-      greeting: "Привіт, малята й батьки!",
-      body: "Чекаємо на казкове свято з єдинорогами, тортом і кульками.",
-      details_line: "18 травня, 13:00 — Парк «Казка», Львів",
-      rsvp_prompt: "Підтвердіть, чи прийде ваша дитина.",
-      closing: "Родина Ковальчук",
-    },
-    design: { palette: "playful", typography: "sans", layout: "banner", ornament: "sparkle" },
-  },
-  {
-    copy: {
-      title: "Новорічний корпоратив",
-      greeting: "Шановні колеги!",
-      body: "Завершуємо рік разом — вечеря, музика й приємні сюрпризи.",
-      details_line: "27 грудня, 19:00 — Готель «Прем'єр», Київ",
-      rsvp_prompt: "Підтвердіть участь до 20 грудня.",
-      closing: "Команда «ТехноЛайн»",
-    },
-    design: { palette: "festive", typography: "serif", layout: "classic", ornament: "sparkle" },
-  },
-];
+const SAMPLE_DESIGNS: Record<SampleId, DesignTokens> = {
+  wedding: { palette: "romantic", typography: "script", layout: "classic", ornament: "floral" },
+  kids: { palette: "playful", typography: "sans", layout: "banner", ornament: "sparkle" },
+  corporate: { palette: "festive", typography: "serif", layout: "classic", ornament: "sparkle" },
+};
+
+/** Fan order, left to right — `lp-fan-{i}` positions each card. */
+const SAMPLE_ORDER: SampleId[] = ["wedding", "kids", "corporate"];
 
 const STEP_ICONS = ["❧", "✧", "◆"];
 
-const responses = [
-  { name: "Оксана Мельник", status: "yes" },
-  { name: "Ігор Бондар", status: "yes" },
-  { name: "Настя і Влад", status: "no" },
-  { name: "Родина Шевченків", status: "wait" },
-] as const;
+/** The mocked reply rows: who they are and how they answered. The names come
+ *  from `LANDING.rsvpNames` under these ids — a status is a colour and a pill
+ *  label, and both of those already have translations of their own. */
+const responses: { id: DemoGuest; status: "yes" | "no" | "wait" }[] = [
+  { id: "friend", status: "yes" },
+  { id: "colleague", status: "yes" },
+  { id: "couple", status: "no" },
+  { id: "family", status: "wait" },
+];
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -283,9 +265,9 @@ export function LandingPage() {
           </button>
         </div>
         <div className="lp-fan" aria-hidden="true">
-          {samples.map((s, i) => (
-            <div key={s.copy.title} className={`lp-fan-card lp-fan-${i}`}>
-              <InvitationPreview copy={s.copy} design={s.design} />
+          {SAMPLE_ORDER.map((id, i) => (
+            <div key={id} className={`lp-fan-card lp-fan-${i}`}>
+              <InvitationPreview copy={t.samples[id]} design={SAMPLE_DESIGNS[id]} />
             </div>
           ))}
         </div>
@@ -321,8 +303,8 @@ export function LandingPage() {
           <div className="lp-rsvp-card">
             <div className="lp-rsvp-summary">{t.rsvpSummary}</div>
             {responses.map((r) => (
-              <div key={r.name} className="lp-rsvp-row">
-                <span>{r.name}</span>
+              <div key={r.id} className="lp-rsvp-row">
+                <span>{t.rsvpNames[r.id]}</span>
                 <span className={`lp-rsvp-status lp-rsvp-${r.status}`}>
                   {t.responseLabels[r.status]}
                 </span>
