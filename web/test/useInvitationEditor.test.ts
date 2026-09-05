@@ -142,7 +142,7 @@ describe("useInvitationEditor", () => {
     expect(nudges).toHaveLength(1);
   });
 
-  it("warns when the date reads cleanly but has already gone by", async () => {
+  it("blocks publishing when the date reads cleanly but has already gone by", async () => {
     // An explicit stale year is the one way past today's date gets this far:
     // brief.ts copies the year the host wrote, and a year-less date is rolled
     // forward by the parser. The card renders it looking perfectly finished.
@@ -155,15 +155,16 @@ describe("useInvitationEditor", () => {
 
     expect(result.current.messages.slice(-2)).toEqual([
       { role: "assistant", text: chat.doneMsg },
-      { role: "assistant", text: chat.pastDateNudge },
+      { role: "assistant", text: chat.pastDateBlock },
     ]);
-    // The prompt is a nudge, not a gate: the invitation is still there to edit
-    // and publish (FR-1.8).
+    // Blocked from publishing, not from editing: the invitation is still there
+    // and every other action still works (FR-1.8).
+    expect(result.current.dateBlocked).toBe(true);
     expect(result.current.phase).toBe("active");
     expect(result.current.invitation).not.toBeNull();
   });
 
-  it("says nothing about a date still ahead", async () => {
+  it("says nothing, and blocks nothing, about a date still ahead", async () => {
     vi.spyOn(api, "generateInvitation").mockResolvedValue(invitation);
     const { result } = renderHook(() => useInvitationEditor(chat));
 
@@ -172,9 +173,24 @@ describe("useInvitationEditor", () => {
     });
 
     expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.doneMsg });
+    expect(result.current.dateBlocked).toBe(false);
   });
 
-  it("warns about a stale date only once across refinements", async () => {
+  it("leaves a save-the-date publishable", async () => {
+    // FR-1.7's case: no day at all is a legitimate invitation, and the nudge
+    // that asks for one must not take the Publish button with it.
+    vi.spyOn(api, "generateInvitation").mockResolvedValue(dated("у вересні"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Весілля у вересні");
+    });
+
+    expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.dateNudge });
+    expect(result.current.dateBlocked).toBe(false);
+  });
+
+  it("repeats the refusal on every turn the date is still stale", async () => {
     vi.spyOn(api, "generateInvitation").mockResolvedValue(dated("12.08.2020"));
     const { result } = renderHook(() => useInvitationEditor(chat));
 
@@ -185,11 +201,33 @@ describe("useInvitationEditor", () => {
       await result.current.send("make it formal");
     });
 
-    const nudges = result.current.messages.filter((m) => m.text === chat.pastDateNudge);
-    expect(nudges).toHaveLength(1);
+    // Unlike the missing-date nudge, this one is not said once: it explains a
+    // disabled button, and two turns later the reason would have scrolled off
+    // the top of the log.
+    expect(result.current.messages.filter((m) => m.text === chat.pastDateBlock)).toHaveLength(2);
+    expect(result.current.dateBlocked).toBe(true);
   });
 
-  it("still warns about a stale year the host answered the date prompt with", async () => {
+  it("stops refusing once the host moves the date forward", async () => {
+    vi.spyOn(api, "generateInvitation")
+      .mockResolvedValueOnce(dated("12.08.2020"))
+      .mockResolvedValueOnce(dated("12.08.2099"));
+    const { result } = renderHook(() => useInvitationEditor(chat));
+
+    await act(async () => {
+      await result.current.send("Olena's birthday dinner on 12.08.2020");
+    });
+    expect(result.current.dateBlocked).toBe(true);
+
+    await act(async () => {
+      await result.current.send("sorry, 12.08.2099");
+    });
+
+    expect(result.current.dateBlocked).toBe(false);
+    expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.doneMsg });
+  });
+
+  it("blocks a stale year the host answered the date prompt with", async () => {
     vi.spyOn(api, "generateInvitation")
       .mockResolvedValueOnce(dated(null))
       .mockResolvedValueOnce(dated("12.08.2020"));
@@ -202,11 +240,19 @@ describe("useInvitationEditor", () => {
       await result.current.send("on 12.08.2020");
     });
 
-    // Two prompts, two problems — the second one is new information, so the
-    // once-per-session rule is per prompt rather than per date.
+    // The nudge asked for a date; the answer was one that cannot be published.
     expect(
       result.current.messages.filter((m) => m.role === "assistant").map((m) => m.text),
-    ).toEqual([chat.doneMsg, chat.dateNudge, chat.doneMsg, chat.pastDateNudge]);
+    ).toEqual([chat.doneMsg, chat.dateNudge, chat.doneMsg, chat.pastDateBlock]);
+  });
+
+  it("blocks an invitation restored from the sign-in draft, which no turn ran for", async () => {
+    // adr-014 §2 hands the invitation straight back into state — nothing
+    // generates, so a flag set during a generate would leave the gate open.
+    const { result } = renderHook(() => useInvitationEditor(chat, "direct", dated("12.08.2020")));
+
+    expect(result.current.dateBlocked).toBe(true);
+    expect(result.current.phase).toBe("active");
   });
 
   it("accumulates the description so later turns refine the same event", async () => {

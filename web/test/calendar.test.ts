@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildIcs, isPastEventStart, parseEventStart } from "../src/calendar";
+import { buildIcs, isPastDate, isPastEventStart, parseEventStart } from "../src/calendar";
 
 // The host wrote the invitation in July 2026.
 const now = new Date(2026, 6, 22);
@@ -89,6 +89,30 @@ describe("isPastEventStart", () => {
   it("compares by day, so an event that started hours ago is still today's", () => {
     const evening = new Date(2026, 6, 22, 23, 30);
     expect(isPastEventStart(start(2026, 7, 22, 18), evening)).toBe(false);
+  });
+});
+
+// The exact predicate the publish gate runs on (FR-1.8).
+describe("isPastDate", () => {
+  it("is true only for a date that reads as a day already over", () => {
+    expect(isPastDate("12.08.2020", "18:00", now)).toBe(true);
+    expect(isPastDate("August 12, 2020", null, now)).toBe(true);
+    expect(isPastDate("12.08.2027", null, now)).toBe(false);
+    expect(isPastDate("22.07", null, now)).toBe(false); // today
+  });
+
+  it("is false for a date no calendar can read", () => {
+    // A save-the-date is not an invalid date: FR-1.7 asks for a day, FR-1.8
+    // must not refuse to publish for the lack of one.
+    expect(isPastDate(null, null, now)).toBe(false);
+    expect(isPastDate("у вересні", null, now)).toBe(false);
+    expect(isPastDate("next Saturday", "18:00", now)).toBe(false);
+  });
+
+  it("rolls a bare month-day forward rather than calling it past", () => {
+    // pickYear already picks the next occurrence, so only an explicit year
+    // can trip the gate — which is what makes it a stale-year check.
+    expect(isPastDate("10 січня", null, now)).toBe(false);
   });
 });
 

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { ApiError, publishInvitation, startGoogleSignIn } from "../api";
+import { isPastDate } from "../calendar";
 import { clearDraft, hasDraft, saveDraft } from "../draft";
 import { recordHostInvitation } from "../hostInvitations";
 import { writeManageToken } from "../manageTokens";
@@ -52,9 +53,18 @@ export function usePublishing(
     /** The sign-in result we came back with, if this mount is a return trip. */
     authReturn?: AuthReturn | null;
     authCode?: string | null;
+    /** Called instead of publishing when the invitation's day has gone by
+     *  (FR-1.8). The editor says so in the chat; nothing here renders. */
+    onDateBlocked?: () => void;
   } = {},
 ) {
-  const { gated = false, signedIn = false, source = "direct", authReturn = null } = options;
+  const {
+    gated = false,
+    signedIn = false,
+    source = "direct",
+    authReturn = null,
+    onDateBlocked = () => {},
+  } = options;
   const [published, setPublished] = useState<PublishResult | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -107,6 +117,21 @@ export function usePublishing(
 
   const publish = useCallback(
     async (invitation: Invitation, existing: Republishable | null) => {
+      // The date gate (FR-1.8). It sits here rather than on the button because
+      // this is the one funnel every path runs through — the press, a
+      // republish, and the resume a host lands in after signing in — and a
+      // guest link is exactly the thing that must not carry a day that has
+      // gone by. The editor disables the button from the same rule
+      // (`isPastDate`), so the refusal is normally unreachable; this is what
+      // makes it a rule rather than a disabled button.
+      if (isPastDate(invitation.brief.date, invitation.brief.time)) {
+        // A host blocked on the way back from Google would otherwise be left
+        // watching a sheet that promises a publish is in flight.
+        setGate(null);
+        clearDraft();
+        onDateBlocked();
+        return;
+      }
       setPublishing(true);
       try {
         const result = await publishInvitation(
@@ -128,7 +153,7 @@ export function usePublishing(
         setPublishing(false);
       }
     },
-    [finish, onError, source],
+    [finish, onError, onDateBlocked, source],
   );
 
   /** Publish (or republish) and open the share panel; a second call while the

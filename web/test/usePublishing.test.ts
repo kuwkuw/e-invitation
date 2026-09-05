@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
+import { clearDraft, saveDraft } from "../src/draft";
 import { tokenFromManageLink } from "../src/hooks/useHostManage";
 import { manageUrl, shareUrl, usePublishing } from "../src/hooks/usePublishing";
 
@@ -15,6 +16,7 @@ const invitation = {
 beforeEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
+  clearDraft();
 });
 
 describe("link building", () => {
@@ -110,6 +112,74 @@ describe("usePublishing", () => {
     await waitFor(() => expect(onError).toHaveBeenCalled());
     expect(result.current.shareOpen).toBe(false);
     expect(result.current.published).toBeNull();
+  });
+});
+
+// FR-1.8. The editor disables the button from the same rule, so none of this
+// is reachable through the UI — which is the point: the gate is here, in the
+// one funnel every publish path runs through, rather than on the button.
+describe("the past-date gate", () => {
+  const staleDated = () =>
+    ({
+      brief: { date: "12.08.2020", time: "18:00" },
+      copy: { title: "Ювілей Олени" },
+      design: {},
+    }) as unknown as Parameters<ReturnType<typeof usePublishing>["share"]>[0];
+
+  it("never lets a day that has gone by become a share link", async () => {
+    const publishCall = vi.spyOn(api, "publishInvitation").mockResolvedValue(RESULT);
+    const onDateBlocked = vi.fn();
+    const { result } = renderHook(() => usePublishing(() => {}, { onDateBlocked }));
+
+    await act(async () => {
+      await result.current.share(staleDated());
+    });
+
+    expect(publishCall).not.toHaveBeenCalled();
+    expect(onDateBlocked).toHaveBeenCalled();
+    expect(result.current.published).toBeNull();
+    expect(result.current.shareOpen).toBe(false);
+  });
+
+  it("refuses the resume a host lands in after signing in", async () => {
+    // The one path that reaches the gate in practice: the press was made
+    // before the redirect, and the sheet is already promising a publish.
+    const publishCall = vi.spyOn(api, "publishInvitation").mockResolvedValue(RESULT);
+    const onDateBlocked = vi.fn();
+    saveDraft({ invitation: staleDated(), source: "direct", published: null });
+    const { result } = renderHook(() =>
+      usePublishing(() => {}, { onDateBlocked, authReturn: "ok" }),
+    );
+    expect(result.current.gate).toBe("returning");
+
+    await act(async () => {
+      await result.current.resume(staleDated(), null);
+    });
+
+    expect(publishCall).not.toHaveBeenCalled();
+    expect(onDateBlocked).toHaveBeenCalled();
+    // And the sheet comes down rather than sitting on "Publishing…" forever.
+    expect(result.current.gate).toBeNull();
+  });
+
+  it("is not a refusal to publish a save-the-date", async () => {
+    // FR-1.7's invitation: no day a calendar can read is not a past day.
+    const publishCall = vi.spyOn(api, "publishInvitation").mockResolvedValue(RESULT);
+    const onDateBlocked = vi.fn();
+    const vague = {
+      brief: { date: "у вересні", time: null },
+      copy: { title: "Весілля" },
+      design: {},
+    } as unknown as Parameters<ReturnType<typeof usePublishing>["share"]>[0];
+    const { result } = renderHook(() => usePublishing(() => {}, { onDateBlocked }));
+
+    await act(async () => {
+      await result.current.share(vague);
+    });
+
+    expect(publishCall).toHaveBeenCalled();
+    expect(onDateBlocked).not.toHaveBeenCalled();
+    expect(result.current.published).toEqual(RESULT);
   });
 });
 

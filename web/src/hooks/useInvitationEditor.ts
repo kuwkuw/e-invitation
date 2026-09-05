@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
-import { isPastEventStart, parseEventStart } from "../calendar";
+import { isPastDate, isPastEventStart, parseEventStart } from "../calendar";
 import { failureMessage } from "../failureMessage";
 import type { ChatStrings } from "../i18n";
 import type { CopyField, DesignTokens, GenerateSource, Invitation } from "../types";
@@ -40,10 +40,6 @@ export function useInvitationEditor(
   // Asked at most once per editor session — a date the host doesn't have yet
   // is a legitimate save-the-date, so this nudges and then stays quiet.
   const datePrompted = useRef(false);
-  // The same rule for a date that reads fine but has gone by. Its own flag:
-  // a host who answers the missing-date nudge with a stale year has a new
-  // problem, and hearing about it is the point of having asked.
-  const pastDatePrompted = useRef(false);
 
   function say(text: string) {
     setMessages((m) => [...m, { role: "assistant", text }]);
@@ -66,17 +62,17 @@ export function useInvitationEditor(
       // at all — GuestActions hides add-to-calendar — so both get the nudge.
       // A date already gone by is the same silence with the opposite cause:
       // it renders, it exports to a calendar, and nothing about the finished
-      // card says the year is last year's. Neither prompt blocks anything —
-      // the host is told once and stays in charge of the date (FR-1.7/1.8).
+      // card says the year is last year's. That one blocks publishing
+      // (FR-1.8), so it is said on every turn it is still true rather than
+      // once — the reason a button is disabled cannot be scrolled past.
       const start = parseEventStart(inv.brief.date, inv.brief.time);
       if (!start) {
         if (!datePrompted.current) {
           datePrompted.current = true;
           say(chat.dateNudge);
         }
-      } else if (isPastEventStart(start) && !pastDatePrompted.current) {
-        pastDatePrompted.current = true;
-        say(chat.pastDateNudge);
+      } else if (isPastEventStart(start)) {
+        say(chat.pastDateBlock);
       }
       setPhase("active");
     } catch (error) {
@@ -147,11 +143,20 @@ export function useInvitationEditor(
     return [...new Set(ok)];
   }
 
+  // Derived rather than remembered: it has to be right for an invitation
+  // restored from the sign-in draft too, which no generate ran for in this
+  // session. `usePublishing` re-tests the same rule on the press — this flag
+  // is what makes the refusal visible before the host reaches for it.
+  const dateBlocked = invitation ? isPastDate(invitation.brief.date, invitation.brief.time) : false;
+
   return {
     messages,
     phase,
     invitation,
     bgBusy,
+    /** FR-1.8: the event's day has gone by, so publishing is refused until the
+     *  host moves it. */
+    dateBlocked,
     say,
     send,
     updateField,
