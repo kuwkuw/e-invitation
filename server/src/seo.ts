@@ -25,9 +25,23 @@ import type { Language } from "./schemas.js";
 export const SITE_NAME = "INVINTO";
 
 /** 1200×630, the same canvas the per-invitation card uses (`og/render.ts`).
- *  Static and committed rather than rendered: the marketing card never varies,
- *  so a build artifact beats a satori render on every crawl. */
-export const SITE_IMAGE_PATH = "/og-cover.png";
+ *  Static and committed rather than rendered: the marketing card never varies
+ *  per request, so a build artifact beats a satori render on every crawl.
+ *
+ *  One card per language, because the card is copy — the headline and the
+ *  occasion words, in the language of the page it belongs to. `?lang=en` is
+ *  the English landing page's own address (§5 of adr-016) and the thing most
+ *  often *shared* rather than typed, so a single Ukrainian card would put the
+ *  one page written for English readers into chats in a script they followed a
+ *  link to avoid. Ukrainian keeps the unsuffixed path: `/` serves it, and the
+ *  committed shell in `web/index.html` names it.
+ *
+ *  Both files are rendered by `scripts/build-brand-assets.mjs` and committed;
+ *  their copy mirrors `LANDING` by hand, as the note there says. */
+export const SITE_IMAGE_PATHS: Record<Language, string> = {
+  uk: "/og-cover.png",
+  en: "/og-cover-en.png",
+};
 export const SITE_IMAGE_WIDTH = 1200;
 export const SITE_IMAGE_HEIGHT = 630;
 
@@ -285,7 +299,7 @@ function landingJsonLd(base: string, lang: Language): string {
 export function shellMeta(path: string, search: string, base: string): HeadMeta {
   const params = new URLSearchParams(search);
   const lang = langFromQuery(params.get("lang"));
-  const image = `${base}${SITE_IMAGE_PATH}`;
+  const image = `${base}${SITE_IMAGE_PATHS[lang]}`;
   const common = {
     lang,
     image,

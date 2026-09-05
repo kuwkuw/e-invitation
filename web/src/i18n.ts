@@ -1,6 +1,6 @@
 import type { RsvpCsvStrings } from "./csv";
 import type { RelativeTimeStrings } from "./relativeTime";
-import type { CopyField, DesignTokens, Language } from "./types";
+import type { CopyField, DesignTokens, InvitationCopy, Language } from "./types";
 
 type DesignValue =
   | DesignTokens["palette"]
@@ -577,14 +577,30 @@ export function saveUiLang(lang: Language): void {
   }
 }
 
-// Landing-page marketing copy. The sample invitations in the hero stay
-// Ukrainian on purpose — they're showcased content, not chrome.
+// Landing-page copy, including the page's demo content — the three sample
+// invitations in the hero and the mocked reply rows under the RSVP pitch.
+//
+// Those samples were Ukrainian-only for a while, on the argument that they are
+// showcased content rather than chrome. That argument does not survive
+// `?lang=en` being the English home page's indexed address (adr-016 §5): the
+// one thing an English visitor is there to judge is what an invitation looks
+// like, and a page that answers in a language they cannot read has not made
+// the case. FR-6.3's "never translated" rule is about a *host's* invitation on
+// the guest page — real content, someone else's words — and these are neither.
+//
+// They stay Ukrainian in flavour on both sides, transliterated rather than
+// localised (Odesa, not Springfield), the way `UI.en.placeholder` already
+// names Olena and a café in Lviv: the market is the same market, and the
+// English page is a door into it, not a different product.
 //
 // `brand` is the one string here that is **not** translated: the product has
 // one name and it is the domain's (adr-016 §9). It stays in the table rather
 // than becoming a constant because `LandingStrings` is what the page reads,
 // and a name that lives half in i18n and half beside it is how the two-name
 // problem started.
+export type SampleId = "wedding" | "kids" | "corporate";
+export type DemoGuest = "friend" | "colleague" | "couple" | "family";
+
 export interface LandingStrings {
   brand: string;
   cta: string;
@@ -597,6 +613,12 @@ export interface LandingStrings {
   rsvpText: string;
   rsvpSummary: string;
   responseLabels: { yes: string; no: string; wait: string };
+  /** The hero's three sample invitations. Copy only — their design tokens are
+   *  presentation and stay in `LandingPage.tsx`, keyed by the same ids. */
+  samples: Record<SampleId, InvitationCopy>;
+  /** The names on the mocked reply rows. The statuses beside them live in the
+   *  component for the same reason: a status is a colour, not a sentence. */
+  rsvpNames: Record<DemoGuest, string>;
   finalTitle: string;
   footer: string;
   // Returning-host block (adr-010 §4). Ukrainian needs a singular heading, so
@@ -633,6 +655,38 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpText: "Guests confirm by the link — you see the replies right away, no calls or reminders.",
     rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
+    samples: {
+      wedding: {
+        title: "We're getting married!",
+        greeting: "Dear family and friends,",
+        body: "Come and share the happiest day of our lives with us.",
+        details_line: "6 June, 3:00 pm — Oranzhereya Garden, Odesa",
+        rsvp_prompt: "Please let us know by 20 May.",
+        closing: "Mariya & Andriy",
+      },
+      kids: {
+        title: "Sofia is turning 5!",
+        greeting: "Hello, little ones and parents!",
+        body: "A fairy-tale afternoon of unicorns, cake and balloons awaits.",
+        details_line: "18 May, 1:00 pm — Kazka Park, Lviv",
+        rsvp_prompt: "Tell us whether your little one is coming.",
+        closing: "The Kovalchuk family",
+      },
+      corporate: {
+        title: "New Year party",
+        greeting: "Dear colleagues,",
+        body: "Let's close the year together — dinner, music and a few surprises.",
+        details_line: "27 December, 7:00 pm — Premier Hotel, Kyiv",
+        rsvp_prompt: "Please confirm by 20 December.",
+        closing: "The TechnoLine team",
+      },
+    },
+    rsvpNames: {
+      friend: "Oksana Melnyk",
+      colleague: "Ihor Bondar",
+      couple: "Nastia & Vlad",
+      family: "The Shevchenko family",
+    },
     finalTitle: "Ready to send your first invitation?",
     footer: "INVINTO — simple, and Ukrainian at heart.",
     yoursTitle: "Your invitations",
@@ -669,6 +723,38 @@ export const LANDING: Record<Language, LandingStrings> = {
       "Гості підтверджують участь за посиланням — ви бачите відповіді одразу, без дзвінків і нагадувань.",
     rsvpSummary: "18 прийдуть · 3 не прийдуть · 5 ще не відповіли",
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
+    samples: {
+      wedding: {
+        title: "Ми одружуємось!",
+        greeting: "Любі рідні та друзі,",
+        body: "Запрошуємо вас розділити з нами найщасливіший день нашого життя.",
+        details_line: "6 червня, 15:00 — Сад «Оранжерея», Одеса",
+        rsvp_prompt: "Підтвердіть присутність до 20 травня.",
+        closing: "Марія та Андрій",
+      },
+      kids: {
+        title: "Софійці — 5 років!",
+        greeting: "Привіт, малята й батьки!",
+        body: "Чекаємо на казкове свято з єдинорогами, тортом і кульками.",
+        details_line: "18 травня, 13:00 — Парк «Казка», Львів",
+        rsvp_prompt: "Підтвердіть, чи прийде ваша дитина.",
+        closing: "Родина Ковальчук",
+      },
+      corporate: {
+        title: "Новорічний корпоратив",
+        greeting: "Шановні колеги!",
+        body: "Завершуємо рік разом — вечеря, музика й приємні сюрпризи.",
+        details_line: "27 грудня, 19:00 — Готель «Прем'єр», Київ",
+        rsvp_prompt: "Підтвердіть участь до 20 грудня.",
+        closing: "Команда «ТехноЛайн»",
+      },
+    },
+    rsvpNames: {
+      friend: "Оксана Мельник",
+      colleague: "Ігор Бондар",
+      couple: "Настя і Влад",
+      family: "Родина Шевченків",
+    },
     finalTitle: "Готові надіслати перше запрошення?",
     footer: "INVINTO — просто і по-українськи.",
     yoursTitle: "Ваші запрошення",

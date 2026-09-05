@@ -188,6 +188,13 @@ implementation.
 - FR-6.3 On the guest page the toggle switches chrome only and defaults to
   the invitation's language; invitation text is host content and is never
   translated by the switcher.
+- FR-6.4 The landing page's demo content — the three sample invitations in the
+  hero and the mocked reply rows under the RSVP pitch — follows the toggle like
+  the rest of the page. It is not host content: FR-6.3 protects someone's real
+  invitation from being rewritten, and a mock-up of one is the single thing an
+  English visitor arriving on `/?lang=en` (FR-13.6) is there to judge. Both
+  languages stay in the same setting — the names are transliterated, not
+  replaced — so the samples show one product rather than two.
 
 ## FR-7 Operational metrics
 
@@ -422,9 +429,11 @@ result.
   appended card would show every share link as the marketing page.
 - FR-13.2 The landing page is the one page offered for indexing, with a
   self-referencing canonical, `WebSite`/`WebApplication` structured data and a
-  1200×630 share card at `/og-cover.png`. The editor, the host dashboard,
-  published invitations and unknown paths are `noindex` and name no canonical.
-  `X-Robots-Tag` repeats the instruction in a header on every such response.
+  1200×630 share card — `/og-cover.png` for `/`, `/og-cover-en.png` for
+  `/?lang=en`, since the card is copy and a share link is how the page mostly
+  travels. The editor, the host dashboard, published invitations and unknown
+  paths are `noindex` and name no canonical. `X-Robots-Tag` repeats the
+  instruction in a header on every such response.
 - FR-13.3 A published invitation stays shareable and unindexable at the same
   time. No unfurler consults `robots`, so the `og:*` tags of FR-3.5 are
   unaffected by the `noindex` beside them, and the host's date, venue and
@@ -503,7 +512,7 @@ result.
 | --- | --- | --- |
 | `GET /robots.txt` | Crawl policy; names the sitemap absolutely | — (public) |
 | `GET /sitemap.xml` | The landing page in both languages, with `hreflang` | — (public) |
-| `GET /og-cover.png` | Site-level share card, 1200×630 (static, `web/public/`) | — (public) |
+| `GET /og-cover.png`, `GET /og-cover-en.png` | Site-level share card, 1200×630, one per language (static, `web/public/`) | — (public) |
 
 Both generated files state an absolute origin, which is why they are routes
 rather than static files — and why they are registered ahead of the SPA
