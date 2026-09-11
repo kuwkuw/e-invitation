@@ -31,6 +31,22 @@ implementation.
   plus the copy stage's write-around-it rule otherwise leave the host with a
   card that looks complete. The prompt never blocks generating or publishing: a
   save-the-date without a day is a valid invitation.
+- FR-1.8 An invitation whose date reads as a **day already gone by cannot be
+  published**. The chat says so on every turn the date is still stale, the
+  Publish button is disabled, and `usePublishing.publish` refuses the same
+  invitation whatever path asks — the press, a republish, or the resume a host
+  lands in after signing in. One rule behind all three: `isPastDate` in
+  [calendar.ts](../web/src/calendar.ts), the same parser FR-1.7 and FR-4.5 use.
+  Only an explicit year can trip it: FR-1.2 has the model copy the date as the
+  host wrote it, and a year-less date is rolled forward to its next occurrence,
+  so this is a stale year and nothing else. The comparison is by **calendar
+  day** in the host's own local time, so an event that started earlier today is
+  not past — and the check is client-side for that reason, where "today" is the
+  host's day rather than the server's UTC one. A date **no** calendar can read
+  is not a past date: a save-the-date stays publishable and gets FR-1.7's nudge
+  instead. Nothing else is blocked — the invitation still generates, edits,
+  regenerates and takes a background; only the share link waits for a date the
+  event can actually happen on.
 
 ## FR-2 Edit and regenerate per field
 

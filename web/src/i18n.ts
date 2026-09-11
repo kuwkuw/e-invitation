@@ -38,6 +38,11 @@ export interface ChatStrings {
   /** Asked once when the generated brief carries no date a calendar can read
    *  — the one missing fact the host gets no other signal about. */
   dateNudge: string;
+  /** Said on every turn the brief's date reads cleanly but has already gone
+   *  by. Unlike `dateNudge` this one is a refusal: Publish is blocked until
+   *  the date moves, so the reason has to be the last thing in the log rather
+   *  than something said once and scrolled past (FR-1.8). */
+  pastDateBlock: string;
   failMsg: string;
   editingLabel: string;
   actionRegenerate: string;
@@ -380,6 +385,8 @@ export const UI: Record<Language, UiStrings> = {
       doneMsg: "Done — tap any part of the invitation to tweak it.",
       dateNudge:
         "When exactly is it? Add the date and I'll put it on the card — then guests can save the event to their calendar.",
+      pastDateBlock:
+        "That date has already gone by, so I can't publish this invitation yet — tell me the new date and I'll update the card.",
       failMsg: "Something went wrong. Please try again.",
       editingLabel: "Editing",
       actionRegenerate: "Regenerate",
@@ -501,6 +508,8 @@ export const UI: Record<Language, UiStrings> = {
       doneMsg: "Готово — торкніться будь-якої частини запрошення, щоб змінити її.",
       dateNudge:
         "А коли саме це буде? Додайте дату — я впишу її в запрошення, і гості зможуть зберегти подію в календар.",
+      pastDateBlock:
+        "Ця дата вже минула, тому опублікувати запрошення поки не вийде — скажіть нову дату, і я оновлю картку.",
       failMsg: "Щось пішло не так. Спробуйте ще раз.",
       editingLabel: "Редагування",
       actionRegenerate: "Перегенерувати",

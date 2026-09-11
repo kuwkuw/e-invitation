@@ -52,6 +52,10 @@ export default function App() {
 
   const editor = useInvitationEditor(t.chat, draft?.source ?? source, draft?.invitation ?? null);
   const publishing = usePublishing(() => editor.say(t.chat.failMsg), {
+    // Refused for a date that has gone by (FR-1.8). The button is already
+    // disabled from the same rule, so this fires only for a press the gate
+    // could not reach first — a resume after sign-in, most of all.
+    onDateBlocked: () => editor.say(t.chat.pastDateBlock),
     gated: account.publishGate,
     signedIn: account.status === "signed_in",
     source: draft?.source ?? source,
@@ -74,6 +78,9 @@ export default function App() {
   }, [authReturn.result, draft, publishing.resume]);
 
   const hasInvitation = editor.invitation !== null && editor.phase !== "generating";
+  // An invitation whose day has gone by is not publishable until the host
+  // moves it (FR-1.8); the chat says so on the turn that produced it.
+  const canPublish = hasInvitation && !editor.dateBlocked;
 
   function handleSend(text: string) {
     setSelectedField(null);
@@ -103,12 +110,13 @@ export default function App() {
           />
           <button
             type="button"
-            className={`cc-share${hasInvitation ? " ready" : ""}`}
-            disabled={!hasInvitation || publishing.publishing}
+            className={`cc-share${canPublish ? " ready" : ""}`}
+            disabled={!canPublish || publishing.publishing}
             onClick={() => editor.invitation && publishing.share(editor.invitation)}
             // The label is hidden on narrow screens to leave the title room to
             // be readable, so the button carries its name here regardless.
             aria-label={t.chat.share}
+            title={editor.dateBlocked ? t.chat.pastDateBlock : undefined}
           >
             <ShareIcon />
             <span className="cc-share-label">{publishing.publishing ? "…" : t.chat.share}</span>

@@ -130,6 +130,31 @@ export function parseEventStart(
   return { ...date, hour: time?.hour ?? null, minute: time?.minute ?? 0 };
 }
 
+/** True when the event's day is already over. The comparison is by calendar
+ *  day, not by instant: an event dated today is today's until midnight, and a
+ *  host whose party started an hour ago does not need to be told about it.
+ *  A year-less date can still land here — pickYear's grace deliberately keeps
+ *  "yesterday" in the current year instead of rolling it forward, and a host
+ *  writing an invitation for yesterday is exactly who wants to hear that. */
+export function isPastEventStart(start: EventStart, now: Date = new Date()): boolean {
+  const day = new Date(start.year, start.month - 1, start.day);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return day.getTime() < today.getTime();
+}
+
+/** The rule the publish gate runs on (FR-1.8), stated once so the editor's
+ *  disabled button and the refusal inside `usePublishing` cannot disagree.
+ *  A date nothing can parse is *not* past — an event with no day yet is a
+ *  save-the-date, and FR-1.7 already covers it. */
+export function isPastDate(
+  dateText: string | null,
+  timeText: string | null,
+  now: Date = new Date(),
+): boolean {
+  const start = parseEventStart(dateText, timeText, now);
+  return start !== null && isPastEventStart(start, now);
+}
+
 // RFC 5545 text escaping: backslash, semicolon, comma, newline.
 function escapeIcsText(text: string): string {
   return text

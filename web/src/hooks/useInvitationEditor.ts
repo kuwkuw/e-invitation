@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
-import { parseEventStart } from "../calendar";
+import { isPastDate, isPastEventStart, parseEventStart } from "../calendar";
 import { failureMessage } from "../failureMessage";
 import type { ChatStrings } from "../i18n";
 import type { CopyField, DesignTokens, GenerateSource, Invitation } from "../types";
@@ -60,9 +60,19 @@ export function useInvitationEditor(
       // placeholder, so the card looks complete and the host is never told.
       // A date too vague to parse costs the guest the same thing as no date
       // at all — GuestActions hides add-to-calendar — so both get the nudge.
-      if (!datePrompted.current && !parseEventStart(inv.brief.date, inv.brief.time)) {
-        datePrompted.current = true;
-        say(chat.dateNudge);
+      // A date already gone by is the same silence with the opposite cause:
+      // it renders, it exports to a calendar, and nothing about the finished
+      // card says the year is last year's. That one blocks publishing
+      // (FR-1.8), so it is said on every turn it is still true rather than
+      // once — the reason a button is disabled cannot be scrolled past.
+      const start = parseEventStart(inv.brief.date, inv.brief.time);
+      if (!start) {
+        if (!datePrompted.current) {
+          datePrompted.current = true;
+          say(chat.dateNudge);
+        }
+      } else if (isPastEventStart(start)) {
+        say(chat.pastDateBlock);
       }
       setPhase("active");
     } catch (error) {
@@ -133,11 +143,20 @@ export function useInvitationEditor(
     return [...new Set(ok)];
   }
 
+  // Derived rather than remembered: it has to be right for an invitation
+  // restored from the sign-in draft too, which no generate ran for in this
+  // session. `usePublishing` re-tests the same rule on the press — this flag
+  // is what makes the refusal visible before the host reaches for it.
+  const dateBlocked = invitation ? isPastDate(invitation.brief.date, invitation.brief.time) : false;
+
   return {
     messages,
     phase,
     invitation,
     bgBusy,
+    /** FR-1.8: the event's day has gone by, so publishing is refused until the
+     *  host moves it. */
+    dateBlocked,
     say,
     send,
     updateField,
