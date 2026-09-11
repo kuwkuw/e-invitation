@@ -1,4 +1,5 @@
 import type { RsvpCsvStrings } from "./csv";
+import type { OccasionId } from "./gallery/occasions";
 import type { RelativeTimeStrings } from "./relativeTime";
 import type { CopyField, DesignTokens, InvitationCopy, Language } from "./types";
 
@@ -1149,6 +1150,101 @@ export const CRASH: Record<Language, Record<CrashAudience, CrashStrings>> = {
       body: "Щось пішло не так під час показу запрошення. Зазвичай допомагає перезавантаження сторінки.",
       hint: "Якщо це повториться, попросіть господаря надіслати нове посилання.",
       reload: "Перезавантажити сторінку",
+    },
+  },
+};
+
+/** The gallery's own chrome (adr-017). Separate from `LANDING` because it is a
+ *  different surface with a different job — and from the gallery *content*,
+ *  which is product copy and lives in `web/src/gallery/` rather than here. */
+export interface GalleryStrings {
+  home: string;
+  hubTitle: string;
+  hubIntro: string;
+  otherOccasions: string;
+  /** The call to action under every example. */
+  use: string;
+  notFound: string;
+  occasions: Record<OccasionId, string>;
+  occasionTitle: Record<OccasionId, string>;
+  occasionIntro: Record<OccasionId, string>;
+}
+
+export const GALLERY: Record<Language, GalleryStrings> = {
+  uk: {
+    home: "Головна",
+    hubTitle: "Зразки запрошень",
+    hubIntro:
+      "Готові тексти для шести подій. Виберіть свою — далі можна взяти будь-який зразок, змінити слова й дизайн, і надіслати гостям посилання.",
+    otherOccasions: "Інші події",
+    use: "Взяти цей",
+    notFound: "Такої сторінки немає. Подивіться зразки для інших подій.",
+    occasions: {
+      wedding: "Весілля",
+      birthday: "День народження",
+      kids: "Дитяче свято",
+      christening: "Хрестини",
+      corporate: "Корпоратив",
+      jubilee: "Ювілей",
+    },
+    occasionTitle: {
+      wedding: "Запрошення на весілля: готові тексти",
+      birthday: "Запрошення на день народження: готові тексти",
+      kids: "Запрошення на дитяче свято: готові тексти",
+      christening: "Запрошення на хрестини: готові тексти",
+      corporate: "Запрошення на корпоратив: готові тексти",
+      jubilee: "Запрошення на ювілей: готові тексти",
+    },
+    occasionIntro: {
+      wedding:
+        "Чотири готові запрошення, які можна взяти й змінити під себе — слова, шрифт і кольори вже підібрані. Виберіть те, що звучить як ви, допишіть дату й місце, і надішліть гостям посилання.",
+      birthday:
+        "Готові тексти запрошення на день народження — від теплого до зовсім короткого. Візьміть будь-який, змініть під свою подію й збирайте відповіді.",
+      kids: "Запрошення на дитяче свято — яскраві, прості й зрозумілі батькам. Оберіть зразок і допишіть, коли і де святкуєте.",
+      christening:
+        "Стримані й теплі тексти запрошення на хрестини. Візьміть зразок, допишіть деталі й надішліть рідним посилання.",
+      corporate:
+        "Запрошення на корпоратив і новорічну вечірку компанії. Оберіть тон, змініть слова під себе й зберіть відповіді колег.",
+      jubilee:
+        "Урочисті й теплі запрошення на ювілей. Візьміть зразок, допишіть дату й місце, і надішліть гостям посилання.",
+    },
+  },
+  en: {
+    home: "Home",
+    hubTitle: "Invitation templates",
+    hubIntro:
+      "Ready-made wording for six occasions. Pick yours — then take any sample, change the words and the design, and send your guests a link.",
+    otherOccasions: "Other occasions",
+    use: "Use this one",
+    notFound: "There is no such page. Have a look at the other occasions.",
+    occasions: {
+      wedding: "Wedding",
+      birthday: "Birthday",
+      kids: "Kids party",
+      christening: "Christening",
+      corporate: "Office party",
+      jubilee: "Anniversary",
+    },
+    occasionTitle: {
+      wedding: "Wedding invitation wording",
+      birthday: "Birthday invitation wording",
+      kids: "Kids party invitation wording",
+      christening: "Christening invitation wording",
+      corporate: "Office party invitation wording",
+      jubilee: "Anniversary invitation wording",
+    },
+    occasionIntro: {
+      wedding:
+        "Four ready-made invitations you can take and make your own — the words, the type and the colours are already chosen. Pick the one that sounds like you, add your date and place, and send your guests a link.",
+      birthday:
+        "Ready-made birthday invitation wording, from warm to very short. Take any of them, adjust it to your event, and collect replies.",
+      kids: "Invitations for a children's party — bright, simple, and clear to other parents. Pick a sample and add when and where you're celebrating.",
+      christening:
+        "Quiet, warm wording for a christening invitation. Take a sample, add the details, and send your family a link.",
+      corporate:
+        "Invitations for a company party or an end-of-year event. Choose the tone, make the words yours, and collect your colleagues' replies.",
+      jubilee:
+        "Formal and warm anniversary invitations. Take a sample, add your date and place, and send your guests a link.",
     },
   },
 };

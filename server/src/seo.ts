@@ -276,11 +276,14 @@ function escapeJsonLd(json: string): string {
   return json.replaceAll("<", "\\u003c");
 }
 
-/** The languages the shell can be built for. Mirrors `Language` in
- *  `schemas.ts`; `OG_LOCALES` below is keyed by it, so a third language fails
- *  to compile there rather than silently going unstripped here. */
-const LANGUAGES = ["uk", "en"] as const satisfies readonly Language[];
-
+/** Keyed by `Language`, so a third language fails to compile here rather than
+ *  going silently unlocalised.
+ *
+ *  There used to be a `LANGUAGES` list beside this, which `selectPrerender`
+ *  walked to find the blocks to strip. It is gone: with fourteen blocks keyed
+ *  by page as well as language (adr-017 §6), that function now scans the shell
+ *  for whatever markers are actually in it, which is the only version that
+ *  cannot fall behind the page list. */
 const OG_LOCALES: Record<Language, string> = { uk: "uk_UA", en: "en_US" };
 
 /** The head block for one page: the tags a crawler reads and the tags a
@@ -618,9 +621,14 @@ export function sitemapXml(base: string): string {
  *
  *  `null` strips both, which is every path that is not the landing page. A
  *  shell built without the plugin has no markers and comes back untouched. */
-export function selectPrerender(html: string, lang: Language | null): string {
+export function selectPrerender(html: string, key: string | null): string {
+  // Scanned out of the shell rather than enumerated: there are fourteen blocks
+  // now (adr-017 §6), and a hard-coded list here would silently stop stripping
+  // whichever page was added without updating it — leaving a guest to watch
+  // somebody else's page under their share link.
+  const candidates = [...html.matchAll(/<!--pre:([a-z0-9-]+:[a-z]{2})-->/g)].map((m) => m[1]);
   let out = html;
-  for (const candidate of LANGUAGES) {
+  for (const candidate of candidates) {
     const open = `<!--pre:${candidate}-->`;
     const close = `<!--/pre:${candidate}-->`;
     const start = out.indexOf(open);
@@ -630,16 +638,27 @@ export function selectPrerender(html: string, lang: Language | null): string {
     // Unwrapped (markers removed, copy kept) or excised entirely. Slicing
     // rather than `String.replace`, so no `$` sequence in a headline can
     // expand into the surrounding markup.
-    const inner = candidate === lang ? out.slice(start + open.length, end) : "";
+    const inner = candidate === key ? out.slice(start + open.length, end) : "";
     out = out.slice(0, start) + inner + out.slice(end + close.length);
   }
   return out;
 }
 
-/** Which language's landing copy this path should ship, if any. Only `/` has
- *  any: it is the one page written to be read before the app boots. */
-export function prerenderLanguage(path: string, lang: Language): Language | null {
-  return path === "/" ? lang : null;
+/** Which prerendered block this path should ship, if any (adr-017 §6).
+ *
+ *  Keyed by page **and** language, because more than one page is prerendered
+ *  now: the landing page, the gallery hub, and each occasion. `null` means
+ *  strip everything — every private page, and any occasion we do not
+ *  recognise. The key format is mirrored by hand in `web/src/prerender.ts`
+ *  (`prerenderMarkers`). */
+export function prerenderKey(path: string, lang: Language): string | null {
+  if (path === "/") return `landing:${lang}`;
+  if (path === "/gallery") return `gallery:${lang}`;
+  if (path.startsWith("/gallery/")) {
+    const slug = path.slice("/gallery/".length);
+    return isGalleryOccasion(slug) ? `gallery-${slug}:${lang}` : null;
+  }
+  return null;
 }
 
 /** The shell, dressed for one page: head block swapped in, `<html lang>`
@@ -647,11 +666,7 @@ export function prerenderLanguage(path: string, lang: Language): Language | null
  *  SPA fallback and `/i/:id` — differ in where their `HeadMeta` comes from and
  *  in whether they want a prerender; a guest page never does, which is why the
  *  parameter defaults to none. */
-export function renderShell(
-  html: string,
-  meta: HeadMeta,
-  prerender: Language | null = null,
-): string {
+export function renderShell(html: string, meta: HeadMeta, prerender: string | null = null): string {
   const dressed = replaceHtmlLang(replaceSeoBlock(html, headTags(meta)), meta.lang);
   return selectPrerender(dressed, prerender);
 }

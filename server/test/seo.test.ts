@@ -9,7 +9,7 @@ import {
   GALLERY_OCCASIONS,
   headTags,
   isGalleryOccasion,
-  prerenderLanguage,
+  prerenderKey,
   replaceHtmlLang,
   replaceSeoBlock,
   robotsTxt,
@@ -141,35 +141,45 @@ describe("head block replacement", () => {
 // others are worse than nothing: a guest opening a share link would watch the
 // marketing hero sit there until React replaced it with their invitation.
 describe("prerendered landing copy", () => {
-  const shell = `<div id="root"><!--pre:uk-->ВІТАЄМО<!--/pre:uk--><!--pre:en-->WELCOME<!--/pre:en--></div>`;
+  const shell = `<div id="root"><!--pre:landing:uk-->ВІТАЄМО<!--/pre:landing:uk--><!--pre:landing:en-->WELCOME<!--/pre:landing:en--><!--pre:gallery-wedding:uk-->ВЕСІЛЛЯ<!--/pre:gallery-wedding:uk--></div>`;
 
-  it("keeps the language asked for and drops the other", () => {
-    expect(selectPrerender(shell, "uk")).toBe('<div id="root">ВІТАЄМО</div>');
-    expect(selectPrerender(shell, "en")).toBe('<div id="root">WELCOME</div>');
+  it("keeps the block asked for and drops every other", () => {
+    expect(selectPrerender(shell, "landing:uk")).toBe('<div id="root">ВІТАЄМО</div>');
+    expect(selectPrerender(shell, "landing:en")).toBe('<div id="root">WELCOME</div>');
+    expect(selectPrerender(shell, "gallery-wedding:uk")).toBe('<div id="root">ВЕСІЛЛЯ</div>');
   });
 
-  it("strips every block when no language is asked for", () => {
+  it("strips every block when none is asked for", () => {
     expect(selectPrerender(shell, null)).toBe('<div id="root"></div>');
   });
 
   // A shell built without the Vite plugin has no markers at all.
   it("leaves a shell without markers alone", () => {
     const bare = '<div id="root"></div>';
-    expect(selectPrerender(bare, "uk")).toBe(bare);
+    expect(selectPrerender(bare, "landing:uk")).toBe(bare);
   });
 
   // Slicing rather than String.replace, so no `$` sequence in a headline can
   // expand into the surrounding markup.
   it("does not expand $-sequences in the kept copy", () => {
-    const dollars = `<div id="root"><!--pre:uk-->$& $\` $' $1 $$<!--/pre:uk--></div>`;
-    expect(selectPrerender(dollars, "uk")).toBe(`<div id="root">$& $\` $' $1 $$</div>`);
+    const dollars = `<div id="root"><!--pre:landing:uk-->$& $\` $' $1 $$<!--/pre:landing:uk--></div>`;
+    expect(selectPrerender(dollars, "landing:uk")).toBe(`<div id="root">$& $\` $' $1 $$</div>`);
   });
 
-  it("prerenders the landing page and nothing else", () => {
-    expect(prerenderLanguage("/", "uk")).toBe("uk");
-    expect(prerenderLanguage("/", "en")).toBe("en");
+  it("keys the landing page by language", () => {
+    expect(prerenderKey("/", "uk")).toBe("landing:uk");
+    expect(prerenderKey("/", "en")).toBe("landing:en");
+  });
+
+  it("keys the gallery hub and each occasion", () => {
+    expect(prerenderKey("/gallery", "uk")).toBe("gallery:uk");
+    expect(prerenderKey("/gallery/wedding", "en")).toBe("gallery-wedding:en");
+  });
+
+  it("has no key for an unknown occasion or any private page", () => {
+    expect(prerenderKey("/gallery/nope", "uk")).toBeNull();
     for (const path of ["/create", "/manage/abc123xy", "/i/abc123xy", "/nonsense"]) {
-      expect(prerenderLanguage(path, "uk")).toBeNull();
+      expect(prerenderKey(path, "uk")).toBeNull();
     }
   });
 });
