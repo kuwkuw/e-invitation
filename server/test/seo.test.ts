@@ -230,17 +230,19 @@ describe("robots.txt", () => {
 describe("sitemap.xml", () => {
   const xml = sitemapXml(BASE);
 
-  it("lists both languages of the one page worth listing", () => {
+  // Eight pages in two languages (adr-017 §1): the landing page, the gallery
+  // hub, and one per occasion.
+  it("lists both languages of every page worth listing", () => {
     expect(xml).toContain(`<loc>${BASE}/</loc>`);
     expect(xml).toContain(`<loc>${BASE}/?lang=en</loc>`);
-    expect(xml.match(/<url>/g)).toHaveLength(2);
+    expect(xml.match(/<url>/g)).toHaveLength(16);
   });
 
   // An hreflang relationship Google accepts is reciprocal: every URL in the
   // set repeats the whole set.
-  it("repeats the full alternate set on both URLs", () => {
-    expect(xml.match(/hreflang="en"/g)).toHaveLength(2);
-    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(2);
+  it("repeats the full alternate set on every URL", () => {
+    expect(xml.match(/hreflang="en"/g)).toHaveLength(16);
+    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(16);
   });
 
   it("lists nothing the crawl policy closes", () => {
@@ -445,5 +447,79 @@ describe("gallery occasions", () => {
     expect(isGalleryOccasion("wedding")).toBe(true);
     expect(isGalleryOccasion("weddings")).toBe(false);
     expect(isGalleryOccasion("..")).toBe(false);
+  });
+});
+
+describe("gallery head metadata", () => {
+  it("offers the hub for indexing with a canonical", () => {
+    const meta = shellMeta("/gallery", "", BASE);
+    expect(meta.robots).toBe("index, follow");
+    expect(meta.canonical).toBe(`${BASE}/gallery`);
+    expect(meta.alternates).toEqual([
+      { hreflang: "uk", href: `${BASE}/gallery` },
+      { hreflang: "en", href: `${BASE}/gallery?lang=en` },
+      { hreflang: "x-default", href: `${BASE}/gallery` },
+    ]);
+  });
+
+  it("offers a known occasion for indexing, in the requested language", () => {
+    const meta = shellMeta("/gallery/wedding", "lang=en", BASE);
+    expect(meta.robots).toBe("index, follow");
+    expect(meta.canonical).toBe(`${BASE}/gallery/wedding?lang=en`);
+    expect(meta.lang).toBe("en");
+    expect(meta.title.toLowerCase()).toContain("wedding");
+  });
+
+  it("refuses an unknown occasion", () => {
+    const meta = shellMeta("/gallery/nope", "", BASE);
+    expect(meta.robots).toBe("noindex, follow");
+    expect(meta.canonical).toBeNull();
+  });
+
+  it("never offers a canonical on a noindex page", () => {
+    for (const path of ["/create", "/manage/abc", "/gallery/nope", "/whatever"]) {
+      const meta = shellMeta(path, "", BASE);
+      if (meta.robots.startsWith("noindex")) expect(meta.canonical).toBeNull();
+    }
+  });
+});
+
+describe("sitemap with the gallery", () => {
+  const xml = sitemapXml(BASE);
+
+  // Eight pages, two languages. Fourteen of the sixteen are new: the landing
+  // page's own pair already existed (adr-017 §1).
+  it("lists sixteen urls", () => {
+    expect(xml.match(/<loc>/g)).toHaveLength(16);
+  });
+
+  it("lists every occasion in both languages", () => {
+    for (const occasion of GALLERY_OCCASIONS) {
+      expect(xml).toContain(`<loc>${BASE}/gallery/${occasion}</loc>`);
+      expect(xml).toContain(`<loc>${BASE}/gallery/${occasion}?lang=en</loc>`);
+    }
+  });
+
+  it("gives every url a complete hreflang set", () => {
+    const urls = xml.split("<url>").slice(1);
+    expect(urls).toHaveLength(16);
+    for (const url of urls) {
+      expect(url.match(/hreflang=/g)).toHaveLength(3);
+    }
+  });
+});
+
+describe("robots.txt is unchanged by the gallery", () => {
+  const txt = robotsTxt(BASE);
+
+  it("still allows the og image before disallowing /api/", () => {
+    expect(txt.indexOf("Allow: /api/invitations/*/og.png")).toBeLessThan(
+      txt.indexOf("Disallow: /api/"),
+    );
+  });
+
+  it("still does not disallow /i/ or /gallery", () => {
+    expect(txt).not.toContain("Disallow: /i/");
+    expect(txt).not.toContain("Disallow: /gallery");
   });
 });

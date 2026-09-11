@@ -56,12 +56,13 @@ not about the product; they are the product, published.
 
 ## Decision
 
-### 1. Seven pages, fourteen addresses, and FR-13.2 is amended
+### 1. Seven new pages, sixteen indexed addresses, and FR-13.2 is amended
 
 `/gallery` is a hub listing six occasions. `/gallery/:occasion` is the page
 written to rank. English keeps the existing scheme — `?lang=en` is the English
-address (FR-13.6), not a separate path — so the site's indexed URL count goes
-from 2 to 14, each carrying the complete hreflang set.
+address (FR-13.6), not a separate path — so these seven pages add **fourteen
+new addresses**, taking the site's indexed URL count from 2 to **16**, each
+carrying the complete hreflang set.
 
 Slugs are English (`/gallery/wedding`), matching every identifier in the
 codebase. A path keyword is a weak signal beside title, `h1` and body, and a
