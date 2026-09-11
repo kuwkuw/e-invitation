@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { SEO, type SeoPage } from "./i18n";
+import type { OccasionId } from "./gallery/occasions";
+import { GALLERY, LANDING, SEO, type SeoPage } from "./i18n";
 import type { Language } from "./types";
 
 // Client-side head management (adr-016 §6).
@@ -65,6 +66,37 @@ export function routeMeta(page: SeoPage, lang: Language, search = ""): DocumentM
     // dashboard, whose links are that host's own invitation and manage URLs.
     robots: page === "manage" ? "noindex, nofollow" : "noindex, follow",
     canonical: null,
+  };
+}
+
+/** Head metadata for a gallery page after a client-side navigation (adr-017 §1,
+ *  FR-13.7). These are the product's only other indexed pages, so unlike the
+ *  `noindex` routes above they carry a canonical — and getting that wrong is
+ *  worse here than anywhere else, because arriving on `/` and clicking through
+ *  would otherwise leave every occasion page claiming to be the home page.
+ *
+ *  **The wording is deliberately not a copy of the server's.** `GALLERY_SEO` in
+ *  `server/src/seo.ts` is written for a result listing and is what a crawler
+ *  fetching the URL is handed; that is the authoritative search copy. Mirroring
+ *  those twelve title/description pairs by hand here would add a second body of
+ *  search copy to keep in step for the sake of a tab that a crawler never reads
+ *  — so this composes the page's own on-screen heading instead, which is
+ *  already parity-tested in `i18n.test.ts` and cannot drift from what the
+ *  visitor is looking at. */
+export function galleryRouteMeta(
+  lang: Language,
+  occasion: OccasionId | null,
+  origin = window.location.origin,
+): DocumentMeta {
+  const t = GALLERY[lang];
+  const path = occasion ? `/gallery/${occasion}` : "/gallery";
+  const suffix = lang === "en" ? "?lang=en" : "";
+  return {
+    lang,
+    title: `${occasion ? t.occasionTitle[occasion] : t.hubTitle} · ${LANDING[lang].brand}`,
+    description: occasion ? t.occasionIntro[occasion] : t.hubIntro,
+    robots: "index, follow",
+    canonical: `${origin}${path}${suffix}`,
   };
 }
 

@@ -2,17 +2,21 @@ import { Route, Routes, useLocation, useParams } from "react-router-dom";
 import App from "./App";
 import { CrashScreen } from "./components/CrashScreen";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { GalleryHubPage } from "./GalleryHubPage";
+import { GalleryOccasionPage } from "./GalleryOccasionPage";
 import { GuestPage } from "./GuestPage";
 import { LandingPage } from "./LandingPage";
 import { ManagePage } from "./ManagePage";
 
-/** Four flat screens, no nesting and no shared chrome — declarative mode is
+/** Six flat screens, no nesting and no shared chrome — declarative mode is
  *  the whole of it (adr-011 §1):
  *
- *    /i/:id      → public guest page behind the share link
- *    /manage/:id → host response dashboard (needs the manage token)
- *    /create     → the editor
- *    /           → marketing landing page
+ *    /i/:id              → public guest page behind the share link
+ *    /manage/:id         → host response dashboard (needs the manage token)
+ *    /create             → the editor
+ *    /gallery            → sample-invitation hub (adr-017)
+ *    /gallery/:occasion  → ready-made wording for one occasion, written to rank
+ *    /                   → marketing landing page
  */
 
 /** `:id` matches any non-empty segment, so an id that doesn't fit the server's
@@ -52,6 +56,8 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/create" element={<App />} />
+        <Route path="/gallery" element={<GalleryHubPage />} />
+        <Route path="/gallery/:occasion" element={<GalleryOccasionPage />} />
         <Route path="/i/:id" element={<GuestRoute />} />
         <Route path="/manage/:id" element={<ManageRoute />} />
         {/* Unknown paths land on the marketing page, as they did before. */}
