@@ -70,6 +70,25 @@ export interface PageStrings {
  *  invitation itself (`routes/og.ts`), so it is not here. */
 export type ShellPage = "landing" | "create" | "manage" | "notFound";
 
+/** The gallery's occasions (adr-017 §1). **Mirrored by hand** in
+ *  `web/src/gallery/occasions.ts` — keep the two lists identical and in the
+ *  same order. A slug here that is missing there is a page this server marks
+ *  `index, follow` and the client renders as a dead link. */
+export const GALLERY_OCCASIONS = [
+  "wedding",
+  "birthday",
+  "kids",
+  "christening",
+  "corporate",
+  "jubilee",
+] as const;
+
+export type GalleryOccasion = (typeof GALLERY_OCCASIONS)[number];
+
+export function isGalleryOccasion(value: string): value is GalleryOccasion {
+  return (GALLERY_OCCASIONS as readonly string[]).includes(value);
+}
+
 // Search copy, not UI copy — it is written for a result listing rather than
 // for the page, which is why it names the occasions ("весілля", "день
 // народження") the landing headline deliberately does not. Ukrainian first:

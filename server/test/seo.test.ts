@@ -6,7 +6,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Invitation } from "../src/schemas.js";
 import {
   DEFAULT_ORIGIN,
+  GALLERY_OCCASIONS,
   headTags,
+  isGalleryOccasion,
   prerenderLanguage,
   replaceHtmlLang,
   replaceSeoBlock,
@@ -424,5 +426,24 @@ describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
     expect(bodyWords(page.body)).toBe("");
     expect(page.headers["x-robots-tag"]).toBe("noindex, nofollow");
     expect(page.body).not.toContain('rel="canonical"');
+  });
+});
+
+describe("gallery occasions", () => {
+  it("lists the six occasions in the order the web mirror uses", () => {
+    expect([...GALLERY_OCCASIONS]).toEqual([
+      "wedding",
+      "birthday",
+      "kids",
+      "christening",
+      "corporate",
+      "jubilee",
+    ]);
+  });
+
+  it("rejects a slug that is not an occasion", () => {
+    expect(isGalleryOccasion("wedding")).toBe(true);
+    expect(isGalleryOccasion("weddings")).toBe(false);
+    expect(isGalleryOccasion("..")).toBe(false);
   });
 });
