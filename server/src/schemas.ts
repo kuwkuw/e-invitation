@@ -77,11 +77,14 @@ export const Invitation = z.object({
 });
 export type Invitation = z.infer<typeof Invitation>;
 
-// Share-loop attribution (adr-013 §3): where the host arrived from. A closed
-// enum and deliberately nothing more — carrying the referring invitation id
-// would make the aggregate decomposable into "this event produced this host",
-// which is the graph adr-012 and adr-005 both refused to let the server build.
-export const GenerateSource = z.enum(["direct", "guest"]);
+// Share-loop attribution (adr-013 §3, widened by adr-017 §7): where the host
+// arrived from. A closed enum and deliberately nothing more — carrying the
+// referring invitation id would make the aggregate decomposable into "this
+// event produced this host", which is the graph adr-012 and adr-005 both
+// refused to let the server build. `gallery` is a third *origin*, not a third
+// referrer: it carries no id and builds no graph, so it respects that rule
+// rather than widening past it.
+export const GenerateSource = z.enum(["direct", "guest", "gallery"]);
 export type GenerateSource = z.infer<typeof GenerateSource>;
 
 // API request bodies
