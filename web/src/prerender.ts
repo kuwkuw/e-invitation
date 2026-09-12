@@ -189,15 +189,17 @@ export function galleryHubBodyHtml(lang: Language): string {
   const t = GALLERY[lang];
   const tiles = populatedOccasions(lang)
     .map((occasion) => {
-      // `populatedOccasions` only yields occasions with at least one example,
-      // so the first is always there — but the index signature does not know
-      // that, and an empty title is a better failure than a build crash.
-      const first = galleryFor(occasion, lang)[0];
+      const count = galleryFor(occasion, lang).length;
+      // The card thumbnail is deliberately left out of the prerendered block:
+      // it is `aria-hidden` decoration whose text is the occasion page's own
+      // content, and repeating a whole invitation here would put the same
+      // wording on two indexed pages. React draws it on mount.
       return (
         `<a class="gl-tile" href="/gallery/${occasion}">` +
+        `<span class="gl-tile-body">` +
         `<span class="gl-tile-name">${escapeHtml(t.occasions[occasion])}</span>` +
-        `<span class="gl-tile-sample">${escapeHtml(first?.copy.title ?? "")}</span>` +
-        `</a>`
+        `<span class="gl-tile-count">${escapeHtml(t.exampleCount.replace("{n}", String(count)))}</span>` +
+        `</span></a>`
       );
     })
     .join("");

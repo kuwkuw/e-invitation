@@ -1166,6 +1166,8 @@ export interface GalleryStrings {
   hubTitle: string;
   hubIntro: string;
   otherOccasions: string;
+  /** Count under each hub tile. `{n}` is the number of examples. */
+  exampleCount: string;
   /** The call to action under every example. */
   use: string;
   notFound: string;
@@ -1181,6 +1183,7 @@ export const GALLERY: Record<Language, GalleryStrings> = {
     hubIntro:
       "Готові тексти для шести подій. Виберіть свою — далі можна взяти будь-який зразок, змінити слова й дизайн, і надіслати гостям посилання.",
     otherOccasions: "Інші події",
+    exampleCount: "{n} готові тексти",
     use: "Взяти цей",
     notFound: "Такої сторінки немає. Подивіться зразки для інших подій.",
     occasions: {
@@ -1219,6 +1222,7 @@ export const GALLERY: Record<Language, GalleryStrings> = {
     hubIntro:
       "Ready-made wording for six occasions. Pick yours — then take any sample, change the words and the design, and send your guests a link.",
     otherOccasions: "Other occasions",
+    exampleCount: "{n} ready-made texts",
     use: "Use this one",
     notFound: "There is no such page. Have a look at the other occasions.",
     occasions: {

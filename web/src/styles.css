@@ -1674,10 +1674,16 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* The hub: no filled accent at all — the tile is the link. */
 .gl-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.gl-tile { display: block; background: #fff; border: 1px solid #e4ddd0; border-radius: 18px; padding: 20px; text-decoration: none; color: inherit; transition: box-shadow 0.16s, transform 0.16s, border-color 0.16s; }
+.gl-tile { display: block; background: #fff; border: 1px solid #e4ddd0; border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; transition: box-shadow 0.16s, transform 0.16s, border-color 0.16s; }
 .gl-tile:hover { box-shadow: 0 18px 40px rgba(20, 18, 14, 0.14); transform: translateY(-2px); border-color: #dcd3c4; }
+/* A window onto a real card. The card keeps its own 380px min-height and
+   padding — it is `InvitationPreview` untouched — so the tile clips it and
+   scales it down rather than asking the component for a compact mode. */
+.gl-tile-shot { display: block; height: 190px; background: #f3efe8; overflow: hidden; position: relative; }
+.gl-tile-shot-inner { display: block; position: absolute; top: 14px; left: 50%; width: 420px; margin-left: -210px; transform: scale(0.46); transform-origin: top center; pointer-events: none; }
+.gl-tile-body { display: block; padding: 16px 18px 18px; }
 .gl-tile-name { display: block; font-family: var(--lp-display); font-size: 1.2rem; margin-bottom: 4px; }
-.gl-tile-sample { display: block; font-size: 0.84rem; color: #8d8577; }
+.gl-tile-count { display: block; font-size: 0.84rem; color: #8d8577; }
 
 .gl-others { margin-top: 40px; padding-top: 26px; border-top: 1px solid #e4ddd0; }
 .gl-chips { display: flex; flex-wrap: wrap; gap: 10px; }
