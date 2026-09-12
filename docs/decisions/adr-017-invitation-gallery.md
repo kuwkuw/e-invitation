@@ -222,10 +222,22 @@ host this iteration exists to produce as invisible. `usePublishing.publish` is
 already the single funnel every publish runs through, which makes it the one
 place to add it. Two counters go in `SCALAR_COUNTERS` and nowhere else.
 
-**A baseline is frozen at ship** (`markBaseline`), as adr-014 did for the auth
-gate: the gallery adds an acquisition channel, so it changes what `publish_rate`
-is a rate *of*, and without a baseline the before and after get compared as if
-they measured the same population.
+**No baseline is frozen, and that is a correction to an earlier draft of this
+section.** `markBaseline` is idempotent by design — adr-014 §2 made it so
+because the caller runs at boot and re-freezing on every restart would keep
+resetting the "before" — and production froze its one baseline on 2026-07-31
+for the auth gate. Calling it again would silently do nothing.
+
+It is also the wrong instrument. The auth gate changed the **denominator** of
+an existing rate; the gallery adds numerator-only counters that are
+definitionally zero before it ships, so "before" needs no snapshot.
+
+There **is** a distortion, and it is worth stating plainly rather than
+freezing around: `publish_rate` is publishes over generations, and a gallery
+host can publish having generated nothing. Gallery publishes therefore inflate
+that rate, which can now exceed 1. `gallery_publishes` is what lets a reader
+subtract them and recover what the rate meant before this channel existed —
+which is one more reason the publish is attributed and not only the generate.
 
 **The top of the funnel needs no code.** Google Search Console gives
 impressions, clicks and position per query for free, and `sitemap.xml` already

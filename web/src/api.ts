@@ -119,8 +119,12 @@ export async function generateBackground(
 export function publishInvitation(
   invitation: Invitation,
   existing?: { id: string; manage_token: string },
+  /** Where this host arrived from (adr-017 §7). Carried on the publish as well
+   *  as on the generate, because a gallery host can publish without ever
+   *  generating — and they are the host that channel exists to produce. */
+  source?: GenerateSource,
 ): Promise<PublishResult> {
-  return post<PublishResult>("/api/invitations/publish", { invitation, ...existing });
+  return post<PublishResult>("/api/invitations/publish", { invitation, ...existing, source });
 }
 
 export function fetchInvitation(id: string): Promise<PublishedInvitation> {

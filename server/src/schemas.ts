@@ -127,6 +127,11 @@ export const PublishRequest = z.object({
   // Both present = republish (new version of an existing invitation).
   id: InvitationId.optional(),
   manage_token: z.string().optional(),
+  // Where this host arrived from (adr-017 §7). On the publish and not only on
+  // the generate, because a gallery host can take a ready-made sample and
+  // publish having generated nothing at all. Absent means direct, so a client
+  // that predates this keeps working.
+  source: GenerateSource.default("direct"),
 });
 export type PublishRequest = z.infer<typeof PublishRequest>;
 

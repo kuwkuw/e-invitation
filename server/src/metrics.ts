@@ -19,6 +19,13 @@ interface Counters {
   // the generations that began on a guest page rather than cold.
   invitation_views: number;
   referred_generations: number;
+  // Gallery attribution (adr-017 §7). Two counters rather than one because the
+  // gallery is the first channel whose hosts can publish **without ever
+  // generating** — they take a ready-made sample, edit it by hand and publish.
+  // Counting only generations would score exactly the host this channel exists
+  // to produce as invisible.
+  gallery_generations: number;
+  gallery_publishes: number;
   // Not a counter — the frozen "counters as they stood" snapshot (adr-014 §2).
   // Handled apart from SCALAR_COUNTERS in the loader, like field_regenerations.
   baseline: Baseline | null;
@@ -35,6 +42,8 @@ interface CounterTotals {
   rsvps: number;
   invitation_views: number;
   referred_generations: number;
+  gallery_generations: number;
+  gallery_publishes: number;
 }
 
 interface Baseline {
@@ -51,6 +60,8 @@ const TOTAL_KEYS = [
   "rsvps",
   "invitation_views",
   "referred_generations",
+  "gallery_generations",
+  "gallery_publishes",
 ] as const satisfies readonly (keyof CounterTotals)[];
 
 let counters: Counters | null = null;
@@ -69,6 +80,8 @@ const SCALAR_COUNTERS = [
   "rsvps",
   "invitation_views",
   "referred_generations",
+  "gallery_generations",
+  "gallery_publishes",
 ] as const satisfies readonly (keyof Counters)[];
 
 // Loaded lazily on first use (so tests can set DATA_DIR first). A missing or
@@ -83,6 +96,8 @@ function load(): Counters {
     rsvps: 0,
     invitation_views: 0,
     referred_generations: 0,
+    gallery_generations: 0,
+    gallery_publishes: 0,
     baseline: null,
   };
   try {
@@ -123,6 +138,8 @@ function readBaseline(value: unknown): Baseline | null {
     rsvps: 0,
     invitation_views: 0,
     referred_generations: 0,
+    gallery_generations: 0,
+    gallery_publishes: 0,
   };
   for (const key of TOTAL_KEYS) {
     const n = stored[key];
@@ -154,6 +171,7 @@ export function recordGeneration(source: GenerateSource = "direct"): void {
   const current = load();
   current.generations += 1;
   if (source === "guest") current.referred_generations += 1;
+  if (source === "gallery") current.gallery_generations += 1;
   save(current);
 }
 
@@ -169,9 +187,22 @@ export function recordBackground(): void {
   save(current);
 }
 
-export function recordPublish(): void {
+/** One publish, tagged with where the host arrived from (adr-017 §7).
+ *
+ *  The source matters here and not only on a generate, which is the part that
+ *  is easy to get wrong: a gallery visitor can take a ready-made sample, hand
+ *  edit two lines and publish having generated nothing at all. That host is
+ *  invisible to `recordGeneration`, and they are precisely the host the gallery
+ *  exists to produce.
+ *
+ *  A consequence worth knowing when reading `/api/metrics`: `publish_rate` is
+ *  publishes over generations, so gallery publishes inflate it and it can now
+ *  exceed 1. Subtracting `gallery_publishes` from `publishes` restores what
+ *  that rate meant before this channel existed. */
+export function recordPublish(source: GenerateSource = "direct"): void {
   const current = load();
   current.publishes += 1;
+  if (source === "gallery") current.gallery_publishes += 1;
   save(current);
 }
 
@@ -216,6 +247,8 @@ function totals(current: Counters): CounterTotals {
     rsvps: current.rsvps,
     invitation_views: current.invitation_views,
     referred_generations: current.referred_generations,
+    gallery_generations: current.gallery_generations,
+    gallery_publishes: current.gallery_publishes,
   };
 }
 
@@ -274,6 +307,12 @@ export function metricsSnapshot() {
     rsvps: current.rsvps,
     invitation_views: current.invitation_views,
     referred_generations: current.referred_generations,
+    // Gallery attribution (adr-017 §7). Reported as counts rather than as a
+    // rate on purpose: the question these answer is "did organic search
+    // produce a host at all", and a ratio over a near-zero denominator would
+    // dress that up as precision it does not have.
+    gallery_generations: current.gallery_generations,
+    gallery_publishes: current.gallery_publishes,
     views_per_publish: lifetime.views_per_publish,
     new_hosts_per_publish: lifetime.new_hosts_per_publish,
     baseline: baselineBlock(current),
