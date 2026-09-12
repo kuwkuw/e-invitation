@@ -68,7 +68,26 @@ export interface PageStrings {
 
 /** The pages a crawler can reach without a token. `guest` copy comes from the
  *  invitation itself (`routes/og.ts`), so it is not here. */
-export type ShellPage = "landing" | "create" | "manage" | "notFound";
+export type ShellPage = "landing" | "create" | "manage" | "notFound" | "gallery";
+
+/** The gallery's occasions (adr-017 §1). **Mirrored by hand** in
+ *  `web/src/gallery/occasions.ts` — keep the two lists identical and in the
+ *  same order. A slug here that is missing there is a page this server marks
+ *  `index, follow` and the client renders as a dead link. */
+export const GALLERY_OCCASIONS = [
+  "wedding",
+  "birthday",
+  "kids",
+  "christening",
+  "corporate",
+  "jubilee",
+] as const;
+
+export type GalleryOccasion = (typeof GALLERY_OCCASIONS)[number];
+
+export function isGalleryOccasion(value: string): value is GalleryOccasion {
+  return (GALLERY_OCCASIONS as readonly string[]).includes(value);
+}
 
 // Search copy, not UI copy — it is written for a result listing rather than
 // for the page, which is why it names the occasions ("весілля", "день
@@ -97,6 +116,12 @@ export const SEO_STRINGS: Record<Language, Record<ShellPage, PageStrings>> = {
       title: `Сторінку не знайдено — ${SITE_NAME}`,
       description: "Такої сторінки немає. Створіть запрошення на головній.",
     },
+    gallery: {
+      title: `Зразки запрошень — готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошень на весілля, день народження, хрестини, корпоратив і ювілей — " +
+        "візьміть будь-який, змініть під себе й надішліть гостям посилання.",
+    },
   },
   en: {
     landing: {
@@ -118,6 +143,96 @@ export const SEO_STRINGS: Record<Language, Record<ShellPage, PageStrings>> = {
     notFound: {
       title: `Page not found — ${SITE_NAME}`,
       description: "There is no such page. Start an invitation from the home page.",
+    },
+    gallery: {
+      title: `Invitation templates — ready-made wording · ${SITE_NAME}`,
+      description:
+        "Ready-made invitation wording for weddings, birthdays, christenings and office parties — " +
+        "take one, make it yours, and send your guests a link.",
+    },
+  },
+};
+
+/** Search copy per occasion page (adr-017 §1). Separate from `SEO_STRINGS`
+ *  because these are keyed by occasion rather than by `ShellPage`, and bolting
+ *  six pseudo-pages onto that union would make the type lie about what a shell
+ *  page is. Written for a result listing: the occasion word leads, because
+ *  that is the word that was searched. */
+export const GALLERY_SEO: Record<Language, Record<GalleryOccasion, PageStrings>> = {
+  uk: {
+    wedding: {
+      title: `Запрошення на весілля: готові тексти · ${SITE_NAME}`,
+      description:
+        "Чотири готові тексти весільного запрошення — романтичний, стриманий, урочистий і " +
+        "мінімалістичний. Візьміть будь-який, змініть слова й надішліть гостям посилання.",
+    },
+    birthday: {
+      title: `Запрошення на день народження: готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошення на день народження — від теплого до сучасного. " +
+        "Оберіть, допишіть дату й місце, і збирайте відповіді гостей.",
+    },
+    kids: {
+      title: `Запрошення на дитяче свято: готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошення на дитячий день народження та свято — яскраві й прості. " +
+        "Візьміть зразок і змініть під свою подію.",
+    },
+    christening: {
+      title: `Запрошення на хрестини: готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошення на хрестини — стримані й теплі. " +
+        "Оберіть зразок, допишіть деталі й надішліть рідним посилання.",
+    },
+    corporate: {
+      title: `Запрошення на корпоратив: готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошення на корпоратив і новорічну вечірку компанії. " +
+        "Візьміть зразок, змініть під себе й зберіть відповіді колег.",
+    },
+    jubilee: {
+      title: `Запрошення на ювілей: готові тексти · ${SITE_NAME}`,
+      description:
+        "Готові тексти запрошення на ювілей — урочисті й теплі. " +
+        "Оберіть зразок, допишіть дату й місце, і надішліть гостям посилання.",
+    },
+  },
+  en: {
+    wedding: {
+      title: `Wedding invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Four ready-made wedding invitation texts — romantic, formal, festive and minimal. " +
+        "Take one, change the words, and send your guests a link.",
+    },
+    birthday: {
+      title: `Birthday invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Ready-made birthday invitation wording, from warm to modern. " +
+        "Pick one, add your date and place, and collect replies.",
+    },
+    kids: {
+      title: `Kids party invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Ready-made wording for a children's birthday or party invitation — bright and simple. " +
+        "Take a sample and make it yours.",
+    },
+    christening: {
+      title: `Christening invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Ready-made christening invitation wording, quiet and warm. " +
+        "Pick a sample, add the details, and send your family a link.",
+    },
+    corporate: {
+      title: `Office party invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Ready-made wording for a company party or end-of-year event invitation. " +
+        "Take a sample, make it yours, and collect your colleagues' replies.",
+    },
+    jubilee: {
+      title: `Anniversary invitation wording: ready-made texts · ${SITE_NAME}`,
+      description:
+        "Ready-made anniversary invitation wording, formal and warm. " +
+        "Pick a sample, add your date and place, and send your guests a link.",
     },
   },
 };
@@ -161,11 +276,14 @@ function escapeJsonLd(json: string): string {
   return json.replaceAll("<", "\\u003c");
 }
 
-/** The languages the shell can be built for. Mirrors `Language` in
- *  `schemas.ts`; `OG_LOCALES` below is keyed by it, so a third language fails
- *  to compile there rather than silently going unstripped here. */
-const LANGUAGES = ["uk", "en"] as const satisfies readonly Language[];
-
+/** Keyed by `Language`, so a third language fails to compile here rather than
+ *  going silently unlocalised.
+ *
+ *  There used to be a `LANGUAGES` list beside this, which `selectPrerender`
+ *  walked to find the blocks to strip. It is gone: with fourteen blocks keyed
+ *  by page as well as language (adr-017 §6), that function now scans the shell
+ *  for whatever markers are actually in it, which is the only version that
+ *  cannot fall behind the page list. */
 const OG_LOCALES: Record<Language, string> = { uk: "uk_UA", en: "en_US" };
 
 /** The head block for one page: the tags a crawler reads and the tags a
@@ -247,10 +365,19 @@ export function replaceHtmlLang(html: string, lang: Language): string {
  *  unindexable. `uk` is the parameterless form — the primary market gets the
  *  clean URL and the `x-default`. */
 export function landingAlternates(base: string): { hreflang: string; href: string }[] {
+  return alternatesFor(base, "/");
+}
+
+/** Every URL in an hreflang set repeats the whole set — a sitemap that names
+ *  the alternates only on one of them describes a one-way relationship, which
+ *  Google discards. `path` is the Ukrainian (unsuffixed) address; the English
+ *  one is the same path with `?lang=en` (FR-13.6). */
+export function alternatesFor(base: string, path: string): { hreflang: string; href: string }[] {
+  const uk = `${base}${path}`;
   return [
-    { hreflang: "uk", href: `${base}/` },
-    { hreflang: "en", href: `${base}/?lang=en` },
-    { hreflang: "x-default", href: `${base}/` },
+    { hreflang: "uk", href: uk },
+    { hreflang: "en", href: `${uk}?lang=en` },
+    { hreflang: "x-default", href: uk },
   ];
 }
 
@@ -294,6 +421,40 @@ function landingJsonLd(base: string, lang: Language): string {
   });
 }
 
+/** The gallery's half of `shellMeta` (adr-017 §1) — the first pages after the
+ *  landing page offered for indexing, and the first canonicals in the product.
+ *  FR-13.2 named the landing page as the only indexed page, and this amends it.
+ *
+ *  `null` for anything that is not a gallery page **and for an unrecognised
+ *  occasion**, which then falls through to `notFound`: the client renders a
+ *  dead link for it, and a URL this server marks `index, follow` must not be
+ *  one the app refuses to draw.
+ *
+ *  Split out of `shellMeta` rather than inlined because that function was at
+ *  the cognitive-complexity ceiling; the branches are a flat list of paths and
+ *  splitting them costs nothing. */
+function galleryMeta(
+  path: string,
+  lang: Language,
+  base: string,
+): Pick<HeadMeta, "title" | "description" | "robots" | "canonical" | "url" | "alternates"> | null {
+  if (path !== "/gallery" && !path.startsWith("/gallery/")) return null;
+
+  const slug = path === "/gallery" ? "" : path.slice("/gallery/".length);
+  if (slug !== "" && !isGalleryOccasion(slug)) return null;
+
+  const canonicalPath = slug === "" ? "/gallery" : `/gallery/${slug}`;
+  const canonical = lang === "en" ? `${base}${canonicalPath}?lang=en` : `${base}${canonicalPath}`;
+
+  return {
+    ...(slug === "" ? SEO_STRINGS[lang].gallery : GALLERY_SEO[lang][slug]),
+    robots: "index, follow",
+    canonical,
+    url: canonical,
+    alternates: alternatesFor(base, canonicalPath),
+  };
+}
+
 /** Head metadata for a path the SPA shell answers. `path` is the pathname
  *  alone and `search` the raw query string, both as `app.ts` splits them. */
 export function shellMeta(path: string, search: string, base: string): HeadMeta {
@@ -323,6 +484,9 @@ export function shellMeta(path: string, search: string, base: string): HeadMeta 
       jsonLd: landingJsonLd(base, lang),
     };
   }
+
+  const gallery = galleryMeta(path, lang, base);
+  if (gallery) return { ...common, ...gallery };
 
   // The editor is the product, not a document: it renders nothing until the
   // app boots and has nothing a search result could usefully quote. Indexing
@@ -404,26 +568,44 @@ export function robotsTxt(base: string): string {
  *  the alternates only on one of them describes a one-way relationship, which
  *  Google discards. */
 export function sitemapXml(base: string): string {
-  const alternates = landingAlternates(base)
-    .map(
-      (a) =>
-        `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${escapeHtml(a.href)}"/>`,
-    )
-    .join("\n");
-  const url = (loc: string, priority: string) =>
-    [
-      "  <url>",
-      `    <loc>${escapeHtml(loc)}</loc>`,
-      alternates,
-      "    <changefreq>weekly</changefreq>",
-      `    <priority>${priority}</priority>`,
-      "  </url>",
-    ].join("\n");
+  const entry = (path: string, priority: string) => {
+    const alternates = alternatesFor(base, path)
+      .map(
+        (a) =>
+          `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${escapeHtml(a.href)}"/>`,
+      )
+      .join("\n");
+    return (loc: string) =>
+      [
+        "  <url>",
+        `    <loc>${escapeHtml(loc)}</loc>`,
+        alternates,
+        "    <changefreq>weekly</changefreq>",
+        `    <priority>${priority}</priority>`,
+        "  </url>",
+      ].join("\n");
+  };
+
+  // The landing page, the gallery hub, and one page per occasion — each in
+  // both languages (adr-017 §1).
+  const pages: { path: string; priority: string }[] = [
+    { path: "/", priority: "1.0" },
+    { path: "/gallery", priority: "0.9" },
+    ...GALLERY_OCCASIONS.map((occasion) => ({
+      path: `/gallery/${occasion}`,
+      priority: "0.8",
+    })),
+  ];
+
+  const rows = pages.flatMap((page) => {
+    const render = entry(page.path, page.priority);
+    return [render(`${base}${page.path}`), render(`${base}${page.path}?lang=en`)];
+  });
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
-    url(`${base}/`, "1.0"),
-    url(`${base}/?lang=en`, "0.8"),
+    ...rows,
     "</urlset>",
     "",
   ].join("\n");
@@ -439,9 +621,14 @@ export function sitemapXml(base: string): string {
  *
  *  `null` strips both, which is every path that is not the landing page. A
  *  shell built without the plugin has no markers and comes back untouched. */
-export function selectPrerender(html: string, lang: Language | null): string {
+export function selectPrerender(html: string, key: string | null): string {
+  // Scanned out of the shell rather than enumerated: there are fourteen blocks
+  // now (adr-017 §6), and a hard-coded list here would silently stop stripping
+  // whichever page was added without updating it — leaving a guest to watch
+  // somebody else's page under their share link.
+  const candidates = [...html.matchAll(/<!--pre:([a-z0-9-]+:[a-z]{2})-->/g)].map((m) => m[1]);
   let out = html;
-  for (const candidate of LANGUAGES) {
+  for (const candidate of candidates) {
     const open = `<!--pre:${candidate}-->`;
     const close = `<!--/pre:${candidate}-->`;
     const start = out.indexOf(open);
@@ -451,16 +638,27 @@ export function selectPrerender(html: string, lang: Language | null): string {
     // Unwrapped (markers removed, copy kept) or excised entirely. Slicing
     // rather than `String.replace`, so no `$` sequence in a headline can
     // expand into the surrounding markup.
-    const inner = candidate === lang ? out.slice(start + open.length, end) : "";
+    const inner = candidate === key ? out.slice(start + open.length, end) : "";
     out = out.slice(0, start) + inner + out.slice(end + close.length);
   }
   return out;
 }
 
-/** Which language's landing copy this path should ship, if any. Only `/` has
- *  any: it is the one page written to be read before the app boots. */
-export function prerenderLanguage(path: string, lang: Language): Language | null {
-  return path === "/" ? lang : null;
+/** Which prerendered block this path should ship, if any (adr-017 §6).
+ *
+ *  Keyed by page **and** language, because more than one page is prerendered
+ *  now: the landing page, the gallery hub, and each occasion. `null` means
+ *  strip everything — every private page, and any occasion we do not
+ *  recognise. The key format is mirrored by hand in `web/src/prerender.ts`
+ *  (`prerenderMarkers`). */
+export function prerenderKey(path: string, lang: Language): string | null {
+  if (path === "/") return `landing:${lang}`;
+  if (path === "/gallery") return `gallery:${lang}`;
+  if (path.startsWith("/gallery/")) {
+    const slug = path.slice("/gallery/".length);
+    return isGalleryOccasion(slug) ? `gallery-${slug}:${lang}` : null;
+  }
+  return null;
 }
 
 /** The shell, dressed for one page: head block swapped in, `<html lang>`
@@ -468,11 +666,7 @@ export function prerenderLanguage(path: string, lang: Language): Language | null
  *  SPA fallback and `/i/:id` — differ in where their `HeadMeta` comes from and
  *  in whether they want a prerender; a guest page never does, which is why the
  *  parameter defaults to none. */
-export function renderShell(
-  html: string,
-  meta: HeadMeta,
-  prerender: Language | null = null,
-): string {
+export function renderShell(html: string, meta: HeadMeta, prerender: string | null = null): string {
   const dressed = replaceHtmlLang(replaceSeoBlock(html, headTags(meta)), meta.lang);
   return selectPrerender(dressed, prerender);
 }

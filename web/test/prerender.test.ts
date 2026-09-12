@@ -1,82 +1,73 @@
 import { describe, expect, it } from "vitest";
-import { LANDING } from "../src/i18n";
-import { landingBodyHtml, landingPrerenderBlocks, prerenderMarkers } from "../src/prerender";
+import { prerenderBlocks, prerenderMarkers } from "../src/prerender";
 
-/**
- * The landing page's copy as real HTML in the shell (adr-016 §10).
- *
- * The failure this guards against is silent: the SPA's body is one empty div,
- * and a crawler that does not run JavaScript — or runs it days later, which is
- * what Google does for a new domain — reads a title and a description over
- * nothing. These tests assert against `LANDING` rather than against literal
- * strings on purpose: the value of generating this block is that the copy has
- * one source, and a test carrying its own copy would quietly re-create the
- * second one.
- */
-describe("landingBodyHtml", () => {
-  it.each(["uk", "en"] as const)("carries every line of %s copy a result could quote", (lang) => {
-    const html = landingBodyHtml(lang);
-    const t = LANDING[lang];
-    for (const line of [
-      t.heroTitle,
-      t.heroText,
-      t.howTitle,
-      t.rsvpTitle,
-      t.rsvpText,
-      t.finalTitle,
-      t.footer,
-    ]) {
-      expect(html).toContain(line);
+describe("prerender blocks", () => {
+  const html = prerenderBlocks();
+
+  it("emits one block per page per language", () => {
+    // 1 landing + 1 hub + 6 occasions, twice.
+    expect(html.match(/<!--pre:[a-z0-9-]+:(uk|en)-->/g)).toHaveLength(16);
+  });
+
+  it("closes every block it opens", () => {
+    const opens = html.match(/<!--pre:([a-z0-9:-]+)-->/g) ?? [];
+    for (const open of opens) {
+      const key = open.slice("<!--pre:".length, -"-->".length);
+      expect(html).toContain(`<!--/pre:${key}-->`);
     }
-    for (const step of t.steps) {
-      expect(html).toContain(step.title);
-      expect(html).toContain(step.text);
-    }
-    // The occasion words are the search terms the page exists to be found for.
-    for (const chip of t.chips) expect(html).toContain(chip);
   });
 
-  it("has exactly one h1, and it is the hero", () => {
-    const html = landingBodyHtml("uk");
-    expect(html.match(/<h1>/g)).toHaveLength(1);
-    expect(html).toContain(`<h1>${LANDING.uk.heroTitle}</h1>`);
+  it("puts the occasion's real invitation text in the markup", () => {
+    const { open } = prerenderMarkers("gallery-wedding:uk");
+    const start = html.indexOf(open);
+    expect(start).toBeGreaterThan(-1);
+    expect(html.slice(start)).toContain("Ми одружуємось!");
   });
 
-  // A crawler cannot press a button, and the real page's CTA is one — so
-  // without this the editor is reachable only by rendering the app.
-  it("gives the crawl a real link to the editor", () => {
-    expect(landingBodyHtml("uk")).toContain('<a class="lp-cta" href="/create">');
+  it("puts the English invitation text in the English block", () => {
+    const { open, close } = prerenderMarkers("gallery-wedding:en");
+    const block = html.slice(html.indexOf(open), html.indexOf(close));
+    expect(block).toContain("We're getting married!");
+    // The rule `i18n.test.ts` enforces for the tables, held here for the
+    // markup a crawler actually reads.
+    expect(block).not.toMatch(/[Ѐ-ӿ]/);
   });
 
-  it("differs by language", () => {
-    expect(landingBodyHtml("uk")).not.toBe(landingBodyHtml("en"));
-    expect(landingBodyHtml("en")).toContain(LANDING.en.heroTitle);
-    expect(landingBodyHtml("en")).not.toContain(LANDING.uk.heroTitle);
+  it("links each hub tile with a crawlable href", () => {
+    expect(html).toContain('href="/gallery/wedding"');
   });
 
-  // Landing copy is full of «», — and apostrophes; one `&` in a future edit
-  // must not be able to produce broken markup.
-  it("escapes its copy", () => {
-    const html = landingBodyHtml("uk");
-    expect(html).not.toMatch(/&(?!amp;|quot;|lt;|gt;)/);
+  it("gives every example a crawlable use-this link", () => {
+    expect(html).toContain('href="/create?sample=wedding-romantic"');
   });
 
-  it("uses the classes the React page uses, so the swap is invisible", () => {
-    const html = landingBodyHtml("uk");
-    for (const cls of ["landing", "lp-hero", "lp-hero-copy", "lp-steps", "lp-chips", "lp-footer"]) {
-      expect(html).toContain(`class="${cls}"`);
-    }
+  it("renders each example's design tokens as the card's classes", () => {
+    // The prerendered card has to carry the same classes React will, or the
+    // swap on mount is visible.
+    expect(html).toContain("palette-romantic");
+    expect(html).toContain("type-script");
+    expect(html).toContain("layout-banner");
   });
 });
 
-describe("landingPrerenderBlocks", () => {
-  it("wraps both languages in the markers the server strips by", () => {
-    const blocks = landingPrerenderBlocks();
+// adr-017 §8. A crawler cannot press a button, so the gallery needs a real
+// edge from the one page that is already indexed.
+describe("landing entry point", () => {
+  const html = prerenderBlocks();
+
+  it("links to the gallery with a crawlable href", () => {
     for (const lang of ["uk", "en"] as const) {
-      const { open, close } = prerenderMarkers(lang);
-      expect(blocks).toContain(open);
-      expect(blocks).toContain(close);
-      expect(blocks.indexOf(open)).toBeLessThan(blocks.indexOf(close));
+      const { open, close } = prerenderMarkers(`landing:${lang}`);
+      const block = html.slice(html.indexOf(open), html.indexOf(close));
+      expect(block).toContain('href="/gallery"');
     }
+  });
+
+  it("keeps the hero's single call to action", () => {
+    const { open, close } = prerenderMarkers("landing:uk");
+    const block = html.slice(html.indexOf(open), html.indexOf(close));
+    // The gallery link is nav chrome, not a second hero action: the hero still
+    // has exactly the two /create calls to action it shipped with.
+    expect(block.match(/class="lp-cta"/g)).toHaveLength(2);
   });
 });

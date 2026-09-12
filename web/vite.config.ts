@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
-import { landingPrerenderBlocks } from "./src/prerender";
+import { prerenderBlocks } from "./src/prerender";
 
 /**
  * Ships the landing page's copy as real HTML inside `#root` (adr-016 §10).
@@ -19,7 +19,7 @@ import { landingPrerenderBlocks } from "./src/prerender";
  */
 function prerenderLanding(): Plugin {
   return {
-    name: "inv-prerender-landing",
+    name: "inv-prerender",
     apply: "build",
     transformIndexHtml(html) {
       const root = '<div id="root"></div>';
@@ -28,7 +28,7 @@ function prerenderLanding(): Plugin {
       }
       // Replacer function, not a string: the copy is developer-authored, but
       // `$&` in a headline would otherwise expand to the matched root div.
-      return html.replace(root, () => `<div id="root">${landingPrerenderBlocks()}</div>`);
+      return html.replace(root, () => `<div id="root">${prerenderBlocks()}</div>`);
     },
   };
 }

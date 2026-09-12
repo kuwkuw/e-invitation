@@ -1,5 +1,13 @@
-import { LANDING } from "./i18n";
-import type { Language } from "./types";
+import {
+  GALLERY_DESIGNS,
+  type GalleryExample,
+  galleryFor,
+  OCCASION_IDS,
+  type OccasionId,
+  populatedOccasions,
+} from "./gallery";
+import { GALLERY, LANDING } from "./i18n";
+import type { DesignTokens, Language } from "./types";
 
 // Build-time only (adr-016 §10). `vite.config.ts` imports this and nothing
 // else does — **never import it from client code**, where it would be dead
@@ -21,13 +29,18 @@ import type { Language } from "./types";
 // the copy has exactly one source, and marketing edits cannot leave a stale
 // second copy behind the way a hand-mirrored block would.
 
-/** Two blocks go into the shell, one per language, and the server keeps the
- *  one the request asked for (`selectPrerender` in `server/src/seo.ts`). The
- *  alternative — a shell per language — would mean two build outputs for a
- *  difference of about a kilobyte. */
-export const prerenderMarkers = (lang: Language) => ({
-  open: `<!--pre:${lang}-->`,
-  close: `<!--/pre:${lang}-->`,
+/** One block per (page × language) goes into the shell, and the server keeps
+ *  the one the request asked for (`selectPrerender` in `server/src/seo.ts`).
+ *  The alternative — a shell per page per language — would mean fourteen build
+ *  outputs for a difference of a few kilobytes.
+ *
+ *  Keys are `<page>:<lang>` — `landing:uk`, `gallery:en`,
+ *  `gallery-wedding:uk`. `server/src/seo.ts` builds the same strings in
+ *  `prerenderKey`; the two are mirrored by hand, and its scanning regex
+ *  expects exactly this shape. */
+export const prerenderMarkers = (key: string) => ({
+  open: `<!--pre:${key}-->`,
+  close: `<!--/pre:${key}-->`,
 });
 
 /** These are developer-authored strings, not user input, so this is hygiene
@@ -76,7 +89,12 @@ export function landingBodyHtml(lang: Language): string {
     `<div class="landing">` +
     `<header class="lp-nav"><span class="lp-brand">` +
     `<span class="lp-brand-full">${escapeHtml(t.brand)}</span>` +
-    `</span></header>` +
+    `</span>` +
+    // The crawl edge into the gallery (adr-017 §8). In the nav rather than the
+    // hero: the hero already carries the primary action, and a second one
+    // beside it takes weight from the one that matters.
+    `<a class="lp-nav-gallery" href="/gallery">${escapeHtml(t.galleryLink)}</a>` +
+    `</header>` +
     `<section class="lp-hero"><div class="lp-hero-copy">` +
     `<h1>${escapeHtml(t.heroTitle)}</h1>` +
     `<p>${escapeHtml(t.heroText)}</p>` +
@@ -95,12 +113,121 @@ export function landingBodyHtml(lang: Language): string {
   );
 }
 
-/** Both languages, each in its markers, for the shell's root container. */
-export function landingPrerenderBlocks(): string {
-  return (["uk", "en"] as const)
-    .map((lang) => {
-      const { open, close } = prerenderMarkers(lang);
-      return `${open}${landingBodyHtml(lang)}${close}`;
+/** One gallery example, as a crawler sees it (adr-017 §2).
+ *
+ *  The invitation's text is real markup, not an image: a gallery of pictures is
+ *  an empty page for search, and these pages exist to be found. Class names and
+ *  element types are copied from `InvitationPreview.tsx` so React's swap on
+ *  mount is invisible — the ornament is an empty div the CSS draws, not a glyph
+ *  in the markup.
+ *
+ *  The call to action is a real `<a href>`: a crawler cannot press a button,
+ *  and a full page load is what makes `?sample=` reload-safe. */
+function exampleHtml(example: GalleryExample, design: DesignTokens, useLabel: string): string {
+  const card =
+    `<div class="inv palette-${design.palette} type-${design.typography} ` +
+    `layout-${design.layout} ornament-${design.ornament}">` +
+    `<div class="inv-ornament"></div>` +
+    `<h2 class="inv-title">${escapeHtml(example.copy.title)}</h2>` +
+    `<p class="inv-greeting">${escapeHtml(example.copy.greeting)}</p>` +
+    `<p class="inv-body">${escapeHtml(example.copy.body)}</p>` +
+    `<p class="inv-details">${escapeHtml(example.copy.details_line)}</p>` +
+    `<p class="inv-rsvp">${escapeHtml(example.copy.rsvp_prompt)}</p>` +
+    `<p class="inv-closing">${escapeHtml(example.copy.closing)}</p>` +
+    `</div>`;
+  return (
+    `<article class="gl-example">${card}` +
+    `<div class="gl-example-foot"><div>` +
+    `<div class="gl-example-style">${escapeHtml(example.style)}</div>` +
+    `<div class="gl-example-note">${escapeHtml(example.styleNote)}</div>` +
+    `</div>` +
+    `<a class="gl-use" href="/create?sample=${encodeURIComponent(example.id)}">` +
+    `${escapeHtml(useLabel)}</a>` +
+    `</div></article>`
+  );
+}
+
+/** `/gallery/:occasion` — the page written to rank. */
+export function galleryOccasionBodyHtml(occasion: OccasionId, lang: Language): string {
+  const t = GALLERY[lang];
+  // An example with no design tokens is skipped rather than asserted past:
+  // `gallery.test.ts` holds that none exist, and a missing one should cost a
+  // card rather than the whole build.
+  const examples = galleryFor(occasion, lang)
+    .flatMap((example) => {
+      const design = GALLERY_DESIGNS[example.id];
+      return design ? [exampleHtml(example, design, t.use)] : [];
     })
     .join("");
+  const others = populatedOccasions(lang)
+    .filter((other) => other !== occasion)
+    .map(
+      (other) =>
+        `<a class="gl-chip" href="/gallery/${other}">${escapeHtml(t.occasions[other])}</a>`,
+    )
+    .join("");
+
+  return (
+    `<div class="gl">` +
+    `<nav class="gl-crumbs">` +
+    `<a href="/">${escapeHtml(t.home)}</a>` +
+    `<a href="/gallery">${escapeHtml(t.hubTitle)}</a>` +
+    `<span>${escapeHtml(t.occasions[occasion])}</span>` +
+    `</nav>` +
+    `<h1>${escapeHtml(t.occasionTitle[occasion])}</h1>` +
+    `<p class="gl-intro">${escapeHtml(t.occasionIntro[occasion])}</p>` +
+    `<div class="gl-examples">${examples}</div>` +
+    `<section class="gl-others"><h2>${escapeHtml(t.otherOccasions)}</h2>` +
+    `<div class="gl-chips">${others}</div></section>` +
+    `</div>`
+  );
+}
+
+/** `/gallery` — the hub. A crawl path to the six occasion pages, and a way for
+ *  a visitor to pick theirs. No filled accent anywhere: the tile is the link. */
+export function galleryHubBodyHtml(lang: Language): string {
+  const t = GALLERY[lang];
+  const tiles = populatedOccasions(lang)
+    .map((occasion) => {
+      const count = galleryFor(occasion, lang).length;
+      // The card thumbnail is deliberately left out of the prerendered block:
+      // it is `aria-hidden` decoration whose text is the occasion page's own
+      // content, and repeating a whole invitation here would put the same
+      // wording on two indexed pages. React draws it on mount.
+      return (
+        `<a class="gl-tile" href="/gallery/${occasion}">` +
+        `<span class="gl-tile-body">` +
+        `<span class="gl-tile-name">${escapeHtml(t.occasions[occasion])}</span>` +
+        `<span class="gl-tile-count">${escapeHtml(t.exampleCount.replace("{n}", String(count)))}</span>` +
+        `</span></a>`
+      );
+    })
+    .join("");
+
+  return (
+    `<div class="gl">` +
+    `<h1>${escapeHtml(t.hubTitle)}</h1>` +
+    `<p class="gl-intro">${escapeHtml(t.hubIntro)}</p>` +
+    `<div class="gl-tiles">${tiles}</div>` +
+    `</div>`
+  );
+}
+
+/** Every prerendered block: the landing page, the gallery hub and each
+ *  occasion, in both languages (adr-017 §6). The server keeps one
+ *  (`prerenderKey` + `selectPrerender`) and strips the rest. */
+export function prerenderBlocks(): string {
+  const parts: string[] = [];
+  for (const lang of ["uk", "en"] as const) {
+    const wrap = (key: string, body: string) => {
+      const { open, close } = prerenderMarkers(key);
+      parts.push(`${open}${body}${close}`);
+    };
+    wrap(`landing:${lang}`, landingBodyHtml(lang));
+    wrap(`gallery:${lang}`, galleryHubBodyHtml(lang));
+    for (const occasion of OCCASION_IDS) {
+      wrap(`gallery-${occasion}:${lang}`, galleryOccasionBodyHtml(occasion, lang));
+    }
+  }
+  return parts.join("");
 }

@@ -12,8 +12,17 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **88.9 kB gzipped** (275.1 kB raw), measured with
-  `pnpm --filter inv-app-web build`. It was 80.9 kB at the client-router
+  **101.2 kB gzipped** (317.7 kB raw), measured 2026-09-12 with
+  `pnpm --filter inv-app-web build`. **+9.1 kB of that is the invitation
+  gallery** ([adr-017](decisions/adr-017-invitation-gallery.md)) — 24 sample
+  invitations in two languages, two screens and their styles. That ADR's §5
+  records why the content stays in the bundle and re-derives its revisit
+  trigger as 115 kB.
+  The figure before the gallery was **92.1 kB**, not the 88.9 kB this line
+  carried: it had gone stale somewhere between adr-014 and adr-016, which is
+  how adr-017 came to set a threshold against a number that was 3.2 kB wrong.
+  Re-measure when amending this line rather than adding to the one already
+  written here. It was 80.9 kB at the client-router
   iteration, itself up 13.2 kB from 67.7 kB when react-router-dom was adopted
   ([adr-011](decisions/adr-011-client-router.md)); ~2 kB of the rest is the
   share-loop client (adr-013), **+0.7 kB is reply notifications**

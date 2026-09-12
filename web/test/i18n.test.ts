@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUTH, CRASH, GUEST, LANDING, MANAGE, SEO, UI } from "../src/i18n";
+import { AUTH, CRASH, GALLERY, GUEST, LANDING, MANAGE, SEO, UI } from "../src/i18n";
 
 /**
  * The bilingual UI (FR-6) is enforced by types only as far as *keys*: a
@@ -43,7 +43,7 @@ function shape(value: unknown): unknown {
 
 const CYRILLIC = /[Ѐ-ӿ]/;
 
-const tables = { AUTH, CRASH, GUEST, LANDING, MANAGE, SEO, UI } as const;
+const tables = { AUTH, CRASH, GALLERY, GUEST, LANDING, MANAGE, SEO, UI } as const;
 
 describe("i18n tables", () => {
   // `INVINTO` is the one string deliberately identical in both (adr-016 §9),

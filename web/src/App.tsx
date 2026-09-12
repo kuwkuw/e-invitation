@@ -9,8 +9,10 @@ import { PreviewPanel } from "./components/editor/PreviewPanel";
 import { SharePanel } from "./components/editor/SharePanel";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { loadDraft } from "./draft";
+import { sampleInvitation } from "./gallery";
 import { useAuthReturn } from "./hooks/useAuthReturn";
 import { useAuthSession } from "./hooks/useAuthSession";
+import { useGallerySample } from "./hooks/useGallerySample";
 import { useInvitationEditor } from "./hooks/useInvitationEditor";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { usePublishing } from "./hooks/usePublishing";
@@ -50,7 +52,20 @@ export default function App() {
   const [draft] = useState(() => (authReturn.result ? loadDraft() : null));
   const account = useAuthSession();
 
-  const editor = useInvitationEditor(t.chat, draft?.source ?? source, draft?.invitation ?? null);
+  // A gallery sample the visitor pressed "use this one" on (adr-017 §4), read
+  // and stripped by the router at mount like the referral above.
+  const sample = useGallerySample(uiLang);
+  // A parked sign-in draft wins over `?sample=`: someone returning from Google
+  // is mid-publish, and a sample in the URL is a stale parameter from before
+  // the redirect.
+  const seeded = draft?.invitation ?? (sample ? sampleInvitation(sample) : null);
+
+  const editor = useInvitationEditor(
+    t.chat,
+    draft?.source ?? (sample ? "gallery" : source),
+    seeded,
+    draft ? "" : (sample?.example.sentence ?? ""),
+  );
   const publishing = usePublishing(() => editor.say(t.chat.failMsg), {
     // Refused for a date that has gone by (FR-1.8). The button is already
     // disabled from the same rule, so this fires only for a press the gate

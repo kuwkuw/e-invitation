@@ -6,8 +6,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Invitation } from "../src/schemas.js";
 import {
   DEFAULT_ORIGIN,
+  GALLERY_OCCASIONS,
   headTags,
-  prerenderLanguage,
+  isGalleryOccasion,
+  prerenderKey,
   replaceHtmlLang,
   replaceSeoBlock,
   robotsTxt,
@@ -139,35 +141,45 @@ describe("head block replacement", () => {
 // others are worse than nothing: a guest opening a share link would watch the
 // marketing hero sit there until React replaced it with their invitation.
 describe("prerendered landing copy", () => {
-  const shell = `<div id="root"><!--pre:uk-->ВІТАЄМО<!--/pre:uk--><!--pre:en-->WELCOME<!--/pre:en--></div>`;
+  const shell = `<div id="root"><!--pre:landing:uk-->ВІТАЄМО<!--/pre:landing:uk--><!--pre:landing:en-->WELCOME<!--/pre:landing:en--><!--pre:gallery-wedding:uk-->ВЕСІЛЛЯ<!--/pre:gallery-wedding:uk--></div>`;
 
-  it("keeps the language asked for and drops the other", () => {
-    expect(selectPrerender(shell, "uk")).toBe('<div id="root">ВІТАЄМО</div>');
-    expect(selectPrerender(shell, "en")).toBe('<div id="root">WELCOME</div>');
+  it("keeps the block asked for and drops every other", () => {
+    expect(selectPrerender(shell, "landing:uk")).toBe('<div id="root">ВІТАЄМО</div>');
+    expect(selectPrerender(shell, "landing:en")).toBe('<div id="root">WELCOME</div>');
+    expect(selectPrerender(shell, "gallery-wedding:uk")).toBe('<div id="root">ВЕСІЛЛЯ</div>');
   });
 
-  it("strips every block when no language is asked for", () => {
+  it("strips every block when none is asked for", () => {
     expect(selectPrerender(shell, null)).toBe('<div id="root"></div>');
   });
 
   // A shell built without the Vite plugin has no markers at all.
   it("leaves a shell without markers alone", () => {
     const bare = '<div id="root"></div>';
-    expect(selectPrerender(bare, "uk")).toBe(bare);
+    expect(selectPrerender(bare, "landing:uk")).toBe(bare);
   });
 
   // Slicing rather than String.replace, so no `$` sequence in a headline can
   // expand into the surrounding markup.
   it("does not expand $-sequences in the kept copy", () => {
-    const dollars = `<div id="root"><!--pre:uk-->$& $\` $' $1 $$<!--/pre:uk--></div>`;
-    expect(selectPrerender(dollars, "uk")).toBe(`<div id="root">$& $\` $' $1 $$</div>`);
+    const dollars = `<div id="root"><!--pre:landing:uk-->$& $\` $' $1 $$<!--/pre:landing:uk--></div>`;
+    expect(selectPrerender(dollars, "landing:uk")).toBe(`<div id="root">$& $\` $' $1 $$</div>`);
   });
 
-  it("prerenders the landing page and nothing else", () => {
-    expect(prerenderLanguage("/", "uk")).toBe("uk");
-    expect(prerenderLanguage("/", "en")).toBe("en");
+  it("keys the landing page by language", () => {
+    expect(prerenderKey("/", "uk")).toBe("landing:uk");
+    expect(prerenderKey("/", "en")).toBe("landing:en");
+  });
+
+  it("keys the gallery hub and each occasion", () => {
+    expect(prerenderKey("/gallery", "uk")).toBe("gallery:uk");
+    expect(prerenderKey("/gallery/wedding", "en")).toBe("gallery-wedding:en");
+  });
+
+  it("has no key for an unknown occasion or any private page", () => {
+    expect(prerenderKey("/gallery/nope", "uk")).toBeNull();
     for (const path of ["/create", "/manage/abc123xy", "/i/abc123xy", "/nonsense"]) {
-      expect(prerenderLanguage(path, "uk")).toBeNull();
+      expect(prerenderKey(path, "uk")).toBeNull();
     }
   });
 });
@@ -228,17 +240,19 @@ describe("robots.txt", () => {
 describe("sitemap.xml", () => {
   const xml = sitemapXml(BASE);
 
-  it("lists both languages of the one page worth listing", () => {
+  // Eight pages in two languages (adr-017 §1): the landing page, the gallery
+  // hub, and one per occasion.
+  it("lists both languages of every page worth listing", () => {
     expect(xml).toContain(`<loc>${BASE}/</loc>`);
     expect(xml).toContain(`<loc>${BASE}/?lang=en</loc>`);
-    expect(xml.match(/<url>/g)).toHaveLength(2);
+    expect(xml.match(/<url>/g)).toHaveLength(16);
   });
 
   // An hreflang relationship Google accepts is reciprocal: every URL in the
   // set repeats the whole set.
-  it("repeats the full alternate set on both URLs", () => {
-    expect(xml.match(/hreflang="en"/g)).toHaveLength(2);
-    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(2);
+  it("repeats the full alternate set on every URL", () => {
+    expect(xml.match(/hreflang="en"/g)).toHaveLength(16);
+    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(16);
   });
 
   it("lists nothing the crawl policy closes", () => {
@@ -424,5 +438,98 @@ describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
     expect(bodyWords(page.body)).toBe("");
     expect(page.headers["x-robots-tag"]).toBe("noindex, nofollow");
     expect(page.body).not.toContain('rel="canonical"');
+  });
+});
+
+describe("gallery occasions", () => {
+  it("lists the six occasions in the order the web mirror uses", () => {
+    expect([...GALLERY_OCCASIONS]).toEqual([
+      "wedding",
+      "birthday",
+      "kids",
+      "christening",
+      "corporate",
+      "jubilee",
+    ]);
+  });
+
+  it("rejects a slug that is not an occasion", () => {
+    expect(isGalleryOccasion("wedding")).toBe(true);
+    expect(isGalleryOccasion("weddings")).toBe(false);
+    expect(isGalleryOccasion("..")).toBe(false);
+  });
+});
+
+describe("gallery head metadata", () => {
+  it("offers the hub for indexing with a canonical", () => {
+    const meta = shellMeta("/gallery", "", BASE);
+    expect(meta.robots).toBe("index, follow");
+    expect(meta.canonical).toBe(`${BASE}/gallery`);
+    expect(meta.alternates).toEqual([
+      { hreflang: "uk", href: `${BASE}/gallery` },
+      { hreflang: "en", href: `${BASE}/gallery?lang=en` },
+      { hreflang: "x-default", href: `${BASE}/gallery` },
+    ]);
+  });
+
+  it("offers a known occasion for indexing, in the requested language", () => {
+    const meta = shellMeta("/gallery/wedding", "lang=en", BASE);
+    expect(meta.robots).toBe("index, follow");
+    expect(meta.canonical).toBe(`${BASE}/gallery/wedding?lang=en`);
+    expect(meta.lang).toBe("en");
+    expect(meta.title.toLowerCase()).toContain("wedding");
+  });
+
+  it("refuses an unknown occasion", () => {
+    const meta = shellMeta("/gallery/nope", "", BASE);
+    expect(meta.robots).toBe("noindex, follow");
+    expect(meta.canonical).toBeNull();
+  });
+
+  it("never offers a canonical on a noindex page", () => {
+    for (const path of ["/create", "/manage/abc", "/gallery/nope", "/whatever"]) {
+      const meta = shellMeta(path, "", BASE);
+      if (meta.robots.startsWith("noindex")) expect(meta.canonical).toBeNull();
+    }
+  });
+});
+
+describe("sitemap with the gallery", () => {
+  const xml = sitemapXml(BASE);
+
+  // Eight pages, two languages. Fourteen of the sixteen are new: the landing
+  // page's own pair already existed (adr-017 §1).
+  it("lists sixteen urls", () => {
+    expect(xml.match(/<loc>/g)).toHaveLength(16);
+  });
+
+  it("lists every occasion in both languages", () => {
+    for (const occasion of GALLERY_OCCASIONS) {
+      expect(xml).toContain(`<loc>${BASE}/gallery/${occasion}</loc>`);
+      expect(xml).toContain(`<loc>${BASE}/gallery/${occasion}?lang=en</loc>`);
+    }
+  });
+
+  it("gives every url a complete hreflang set", () => {
+    const urls = xml.split("<url>").slice(1);
+    expect(urls).toHaveLength(16);
+    for (const url of urls) {
+      expect(url.match(/hreflang=/g)).toHaveLength(3);
+    }
+  });
+});
+
+describe("robots.txt is unchanged by the gallery", () => {
+  const txt = robotsTxt(BASE);
+
+  it("still allows the og image before disallowing /api/", () => {
+    expect(txt.indexOf("Allow: /api/invitations/*/og.png")).toBeLessThan(
+      txt.indexOf("Disallow: /api/"),
+    );
+  });
+
+  it("still does not disallow /i/ or /gallery", () => {
+    expect(txt).not.toContain("Disallow: /i/");
+    expect(txt).not.toContain("Disallow: /gallery");
   });
 });

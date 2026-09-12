@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
@@ -170,6 +170,16 @@ export function LandingPage() {
               and deriving it still beats a second place to edit the name. */}
           <span className="lp-brand-mono">{[...t.brand][0]}</span>
         </span>
+        {/* The way into the gallery (adr-017 §8), and the crawl edge a
+            `<button>` could not be. Deliberately in the nav and not the hero:
+            the hero already carries the primary action, and a second one
+            beside it takes weight from the one that matters. A `<Link>` here
+            rather than an `<a>` — the prerendered block has the real href a
+            crawler follows, and by the time React is mounted a transition is
+            the better experience. */}
+        <Link className="lp-nav-gallery" to="/gallery">
+          {t.galleryLink}
+        </Link>
         <div className="lp-nav-right">
           {/* The only sign-in outside the publish gate. Before it, a returning
               host on a new phone could reach their events only by generating an

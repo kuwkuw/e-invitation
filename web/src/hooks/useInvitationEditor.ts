@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { generateBackground, generateInvitation, regenerateField } from "../api";
 import { isPastDate, isPastEventStart, parseEventStart } from "../calendar";
 import { failureMessage } from "../failureMessage";
@@ -23,27 +23,86 @@ export interface ChatMsg {
 export function useInvitationEditor(
   chat: ChatStrings,
   source: GenerateSource = "direct",
-  /** An invitation parked across the sign-in redirect (adr-014 §2). The editor
-   *  comes back mid-session rather than empty, which is the whole reason the
-   *  gate can be one sheet instead of two screens. The chat transcript is not
-   *  restored — it is a log of how we got here, and the host is looking at the
-   *  invitation, not at what they typed. */
+  /** An invitation the editor starts with, that no generate in this session
+   *  produced. Two callers, one state:
+   *
+   *  - a draft parked across the sign-in redirect (adr-014 §2), which is why
+   *    the gate can be one sheet instead of two screens;
+   *  - a gallery sample the visitor pressed "use this one" on (adr-017 §4).
+   *
+   *  The chat transcript is not restored either way — it is a log of how we
+   *  got here, and the host is looking at the invitation, not at what they
+   *  typed. */
   restored: Invitation | null = null,
+  /** The sentence a gallery sample was generated from (adr-017 §4).
+   *
+   *  Without it `description` starts empty, and the host's first chat turn
+   *  would generate from "12 жовтня, ресторан Софія" alone — no wedding, no
+   *  hosts, no tone — replacing the invitation they chose with an unrelated
+   *  one. Empty for every other entry point, including the sign-in draft,
+   *  whose transcript is deliberately not restored. */
+  seededDescription = "",
 ) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [phase, setPhase] = useState<Phase>(restored ? "active" : "empty");
   // Full event description accumulated across chat turns; each new detail
   // re-runs the whole pipeline on the combined text.
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(seededDescription);
   const [invitation, setInvitation] = useState<Invitation | null>(restored);
   const [bgBusy, setBgBusy] = useState(false);
   // Asked at most once per editor session — a date the host doesn't have yet
   // is a legitimate save-the-date, so this nudges and then stays quiet.
   const datePrompted = useRef(false);
 
-  function say(text: string) {
+  // Stable identity: `say` is returned to `App.tsx` and is a dependency of
+  // `noteDateState` below, which the seed effect depends on in turn.
+  const say = useCallback((text: string) => {
     setMessages((m) => [...m, { role: "assistant", text }]);
-  }
+  }, []);
+
+  /** What the chat says about an invitation's date, wherever it came from.
+   *
+   *  The copy stage writes around a missing date rather than leaving a
+   *  placeholder, so the card looks complete and the host is never told. A date
+   *  too vague to parse costs the guest what no date costs them — GuestActions
+   *  hides add-to-calendar — so both get the nudge, once per session (FR-1.7).
+   *
+   *  A date already gone by is the same silence with the opposite cause: it
+   *  renders, it exports to a calendar, and nothing about the finished card
+   *  says the year is last year's. That one blocks publishing (FR-1.8), so it
+   *  is said on **every** turn it is still true rather than once — the reason a
+   *  button is disabled cannot be scrolled past.
+   *
+   *  Lifted out of `send` for adr-017 §4: a gallery sample never goes through a
+   *  generate, and a sample always has a null date, so leaving this inside the
+   *  generate handler meant nobody was ever asked when the event was. */
+  const noteDateState = useCallback(
+    (inv: Invitation) => {
+      const start = parseEventStart(inv.brief.date, inv.brief.time);
+      if (!start) {
+        if (!datePrompted.current) {
+          datePrompted.current = true;
+          say(chat.dateNudge);
+        }
+      } else if (isPastEventStart(start)) {
+        say(chat.pastDateBlock);
+      }
+    },
+    [chat, say],
+  );
+
+  // Ref-guarded rather than state-guarded: StrictMode runs effects twice on the
+  // same instance, and a state guard would let the second pass through before
+  // the first had committed — the same reason adr-014 §2's sign-in resume is
+  // ref-guarded. `restored` is the mount-time invitation and never changes
+  // identity for the life of this hook, so the empty dependency list is the
+  // honest description of when this runs.
+  const seedAnnounced = useRef(false);
+  useEffect(() => {
+    if (!restored || seedAnnounced.current) return;
+    seedAnnounced.current = true;
+    noteDateState(restored);
+  }, [restored, noteDateState]);
 
   async function send(text: string) {
     if (!text || phase === "generating") return;
@@ -56,24 +115,7 @@ export function useInvitationEditor(
       setInvitation(inv);
       // Edits invalidate the published snapshot's freshness, not the link.
       say(chat.doneMsg);
-      // The copy stage writes around a missing date rather than leaving a
-      // placeholder, so the card looks complete and the host is never told.
-      // A date too vague to parse costs the guest the same thing as no date
-      // at all — GuestActions hides add-to-calendar — so both get the nudge.
-      // A date already gone by is the same silence with the opposite cause:
-      // it renders, it exports to a calendar, and nothing about the finished
-      // card says the year is last year's. That one blocks publishing
-      // (FR-1.8), so it is said on every turn it is still true rather than
-      // once — the reason a button is disabled cannot be scrolled past.
-      const start = parseEventStart(inv.brief.date, inv.brief.time);
-      if (!start) {
-        if (!datePrompted.current) {
-          datePrompted.current = true;
-          say(chat.dateNudge);
-        }
-      } else if (isPastEventStart(start)) {
-        say(chat.pastDateBlock);
-      }
+      noteDateState(inv);
       setPhase("active");
     } catch (error) {
       say(failureMessage(error, chat));

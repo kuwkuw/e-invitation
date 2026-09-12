@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
+import { findSample, sampleInvitation } from "../src/gallery";
 import { useInvitationEditor } from "../src/hooks/useInvitationEditor";
 import { UI } from "../src/i18n";
 import type { Invitation } from "../src/types";
@@ -422,5 +423,52 @@ describe("useInvitationEditor", () => {
     expect(result.current.bgBusy).toBe(false);
     expect(result.current.messages.at(-1)).toEqual({ role: "assistant", text: chat.quotaMsg });
     expect(result.current.invitation?.background).toBeUndefined();
+  });
+});
+
+// adr-017 §4. A gallery sample never goes through a generate, and it always
+// has a null date — so the nudge living inside `send` meant nobody was ever
+// asked when the event was.
+describe("seeding from a gallery sample", () => {
+  const sample = findSample("wedding-romantic", "uk");
+  const seeded = sample ? sampleInvitation(sample) : null;
+
+  it("starts active with the sample already loaded", () => {
+    const { result } = renderHook(() =>
+      useInvitationEditor(chat, "gallery", seeded, sample?.example.sentence ?? ""),
+    );
+    expect(result.current.phase).toBe("active");
+    expect(result.current.invitation?.copy.title).toBe("Ми одружуємось!");
+  });
+
+  it("asks for the date once, because a sample never has one", () => {
+    const { result } = renderHook(() =>
+      useInvitationEditor(chat, "gallery", seeded, sample?.example.sentence ?? ""),
+    );
+    expect(result.current.messages.filter((m) => m.text === chat.dateNudge)).toHaveLength(1);
+  });
+
+  // StrictMode runs effects twice on the same instance; the ref is what
+  // actually guards re-entry (adr-014 §2 learned this the hard way).
+  it("asks only once across re-renders", () => {
+    const { result, rerender } = renderHook(() =>
+      useInvitationEditor(chat, "gallery", seeded, sample?.example.sentence ?? ""),
+    );
+    rerender();
+    rerender();
+    expect(result.current.messages.filter((m) => m.text === chat.dateNudge)).toHaveLength(1);
+  });
+
+  it("does not block publishing on a dateless sample", () => {
+    const { result } = renderHook(() =>
+      useInvitationEditor(chat, "gallery", seeded, sample?.example.sentence ?? ""),
+    );
+    expect(result.current.dateBlocked).toBe(false);
+  });
+
+  it("says nothing about the date when nothing was seeded", () => {
+    const { result } = renderHook(() => useInvitationEditor(chat, "direct", null));
+    expect(result.current.messages).toHaveLength(0);
+    expect(result.current.phase).toBe("empty");
   });
 });

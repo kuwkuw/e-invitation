@@ -137,6 +137,7 @@ export function usePublishing(
         const result = await publishInvitation(
           invitation,
           existing ? { id: existing.id, manage_token: existing.manage_token } : undefined,
+          source,
         );
         finish(result, invitation);
       } catch (error) {

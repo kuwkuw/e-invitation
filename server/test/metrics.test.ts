@@ -45,6 +45,8 @@ describe("durable metrics", () => {
       rsvps: 1,
       invitation_views: 1,
       referred_generations: 0,
+      gallery_generations: 0,
+      gallery_publishes: 0,
       views_per_publish: 1,
       new_hosts_per_publish: 0,
       baseline: null,
@@ -256,5 +258,80 @@ describe("durable metrics", () => {
     expect(snapshot.generations).toBe(7);
     expect(snapshot.field_regenerations).toEqual({});
     expect(snapshot.rsvps).toBe(0);
+  });
+});
+
+// adr-017 §7. The gallery is the first channel whose hosts can publish without
+// ever generating, so attributing only generations would score exactly the
+// host this channel exists to produce as invisible.
+describe("gallery attribution", () => {
+  it("counts a gallery generation in both totals", async () => {
+    const m = await freshMetrics();
+    m.recordGeneration("gallery");
+    m.recordGeneration("direct");
+    const snap = m.metricsSnapshot();
+    expect(snap.gallery_generations).toBe(1);
+    expect(snap.generations).toBe(2);
+    // A third origin, not a third referrer: it must not touch the share-loop
+    // number 07-monetization §5.1 gates on.
+    expect(snap.referred_generations).toBe(0);
+  });
+
+  it("counts a gallery publish that had no generation behind it", async () => {
+    const m = await freshMetrics();
+    m.recordPublish("gallery");
+    const snap = m.metricsSnapshot();
+    expect(snap.gallery_publishes).toBe(1);
+    expect(snap.publishes).toBe(1);
+    expect(snap.gallery_generations).toBe(0);
+  });
+
+  it("leaves an unattributed publish out of the gallery count", async () => {
+    const m = await freshMetrics();
+    m.recordPublish();
+    m.recordPublish("direct");
+    m.recordPublish("guest");
+    expect(m.metricsSnapshot().gallery_publishes).toBe(0);
+    expect(m.metricsSnapshot().publishes).toBe(3);
+  });
+
+  it("survives a restart like every other counter", async () => {
+    const m1 = await freshMetrics();
+    m1.recordGeneration("gallery");
+    m1.recordPublish("gallery");
+    const m2 = await freshMetrics();
+    expect(m2.metricsSnapshot().gallery_generations).toBe(1);
+    expect(m2.metricsSnapshot().gallery_publishes).toBe(1);
+  });
+
+  // A key absent from an older metrics.json starts at 0 rather than resetting
+  // the file — the rule CLAUDE.md states for SCALAR_COUNTERS.
+  it("starts at zero when the file predates the counter", async () => {
+    writeFileSync(
+      join(dataDir, "metrics.json"),
+      JSON.stringify({ generations: 5, publishes: 2, rsvps: 1 }),
+    );
+    const m = await freshMetrics();
+    const snap = m.metricsSnapshot();
+    expect(snap.gallery_generations).toBe(0);
+    expect(snap.gallery_publishes).toBe(0);
+    expect(snap.generations).toBe(5);
+    expect(snap.publishes).toBe(2);
+  });
+
+  // Documents a distortion rather than hiding it: publish_rate is
+  // publishes/generations, and a gallery host can publish without generating.
+  // Subtracting gallery_publishes is what restores the old meaning.
+  it("lets a reader recover publish_rate's original meaning", async () => {
+    const m = await freshMetrics();
+    m.recordGeneration("direct");
+    m.recordPublish("direct");
+    m.recordPublish("gallery");
+    m.recordPublish("gallery");
+    const snap = m.metricsSnapshot();
+    // Inflated: three publishes over one generation.
+    expect(snap.publish_rate).toBe(3);
+    const nonGallery = snap.publishes - snap.gallery_publishes;
+    expect(nonGallery / snap.generations).toBe(1);
   });
 });

@@ -175,7 +175,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
         return reply.code(403).send({ error: "Invalid manage token." });
       }
       const updated = appendVersion(record, body.invitation);
-      recordPublish();
+      recordPublish(body.source);
       rememberForHost(request, updated.id);
       return {
         id: updated.id,
@@ -197,7 +197,7 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
       return reply.code(401).send({ error: "Sign in to publish." });
     }
     const record = createRecord(body.invitation);
-    recordPublish();
+    recordPublish(body.source);
     if (user) linkInvitation(user.id, record.id);
     return { id: record.id, version: 1, manage_token: record.manage_token };
   });
