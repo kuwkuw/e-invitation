@@ -23,7 +23,7 @@ describe("llmFailureKind", () => {
   it("reports quota when any model hit its provider's ceiling", () => {
     const kind = llmFailureKind(
       apiError(502, [
-        { model: "llama-3.3-70b-versatile", class: "connectivity" },
+        { model: "openai/gpt-oss-120b", class: "connectivity" },
         { model: "gemini-2.5-flash", class: "quota" },
       ]),
     );
@@ -54,7 +54,7 @@ describe("llmFailureKind", () => {
     const kind = llmFailureKind(
       apiError(502, [
         { model: "gemini-2.5-flash", class: "connectivity" },
-        { model: "llama-3.3-70b-versatile", class: "connectivity" },
+        { model: "openai/gpt-oss-120b", class: "connectivity" },
       ]),
     );
     expect(kind).toBe("busy");
