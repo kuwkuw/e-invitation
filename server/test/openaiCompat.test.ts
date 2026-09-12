@@ -88,7 +88,7 @@ describe("openaiCompat adapter (adr-007)", () => {
     const spy = stubFetch();
     await completeCompat({
       provider: "groq",
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
       system: "sys",
       user: "usr",
       maxTokens: 1024,
@@ -96,8 +96,26 @@ describe("openaiCompat adapter (adr-007)", () => {
     });
     const { url, body } = requestOf(spy);
     expect(url).toBe("https://api.groq.com/openai/v1/chat/completions");
-    expect(body.model).toBe("llama-3.3-70b-versatile");
+    expect(body.model).toBe("openai/gpt-oss-120b");
     expect(body.response_format).toEqual({ type: "json_object" });
+  });
+
+  it("groq gpt-oss: reasoning held low so design_resolution's 256 cap reaches JSON", async () => {
+    // Measured against the live model on the real 256-token cap: at Groq's
+    // default effort one design_resolution call spent 126 of 147 completion
+    // tokens reasoning, leaving the JSON a single prompt away from truncation.
+    // "low" takes that to 33 tokens and the call to ~224 ms.
+    vi.stubEnv("GROQ_API_KEY", "gsk-key");
+    const spy = stubFetch();
+    await completeCompat({
+      provider: "groq",
+      model: "openai/gpt-oss-120b",
+      system: "sys",
+      user: "usr",
+      maxTokens: 256,
+      schema,
+    });
+    expect(requestOf(spy).body.reasoning_effort).toBe("low");
   });
 
   it("openai: reasoning kept off so small maxTokens caps go to JSON", async () => {
@@ -155,7 +173,7 @@ describe("openaiCompat adapter (adr-007)", () => {
     await expect(
       completeCompat({
         provider: "groq",
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         system: "sys",
         user: "usr",
         maxTokens: 1024,

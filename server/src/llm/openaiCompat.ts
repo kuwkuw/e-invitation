@@ -61,6 +61,11 @@ const GEMINI_NO_THINKING = {
 const MODEL_PARAMS: Record<string, Record<string, unknown>> = {
   "gpt-5.1": { reasoning_effort: "none" },
   "gpt-5-mini": { reasoning_effort: "minimal" },
+  // Same rule, Groq's gpt-oss: it has no "none" tier, and "low" is what keeps
+  // design_resolution's 256-token cap for the JSON. Measured live on that cap
+  // — default effort spent 126 of 147 completion tokens reasoning, "low"
+  // spends 33 and returns in ~224 ms.
+  "openai/gpt-oss-120b": { reasoning_effort: "low" },
   "gemini-2.5-flash": GEMINI_NO_THINKING,
   "gemini-2.5-pro": GEMINI_NO_THINKING,
 };

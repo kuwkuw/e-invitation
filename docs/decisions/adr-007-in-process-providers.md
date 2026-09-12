@@ -36,8 +36,10 @@ table, not proxy-only extras.
    the adapter: reasoning off for GPT models, thinking budget 0 for Gemini
    (small per-task `maxTokens` caps must go to JSON, not reasoning), the
    `gemma3-4b → gemma3:4b` Ollama alias.
-3. **Free-tier-first routing.** Groq's free `llama-3.3-70b-versatile`
-   (~1k req/day) is primary for the volume tasks (brief extraction, design);
+3. **Free-tier-first routing.** Groq's free model (~1k req/day, amended
+   2026-09-12: `openai/gpt-oss-120b`, and `llama-3.3-70b-versatile` before
+   that — see the note below)
+   is primary for the volume tasks (brief extraction, design);
    Gemini's free `gemini-2.5-flash` (~20 req/day, best free Ukrainian) is
    reserved for the copy-quality tasks (copy, field regeneration). Claude
    models are paid fallbacks: with no `ANTHROPIC_API_KEY` they fail
@@ -67,3 +69,35 @@ table, not proxy-only extras.
   (`extra_body.google.thinking_config`) is asserted by unit test against our
   request shape; it must be re-verified against the live endpoint if Gemini
   changes its compat surface.
+
+## Note — the Groq model moved tier (2026-09-12)
+
+`llama-3.3-70b-versatile`, §3's primary for brief extraction and design
+resolution, **404s for a free-tier key**. Groq moved the Llama line to a paid
+tier: the id is still documented as a production model, but it is absent from
+a free key's `/v1/models` catalog, on the operator key as well as a fresh one.
+
+Nothing failed loudly, and that is the part worth recording. Both walks simply
+fell through to `gemini-2.5-flash`, which put **all three calls of a generation
+on the ~20 req/day tier §3 reserves for the two copy tasks** — roughly six
+generations a day, then `AllModelsFailedError` and a 502, since production
+carries no Anthropic or OpenAI key and no Ollama. That is the ceiling the
+2026-08-02 iteration believed it had removed by configuring Groq at all.
+It went unseen because `/healthz` reports `groq: true` from **key presence**,
+never from model reachability, so the one surface built to show the effective
+routing showed a route that did not exist.
+
+Replaced with `openai/gpt-oss-120b`, free on the same tier, measured at
+~400–800 ms for brief extraction and ~350–530 ms for design resolution, with
+dates preserved verbatim rather than normalised into an invented year
+(`qwen3.8-27b` returned `2024-10-12` for "12 жовтня" and was rejected on that
+— FR-1.8 refuses to publish a past date). It needs a `MODEL_PARAMS` entry:
+Groq's gpt-oss has no `"none"` reasoning tier, and at the default effort one
+`design_resolution` call spent 126 of 147 completion tokens reasoning against
+that task's 256-token cap. `reasoning_effort: "low"` takes it to 33.
+
+The decision in §3 is unchanged — free-tier-first, Groq for volume, Gemini
+for copy. What this note adds is the failure mode: **a routed model can stop
+being reachable without any code changing**, and the walker's own resilience
+is what hides it. Check `/v1/models` with the operator key rather than the
+provider's docs when picking a replacement.

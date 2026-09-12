@@ -32,7 +32,7 @@ export const MODEL_PROVIDERS: Record<string, Provider> = {
   "gemini-2.5-pro": "gemini",
   "gpt-5.1": "openai",
   "gpt-5-mini": "openai",
-  "llama-3.3-70b-versatile": "groq",
+  "openai/gpt-oss-120b": "groq",
   "gemma3-4b": "ollama",
 };
 
@@ -46,6 +46,15 @@ export const BYOK_FALLBACK_MODELS: Record<ByokProvider, string[]> = {
 };
 
 // Free-tier-first for the MVP (adr-007): primaries cost the operator nothing.
+//
+// The Groq model here is `openai/gpt-oss-120b` and was `llama-3.3-70b-versatile`
+// until 2026-09-12. Groq moved the Llama line to a paid tier: the id still
+// exists in their docs but 404s for a free-tier key and is absent from that
+// key's /v1/models catalog. Nothing failed loudly — both walks just fell
+// through to Gemini, putting all three calls of a generation on a ~20/day
+// tier. When picking a replacement, check /v1/models with the *operator* key
+// rather than the docs.
+//
 // Groq's free tier (~1k req/day) absorbs volume; the Gemini free tier
 // (~20 req/day observed — one generation is 3 calls) is saved for the two
 // copy-quality tasks, where gemini-2.5-flash writes the best free Ukrainian.
@@ -55,26 +64,26 @@ export const BYOK_FALLBACK_MODELS: Record<ByokProvider, string[]> = {
 export const TASK_ROUTES: Record<Task, Route> = {
   // Cheap, fast structured extraction (per spec: brief uses a cheap model).
   brief_extraction: {
-    primary: "llama-3.3-70b-versatile",
+    primary: "openai/gpt-oss-120b",
     fallbacks: ["gemini-2.5-flash", "claude-haiku-4-5", "gemma3-4b"],
     maxTokens: 1024,
   },
   // Quality-sensitive: the invitation text is the product.
   copy_generation: {
     primary: "gemini-2.5-flash",
-    fallbacks: ["llama-3.3-70b-versatile", "claude-sonnet-5", "gemma3-4b"],
+    fallbacks: ["openai/gpt-oss-120b", "claude-sonnet-5", "gemma3-4b"],
     maxTokens: 2048,
   },
   // Enum picking — small output. If the ~3s target is missed, this is the
   // first candidate to downgrade.
   design_resolution: {
-    primary: "llama-3.3-70b-versatile",
+    primary: "openai/gpt-oss-120b",
     fallbacks: ["gemini-2.5-flash", "claude-haiku-4-5", "gemma3-4b"],
     maxTokens: 256,
   },
   field_regeneration: {
     primary: "gemini-2.5-flash",
-    fallbacks: ["llama-3.3-70b-versatile", "claude-sonnet-5", "gemma3-4b"],
+    fallbacks: ["openai/gpt-oss-120b", "claude-sonnet-5", "gemma3-4b"],
     maxTokens: 512,
   },
 };

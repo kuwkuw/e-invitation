@@ -169,7 +169,7 @@ describe("failure surfaces", () => {
       "design_resolution",
       "field_regeneration",
     ]);
-    expect(body.llm.tasks.brief_extraction[0]).toBe("llama-3.3-70b-versatile");
+    expect(body.llm.tasks.brief_extraction[0]).toBe("openai/gpt-oss-120b");
     expect(body.llm.tasks.copy_generation[0]).toBe("gemini-2.5-flash");
     await app.close();
   });
