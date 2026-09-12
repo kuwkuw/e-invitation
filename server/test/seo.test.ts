@@ -20,6 +20,7 @@ import {
   shellMeta,
   sitemapXml,
 } from "../src/seo.js";
+import { assertShellFresh, spaBuilt } from "./spaBuilt.js";
 
 const BASE = "https://invinto.app";
 /** The landing hero, as `web/src/i18n.ts` has it. Named once here because the
@@ -313,16 +314,12 @@ describe("seo routes", () => {
   });
 });
 
-// The SPA fallback only dresses the shell when the client has been built next
-// to the server, which is how the production image is laid out but not how a
-// bare checkout is (see spaShell.test.ts).
-const spaBuilt = existsSync(join(process.cwd(), "..", "web", "dist", "index.html"));
-
 describe.skipIf(!spaBuilt)("shell metadata over HTTP", () => {
   let app: FastifyInstance;
   let dataDir: string;
 
   beforeAll(async () => {
+    assertShellFresh();
     dataDir = mkdtempSync(join(tmpdir(), "inv-app-seo-shell-test-"));
     process.env.DATA_DIR = dataDir;
     const { buildApp } = await import("../src/app.js");

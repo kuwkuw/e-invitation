@@ -1,13 +1,7 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
-
-// The SPA fallback only exists when the client has been built next to the
-// server, which is how the production image is laid out but not how a bare
-// checkout is. Skipping beats a test that fails for the wrong reason.
-const spaBuilt = existsSync(join(process.cwd(), "..", "web", "dist", "index.html"));
+import { assertShellFresh, spaBuilt } from "./spaBuilt.js";
 
 let app: FastifyInstance | null = null;
 
@@ -19,6 +13,8 @@ afterEach(async () => {
 });
 
 describe.skipIf(!spaBuilt)("SPA shell fallback", () => {
+  beforeAll(assertShellFresh);
+
   it.each(["/", "/create", "/manage/abc123xy"])("serves the shell for GET %s", async (url) => {
     app = await buildApp({ logger: false });
     const res = await app.inject({ method: "GET", url });
