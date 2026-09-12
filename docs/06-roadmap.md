@@ -10,7 +10,10 @@ its code landed and RSVP notifications (adr-015) shipped as FR-12, and
 2026-08-02 when production was read against
 [07-monetization.md](07-monetization.md) §5.1 for the first time and the next
 iteration was taken, and 2026-08-08 when six days of the standing "wait for
-numbers" candidate were read back and the share sheet was taken. This
+numbers" candidate were read back and the share sheet was taken, and
+2026-09-12 when the gallery shipped as FR-14 and this file paid off the two
+sections it owed — public discoverability and the date rules had both shipped
+with only a backlog strikethrough between them. This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -24,8 +27,9 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Ten iterations have shipped since (the last three were missing from this list
-until 2026-08-08 — the sections below always carried them):
+Thirteen iterations have shipped since (three were missing from this list until
+2026-08-08, and the last three until 2026-09-12 — this list has now twice been
+the thing that fell behind):
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -48,6 +52,12 @@ until 2026-08-08 — the sections below always carried them):
 - **Reply notifications become opt-in** — below. Shipped as FR-12.10–12.11,
   amending adr-015 §7.
 - **The native share sheet at publish** — below. Shipped as FR-3.6, no new ADR.
+- **Public discoverability** — [adr-016](decisions/adr-016-public-discoverability.md),
+  below. Shipped as FR-13.
+- **The missing-date nudge and the past-date gate** — below. Shipped as
+  FR-1.7 and FR-1.8, no new ADR.
+- **The invitation gallery** — [adr-017](decisions/adr-017-invitation-gallery.md),
+  below. Shipped as FR-14, amending FR-13.2.
 
 ## Shipped: the host can come back
 
@@ -597,37 +607,138 @@ a share sheet does not move `new_hosts_per_publish` by itself. This doc's four
 previous warnings about building for hosts who are not here yet all still
 stand.
 
-## No iteration currently taken
+## Shipped: public discoverability
 
-The share sheet shipped 2026-08-08 and the position above is unchanged by it:
-`views_per_publish` is 0.5, `new_hosts_per_publish` is 0, and the product still
-needs published events real guests open. What changed is that the cheapest
-plausible cause of the publish→view gap is no longer in the product.
+Settled in [adr-016](decisions/adr-016-public-discoverability.md) (accepted),
+shipped 2026-08-21 as **FR-13**. This section was owed when the code landed and
+is written late, from the ADR and the commits.
 
-The reading to take next is not another feature: it is whether
-`views_per_publish` moves off 0.5 for publishes made after this. If it does not,
-the friction was never the explanation and the honest conclusion in §5.1 gets
-closer.
+The app shipped **one** `index.html` whose entire head was
+`<title>Invitation Studio</title>` — a name that appeared nowhere else in the
+product, which at that point had four. Three separate problems followed: the
+product was not findable; everything it served was indexable *including* guest
+pages and dashboards; and there was no `robots.txt`, sitemap, icon or share
+card at all.
+
+What landed: one module (`server/src/seo.ts`) deciding what each path's head
+says, the shell's default block **replaced** rather than appended to (`og:title`
+is first-one-wins, so an appended card would unfurl every share link as the
+marketing page), `/` indexed and every private surface `noindex` with an
+`X-Robots-Tag` to match, `robots.txt`/`sitemap.xml` as routes rather than
+files, `?lang=en` as the English landing page's own address, one name —
+**INVINTO** — everywhere, brand icons and a per-language share card, and
+finally (§10) the landing page's copy prerendered into the shell, because
+Google's JS rendering is a queued second pass that gets the least budget on
+exactly this kind of domain.
+
+The rule that must not be "tidied": `robots.txt` does **not** disallow `/i/`,
+and explicitly `Allow`s the OG image before `Disallow: /api/`. Either omission
+stops every published link unfurling, with nothing in the logs.
+
+What it delivered is the **floor** — the landing page can be found and says
+what it is. What it deliberately did not deliver is anything to rank *for*,
+which is the gallery below.
+
+## Shipped: the missing-date nudge and the past-date gate
+
+Shipped 2026-09-05 as **FR-1.7** and **FR-1.8**, no new ADR. Also owed and
+written late.
+
+Two rules about the same silence, deliberately unequal. A date that will not
+parse into a calendar start is a **nudge**: the chat asks once per session and
+publishing is untouched, because a save-the-date without a day is a real
+invitation. A date that parses into a day **already gone by** is a **gate**:
+`usePublishing.publish` refuses it outright — the one funnel the button press,
+a republish and the post-sign-in resume all run through — so it is a rule
+rather than a disabled button, and it is said on every turn it is still true
+because a reason that scrolls off the top of the log explains nothing.
+
+Both sides read one predicate, `isPastDate`, and it compares by **calendar day
+in the host's local time**: an event that started this morning is not past.
+That is also why the check is client-side and not on the server, whose "today"
+is UTC and would refuse a legitimate same-day publish for hosts east of it.
+
+## Shipped: the invitation gallery
+
+Settled in [adr-017](decisions/adr-017-invitation-gallery.md) (accepted),
+shipped 2026-09-12 as **FR-14**, amending FR-13.2.
+
+The 2026-09-11 reading is what took it:
+
+| | 2026-08-02 | 2026-08-08 | 2026-09-11 |
+|---|---|---|---|
+| generations | 20 | 21 | **26** |
+| publishes | 10 | 12 | **15** |
+| guest-page views | 6 | 6 | **8** |
+| referred generations | 0 | 0 | **0** |
+| `views_per_publish` | 0.6 | 0.5 | **0.53** |
+| `new_hosts_per_publish` | 0 | 0 | **0** |
+
+The experiment the previous version of this file set — whether
+`views_per_publish` moves off 0.5 after the share sheet — **did not conclude.**
+Three publishes and two views in thirty-four days is not an answer; it ran out
+of denominator rather than failing. The honest reading is that the loop is not
+broken, **nobody is entering it**, and FR-13 had made the front door findable
+without giving anyone a reason to walk through it.
+
+What shipped: `/gallery` plus six occasion pages in two languages (16 indexed
+addresses, up from 2), 24 ready-to-use invitations rendered through the real
+`InvitationPreview`, "use this one" seeding the editor with **no model call**,
+prerendering extended from one block per language to one per (page × language),
+and gallery-attributed generations *and publishes*.
+
+Three things worth carrying forward:
+
+1. **The publish is attributed, not only the generate.** A gallery host can
+   take a sample, hand-edit two lines and publish having generated nothing —
+   the host this channel exists to produce, and invisible to every counter that
+   existed before. The cost is that `publish_rate` (publishes ÷ generations)
+   now inflates and can exceed 1; subtract `gallery_publishes` to recover it.
+2. **The copy is hand-written, not pipeline-sourced**, which adr-017 §2 asked
+   for and records the reason for: no keyed non-production environment existed,
+   and generating against production would have damaged the very counters this
+   iteration exists to read. The copy-quality reading §2 promised did not
+   happen.
+3. **The bundle budget's trigger fired, against a stale number.** 101.2 kB
+   gzipped, past the ~100 kB adr-017 §5 set — but that threshold was derived
+   from an NFR-1 figure 3.2 kB out of date. The gallery's real cost is +9.1 kB
+   on a 92.1 kB baseline, inside its own estimate. Content stayed in the
+   bundle; the trigger was re-derived as 115 kB against a measured number.
+
+**What this iteration is answerable for**: nothing yet, and deliberately so. A
+new domain with no inbound links takes three to six months to rank. **No
+conclusion before roughly 2026-12-15** — this doc has a documented habit of
+reading too early, and the share sheet above was taken on six days and an n of
+two. The only check worth making sooner is whether Search Console reports the
+pages indexed at all, which is plumbing and answers in about two weeks.
 
 ## Candidate backlog
 
-- **The RSVP prompt is the only field anyone rewrites.** `/api/metrics` reads
-  `field_regenerations: {"rsvp_prompt": 6}` — every field regeneration in the
-  product's lifetime, no exceptions, at a `regenerate_rate` of 0.29.
-  [01-vision.md](01-vision.md) calls that rate the primary copy-quality signal,
-  and this is the first time it has said anything specific. `COPY_SYSTEM` in
-  [copy.ts](../server/src/pipeline/copy.ts) gives `details_line` an explicit
-  rule and gives `rsvp_prompt` nothing beyond its schema description, which is
-  a plausible cause. Smallest item on this list: a prompt change and a test.
-  Caveat: six events could be one host with a habit.
-- **Invitation gallery on the landing page** — a visitor cannot see what they
-  would get without typing a sentence first. The token map is deterministic
-  ([adr-003](decisions/adr-003-no-image-generation.md)), so samples cost no LLM
-  call. Both a conversion surface and the only plausible Ukrainian-language
-  search asset the product could have. Larger, and unclaimed. FR-13 makes it
-  *possible* for that asset to rank — the landing page can now be indexed and
-  says what it is — but adds no content of its own; this item is still where
-  the content would come from.
+- ~~**The RSVP prompt is the only field anyone rewrites.**~~ — **gone cold, and
+  it should be said plainly.** `field_regenerations` has read
+  `{"rsvp_prompt": 6}` since before 2026-08-02 and read exactly that on
+  2026-09-11: **not one field regeneration in thirty-four days.** The 2026-08-08
+  caveat — "six events could be one host with a habit" — is now the most likely
+  reading, and six observations spread over the product's whole life is not a
+  copy-quality signal at any rate. Revisit only if the number moves.
+- **Nothing has ever used the AI background layer.** `backgrounds` is **0
+  lifetime** — a feature with its own ADR ([adr-009](decisions/adr-009-ai-background-layer.md)),
+  an image model, a scrim spec synced from the DS and a per-IP guardrail, and
+  not one invocation in production. That is not a bug report; it is a fact
+  about where effort went, and it belongs on this list next to every proposal
+  to build something else for hosts who are not here. The cheap reading first:
+  the control may simply be hard to find in the editor.
+- **Re-source the gallery copy from the pipeline** once a keyed
+  non-production environment exists. adr-017 §2 wanted the gallery to show what
+  the *product* writes, not what a careful writer writes; it shipped
+  hand-written because the only keyed environment was production, where forty
+  generations would have damaged the counters the iteration exists to read.
+  Cheap, and it restores the copy-quality reading §2 promised.
+- ~~**Invitation gallery on the landing page**~~ — shipped as FR-14; see
+  [adr-017](decisions/adr-017-invitation-gallery.md) and the section above. It
+  landed as its own seven-page section rather than a strip on the landing page:
+  a conversion surface wants to be on `/`, but a *search asset* wants one page
+  per query, and the numbers said acquisition was the problem.
 - **RSVP deletion** — needs stable per-RSVP ids and a mutating token-gated
   endpoint; adr-010 §5's superseding covers the common case. Wait for a host
   to ask.

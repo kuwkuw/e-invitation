@@ -25,4 +25,28 @@
 - The authored preview (`.design-sync/previews/InvitationPreview.tsx`) hard-codes realistic copy; it tracks the pipeline's copy shape (`title/greeting/body/details_line/rsvp_prompt/closing`). A schema rename breaks it loudly (compile), a semantic change only stales it quietly.
 - Google Fonts are fetched at runtime — render checks need network for true typography; offline runs fall back to Georgia/Segoe and screenshots will look wrong without being a regression.
 - Build assumptions: pnpm v10 workspace install from repo root; converter deps staged in `.ds-sync/` (npm, isolated); playwright chromium cached at `%LOCALAPPDATA%\ms-playwright`.
-- **The DS project holds far more than this sync produces — never sweep it.** Alongside our 13 files it carries a `templates/` tree of design-agent mockups authored *in* claude.ai/design (`landing-page`, `share-panel`, `host-manage`, `rsvp-notifications`, `auth-gate`, `card-background`, `creation-chat`, `guest-rsvp*`, `lang-switcher` — the same mockups `CLAUDE.md` cites as the spec source for the scrim and the sign-in gate), plus app-generated `Canvas.dc.html`, `support.js`, `_ds_manifest.json`, `_adherence.oxlintrc.json`. None are converter output. With a healthy anchor this is safe automatically (`deletePaths` only ever names our own paths). **The trap is the no-anchor branch of §5**, which says to review `list_files` for "files this build doesn't produce" and put them in `deletes` — applied literally here that deletes every mockup the design work depends on. If the anchor is ever missing, pass `deletes: []` and re-anchor instead.
+- **The DS project holds far more than this sync produces — never sweep it.** Alongside our 13 files it carries a `templates/` tree of design-agent mockups authored *in* claude.ai/design (`landing-page`, `share-panel`, `host-manage`, `rsvp-notifications`, `auth-gate`, `card-background`, `creation-chat`, `guest-rsvp*`, `lang-switcher`, `brand-name`, `feedback-sheet`, `gallery` — the same mockups `CLAUDE.md` cites as the spec source for the scrim and the sign-in gate), plus app-generated `Canvas.dc.html`, `support.js`, `_ds_manifest.json`, `_adherence.oxlintrc.json`. **That list has been wrong before** — `brand-name`, `feedback-sheet` and `gallery` were all missing from it until 2026-09-12 — so treat it as a reminder that the tree is larger than this sync, not as an inventory. None are converter output. With a healthy anchor this is safe automatically (`deletePaths` only ever names our own paths). **The trap is the no-anchor branch of §5**, which says to review `list_files` for "files this build doesn't produce" and put them in `deletes` — applied literally here that deletes every mockup the design work depends on. If the anchor is ever missing, pass `deletes: []` and re-anchor instead.
+
+## Registering a new template set (learned 2026-09-12)
+
+Writing `.dc.html` files into `templates/<name>/` is **not enough to make a set
+appear** in the project, and two attempts were spent discovering that:
+
+1. A set needs an **entry canvas** — `templates/<name>/<Name>.dc.html` carrying
+   a first-line-in-`<x-dc>` marker,
+   `<!-- @template name="…" description="…" -->`, a
+   `<meta name="design_doc_mode" content="canvas">` helmet and one
+   `<dc-import name="Artboard" hint-size="W,H">` per artboard. Sub-artboards
+   carry no marker of their own. (`@dsCard group="…"` is the *other* thing —
+   it registers a single foundation card, which is what `brand-name` is.)
+2. **The Claude Design app does not recompile `_ds_manifest.json` for this
+   project — only the CLI resync writes it.** Its `templates` array is what the
+   project's list renders from, so until an entry is added there by hand, a new
+   set is invisible however correct its markers are. The proof is that
+   `brand-name`'s `@dsCard` was never compiled in either. A hand-added entry
+   is `{name, description, folder, entryPath}`; `thumbnail` is optional and the
+   app captures one later.
+
+`ds-base.js` is a nine-line loader (`base = '../..'`) and can be copied
+verbatim into a new folder. `support.js` is app-generated and a folder works
+without it — `brand-name` has none.

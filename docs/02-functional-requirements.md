@@ -443,7 +443,10 @@ result.
   one document, so these are **replaced** in it per request rather than added
   to — `og:title` is first-one-wins in every unfurler that matters, and an
   appended card would show every share link as the marketing page.
-- FR-13.2 The landing page is the one page offered for indexing, with a
+- FR-13.2 The landing page **and the gallery** (FR-14) are the pages offered
+  for indexing — amended by
+  [adr-017](decisions/adr-017-invitation-gallery.md) §1, which was written
+  when the landing page was the only one. Each has a
   self-referencing canonical, `WebSite`/`WebApplication` structured data and a
   1200×630 share card — `/og-cover.png` for `/`, `/og-cover-en.png` for
   `/?lang=en`, since the card is copy and a share link is how the page mostly
@@ -538,6 +541,43 @@ HTML page.
 `/unsubscribe` sits **outside `/api`** on purpose: the session cookie is scoped
 `Path=/api`, and this URL arrives from an inbox where a mail provider may fetch
 it on the reader's behalf.
+
+## FR-14 Invitation gallery
+
+Public, indexed pages of ready-to-use invitation wording — the content the
+organic-search channel FR-13 opened has to rank *for*. Settled in
+[adr-017](decisions/adr-017-invitation-gallery.md) (accepted), amending
+FR-13.2.
+
+- FR-14.1 The gallery is seven pages: a hub at `/gallery` and one page per
+  occasion at `/gallery/<occasion>` — `wedding`, `birthday`, `kids`,
+  `christening`, `corporate`, `jubilee`. English keeps FR-13.6's scheme
+  (`?lang=en`), so the site offers 16 indexed addresses rather than 2, each
+  carrying the full hreflang set. The occasion list is mirrored by hand
+  between `server/src/seo.ts` and `web/src/gallery/occasions.ts` (NFR-8).
+- FR-14.2 An occasion page carries **four ready-to-use invitations**, each
+  rendered through the same `InvitationPreview` the editor uses, each with its
+  own call to action. There is no separate marketing prose: what a visitor
+  searched for and what the product makes are the same object.
+- FR-14.3 The four examples of an occasion are **visibly different** — a
+  distinct palette each. Range is what the page promises, and it is held by a
+  test rather than by care.
+- FR-14.4 Every example states **no date, time, venue or city**. It reads as a
+  finished save-the-date, so a template can never age into FR-1.8's refusal to
+  publish, and a seeded editor gets FR-1.7's nudge instead.
+- FR-14.5 "Use this one" opens `/create?sample=<id>` and the editor starts with
+  **that exact invitation**, with no model call. The parameter is stripped by
+  the router; the example's originating sentence seeds the chat, so the next
+  turn builds on the event rather than replacing it.
+- FR-14.6 An unrecognised occasion is a dead link on both sides: `noindex` in
+  the served head, and a not-found state in the app rather than the marketing
+  page.
+- FR-14.7 The landing page carries one quiet `<a href="/gallery">` in its nav —
+  a crawlable edge, and deliberately not a second action in the hero.
+- FR-14.8 Gallery-sourced generations **and publishes** are counted separately
+  (`gallery_generations`, `gallery_publishes`). Attribution is on the publish
+  and not only the generate, because a gallery host can publish having
+  generated nothing at all.
 
 ## Not yet built (backlog)
 

@@ -107,11 +107,27 @@ the same reason `SharePanel.test.tsx` holds the filled-accent count.
 
 Six occasions × four examples × two languages is roughly **500 short strings**
 — 24 examples, each carrying six copy fields, the brief's handful of words, and
-the sentence it was generated from. They are sourced by running the real pipeline and freezing its
-output, then hand-editing: the gallery then honestly shows what the product
-produces rather than copy polished beyond what any host will get, and the
-review pass doubles as the first real look at copy quality since
-`regenerate_rate` went cold.
+the sentence it was generated from.
+
+The intention was to source them by running the real pipeline and freezing its
+output, so the gallery would honestly show what the product produces rather
+than copy polished beyond what any host gets — and so the review pass would
+double as the first real look at copy quality since `regenerate_rate` went
+cold.
+
+**That is not what happened, and the record should say so.** At implementation
+the development machine had no provider keys at all, and the only keyed
+environment was production — where forty generations would have added forty to
+the counters this iteration exists to read in December, damaging the instrument
+in order to fill the content. The copy was therefore written by hand.
+
+Two consequences, neither fatal and both real. The gallery shows a careful
+writer's invitations rather than the product's, so a visitor who takes a sample
+and then generates something of their own may find the second less polished
+than the first. And the copy-quality reading this section promised did not
+happen; `regenerate_rate` is still the only signal, and it is still cold.
+Regenerating the content through the pipeline is a cheap follow-up whenever a
+keyed non-production environment exists.
 
 ### 3. Every example is a full invitation, and none of them has a date
 
@@ -175,10 +191,10 @@ parameter from before the redirect.
 
 ### 5. The content ships in the client bundle, and NFR-1 records the price
 
-Roughly **+10 kB gzipped on an 88.9 kB budget**, downloaded by every guest
-opening a Viber link who will never see the gallery. Taken deliberately, on the
-precedent of adr-011, which paid +13.2 kB for the router and recorded it rather
-than reaching for code splitting.
+Roughly **+10 kB gzipped**, downloaded by every guest opening a Viber link who
+will never see the gallery. Taken deliberately, on the precedent of adr-011,
+which paid +13.2 kB for the router and recorded it rather than reaching for
+code splitting.
 
 The alternative — content held server-side and injected into the shell as JSON
 — keeps the bundle flat but needs a fetch fallback for in-app navigation, which
@@ -188,8 +204,36 @@ declined in adr-011, and it conflicts directly with §6, since a lazily-loaded
 route blanks the prerendered HTML on exactly the pages built to be landed on
 from search.
 
-**Revisit trigger:** measure the gzipped delta at the end of the iteration. Past
-roughly 100 kB, move the content server-side.
+**Measured, 2026-09-12 — and the trigger this section set fired.** The figures:
+
+| | gzipped |
+|---|---|
+| NFR-1's recorded figure, written at adr-011 | 88.9 kB |
+| Real baseline before this iteration | **92.10 kB** |
+| After the two screens and one occasion | 95.53 kB |
+| After all six occasions | **101.24 kB** |
+
+The cost of the gallery is **+9.14 kB**, inside this section's own estimate and
+below what adr-011 paid for the router. The trigger was nevertheless crossed,
+because **it was written against a baseline that was 3.2 kB wrong** — NFR-1 had
+gone stale somewhere between adr-014 and adr-016, so "100 kB" never meant
+"baseline plus ten".
+
+The content stays in the bundle, and this is the reasoning rather than a
+waiver. Moving it server-side would recover 1.2% and buy a fetch fallback for
+in-app navigation — a second way to obtain the same data, which is the shape of
+bug this codebase keeps designing out. Trimming to three examples per occasion
+would spend the gallery's actual product value, range, to satisfy a threshold
+derived from a stale measurement.
+
+**The trigger is re-derived rather than deleted**, so it still means something:
+past **115 kB gzipped**, move the content server-side. That is the current
+figure plus about the cost of five more occasions, and it is stated against a
+number that was actually measured.
+
+A second figure worth recording: the built `index.html` is now **55.43 kB**
+(10.43 kB gzipped), carrying all sixteen prerendered blocks, of which the
+server strips fifteen per request (§6).
 
 ### 6. Prerendering becomes per (path × language)
 
