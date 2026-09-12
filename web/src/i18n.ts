@@ -614,6 +614,8 @@ export type DemoGuest = "friend" | "colleague" | "couple" | "family";
 export interface LandingStrings {
   brand: string;
   cta: string;
+  /** The landing nav's quiet link into the gallery (adr-017 §8). */
+  galleryLink: string;
   heroTitle: string;
   heroText: string;
   howTitle: string;
@@ -652,6 +654,7 @@ export const LANDING: Record<Language, LandingStrings> = {
   en: {
     brand: "INVINTO",
     cta: "Create an invitation",
+    galleryLink: "Browse templates",
     heroTitle: "An invitation from one sentence",
     heroText: "Describe your event in words — get a beautiful invitation in a minute.",
     howTitle: "How it works",
@@ -719,6 +722,7 @@ export const LANDING: Record<Language, LandingStrings> = {
   uk: {
     brand: "INVINTO",
     cta: "Створити запрошення",
+    galleryLink: "Подивитися зразки",
     heroTitle: "Запрошення за одне речення",
     heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
     howTitle: "Як це працює",

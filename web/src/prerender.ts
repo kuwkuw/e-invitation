@@ -89,7 +89,12 @@ export function landingBodyHtml(lang: Language): string {
     `<div class="landing">` +
     `<header class="lp-nav"><span class="lp-brand">` +
     `<span class="lp-brand-full">${escapeHtml(t.brand)}</span>` +
-    `</span></header>` +
+    `</span>` +
+    // The crawl edge into the gallery (adr-017 §8). In the nav rather than the
+    // hero: the hero already carries the primary action, and a second one
+    // beside it takes weight from the one that matters.
+    `<a class="lp-nav-gallery" href="/gallery">${escapeHtml(t.galleryLink)}</a>` +
+    `</header>` +
     `<section class="lp-hero"><div class="lp-hero-copy">` +
     `<h1>${escapeHtml(t.heroTitle)}</h1>` +
     `<p>${escapeHtml(t.heroText)}</p>` +

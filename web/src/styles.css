@@ -1695,3 +1695,19 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .gl-example-foot { flex-direction: column; align-items: stretch; gap: 10px; }
   .gl-use { width: 100%; height: 48px; }
 }
+
+/* The landing nav's way into the gallery (adr-017 §8). Quiet chrome: it sits
+   beside the wordmark, not beside the call to action, and must never read as a
+   second primary action. */
+/* `margin-right: auto` rather than a margin on the left: the bar is
+   space-between, so without it a third child floats orphaned in the middle
+   instead of sitting beside the wordmark it belongs to. */
+.lp-nav-gallery { font-size: 0.85rem; color: var(--lp-muted); text-decoration: none; margin: 0 auto 0 20px; white-space: nowrap; }
+.lp-nav-gallery:hover { color: var(--lp-ink); }
+/* Kept at every width the bar can hold it. Below 800 the "Create" button is
+   already hidden, so a phone's nav is the wordmark, the language switcher and
+   this — and hiding it there would take the gallery's only in-app entry point
+   away from exactly the visitors it is written for, who arrive on phones. It
+   gives up its space only against the held-token count, which is a sentence
+   rather than a word and wins a narrow bar. */
+@media (max-width: 560px) { .lp-nav-counted .lp-nav-gallery { display: none; } }

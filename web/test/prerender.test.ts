@@ -49,3 +49,25 @@ describe("prerender blocks", () => {
     expect(html).toContain("layout-banner");
   });
 });
+
+// adr-017 §8. A crawler cannot press a button, so the gallery needs a real
+// edge from the one page that is already indexed.
+describe("landing entry point", () => {
+  const html = prerenderBlocks();
+
+  it("links to the gallery with a crawlable href", () => {
+    for (const lang of ["uk", "en"] as const) {
+      const { open, close } = prerenderMarkers(`landing:${lang}`);
+      const block = html.slice(html.indexOf(open), html.indexOf(close));
+      expect(block).toContain('href="/gallery"');
+    }
+  });
+
+  it("keeps the hero's single call to action", () => {
+    const { open, close } = prerenderMarkers("landing:uk");
+    const block = html.slice(html.indexOf(open), html.indexOf(close));
+    // The gallery link is nav chrome, not a second hero action: the hero still
+    // has exactly the two /create calls to action it shipped with.
+    expect(block.match(/class="lp-cta"/g)).toHaveLength(2);
+  });
+});
