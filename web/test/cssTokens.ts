@@ -33,23 +33,14 @@ export function rootTokens(css: string): Map<string, string> {
   const out = new Map<string, string>();
   for (const block of css.matchAll(/:root\s*\{([^}]*)\}/g)) {
     const index = block.index ?? 0;
-    // Skip :root blocks nested inside @media (or other at-rules).
-    // Check if there's an unclosed @media before this :root.
+    // Count unclosed braces before this :root. Depth 0 means top level;
+    // depth > 0 means nested inside an at-rule (@media, @supports, etc.).
     const beforeMatch = css.slice(0, index);
-    const lastAtRule = Math.max(
-      beforeMatch.lastIndexOf("@media"),
-      beforeMatch.lastIndexOf("@supports"),
-      beforeMatch.lastIndexOf("@document"),
-      beforeMatch.lastIndexOf("@-webkit-")
-    );
-    if (lastAtRule >= 0) {
-      // Find the most recent closing brace before this :root.
-      const lastCloseBrace = beforeMatch.lastIndexOf("}", lastAtRule);
-      // If the last closing brace is before the at-rule, the at-rule is still open.
-      if (lastCloseBrace < lastAtRule) {
-        continue;
-      }
-    }
+    const openBraces = (beforeMatch.match(/\{/g) ?? []).length;
+    const closeBraces = (beforeMatch.match(/\}/g) ?? []).length;
+    const depth = openBraces - closeBraces;
+
+    if (depth > 0) continue;
 
     for (const decl of block[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
       out.set(decl[1], decl[2].trim());
