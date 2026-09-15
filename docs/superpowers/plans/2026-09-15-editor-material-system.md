@@ -1640,19 +1640,21 @@ EOF
 
 ---
 
-### Task 9: Settle it in the docs
+### Task 9: Record what shipped
 
 **Files:**
-- Create: `docs/decisions/adr-018-material-system.md`
 - Modify: `docs/03-non-functional-requirements.md`
 - Modify: `docs/06-roadmap.md`
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Write the ADR**
+**Sequencing note:** `adr-018` is **not** in this task. It lands ahead of the
+implementation in its own PR, the way adr-017 did (`Settle the invitation
+gallery as adr-017` → plan → implementation → `Record the invitation gallery as
+FR-14, and catch the roadmap up`). This task is the closing half of that
+pattern: the requirement text and the roadmap describe what **is** built, so
+they follow the code rather than leading it.
 
-Create `docs/decisions/adr-018-material-system.md` by converting the spec at `docs/superpowers/specs/2026-09-15-editor-material-system-design.md` into this repo's ADR shape: `# ADR-018 — Material system and the editor canvas`, a status line (`**Status:** accepted · **Date:** 2026-09 · Lands as **NFR-9**`), then `## Context`, `## Decision` (the spec's §1–§10 as numbered subsections), `## Consequences`, `## Revisit triggers`. The spec was written to convert nearly verbatim — carry its reasoning across rather than summarising it, and fix the relative links (`../../decisions/x.md` becomes `x.md`).
-
-- [ ] **Step 2: Add NFR-9**
+- [ ] **Step 1: Add NFR-9**
 
 Append to `docs/03-non-functional-requirements.md`:
 
@@ -1679,13 +1681,13 @@ Append to `docs/03-non-functional-requirements.md`:
   two media queries above, never a device or user-agent check.
 ```
 
-- [ ] **Step 3: Re-measure the bundle and amend NFR-1**
+- [ ] **Step 2: Re-measure the bundle and amend NFR-1**
 
 Run: `pnpm --filter inv-app-web build`
 
 Read the gzipped CSS + JS totals from the output. Amend NFR-1's bundle bullet with the new figure and the date, following the instruction already written there — *"Re-measure when amending this line rather than adding to the one already written here."* Replace the figure; do not append a second one.
 
-- [ ] **Step 4: Add the new mirror to NFR-8**
+- [ ] **Step 3: Add the new mirror to NFR-8**
 
 In `docs/03-non-functional-requirements.md`, under NFR-8, add:
 
@@ -1696,7 +1698,7 @@ In `docs/03-non-functional-requirements.md`, under NFR-8, add:
   ([adr-018](decisions/adr-018-material-system.md) §1).
 ```
 
-- [ ] **Step 5: Update CLAUDE.md**
+- [ ] **Step 4: Update CLAUDE.md**
 
 In the Architecture section, after the "Rendering: **no full-image generation**" paragraph, add:
 
@@ -1717,7 +1719,7 @@ The editor's ground is tinted by the invitation being edited via
 would push the card's own ink and accent into the chrome.
 ```
 
-- [ ] **Step 6: Move the roadmap forward**
+- [ ] **Step 5: Move the roadmap forward**
 
 In `docs/06-roadmap.md`, add a `## Shipped: the material system and the editor canvas` section following the file's existing pattern, and add a candidate-backlog entry for the surfaces still on literals:
 
@@ -1730,7 +1732,7 @@ In `docs/06-roadmap.md`, add a `## Shipped: the material system and the editor c
   is visible at the moment the host presses Publish.
 ```
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add docs/ CLAUDE.md
