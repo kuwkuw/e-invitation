@@ -212,7 +212,15 @@ Expected: FAIL — "declares every token the editor is built from" reports the f
 
 - [ ] **Step 3: Write minimal implementation**
 
-In `web/src/styles.css`, replace the existing `:root` block (currently lines 20–27, holding only the RSVP pair) with the block below. Keep the comment that is already above it — it explains the RSVP pair and is still true.
+**Placement matters and is not negotiable.** The existing `:root` sits *after* the `/* App chrome ----- */` banner, which means `sections()` assigns it to the "App chrome" section — and Task 4's ratchet forbids raw hex there. A token block is precisely where a literal belongs, so the material system gets **its own banner section at the very top of the file, above `/* App chrome */`**, and that section is never added to `CONVERTED`.
+
+So: delete the existing `:root` block and its comment from the App chrome section, and insert the following immediately after the `@import` on line 1 (leaving the `@import` first — it must stay there, see Global Constraints).
+
+```css
+/* Material system ------------------------------------------------------- */
+```
+
+followed by:
 
 ```css
 /* Material system (adr-018). One vocabulary for the whole app; the editor is
@@ -386,7 +394,7 @@ Add to the `:root` block from Task 1, after the Motion group:
   --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
 ```
 
-Then, immediately after the closing `}` of `:root`:
+Then, immediately after the closing `}` of `:root` — still inside the **Material system** section, above the `/* App chrome */` banner:
 
 ```css
 /* Glass surfaces (adr-018). Two, not one: .glass-solid carries text and so
@@ -500,7 +508,7 @@ Expected: FAIL — the ground list is empty, so the arrays do not match.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Add to `web/src/styles.css` after the reduced-motion media block:
+Add to `web/src/styles.css` after the reduced-motion media block — still inside the **Material system** section, above the `/* App chrome */` banner, so the ratchet never scans these six literals:
 
 ```css
 /* The editor's ground, tinted by the invitation being edited (adr-018 §1).
@@ -601,7 +609,12 @@ describe("no raw hex in converted sections", () => {
     it(`keeps ${name} on tokens`, () => {
       const body = parts.get(name);
       expect(body, `section "${name}" not found — did a banner comment change?`).toBeDefined();
-      const literals = [...(body as string).matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[0]);
+      // .cc-sk's three-stop shimmer needs a middle stop lighter than both
+      // ends, and tokens have no "one step lighter" operation. The rule
+      // carries its own reason in styles.css; minting two more tokens that
+      // nothing else would use is worse.
+      const scanned = (body as string).replace(/\.cc-sk\s*\{[^}]*\}/g, "");
+      const literals = [...scanned.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[0]);
       expect(literals).toEqual([]);
     });
   }
@@ -651,14 +664,7 @@ Two rules that are **not** a straight swap:
 }
 ```
 
-Since `.cc-sk` keeps literals, add it to the ratchet's exception list. Amend the test's section body filter:
-
-```ts
-      // .cc-sk's three-stop shimmer needs relative lightness, which tokens
-      // cannot express — see the rule's own comment.
-      const scanned = (body as string).replace(/\.cc-sk\s*\{[^}]*\}/g, "");
-      const literals = [...scanned.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[0]);
-```
+`.cc-sk` is already excluded by the Step 1 test, which carries the reason — no test change is needed here.
 
 Also replace the ad-hoc radii in these two sections with `var(--r-sm)` (6–8px), `var(--r-md)` (10–12px), `var(--r-lg)` (14–16px), `var(--r-xl)` (20–22px), `var(--r-pill)` (999px), and the bespoke shadows with `var(--e-1)`, `var(--e-2)`, `var(--e-3)`.
 
@@ -822,9 +828,18 @@ Apply `.glass` to the header and chat panel by adding the class in markup — se
 .cc-chat   { /* …as above… */ background: var(--glass-tint); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--glass-edge), var(--glass-shadow); }
 ```
 
+Finally, give the override its hook in the DOM. In `web/src/components/editor/PreviewPanel.tsx`, change the wrapper in the final `return` (the branch that renders an invitation):
+
+```tsx
+    <section className="cc-preview">
+      <div className="cc-preview-inner cc-canvas">
+```
+
+This task owns the class because it owns the near-bleed behaviour — Step 5's visual check cannot pass while the class is absent.
+
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter inv-app-web exec vitest run test/styles.test.ts`
+Run: `pnpm --filter inv-app-web exec vitest run test/styles.test.ts && pnpm --filter inv-app-web typecheck`
 Expected: PASS, 17 tests. The `-webkit-` pairing test from Task 2 still passes because both declarations were added together.
 
 - [ ] **Step 5: Look at it**
@@ -1141,7 +1156,9 @@ export function DesignToolbar({
         </DesignSheet>
       )}
 
-      <div className="cc-seg glass" role="group" aria-label={labels.palette}>
+      {/* No aria-label on the group: it would announce the whole toolbar as
+          "Palette". Each segment is self-describing by its own text. */}
+      <div className="cc-seg glass" role="group">
         {segments.map((seg) => (
           <button
             key={seg.id}
@@ -1183,13 +1200,6 @@ and replace the `<DesignControls … />` element with:
           onBackgroundAdd={onBackgroundAdd}
           onBackgroundRemove={onBackgroundRemove}
         />
-```
-
-Change the wrapper so Task 5's near-bleed override has its hook:
-
-```tsx
-    <section className="cc-preview">
-      <div className="cc-preview-inner cc-canvas">
 ```
 
 Add the toolbar CSS to the `Creation chat` section of `web/src/styles.css`:
@@ -1561,7 +1571,7 @@ and add above it, beside the existing `useState`:
   const [open, setOpen] = useState(false);
 ```
 
-Add to the `Creation chat` section of `web/src/styles.css`, replacing the existing `@media (max-width: 800px)` block's `.cc-chat` rule:
+Add to the `Creation chat` section of `web/src/styles.css`. **Task 5 already authored a `@media (max-width: 800px)` block in this section — merge these rules into that one block rather than opening a second.** Two blocks for one breakpoint with overlapping selectors makes behaviour depend on source order. Task 5's block already carries `.cc-canvas .inv` and a `.cc-preview` rule; fold the `.cc-preview` declarations below into that existing rule.
 
 ```css
 /* Peek line: the latest turn, always visible. Desktop shows the transcript

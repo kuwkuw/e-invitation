@@ -13,7 +13,10 @@ iteration was taken, and 2026-08-08 when six days of the standing "wait for
 numbers" candidate were read back and the share sheet was taken, and
 2026-09-12 when the gallery shipped as FR-14 and this file paid off the two
 sections it owed — public discoverability and the date rules had both shipped
-with only a backlog strikethrough between them. This
+with only a backlog strikethrough between them — and 2026-09-15 when the
+material system (adr-018) shipped as **NFR-9**, the first iteration this file
+records that changed how the product looks rather than what it does, recorded
+the same day it shipped. This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -27,9 +30,9 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Thirteen iterations have shipped since (three were missing from this list until
-2026-08-08, and the last three until 2026-09-12 — this list has now twice been
-the thing that fell behind):
+Fourteen iterations have shipped since (three were missing from this list
+until 2026-08-08, and the last three until 2026-09-12 — this list has now
+twice been the thing that fell behind):
 
 - **"Safe to open to real hosts"** — guardrails as FR-9 /
   [adr-008](decisions/adr-008-operator-cost-guardrails.md), durable metrics as
@@ -58,6 +61,10 @@ the thing that fell behind):
   FR-1.7 and FR-1.8, no new ADR.
 - **The invitation gallery** — [adr-017](decisions/adr-017-invitation-gallery.md),
   below. Shipped as FR-14, amending FR-13.2.
+- **The material system and the editor canvas** —
+  [adr-018](decisions/adr-018-material-system.md), below. Shipped as
+  **NFR-9**, amending NFR-1's bundle line and NFR-8's hand-mirror list. No new
+  FR.
 
 ## Shipped: the host can come back
 
@@ -712,8 +719,119 @@ reading too early, and the share sheet above was taken on six days and an n of
 two. The only check worth making sooner is whether Search Console reports the
 pages indexed at all, which is plumbing and answers in about two weeks.
 
+## Shipped: the material system and the editor canvas
+
+Settled in [adr-018](decisions/adr-018-material-system.md) (accepted), shipped
+2026-09-15 as **NFR-9** (new), amending NFR-1's bundle line and NFR-8's
+hand-mirror list. No new FR — this is the first iteration this file records
+that changed how the product looks rather than what it does.
+
+Taken because reading the stylesheet turned two vague complaints — "looks
+dated and amateur", "inconsistent across screens" — into a measurement: 1719
+lines, 77.8 kB raw / 19.4 kB gzipped, **443** raw hex literals, **106**
+distinct colours, and exactly **one** `:root` token block in the whole file,
+holding only the two RSVP status colours. Three different values served as
+"the accent" depending on which section of the file you were in. Four visual
+bearings were rendered against the real product — the existing direction done
+properly, an editorial/paper direction, a soft-modern direction, and an
+iOS-derived one — and **Full Liquid Glass** was chosen: translucent chrome
+over a colour field, with the invitation itself as the solid object beneath
+it. The editor went first because it was measurably the cheapest surface to
+restructure: three class/DOM test assertions against roughly fifty-six spread
+across the rest of the suite, because the editor's behaviour is tested at the
+`useInvitationEditor`/`usePublishing` hook level rather than through markup.
+
+What shipped:
+
+1. **A `:root` token block** — ground, glass, ink, accent, radius, elevation,
+   motion — in its own "Material system" banner section at the top of
+   `styles.css`, ahead of "App chrome" rather than inside it, so the token
+   definitions themselves are never mistaken for the literals the ratchet
+   test polices.
+2. **A ratchet, not a promise.** `web/test/styles.test.ts`'s `CONVERTED`
+   allowlist names the sections required to carry no raw hex — today exactly
+   `["App chrome", "Creation chat"]` — and each future surface conversion adds
+   a name to it, the same idiom `gallery.test.ts`, `i18n.test.ts`,
+   `seo.test.ts` and `og.test.ts` already use for a rule the types can't hold.
+   `.palette-*`, `.type-*`, `.layout-*` and `.ornament-*` stay permanently
+   exempt: those values are mirrored by hand into `server/src/og/render.ts`,
+   and a raw hex there is what keeps that mirror visible rather than silent.
+3. **Glass as two composed classes**, not a token — `.glass` for the header
+   and toolbars, `.glass-solid` for text-bearing surfaces (composer, banner,
+   sheets), with the rule that makes the `prefers-reduced-transparency`
+   fallback a token swap rather than a second design: every glass surface
+   must stay legible with its blur removed. `prefers-reduced-motion` is
+   honoured the same way, for sheet springs.
+4. **The ground reads the invitation's own palette**, via `data-palette` on
+   `.cc-shell` rather than the `palette-*` class itself, which would leak the
+   card's own ink and accent into the chrome. The six-entry
+   `.cc-shell[data-palette="…"]` map is a new hand-mirror of the `.palette-*`
+   rules, now on NFR-8's list beside the others, with enum coverage held by
+   `web/test/styles.test.ts`.
+5. **Four stacked control rows became one floating segmented toolbar** whose
+   sheets read the real `palette-*` custom properties for their swatches, so
+   an option can never drift from what the card actually shows — the one part
+   of the visual pass that is a genuine usability change, not only a restyle.
+6. **The chat log collapses into a floating composer with a peek line**, and
+   FR-1.8's per-turn publish refusal moved to a banner rendered purely from
+   `dateBlocked` so the guarantee survives a layout that no longer keeps the
+   log on screen at all times. The log's own emission is untouched —
+   `useInvitationEditor.ts` and its test carry zero diff lines, which was the
+   task's defining property, because the log entry and the banner do
+   different jobs and both were already correct.
+7. **Two status tokens, `--danger` and `--success`, were minted at their
+   pre-existing hex values** rather than reusing the RSVP pair or excluding
+   their rules from the ratchet. Both sit inside a converted section but
+   belong to out-of-scope surfaces — `.error` renders on the guest page,
+   `.cc-key-active` in the BYOK panel — so an identical value means zero
+   pixel change today, and the token is ready when those surfaces convert.
+
+Delivered as eight tasks (13 commits, `15ed45c..921c40c`), each independently
+spec- and quality-reviewed before the next was dispatched, plus this docs pass
+the same day — unlike three of the iterations above, nothing here was owed.
+
+**What this iteration is answerable for, and what it is not:**
+
+- **One surface converted, five still on literals.** The editor is the only
+  converted surface; landing, gallery, guest, manage and crash still carry raw
+  hex, named individually below.
+- **A section is not a surface.** The ratchet's unit is a stylesheet section
+  (`App chrome`, `Creation chat`); adr-018 §8's scope boundary's unit is a
+  surface. Tokenising those two sections also touched two things §8 lists as
+  out of scope — the language switcher shared by the landing, guest and
+  manage screens, and the share-panel/BYOK-panel shells — because both live
+  inside those sections. Kept rather than reverted: the deltas are
+  imperceptible or improvements (the globe icon's contrast goes
+  2.22:1 → 3.20:1). The next conversion should expect the same mismatch.
+- **Not every bespoke shadow consolidated.** Three — `.ls-seg.active`,
+  `.cc-share-panel` and `.cc-skeleton` — stayed literal `rgba()` rather than
+  snapping to `--e-1`/`--e-2`/`--e-3`, a
+  disclosed judgment call: the plan gave ranges for radii but none for
+  shadows, and snapping unasked would have moved pixels nobody approved. This
+  weakens adr-018's "~9 bespoke shadows" framing somewhat; the token exists
+  and has consumers, just fewer than the ADR implied.
+- **The toolbar sits above the card, not floating over its bottom edge as the
+  approved mockup showed.** The CSS matches the plan exactly
+  (`.cc-design { position: sticky; bottom: 0 }` as the preview pane's first
+  child); the gap is between the approved mockup and the plan written from
+  it, not an implementation defect. Parked this iteration rather than
+  reworked, because fixing it means repositioning the DOM and changes desktop
+  too, which nothing here specified.
+- **adr-018 §7's hardware gate has not been run.** The ADR is explicit that
+  glass should not ship before a DevTools throttle pass and a check on a real
+  mid-range Android inside Viber's in-app webview — "it does not ship
+  stuttering." Neither has happened yet; this is still owed before the glass
+  direction should be trusted on the hardware hosts are actually opening
+  their invitations on.
+
 ## Candidate backlog
 
+- **Five surfaces still carry raw hex** — landing, gallery, guest, manage,
+  crash. The material system ([adr-018](decisions/adr-018-material-system.md))
+  shipped with the editor as its only converted surface, and
+  `web/test/styles.test.ts`'s allowlist names the rest. The share panel, BYOK
+  panel and auth gate come first: they open from the editor header, so the seam
+  is visible at the moment the host presses Publish.
 - ~~**The RSVP prompt is the only field anyone rewrites.**~~ — **gone cold, and
   it should be said plainly.** `field_regenerations` has read
   `{"rsvp_prompt": 6}` since before 2026-08-02 and read exactly that on

@@ -1,6 +1,134 @@
 /* All families cover Cyrillic — required for Ukrainian copy. */
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400..800&family=Marck+Script&display=swap");
 
+/* Material system ------------------------------------------------------- */
+
+/* Material system (adr-018). One vocabulary for the whole app; the editor is
+   the first surface built from it. Defined here rather than in a tokens.css
+   because design-sync ships this file's closure to the DS project and a local
+   @import would not be inlined — see .design-sync/NOTES.md.
+
+   Deliberately NOT tokenised: .palette-* / .type-* / .layout-* / .ornament-*.
+   Those values are mirrored by hand in server/src/og/render.ts, where a raw
+   hex is what keeps the mirror visible. */
+:root {
+  /* Ground and surface */
+  --ground: #f3ece2;
+  --surface: #ffffff;
+
+  /* body's own background, preserved at its pre-branch value and deliberately
+     distinct from the ground token above. Most screens paint their own
+     opaque background over it, but .gl (the gallery) does not, and the
+     gallery is explicitly out of scope for this iteration (adr-018 §8) — the
+     ground token would repaint it warm beige instead of leaving it alone. */
+  --app-bg: #f6f5f2;
+
+  /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only. */
+  --ink: #23211d;
+  --ink-muted: #6b6659;
+  --ink-faint: #8d8577;
+
+  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
+     --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
+     card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
+     anything meaning the *product's* accent there must read --ui-accent
+     instead — the two are tied together so they cannot drift. */
+  --ui-accent: #b3592e;
+  --accent: var(--ui-accent);
+  --accent-hi: #a04e27;
+  --accent-wash: #f7efe3;
+  --edge: #e4ddd0;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* Elevation */
+  --e-1: 0 1px 3px rgba(74, 55, 40, 0.08);
+  --e-2: 0 8px 24px rgba(74, 55, 40, 0.16);
+  --e-3: 0 24px 54px rgba(20, 18, 14, 0.24);
+
+  /* Motion. iOS reads as much from its easing as from its materials. */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+
+  /* Glass. The alpha is a token of its own so the contrast test can composite
+     the surface over the ground without parsing an rgba() string. */
+  --glass-alpha: 0.62;
+  --glass-alpha-solid: 0.82;
+  --glass-tint: rgba(255, 255, 255, 0.62);
+  --glass-tint-solid: rgba(255, 255, 255, 0.82);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+
+  /* Status colours preserved at their existing values, deliberately. Their only
+     consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
+     guest page (components/guest/RsvpForm.tsx), `.cc-key-active` in the BYOK
+     panel — so tokenising them must not change what those surfaces look like.
+     Whether they should align with the --rsvp-* pair is a decision for the
+     conversion that owns those surfaces, not this one. */
+  --danger: #a4262c;
+  --success: #2f7d4f;
+
+  /* Status tokens (RSVP yes / no) — see the note above. */
+  --rsvp-yes: #3d6b47;
+  --rsvp-yes-bg: #eef3ee;
+  --rsvp-yes-edge: #cfe0d1;
+  --rsvp-no: #a83f3f;
+  --rsvp-no-bg: #f6ebe9;
+  --rsvp-no-edge: #e6cfc9;
+}
+
+/* Glass surfaces (adr-018). Two, not one: .glass-solid carries text and so
+   takes more tint and less blur than a toolbar does.
+
+   The rule that makes the fallback below trivially correct: **every glass
+   surface must be legible with its blur removed.** The tint alone carries the
+   contrast; blur is decoration on top. test/styles.test.ts asserts exactly
+   that, compositing each tint over --ground with blur ignored. */
+.glass {
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+.glass-solid {
+  background: var(--glass-tint-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+
+/* iOS's own Reduce Transparency, and its web equivalent. Because of the rule
+   above this is a token swap, not a second design. */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-tint: #faf7f2; --glass-tint-solid: #fffdfa; }
+  .glass,
+  .glass-solid { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 1ms; --dur-base: 1ms; }
+}
+
+/* The editor's ground, tinted by the invitation being edited (adr-018 §1).
+   A hand-mirror of the six .palette-* entries — NFR-8 lists it, and
+   test/styles.test.ts holds the pairing by enum coverage.
+
+   Every ground stays light, festive included: the card goes dark, the room
+   it sits in does not. */
+.cc-shell[data-palette="warm"]     { --ground: #f4e9d9; --ground-tint-a: #fdf7ec; --ground-tint-b: #efdcc2; }
+.cc-shell[data-palette="elegant"]  { --ground: #f3f0e6; --ground-tint-a: #fffef9; --ground-tint-b: #e9e2cb; }
+.cc-shell[data-palette="playful"]  { --ground: #f5efdc; --ground-tint-a: #fffdf2; --ground-tint-b: #f2e4bd; }
+.cc-shell[data-palette="minimal"]  { --ground: #f1f0ee; --ground-tint-a: #ffffff; --ground-tint-b: #e4e2df; }
+.cc-shell[data-palette="festive"]  { --ground: #e8e7ef; --ground-tint-a: #f7f6fb; --ground-tint-b: #d4d3e2; }
+.cc-shell[data-palette="romantic"] { --ground: #f4e6e8; --ground-tint-a: #fdf6f7; --ground-tint-b: #eed3d8; }
+
 /* App chrome ---------------------------------------------------------- */
 
 * { box-sizing: border-box; }
@@ -8,22 +136,8 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: #f6f5f2;
-  color: #23211d;
-}
-
-/* Status tokens (RSVP yes / no), settled by the E-invitation DS host-manage
-   template (adr-010 §9): warm, muted, AA on white (6.2:1 / 6.1:1), and --rsvp-no
-   deliberately distinct from accent terracotta #b3592e so it reads as a status,
-   not an alert. One pair everywhere — status text, pills, count tiles — in place
-   of the old scattered #2f7d4f/#a4262c literals. */
-:root {
-  --rsvp-yes: #3d6b47;
-  --rsvp-yes-bg: #eef3ee;
-  --rsvp-yes-edge: #cfe0d1;
-  --rsvp-no: #a83f3f;
-  --rsvp-no-bg: #f6ebe9;
-  --rsvp-no-edge: #e6cfc9;
+  background: var(--app-bg);
+  color: var(--ink);
 }
 
 .page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
@@ -37,9 +151,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  background: #efece6;
-  border: 1px solid #e4ddd0;
-  border-radius: 999px;
+  background: var(--accent-wash);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-pill);
   padding: 3px;
 }
 .ls-seg {
@@ -47,9 +161,9 @@ body {
   height: 40px;
   padding: 0 8px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: transparent;
-  color: #8f887a;
+  color: var(--ink-faint);
   font: inherit;
   font-weight: 700;
   font-size: 0.82rem;
@@ -57,42 +171,42 @@ body {
   cursor: pointer;
   transition: color 0.14s, background 0.14s;
 }
-.ls-seg:hover { color: #23211d; background: rgba(255, 255, 255, 0.55); }
+.ls-seg:hover { color: var(--ink); background: rgba(255, 255, 255, 0.55); }
 .ls-seg.active {
-  background: #ffffff;
-  color: #23211d;
+  background: var(--surface);
+  color: var(--ink);
   box-shadow: 0 1px 3px rgba(20, 18, 14, 0.15);
 }
 .ls-globe-wrap { display: inline-flex; align-items: center; gap: 8px; }
-.ls-globe { color: #a89f8e; display: flex; }
+.ls-globe { color: var(--ink-faint); display: flex; }
 .lp-nav-right { display: flex; align-items: center; gap: 12px; }
 
-.tagline { color: #6b6659; margin: 12px 0 20px; }
+.tagline { color: var(--ink-muted); margin: 12px 0 20px; }
 
 .composer { display: flex; flex-direction: column; gap: 10px; }
 .composer textarea, .field textarea {
   width: 100%;
-  border: 1px solid #c8c4bb;
-  border-radius: 8px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-sm);
   padding: 10px 12px;
   font: inherit;
   resize: vertical;
-  background: #fff;
+  background: var(--surface);
 }
 
 button.primary {
   align-self: flex-start;
-  background: #23211d;
-  color: #fff;
+  background: var(--ink);
+  color: var(--surface);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   padding: 10px 20px;
   font-size: 1rem;
   cursor: pointer;
 }
 button.primary:disabled { opacity: 0.5; cursor: default; }
 
-.error { color: #a4262c; }
+.error { color: var(--danger); }
 
 .workspace {
   display: grid;
@@ -103,15 +217,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 @media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
 
-.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b6659; }
+.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
 
 .field { margin-bottom: 14px; }
 .field-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .field-head label { font-size: 0.85rem; font-weight: 600; }
 .field-head button {
-  border: 1px solid #c8c4bb;
-  background: #fff;
-  border-radius: 6px;
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  border-radius: var(--r-sm);
   padding: 2px 8px;
   font-size: 0.8rem;
   cursor: pointer;
@@ -120,33 +234,44 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Creation chat ---------------------------------------------------------- */
 /* Colors come from the "creation-chat" template in the E-invitation DS
-   project: neutral warm chrome, #b3592e accent, invitation owns all color. */
+   project: neutral warm chrome, --accent accent, invitation owns all color. */
 
-.cc-shell { display: flex; flex-direction: column; height: 100dvh; background: #f6f5f2; }
+.cc-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background-color: var(--ground);
+  background-image:
+    radial-gradient(70% 48% at 50% 0%, var(--ground-tint-a, transparent) 0%, transparent 72%),
+    radial-gradient(60% 40% at 88% 92%, var(--ground-tint-b, transparent) 0%, transparent 70%);
+  transition: background-color var(--dur-base) var(--ease-ios);
+}
 
+/* Header: a floating pill, not a bar with a border-bottom. */
 .cc-header {
   position: relative;
   flex: 0 0 auto;
-  height: 58px;
-  background: #fff;
-  border-bottom: 1px solid #e4ddd0;
+  height: 48px;
+  margin: 12px 14px 0;
+  border-radius: var(--r-pill);
   display: flex;
   align-items: center;
-  padding: 0 14px;
+  padding: 0 6px 0 12px;
   gap: 10px;
+  z-index: 6;
 }
 .cc-back {
   width: 38px; height: 38px;
   border: none; background: transparent; border-radius: 50%;
-  color: #23211d; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.cc-back:hover { background: #f2efe9; }
+.cc-back:hover { background: var(--accent-wash); }
 .cc-title {
   flex: 1;
   text-align: center;
   font-weight: 700;
   font-size: 1rem;
-  color: #23211d;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -154,14 +279,14 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-header-right { display: flex; align-items: center; gap: 10px; }
 .cc-share {
   display: flex; align-items: center; gap: 6px;
-  border: none; border-radius: 999px;
+  border: none; border-radius: var(--r-pill);
   padding: 9px 18px;
   font-size: 0.88rem; font-weight: 700;
-  background: #efece6; color: #a89f8e;
+  background: var(--accent-wash); color: var(--ink-faint);
   cursor: default;
 }
-.cc-share.ready { background: #b3592e; color: #fff; cursor: pointer; }
-.cc-share.ready:hover { background: #a04e27; }
+.cc-share.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
+.cc-share.ready:hover { background: var(--accent-hi); }
 /* Under ~480px the header wants 457px of content: back + title + AI key +
    language + Share. The title loses that fight first and collapsed to a single
    letter ("Н…") — and it is not decorative, it carries the invitation's own
@@ -177,125 +302,127 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   top: 62px; right: 14px;
   z-index: 30;
   width: min(400px, calc(100vw - 28px));
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-xl);
   box-shadow: 0 26px 60px rgba(20, 18, 14, 0.24);
   padding: 22px;
 }
 
 /* BYOK key panel (ADR-006) — shares the share-panel dropdown shell. */
-.cc-key-on { color: #b3592e; }
+.cc-key-on { color: var(--accent); }
 .cc-key-panel { width: min(340px, calc(100vw - 28px)); }
 .cc-key-title { margin: 0 0 6px; font-size: 0.95rem; }
-.cc-key-intro { margin: 0 0 10px; font-size: 0.82rem; color: #6b6659; line-height: 1.45; }
-.cc-key-active { margin: 0 0 10px; font-size: 0.82rem; color: #2f7d4f; font-weight: 600; }
-.cc-key-label { display: block; font-size: 0.78rem; font-weight: 600; color: #6b6659; margin-bottom: 10px; }
+.cc-key-intro { margin: 0 0 10px; font-size: 0.82rem; color: var(--ink-muted); line-height: 1.45; }
+.cc-key-active { margin: 0 0 10px; font-size: 0.82rem; color: var(--success); font-weight: 600; }
+.cc-key-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 10px; }
 .cc-key-label select {
   display: block; width: 100%; margin-top: 4px;
-  border: 1px solid #c8c4bb; border-radius: 6px;
-  padding: 6px 10px; font: inherit; font-size: 0.9rem; background: #fff;
+  border: 1px solid var(--edge); border-radius: var(--r-sm);
+  padding: 6px 10px; font: inherit; font-size: 0.9rem; background: var(--surface);
 }
 .cc-key-label .share-row { margin-top: 4px; }
 .cc-key-actions { display: flex; gap: 8px; }
 .cc-key-save {
-  border: none; border-radius: 999px; padding: 8px 16px;
-  font-size: 0.85rem; font-weight: 700; background: #b3592e; color: #fff; cursor: pointer;
+  border: none; border-radius: var(--r-pill); padding: 8px 16px;
+  font-size: 0.85rem; font-weight: 700; background: var(--accent); color: var(--surface); cursor: pointer;
 }
-.cc-key-save:disabled { background: #efece6; color: #a89f8e; cursor: default; }
-.cc-key-save:not(:disabled):hover { background: #a04e27; }
+.cc-key-save:disabled { background: var(--accent-wash); color: var(--ink-faint); cursor: default; }
+.cc-key-save:not(:disabled):hover { background: var(--accent-hi); }
 .cc-key-clear {
-  border: 1px solid #c8c4bb; background: #fff; border-radius: 999px;
-  padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: #6b6659;
+  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-pill);
+  padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: var(--ink-muted);
 }
 
 .cc-main { flex: 1; display: flex; min-height: 0; }
 
+/* Chat: a floating panel, not a flush 440px column with a border-right. */
 .cc-chat {
-  width: 440px;
+  width: 420px;
   flex: 0 0 auto;
-  border-right: 1px solid #e4ddd0;
-  background: #fff;
+  margin: 14px 0 14px 14px;
+  border-radius: var(--r-xl);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 .cc-messages { flex: 1; overflow-y: auto; padding: 28px 32px 8px; display: flex; flex-direction: column; gap: 13px; }
 
 .cc-start { padding-top: 20px; }
-.cc-start-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.8rem; color: #4a3728; line-height: 1.15; }
-.cc-start-hint { margin-top: 12px; color: #6b6659; font-size: 0.98rem; line-height: 1.55; }
-.cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: #8f887a; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.cc-start-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.8rem; color: var(--ink); line-height: 1.15; }
+.cc-start-hint { margin-top: 12px; color: var(--ink-muted); font-size: 0.98rem; line-height: 1.55; }
+.cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .cc-chips { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 9px; }
 .cc-chip {
-  background: #fff;
-  border: 1px solid #d8d2c6;
-  color: #4a3728;
-  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  border-radius: var(--r-pill);
   padding: 9px 15px;
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-chip:hover { border-color: #b3592e; background: #fbf6ef; }
+.cc-chip:hover { border-color: var(--accent); background: var(--accent-wash); }
 
 .cc-msg { display: flex; }
 .cc-msg.user { justify-content: flex-end; }
 .cc-bubble {
   padding: 11px 15px;
-  border-radius: 16px 16px 16px 4px;
+  border-radius: var(--r-lg) var(--r-lg) var(--r-lg) 4px;
   max-width: 84%;
   font-size: 0.94rem;
   line-height: 1.45;
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  color: #23211d;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  color: var(--ink);
 }
-.cc-msg.user .cc-bubble { background: #e9e4dc; border: none; border-radius: 16px 16px 4px 16px; }
+.cc-msg.user .cc-bubble { background: var(--accent-wash); border: none; border-radius: var(--r-lg) var(--r-lg) 4px var(--r-lg); }
 
-.cc-status { display: flex; align-items: center; gap: 8px; color: #6b6659; font-size: 0.94rem; }
-.cc-status svg { color: #b3592e; }
+.cc-status { display: flex; align-items: center; gap: 8px; color: var(--ink-muted); font-size: 0.94rem; }
+.cc-status svg { color: var(--accent); }
 .cc-dots { display: inline-flex; gap: 3px; align-items: center; padding-left: 2px; }
 @keyframes ccBlink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
-.cc-dot { width: 5px; height: 5px; border-radius: 50%; background: #b3592e; animation: ccBlink 1.2s infinite; }
+.cc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: ccBlink 1.2s infinite; }
 .cc-dot:nth-child(2) { animation-delay: 0.2s; }
 .cc-dot:nth-child(3) { animation-delay: 0.4s; }
 
 .cc-composer { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 16px 32px 24px; }
 .cc-composer input {
   flex: 1;
-  background: #f4f2ed;
-  border: 1px solid #e4ddd0;
-  border-radius: 999px;
+  background: var(--ground);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-pill);
   padding: 13px 18px;
   font: inherit;
   font-size: 0.95rem;
-  color: #23211d;
+  color: var(--ink);
 }
-.cc-composer input::placeholder { color: #9a9384; }
-.cc-composer input:focus { outline: none; border-color: #b3592e; }
+.cc-composer input::placeholder { color: var(--ink-faint); }
+.cc-composer input:focus { outline: none; border-color: var(--accent); }
 .cc-send {
   flex: 0 0 auto;
   width: 46px; height: 46px;
   border: none; border-radius: 50%;
-  background: #e7e2d9; color: #a89f8e;
+  background: var(--accent-wash); color: var(--ink-faint);
   display: flex; align-items: center; justify-content: center;
   cursor: default;
 }
-.cc-send.ready { background: #b3592e; color: #fff; cursor: pointer; }
+.cc-send.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
 
-.cc-preview { flex: 1; background: #f1efe9; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px; }
+.cc-preview { flex: 1; background: none; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 28px; }
 .cc-preview-inner { width: min(460px, 100%); }
 .cc-preview-inner .design-controls { margin-bottom: 14px; }
 
 .cc-placeholder {
   width: 340px; height: 430px;
-  border: 1.5px dashed #d3ccbe;
-  border-radius: 16px;
+  border: 1.5px dashed var(--edge);
+  border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.5);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
-  color: #bcb3a2;
+  color: var(--ink-faint);
   font-size: 0.98rem;
   text-align: center;
 }
@@ -306,12 +433,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: linear-gradient(90deg, #ece8e0 25%, #f6f3ed 37%, #ece8e0 63%);
   background-size: 640px 100%;
   animation: ccShimmer 1.5s infinite linear;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 .cc-skeleton {
   width: 340px;
-  background: #fff;
-  border-radius: 16px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
   box-shadow: 0 22px 50px rgba(20, 18, 14, 0.15);
   padding: 44px 40px;
   display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -320,52 +447,52 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-sk-pill { width: 50%; height: 40px; border-radius: 999px; margin-top: 12px; }
 
 /* Tap-to-edit highlights on the invitation card */
-.inv-hit { cursor: pointer; border-radius: 8px; transition: box-shadow 0.15s; }
-.inv-hit:hover { box-shadow: 0 0 0 2px rgba(179, 89, 46, 0.35); }
-.inv-hit-active { box-shadow: 0 0 0 2px #b3592e, 0 0 0 6px rgba(179, 89, 46, 0.15); }
+.inv-hit { cursor: pointer; border-radius: var(--r-sm); transition: box-shadow 0.15s; }
+.inv-hit:hover { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent) 35%, transparent); }
+.inv-hit-active { box-shadow: 0 0 0 2px var(--ui-accent), 0 0 0 6px color-mix(in srgb, var(--ui-accent) 15%, transparent); }
 
 /* Field edit sheet */
 .cc-sheet {
   position: fixed;
   z-index: 40;
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  box-shadow: 0 24px 54px rgba(20, 18, 14, 0.24);
-  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  box-shadow: var(--e-3);
+  border-radius: var(--r-lg);
   padding: 16px 18px;
   right: 40px;
   bottom: 30px;
   width: min(340px, calc(100vw - 36px));
 }
 .cc-sheet-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-.cc-sheet-kicker { font-size: 0.68rem; color: #9a9384; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
-.cc-sheet-title { font-size: 1.05rem; font-weight: 700; color: #23211d; margin-top: 2px; }
+.cc-sheet-kicker { font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.cc-sheet-title { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-top: 2px; }
 .cc-sheet-close {
   width: 30px; height: 30px;
-  border: none; background: #f2efe9; border-radius: 50%;
-  color: #6b6659; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  border: none; background: var(--accent-wash); border-radius: 50%;
+  color: var(--ink-muted); display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .cc-actions { display: flex; gap: 8px; }
 .cc-act {
   flex: 1;
-  background: #f6f5f2;
-  border: 1px solid #e4ddd0;
-  border-radius: 12px;
+  background: var(--ground);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 12px 6px;
   display: flex; flex-direction: column; align-items: center; gap: 7px;
-  font-size: 0.78rem; font-weight: 600; color: #4a3728;
+  font-size: 0.78rem; font-weight: 600; color: var(--ink);
   cursor: pointer; text-align: center; line-height: 1.2;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-act:hover { border-color: #b3592e; }
+.cc-act:hover { border-color: var(--accent); }
 .cc-act:disabled { opacity: 0.6; cursor: default; }
-.cc-act-on { border-color: #b3592e; background: #f7efe3; color: #b3592e; }
+.cc-act-on { border-color: var(--accent); background: var(--accent-wash); color: var(--accent); }
 
 .cc-manual { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .cc-manual textarea {
   width: 100%;
-  border: 1px solid #e4ddd0;
-  border-radius: 10px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 10px 12px;
   font: inherit;
   font-size: 0.92rem;
@@ -375,36 +502,94 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .cc-variants { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .cc-var {
-  background: #fff;
-  border: 1px solid #d8d2c6;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 11px 14px;
   font-size: 0.9rem;
-  color: #4a3728;
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-var:hover { border-color: #b3592e; background: #fbf6ef; }
+.cc-var:hover { border-color: var(--accent); background: var(--accent-wash); }
 
-/* Mobile: preview is the hero, chat becomes a bottom sheet */
+/* FR-1.8's refusal, pinned. Warm-tinted rather than red: the date is a thing
+   to fix, not a failure, and the app has no alert language anywhere else. */
+.cc-banner {
+  margin: 10px 14px 0;
+  padding: 11px 16px;
+  border-radius: var(--r-lg);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--ink);
+  border-left: 3px solid var(--accent);
+}
+
+/* Near-bleed (adr-018 §3): a scoped override, so InvitationPreview.tsx is not
+   touched. It is DS-synced and rendered in four places — editor, gallery
+   cards, landing hero fan, guest page — and its props are hand-mirrored in
+   .design-sync/config.json and conventions.md, both of which have gone stale
+   before.
+
+   12px of inset rather than true full-bleed, for three reasons in the code:
+   the guest receives a card (.gr-card at both breakpoints), layout-banner's
+   title bar hangs on a negative margin with a radius tied to the card's own
+   (square corners show two wedges of background), and layout-split's 38%
+   image panel becomes a strip on a phone. */
+
+/* Mobile: preview is the hero, and the transcript collapses behind a peek
+   line above the composer — the card owns the phone screen. Desktop shows
+   the transcript outright, so the peek line is redundant there and hidden
+   rather than conditionally rendered: the two layouts stay one component. */
+.cc-peek { display: none; }
+
 @media (max-width: 800px) {
   .cc-main { flex-direction: column; }
-  .cc-preview { order: 1; padding: 22px; }
+  .cc-preview { order: 1; padding: 12px; align-items: flex-start; }
+  .cc-canvas .inv { box-shadow: var(--e-1); }
   .cc-chat {
     order: 2;
-    width: 100%;
-    max-height: 44%;
-    border-right: none;
-    border-top: 1px solid #e4ddd0;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 24px rgba(20, 18, 14, 0.06);
+    width: auto;
+    margin: 0 12px 12px;
+    border-radius: var(--r-xl);
   }
+  /* Collapsed: composer and peek only. The card owns the phone screen. */
+  .cc-chat .cc-messages { display: none; }
+  .cc-chat.open .cc-messages { display: flex; max-height: 46vh; }
   .cc-messages { padding: 16px 16px 4px; }
-  .cc-composer { padding: 10px 14px 14px; }
+  .cc-peek {
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 11px 16px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .cc-composer { padding: 8px 10px 10px 16px; }
   .cc-sheet { right: 12px; left: 12px; bottom: 12px; width: auto; }
   .cc-share-panel { right: 8px; }
 }
+
+/* Design toolbar (adr-018 §4). One segmented bar in place of four labelled
+   rows; the sheet it raises dims nothing, so the card stays visible behind it
+   and the host watches the token land. */
+.cc-design { position: sticky; bottom: 0; display: flex; flex-direction: column; gap: 10px; }
+.cc-seg { display: flex; gap: 5px; padding: 5px; border-radius: var(--r-xl); }
+.cc-seg-item { flex: 1; border: none; background: none; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); padding: 9px 4px; border-radius: var(--r-lg); cursor: pointer; transition: background var(--dur-fast) var(--ease-ios); }
+.cc-seg-item.on { background: var(--surface); color: var(--accent); box-shadow: var(--e-1); }
+
+.cc-design-sheet { border-radius: var(--r-xl); padding: 10px 16px 16px; }
+.cc-sheet-grab { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--edge); margin: 0 auto 12px; }
+.cc-design-sheet-title { font-size: 0.82rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.cc-design-sheet-body { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* Design controls -------------------------------------------------------- */
 /* Swatches reuse the palette-* custom properties from the invitation card

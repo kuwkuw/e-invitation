@@ -241,6 +241,22 @@ sheets, the field edit sheet, the tinted ground, the near-bleed card treatment.
 - **Dark mode.** Not supported today; adding it here would double the token work
   before the system has been proven on one screen.
 
+**A section is not a surface, and this list undersells it.** The ratchet's
+unit is a stylesheet *section* — `App chrome`, `Creation chat` — not a
+*surface*, and the two shapes do not coincide: `App chrome` also holds the
+language switcher shared by the landing, guest and manage screens
+(`.ls-track`, `.ls-seg`, `.ls-globe`), and `Creation chat` also holds the
+share-panel and BYOK-panel shells named above as out of scope. Tokenising
+those two sections therefore moved a handful of declarations inside the "out"
+surfaces too — a 20px→22px panel radius, a border colour, a disabled-button
+pair, and the language switcher's track/segment/globe colours. Kept rather
+than reverted: the deltas are imperceptible or improvements (the globe icon's
+contrast goes 2.22:1 → 3.20:1), and reverting them to hold this sentence
+exactly would be worse for users than the sentence being slightly wrong. The
+next surface conversion should expect the same mismatch between its section
+and its surface, and check for it rather than assume the ratchet's boundary
+is the scope boundary.
+
 ### 9. Claude Design authors the material, not the layout
 
 The DS project gets a **small, high-leverage set**: one material spec — the
