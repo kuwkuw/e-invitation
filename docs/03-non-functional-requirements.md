@@ -243,10 +243,14 @@
 - **Deliberate exception:** `.palette-*`, `.type-*`, `.layout-*` and
   `.ornament-*` keep literal values — they are mirrored by hand in
   `server/src/og/render.ts`, where a raw hex is what keeps the mirror visible.
-- **Contrast.** Body ink meets WCAG AA (4.5:1) on every surface it sits on,
-  including each translucent surface **composited with its blur ignored**.
-  `--ink-faint` clears the 3:1 large-text floor only and is never body text.
-  Asserted in `web/test/styles.test.ts`.
+- **Contrast.** Body ink (`--ink` and `--ink-muted`) meets WCAG AA (4.5:1)
+  against `--ground` — the root value and every per-palette override — and
+  against both glass surfaces **composited with their blur ignored**.
+  Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
+  large-text floor and is reserved for labels, icons, placeholders and
+  disabled states, never body copy — but that reservation is a convention,
+  not a guarantee: the tests hold the 3:1 floor and nothing about where
+  `--ink-faint` is used.
 - **Every glass surface must be legible with its blur removed.** The tint
   carries the contrast; blur is decoration. This is what makes the
   `prefers-reduced-transparency: reduce` fallback a token swap rather than a

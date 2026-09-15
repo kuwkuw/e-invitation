@@ -121,6 +121,9 @@ describe("palette-tinted ground", () => {
       expect(
         contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1]),
       ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrast(tokens.get("--ink-muted") as string, (ground as RegExpExecArray)[1]),
+      ).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
