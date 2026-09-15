@@ -5,6 +5,7 @@ import { AuthGate } from "./components/editor/AuthGate";
 import { ChatPanel } from "./components/editor/ChatPanel";
 import { FieldSheet } from "./components/editor/FieldSheet";
 import { BackIcon, ShareIcon } from "./components/editor/icons";
+import { PastDateBanner } from "./components/editor/PastDateBanner";
 import { PreviewPanel } from "./components/editor/PreviewPanel";
 import { SharePanel } from "./components/editor/SharePanel";
 import { LangSwitcher } from "./components/LangSwitcher";
@@ -173,6 +174,8 @@ export default function App() {
           t={t}
         />
       )}
+
+      <PastDateBanner blocked={editor.dateBlocked} message={t.chat.pastDateBlock} />
 
       <div className="cc-main">
         <ChatPanel

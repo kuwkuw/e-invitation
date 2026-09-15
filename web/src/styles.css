@@ -510,6 +510,18 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-var:hover { border-color: var(--accent); background: var(--accent-wash); }
 
+/* FR-1.8's refusal, pinned. Warm-tinted rather than red: the date is a thing
+   to fix, not a failure, and the app has no alert language anywhere else. */
+.cc-banner {
+  margin: 10px 14px 0;
+  padding: 11px 16px;
+  border-radius: var(--r-lg);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--ink);
+  border-left: 3px solid var(--accent);
+}
+
 /* Near-bleed (adr-018 §3): a scoped override, so InvitationPreview.tsx is not
    touched. It is DS-synced and rendered in four places — editor, gallery
    cards, landing hero fan, guest page — and its props are hand-mirrored in
