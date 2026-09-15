@@ -91,8 +91,7 @@ describe("glass", () => {
   // reduced-transparency fallback cannot be a second design.
   it("keeps ink legible on both surfaces with the blur ignored", () => {
     const ground = tokens.get("--ground") as string;
-    const over = (alphaToken: string) =>
-      blend("#ffffff", Number(tokens.get(alphaToken)), ground);
+    const over = (alphaToken: string) => blend("#ffffff", Number(tokens.get(alphaToken)), ground);
     for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
       expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
       expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
@@ -119,7 +118,9 @@ describe("palette-tinted ground", () => {
     for (const m of css.matchAll(/\.cc-shell\[data-palette="[a-z]+"\]\s*\{([^}]*)\}/g)) {
       const ground = /--ground:\s*(#[0-9a-f]{6})/i.exec(m[1]);
       expect(ground).not.toBeNull();
-      expect(contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1])).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1]),
+      ).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
