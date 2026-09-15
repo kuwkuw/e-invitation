@@ -52,6 +52,11 @@ export interface ChatStrings {
   variantsTitle: string;
   save: string;
   send: string;
+  /** Opens and closes the transcript on a phone, where it collapses behind the
+   *  composer (adr-018 §6). Desktop shows the log outright and never uses them
+   *  as visible labels — they stay the button's accessible name. */
+  openLog: string;
+  closeLog: string;
   quotaMsg: string;
   keyMsg: string;
   limitMsg: string;
@@ -396,6 +401,8 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Variants",
       save: "Save",
       send: "Send",
+      openLog: "Show conversation",
+      closeLog: "Hide conversation",
       quotaMsg:
         "The AI's free daily limit is used up. Try again tomorrow — or add your own key via the AI key button above.",
       keyMsg: "The AI key didn't work — check it in the AI key panel above.",
@@ -519,6 +526,8 @@ export const UI: Record<Language, UiStrings> = {
       variantsTitle: "Варіанти",
       save: "Зберегти",
       send: "Надіслати",
+      openLog: "Показати листування",
+      closeLog: "Сховати листування",
       quotaMsg:
         "Безкоштовний денний ліміт AI вичерпано. Спробуйте завтра — або додайте власний ключ через кнопку «Ключ AI» вгорі.",
       keyMsg: "Ключ AI не спрацював — перевірте його в панелі «Ключ AI» вгорі.",

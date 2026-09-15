@@ -17,6 +17,7 @@ interface Props {
  *  after, and the composer. Owns the draft text — nothing above needs it. */
 export function ChatPanel({ messages, phase, hasInvitation, onSend, t }: Props) {
   const [input, setInput] = useState("");
+  const [open, setOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const generating = phase === "generating";
 
@@ -34,8 +35,27 @@ export function ChatPanel({ messages, phase, hasInvitation, onSend, t }: Props) 
     onSend(text);
   }
 
+  // The latest thing the assistant said, or the status while it is saying it.
+  // On a phone the transcript collapses behind the composer, and this line is
+  // what keeps FR-1.7's nudge and the generating state from disappearing with
+  // it. FR-1.8's refusal does not rely on this — it has its own pinned banner,
+  // because a peek line can be scrolled past by the next message.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const peek = generating ? t.creating : lastAssistant?.text;
+
   return (
-    <section className="cc-chat">
+    <section className={`cc-chat${open ? " open" : ""}`}>
+      {peek && (
+        <button
+          type="button"
+          className="cc-peek"
+          aria-label={open ? t.closeLog : t.openLog}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {peek}
+        </button>
+      )}
       <div className="cc-messages">
         {phase === "empty" && messages.length === 0 ? (
           <div className="cc-start">

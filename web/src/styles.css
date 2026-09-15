@@ -534,22 +534,42 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    (square corners show two wedges of background), and layout-split's 38%
    image panel becomes a strip on a phone. */
 
-/* Mobile: preview is the hero, chat becomes a bottom sheet */
+/* Mobile: preview is the hero, and the transcript collapses behind a peek
+   line above the composer — the card owns the phone screen. Desktop shows
+   the transcript outright, so the peek line is redundant there and hidden
+   rather than conditionally rendered: the two layouts stay one component. */
+.cc-peek { display: none; }
+
 @media (max-width: 800px) {
   .cc-main { flex-direction: column; }
   .cc-preview { order: 1; padding: 12px; align-items: flex-start; }
   .cc-canvas .inv { box-shadow: var(--e-1); }
   .cc-chat {
     order: 2;
-    width: 100%;
-    max-height: 44%;
-    border-right: none;
-    border-top: 1px solid var(--edge);
-    border-radius: var(--r-xl) var(--r-xl) 0 0;
-    box-shadow: 0 -8px 24px rgba(20, 18, 14, 0.06);
+    width: auto;
+    margin: 0 12px 12px;
+    border-radius: var(--r-xl);
   }
+  /* Collapsed: composer and peek only. The card owns the phone screen. */
+  .cc-chat .cc-messages { display: none; }
+  .cc-chat.open .cc-messages { display: flex; max-height: 46vh; }
   .cc-messages { padding: 16px 16px 4px; }
-  .cc-composer { padding: 10px 14px 14px; }
+  .cc-peek {
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 11px 16px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .cc-composer { padding: 8px 10px 10px 16px; }
   .cc-sheet { right: 12px; left: 12px; bottom: 12px; width: auto; }
   .cc-share-panel { right: 8px; }
 }
