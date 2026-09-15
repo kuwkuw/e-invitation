@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrast, readStyles, rootTokens } from "./cssTokens";
+import { blend, contrast, readStyles, rootTokens } from "./cssTokens";
 
 // @vitest-environment node
 
@@ -60,5 +60,46 @@ describe("token contrast (WCAG 2.1)", () => {
 
   it("keeps the accent itself visible on the ground for icons and rules", () => {
     expect(contrast(tokens.get("--accent") as string, ground())).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("glass", () => {
+  it("declares both surfaces and their primitives", () => {
+    for (const t of [
+      "--glass-tint",
+      "--glass-tint-solid",
+      "--glass-alpha",
+      "--glass-alpha-solid",
+      "--glass-blur",
+      "--glass-edge",
+      "--glass-shadow",
+    ]) {
+      expect(tokens.has(t)).toBe(true);
+    }
+    expect(css).toMatch(/^\.glass\s*\{/m);
+    expect(css).toMatch(/^\.glass-solid\s*\{/m);
+  });
+
+  it("ships the -webkit- prefix beside every backdrop-filter", () => {
+    const plain = [...css.matchAll(/(?<!-webkit-)backdrop-filter\s*:/g)].length;
+    const prefixed = [...css.matchAll(/-webkit-backdrop-filter\s*:/g)].length;
+    expect(prefixed).toBe(plain);
+  });
+
+  // The spec's central rule: the tint alone carries the contrast, so the
+  // reduced-transparency fallback cannot be a second design.
+  it("keeps ink legible on both surfaces with the blur ignored", () => {
+    const ground = tokens.get("--ground") as string;
+    const over = (alphaToken: string) =>
+      blend("#ffffff", Number(tokens.get(alphaToken)), ground);
+    for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
+      expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("degrades to opaque when the viewer asks for less transparency", () => {
+    expect(css).toMatch(/@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 });

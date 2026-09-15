@@ -44,6 +44,16 @@
   --dur-fast: 160ms;
   --dur-base: 280ms;
 
+  /* Glass. The alpha is a token of its own so the contrast test can composite
+     the surface over the ground without parsing an rgba() string. */
+  --glass-alpha: 0.62;
+  --glass-alpha-solid: 0.82;
+  --glass-tint: rgba(255, 255, 255, 0.62);
+  --glass-tint-solid: rgba(255, 255, 255, 0.82);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+
   /* Status tokens (RSVP yes / no) — see the note above. */
   --rsvp-yes: #3d6b47;
   --rsvp-yes-bg: #eef3ee;
@@ -51,6 +61,38 @@
   --rsvp-no: #a83f3f;
   --rsvp-no-bg: #f6ebe9;
   --rsvp-no-edge: #e6cfc9;
+}
+
+/* Glass surfaces (adr-018). Two, not one: .glass-solid carries text and so
+   takes more tint and less blur than a toolbar does.
+
+   The rule that makes the fallback below trivially correct: **every glass
+   surface must be legible with its blur removed.** The tint alone carries the
+   contrast; blur is decoration on top. test/styles.test.ts asserts exactly
+   that, compositing each tint over --ground with blur ignored. */
+.glass {
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+.glass-solid {
+  background: var(--glass-tint-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+
+/* iOS's own Reduce Transparency, and its web equivalent. Because of the rule
+   above this is a token swap, not a second design. */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-tint: #faf7f2; --glass-tint-solid: #fffdfa; }
+  .glass,
+  .glass-solid { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 1ms; --dur-base: 1ms; }
 }
 
 /* App chrome ---------------------------------------------------------- */
