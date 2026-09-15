@@ -110,7 +110,7 @@ export default function App() {
     // accent belongs. Undefined before the first generate, which falls back to
     // the bare :root --ground.
     <div className="cc-shell" data-palette={editor.invitation?.design.palette}>
-      <header className="cc-header">
+      <header className="cc-header glass">
         <button
           type="button"
           className="cc-back"

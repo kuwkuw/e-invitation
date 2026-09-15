@@ -44,7 +44,7 @@ export function ChatPanel({ messages, phase, hasInvitation, onSend, t }: Props) 
   const peek = generating ? t.creating : lastAssistant?.text;
 
   return (
-    <section className={`cc-chat${open ? " open" : ""}`}>
+    <section className={`cc-chat glass${open ? " open" : ""}`}>
       {peek && (
         <button
           type="button"
