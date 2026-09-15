@@ -103,7 +103,12 @@ export default function App() {
   }
 
   return (
-    <div className="cc-shell">
+    // The ground is tinted by the invitation being edited (adr-018 §1). An
+    // attribute rather than the palette-* class: that class would also push
+    // the card's --ink and --accent into the chrome, where the product's own
+    // accent belongs. Undefined before the first generate, which falls back to
+    // the bare :root --ground.
+    <div className="cc-shell" data-palette={editor.invitation?.design.palette}>
       <header className="cc-header">
         <button
           type="button"

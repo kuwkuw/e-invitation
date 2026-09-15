@@ -104,3 +104,22 @@ describe("glass", () => {
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 });
+
+describe("palette-tinted ground", () => {
+  // Enum coverage, the same idiom server/test/og.test.ts uses: a seventh
+  // palette must not be able to ship an untinted editor.
+  it("gives every palette a ground entry, and invents none", () => {
+    const palettes = [...css.matchAll(/^\.palette-([a-z]+)\s/gm)].map((m) => m[1]);
+    const grounds = [...css.matchAll(/\.cc-shell\[data-palette="([a-z]+)"\]/g)].map((m) => m[1]);
+    expect([...new Set(palettes)].sort()).toEqual([...new Set(grounds)].sort());
+  });
+
+  it("keeps every ground light, so a dark card floats on light", () => {
+    // festive is a dark navy card; its ground must not follow it down.
+    for (const m of css.matchAll(/\.cc-shell\[data-palette="[a-z]+"\]\s*\{([^}]*)\}/g)) {
+      const ground = /--ground:\s*(#[0-9a-f]{6})/i.exec(m[1]);
+      expect(ground).not.toBeNull();
+      expect(contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1])).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

@@ -95,6 +95,19 @@
   :root { --dur-fast: 1ms; --dur-base: 1ms; }
 }
 
+/* The editor's ground, tinted by the invitation being edited (adr-018 §1).
+   A hand-mirror of the six .palette-* entries — NFR-8 lists it, and
+   test/styles.test.ts holds the pairing by enum coverage.
+
+   Every ground stays light, festive included: the card goes dark, the room
+   it sits in does not. */
+.cc-shell[data-palette="warm"]     { --ground: #f4e9d9; --ground-tint-a: #fdf7ec; --ground-tint-b: #efdcc2; }
+.cc-shell[data-palette="elegant"]  { --ground: #f3f0e6; --ground-tint-a: #fffef9; --ground-tint-b: #e9e2cb; }
+.cc-shell[data-palette="playful"]  { --ground: #f5efdc; --ground-tint-a: #fffdf2; --ground-tint-b: #f2e4bd; }
+.cc-shell[data-palette="minimal"]  { --ground: #f1f0ee; --ground-tint-a: #ffffff; --ground-tint-b: #e4e2df; }
+.cc-shell[data-palette="festive"]  { --ground: #e8e7ef; --ground-tint-a: #f7f6fb; --ground-tint-b: #d4d3e2; }
+.cc-shell[data-palette="romantic"] { --ground: #f4e6e8; --ground-tint-a: #fdf6f7; --ground-tint-b: #eed3d8; }
+
 /* App chrome ---------------------------------------------------------- */
 
 * { box-sizing: border-box; }
