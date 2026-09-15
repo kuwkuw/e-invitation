@@ -41,6 +41,15 @@ describe("ChatPanel peek line", () => {
     );
   });
 
+  it("keeps peeking the assistant when the host has spoken last", () => {
+    const { container } = renderPanel({
+      messages: [...messages, { role: "user" as const, text: "А ще додай музику" }],
+    });
+    expect(container.querySelector(".cc-peek")?.textContent).toBe(
+      "Оновила вітання та основний текст.",
+    );
+  });
+
   it("peeks the generating status while a call is in flight", () => {
     const { container } = renderPanel({ phase: "generating" });
     expect(container.querySelector(".cc-peek")?.textContent).toBe(t.creating);
