@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blend, contrast, readStyles, rootTokens } from "./cssTokens";
+import { blend, contrast, readStyles, rootTokens, sections } from "./cssTokens";
 
 // @vitest-environment node
 
@@ -121,5 +121,36 @@ describe("palette-tinted ground", () => {
       expect(ground).not.toBeNull();
       expect(contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1])).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+/** Sections converted to the material system. Each future surface conversion
+ *  ADDS a name here — that is the ratchet. Without it, "we'll tokenise the
+ *  rest later" is an intention rather than a checkable claim, and the second
+ *  surface arrives with fresh literals.
+ *
+ *  `Invitation card` is permanently absent by design: its values are mirrored
+ *  by hand in server/src/og/render.ts. */
+const CONVERTED = ["App chrome", "Creation chat"];
+
+describe("no raw hex in converted sections", () => {
+  const parts = sections(css);
+
+  for (const name of CONVERTED) {
+    it(`keeps ${name} on tokens`, () => {
+      const body = parts.get(name);
+      expect(body, `section "${name}" not found — did a banner comment change?`).toBeDefined();
+      // .cc-sk's three-stop shimmer needs a middle stop lighter than both
+      // ends, and tokens have no "one step lighter" operation. The rule
+      // carries its own reason in styles.css; minting two more tokens that
+      // nothing else would use is worse.
+      const scanned = (body as string).replace(/\.cc-sk\s*\{[^}]*\}/g, "");
+      const literals = [...scanned.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[0]);
+      expect(literals).toEqual([]);
+    });
+  }
+
+  it("names only sections that exist", () => {
+    expect(CONVERTED.filter((n) => !parts.has(n))).toEqual([]);
   });
 });

@@ -54,6 +54,15 @@
   --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
 
+  /* Status colours preserved at their existing values, deliberately. Their only
+     consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
+     guest page (components/guest/RsvpForm.tsx), `.cc-key-active` in the BYOK
+     panel — so tokenising them must not change what those surfaces look like.
+     Whether they should align with the --rsvp-* pair is a decision for the
+     conversion that owns those surfaces, not this one. */
+  --danger: #a4262c;
+  --success: #2f7d4f;
+
   /* Status tokens (RSVP yes / no) — see the note above. */
   --rsvp-yes: #3d6b47;
   --rsvp-yes-bg: #eef3ee;
@@ -115,8 +124,8 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: #f6f5f2;
-  color: #23211d;
+  background: var(--ground);
+  color: var(--ink);
 }
 
 .page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
@@ -130,9 +139,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  background: #efece6;
-  border: 1px solid #e4ddd0;
-  border-radius: 999px;
+  background: var(--accent-wash);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-pill);
   padding: 3px;
 }
 .ls-seg {
@@ -140,9 +149,9 @@ body {
   height: 40px;
   padding: 0 8px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: transparent;
-  color: #8f887a;
+  color: var(--ink-faint);
   font: inherit;
   font-weight: 700;
   font-size: 0.82rem;
@@ -150,42 +159,42 @@ body {
   cursor: pointer;
   transition: color 0.14s, background 0.14s;
 }
-.ls-seg:hover { color: #23211d; background: rgba(255, 255, 255, 0.55); }
+.ls-seg:hover { color: var(--ink); background: rgba(255, 255, 255, 0.55); }
 .ls-seg.active {
-  background: #ffffff;
-  color: #23211d;
+  background: var(--surface);
+  color: var(--ink);
   box-shadow: 0 1px 3px rgba(20, 18, 14, 0.15);
 }
 .ls-globe-wrap { display: inline-flex; align-items: center; gap: 8px; }
-.ls-globe { color: #a89f8e; display: flex; }
+.ls-globe { color: var(--ink-faint); display: flex; }
 .lp-nav-right { display: flex; align-items: center; gap: 12px; }
 
-.tagline { color: #6b6659; margin: 12px 0 20px; }
+.tagline { color: var(--ink-muted); margin: 12px 0 20px; }
 
 .composer { display: flex; flex-direction: column; gap: 10px; }
 .composer textarea, .field textarea {
   width: 100%;
-  border: 1px solid #c8c4bb;
-  border-radius: 8px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-sm);
   padding: 10px 12px;
   font: inherit;
   resize: vertical;
-  background: #fff;
+  background: var(--surface);
 }
 
 button.primary {
   align-self: flex-start;
-  background: #23211d;
-  color: #fff;
+  background: var(--ink);
+  color: var(--surface);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   padding: 10px 20px;
   font-size: 1rem;
   cursor: pointer;
 }
 button.primary:disabled { opacity: 0.5; cursor: default; }
 
-.error { color: #a4262c; }
+.error { color: var(--danger); }
 
 .workspace {
   display: grid;
@@ -196,15 +205,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 @media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
 
-.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b6659; }
+.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
 
 .field { margin-bottom: 14px; }
 .field-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .field-head label { font-size: 0.85rem; font-weight: 600; }
 .field-head button {
-  border: 1px solid #c8c4bb;
-  background: #fff;
-  border-radius: 6px;
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  border-radius: var(--r-sm);
   padding: 2px 8px;
   font-size: 0.8rem;
   cursor: pointer;
@@ -213,16 +222,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Creation chat ---------------------------------------------------------- */
 /* Colors come from the "creation-chat" template in the E-invitation DS
-   project: neutral warm chrome, #b3592e accent, invitation owns all color. */
+   project: neutral warm chrome, --accent accent, invitation owns all color. */
 
-.cc-shell { display: flex; flex-direction: column; height: 100dvh; background: #f6f5f2; }
+.cc-shell { display: flex; flex-direction: column; height: 100dvh; background: var(--ground); }
 
 .cc-header {
   position: relative;
   flex: 0 0 auto;
   height: 58px;
-  background: #fff;
-  border-bottom: 1px solid #e4ddd0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--edge);
   display: flex;
   align-items: center;
   padding: 0 14px;
@@ -231,15 +240,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-back {
   width: 38px; height: 38px;
   border: none; background: transparent; border-radius: 50%;
-  color: #23211d; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.cc-back:hover { background: #f2efe9; }
+.cc-back:hover { background: var(--accent-wash); }
 .cc-title {
   flex: 1;
   text-align: center;
   font-weight: 700;
   font-size: 1rem;
-  color: #23211d;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,14 +256,14 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-header-right { display: flex; align-items: center; gap: 10px; }
 .cc-share {
   display: flex; align-items: center; gap: 6px;
-  border: none; border-radius: 999px;
+  border: none; border-radius: var(--r-pill);
   padding: 9px 18px;
   font-size: 0.88rem; font-weight: 700;
-  background: #efece6; color: #a89f8e;
+  background: var(--accent-wash); color: var(--ink-faint);
   cursor: default;
 }
-.cc-share.ready { background: #b3592e; color: #fff; cursor: pointer; }
-.cc-share.ready:hover { background: #a04e27; }
+.cc-share.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
+.cc-share.ready:hover { background: var(--accent-hi); }
 /* Under ~480px the header wants 457px of content: back + title + AI key +
    language + Share. The title loses that fight first and collapsed to a single
    letter ("Н…") — and it is not decorative, it carries the invitation's own
@@ -270,36 +279,36 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   top: 62px; right: 14px;
   z-index: 30;
   width: min(400px, calc(100vw - 28px));
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-xl);
   box-shadow: 0 26px 60px rgba(20, 18, 14, 0.24);
   padding: 22px;
 }
 
 /* BYOK key panel (ADR-006) — shares the share-panel dropdown shell. */
-.cc-key-on { color: #b3592e; }
+.cc-key-on { color: var(--accent); }
 .cc-key-panel { width: min(340px, calc(100vw - 28px)); }
 .cc-key-title { margin: 0 0 6px; font-size: 0.95rem; }
-.cc-key-intro { margin: 0 0 10px; font-size: 0.82rem; color: #6b6659; line-height: 1.45; }
-.cc-key-active { margin: 0 0 10px; font-size: 0.82rem; color: #2f7d4f; font-weight: 600; }
-.cc-key-label { display: block; font-size: 0.78rem; font-weight: 600; color: #6b6659; margin-bottom: 10px; }
+.cc-key-intro { margin: 0 0 10px; font-size: 0.82rem; color: var(--ink-muted); line-height: 1.45; }
+.cc-key-active { margin: 0 0 10px; font-size: 0.82rem; color: var(--success); font-weight: 600; }
+.cc-key-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 10px; }
 .cc-key-label select {
   display: block; width: 100%; margin-top: 4px;
-  border: 1px solid #c8c4bb; border-radius: 6px;
-  padding: 6px 10px; font: inherit; font-size: 0.9rem; background: #fff;
+  border: 1px solid var(--edge); border-radius: var(--r-sm);
+  padding: 6px 10px; font: inherit; font-size: 0.9rem; background: var(--surface);
 }
 .cc-key-label .share-row { margin-top: 4px; }
 .cc-key-actions { display: flex; gap: 8px; }
 .cc-key-save {
-  border: none; border-radius: 999px; padding: 8px 16px;
-  font-size: 0.85rem; font-weight: 700; background: #b3592e; color: #fff; cursor: pointer;
+  border: none; border-radius: var(--r-pill); padding: 8px 16px;
+  font-size: 0.85rem; font-weight: 700; background: var(--accent); color: var(--surface); cursor: pointer;
 }
-.cc-key-save:disabled { background: #efece6; color: #a89f8e; cursor: default; }
-.cc-key-save:not(:disabled):hover { background: #a04e27; }
+.cc-key-save:disabled { background: var(--accent-wash); color: var(--ink-faint); cursor: default; }
+.cc-key-save:not(:disabled):hover { background: var(--accent-hi); }
 .cc-key-clear {
-  border: 1px solid #c8c4bb; background: #fff; border-radius: 999px;
-  padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: #6b6659;
+  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-pill);
+  padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: var(--ink-muted);
 }
 
 .cc-main { flex: 1; display: flex; min-height: 0; }
@@ -307,8 +316,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-chat {
   width: 440px;
   flex: 0 0 auto;
-  border-right: 1px solid #e4ddd0;
-  background: #fff;
+  border-right: 1px solid var(--edge);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -316,79 +325,79 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-messages { flex: 1; overflow-y: auto; padding: 28px 32px 8px; display: flex; flex-direction: column; gap: 13px; }
 
 .cc-start { padding-top: 20px; }
-.cc-start-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.8rem; color: #4a3728; line-height: 1.15; }
-.cc-start-hint { margin-top: 12px; color: #6b6659; font-size: 0.98rem; line-height: 1.55; }
-.cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: #8f887a; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.cc-start-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.8rem; color: var(--ink); line-height: 1.15; }
+.cc-start-hint { margin-top: 12px; color: var(--ink-muted); font-size: 0.98rem; line-height: 1.55; }
+.cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .cc-chips { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 9px; }
 .cc-chip {
-  background: #fff;
-  border: 1px solid #d8d2c6;
-  color: #4a3728;
-  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  border-radius: var(--r-pill);
   padding: 9px 15px;
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-chip:hover { border-color: #b3592e; background: #fbf6ef; }
+.cc-chip:hover { border-color: var(--accent); background: var(--accent-wash); }
 
 .cc-msg { display: flex; }
 .cc-msg.user { justify-content: flex-end; }
 .cc-bubble {
   padding: 11px 15px;
-  border-radius: 16px 16px 16px 4px;
+  border-radius: var(--r-lg) var(--r-lg) var(--r-lg) 4px;
   max-width: 84%;
   font-size: 0.94rem;
   line-height: 1.45;
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  color: #23211d;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  color: var(--ink);
 }
-.cc-msg.user .cc-bubble { background: #e9e4dc; border: none; border-radius: 16px 16px 4px 16px; }
+.cc-msg.user .cc-bubble { background: var(--accent-wash); border: none; border-radius: var(--r-lg) var(--r-lg) 4px var(--r-lg); }
 
-.cc-status { display: flex; align-items: center; gap: 8px; color: #6b6659; font-size: 0.94rem; }
-.cc-status svg { color: #b3592e; }
+.cc-status { display: flex; align-items: center; gap: 8px; color: var(--ink-muted); font-size: 0.94rem; }
+.cc-status svg { color: var(--accent); }
 .cc-dots { display: inline-flex; gap: 3px; align-items: center; padding-left: 2px; }
 @keyframes ccBlink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
-.cc-dot { width: 5px; height: 5px; border-radius: 50%; background: #b3592e; animation: ccBlink 1.2s infinite; }
+.cc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: ccBlink 1.2s infinite; }
 .cc-dot:nth-child(2) { animation-delay: 0.2s; }
 .cc-dot:nth-child(3) { animation-delay: 0.4s; }
 
 .cc-composer { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 16px 32px 24px; }
 .cc-composer input {
   flex: 1;
-  background: #f4f2ed;
-  border: 1px solid #e4ddd0;
-  border-radius: 999px;
+  background: var(--ground);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-pill);
   padding: 13px 18px;
   font: inherit;
   font-size: 0.95rem;
-  color: #23211d;
+  color: var(--ink);
 }
-.cc-composer input::placeholder { color: #9a9384; }
-.cc-composer input:focus { outline: none; border-color: #b3592e; }
+.cc-composer input::placeholder { color: var(--ink-faint); }
+.cc-composer input:focus { outline: none; border-color: var(--accent); }
 .cc-send {
   flex: 0 0 auto;
   width: 46px; height: 46px;
   border: none; border-radius: 50%;
-  background: #e7e2d9; color: #a89f8e;
+  background: var(--accent-wash); color: var(--ink-faint);
   display: flex; align-items: center; justify-content: center;
   cursor: default;
 }
-.cc-send.ready { background: #b3592e; color: #fff; cursor: pointer; }
+.cc-send.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
 
-.cc-preview { flex: 1; background: #f1efe9; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px; }
+.cc-preview { flex: 1; background: var(--ground); overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px; }
 .cc-preview-inner { width: min(460px, 100%); }
 .cc-preview-inner .design-controls { margin-bottom: 14px; }
 
 .cc-placeholder {
   width: 340px; height: 430px;
-  border: 1.5px dashed #d3ccbe;
-  border-radius: 16px;
+  border: 1.5px dashed var(--edge);
+  border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.5);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
-  color: #bcb3a2;
+  color: var(--ink-faint);
   font-size: 0.98rem;
   text-align: center;
 }
@@ -399,12 +408,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: linear-gradient(90deg, #ece8e0 25%, #f6f3ed 37%, #ece8e0 63%);
   background-size: 640px 100%;
   animation: ccShimmer 1.5s infinite linear;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 .cc-skeleton {
   width: 340px;
-  background: #fff;
-  border-radius: 16px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
   box-shadow: 0 22px 50px rgba(20, 18, 14, 0.15);
   padding: 44px 40px;
   display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -413,52 +422,52 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-sk-pill { width: 50%; height: 40px; border-radius: 999px; margin-top: 12px; }
 
 /* Tap-to-edit highlights on the invitation card */
-.inv-hit { cursor: pointer; border-radius: 8px; transition: box-shadow 0.15s; }
+.inv-hit { cursor: pointer; border-radius: var(--r-sm); transition: box-shadow 0.15s; }
 .inv-hit:hover { box-shadow: 0 0 0 2px rgba(179, 89, 46, 0.35); }
-.inv-hit-active { box-shadow: 0 0 0 2px #b3592e, 0 0 0 6px rgba(179, 89, 46, 0.15); }
+.inv-hit-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 6px rgba(179, 89, 46, 0.15); }
 
 /* Field edit sheet */
 .cc-sheet {
   position: fixed;
   z-index: 40;
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  box-shadow: 0 24px 54px rgba(20, 18, 14, 0.24);
-  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  box-shadow: var(--e-3);
+  border-radius: var(--r-lg);
   padding: 16px 18px;
   right: 40px;
   bottom: 30px;
   width: min(340px, calc(100vw - 36px));
 }
 .cc-sheet-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-.cc-sheet-kicker { font-size: 0.68rem; color: #9a9384; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
-.cc-sheet-title { font-size: 1.05rem; font-weight: 700; color: #23211d; margin-top: 2px; }
+.cc-sheet-kicker { font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.cc-sheet-title { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-top: 2px; }
 .cc-sheet-close {
   width: 30px; height: 30px;
-  border: none; background: #f2efe9; border-radius: 50%;
-  color: #6b6659; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  border: none; background: var(--accent-wash); border-radius: 50%;
+  color: var(--ink-muted); display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .cc-actions { display: flex; gap: 8px; }
 .cc-act {
   flex: 1;
-  background: #f6f5f2;
-  border: 1px solid #e4ddd0;
-  border-radius: 12px;
+  background: var(--ground);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 12px 6px;
   display: flex; flex-direction: column; align-items: center; gap: 7px;
-  font-size: 0.78rem; font-weight: 600; color: #4a3728;
+  font-size: 0.78rem; font-weight: 600; color: var(--ink);
   cursor: pointer; text-align: center; line-height: 1.2;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-act:hover { border-color: #b3592e; }
+.cc-act:hover { border-color: var(--accent); }
 .cc-act:disabled { opacity: 0.6; cursor: default; }
-.cc-act-on { border-color: #b3592e; background: #f7efe3; color: #b3592e; }
+.cc-act-on { border-color: var(--accent); background: var(--accent-wash); color: var(--accent); }
 
 .cc-manual { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .cc-manual textarea {
   width: 100%;
-  border: 1px solid #e4ddd0;
-  border-radius: 10px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 10px 12px;
   font: inherit;
   font-size: 0.92rem;
@@ -468,17 +477,17 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .cc-variants { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .cc-var {
-  background: #fff;
-  border: 1px solid #d8d2c6;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
   padding: 11px 14px;
   font-size: 0.9rem;
-  color: #4a3728;
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
 }
-.cc-var:hover { border-color: #b3592e; background: #fbf6ef; }
+.cc-var:hover { border-color: var(--accent); background: var(--accent-wash); }
 
 /* Mobile: preview is the hero, chat becomes a bottom sheet */
 @media (max-width: 800px) {
@@ -489,8 +498,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
     width: 100%;
     max-height: 44%;
     border-right: none;
-    border-top: 1px solid #e4ddd0;
-    border-radius: 20px 20px 0 0;
+    border-top: 1px solid var(--edge);
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
     box-shadow: 0 -8px 24px rgba(20, 18, 14, 0.06);
   }
   .cc-messages { padding: 16px 16px 4px; }
