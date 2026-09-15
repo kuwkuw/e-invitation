@@ -43,7 +43,15 @@ export function rootTokens(css: string): Map<string, string> {
     if (depth > 0) continue;
 
     for (const decl of block[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-      out.set(decl[1], decl[2].trim());
+      const value = decl[2].trim();
+      // A bare `var(--other-token)` alias (e.g. --accent: var(--ui-accent))
+      // resolves against tokens already collected from this same block —
+      // valid because CSS custom properties read in declaration order and an
+      // alias is always declared after the token it points to. Anything more
+      // than a single var() reference (a fallback, a calc(), ...) is left as
+      // the raw declaration text; no current token needs that.
+      const alias = /^var\((--[\w-]+)\)$/.exec(value);
+      out.set(decl[1], alias ? (out.get(alias[1]) ?? value) : value);
     }
   }
   return out;

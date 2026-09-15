@@ -21,8 +21,13 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
-  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible. */
-  --accent: #b3592e;
+  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
+     --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
+     card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
+     anything meaning the *product's* accent there must read --ui-accent
+     instead — the two are tied together so they cannot drift. */
+  --ui-accent: #b3592e;
+  --accent: var(--ui-accent);
   --accent-hi: #a04e27;
   --accent-wash: #f7efe3;
   --edge: #e4ddd0;
@@ -444,8 +449,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Tap-to-edit highlights on the invitation card */
 .inv-hit { cursor: pointer; border-radius: var(--r-sm); transition: box-shadow 0.15s; }
-.inv-hit:hover { box-shadow: 0 0 0 2px rgba(179, 89, 46, 0.35); }
-.inv-hit-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 6px rgba(179, 89, 46, 0.15); }
+.inv-hit:hover { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent) 35%, transparent); }
+.inv-hit-active { box-shadow: 0 0 0 2px var(--ui-accent), 0 0 0 6px color-mix(in srgb, var(--ui-accent) 15%, transparent); }
 
 /* Field edit sheet */
 .cc-sheet {
