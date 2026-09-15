@@ -1,7 +1,7 @@
 import type { UiStrings } from "../../i18n";
 import type { CopyField, DesignTokens, Invitation } from "../../types";
-import { DesignControls } from "../DesignControls";
 import { InvitationPreview } from "../InvitationPreview";
+import { DesignToolbar } from "./DesignToolbar";
 import { SparkleIcon } from "./icons";
 
 interface Props {
@@ -59,7 +59,7 @@ export function PreviewPanel({
   return (
     <section className="cc-preview">
       <div className="cc-preview-inner cc-canvas">
-        <DesignControls
+        <DesignToolbar
           design={invitation.design}
           labels={t.design}
           onChange={onDesignChange}
