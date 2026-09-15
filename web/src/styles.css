@@ -16,6 +16,13 @@
   --ground: #f3ece2;
   --surface: #ffffff;
 
+  /* body's own background, preserved at its pre-branch value and deliberately
+     distinct from the ground token above. Most screens paint their own
+     opaque background over it, but .gl (the gallery) does not, and the
+     gallery is explicitly out of scope for this iteration (adr-018 §8) — the
+     ground token would repaint it warm beige instead of leaving it alone. */
+  --app-bg: #f6f5f2;
+
   /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only. */
   --ink: #23211d;
   --ink-muted: #6b6659;
@@ -129,7 +136,7 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--ground);
+  background: var(--app-bg);
   color: var(--ink);
 }
 
