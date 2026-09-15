@@ -25,10 +25,32 @@ export function sections(css: string): Map<string, string> {
   return out;
 }
 
-/** Custom properties declared on a bare `:root` (not on a class or attribute). */
+/** Custom properties declared on a bare `:root` (not on a class or attribute).
+ *  Reads only the top-level `:root`, not nested blocks inside @media queries — those
+ *  are intentional conditional overrides (e.g., prefers-reduced-transparency fallbacks)
+ *  and would shadow base token values if read. */
 export function rootTokens(css: string): Map<string, string> {
   const out = new Map<string, string>();
   for (const block of css.matchAll(/:root\s*\{([^}]*)\}/g)) {
+    const index = block.index ?? 0;
+    // Skip :root blocks nested inside @media (or other at-rules).
+    // Check if there's an unclosed @media before this :root.
+    const beforeMatch = css.slice(0, index);
+    const lastAtRule = Math.max(
+      beforeMatch.lastIndexOf("@media"),
+      beforeMatch.lastIndexOf("@supports"),
+      beforeMatch.lastIndexOf("@document"),
+      beforeMatch.lastIndexOf("@-webkit-")
+    );
+    if (lastAtRule >= 0) {
+      // Find the most recent closing brace before this :root.
+      const lastCloseBrace = beforeMatch.lastIndexOf("}", lastAtRule);
+      // If the last closing brace is before the at-rule, the at-rule is still open.
+      if (lastCloseBrace < lastAtRule) {
+        continue;
+      }
+    }
+
     for (const decl of block[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
       out.set(decl[1], decl[2].trim());
     }

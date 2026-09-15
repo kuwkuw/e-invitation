@@ -83,6 +83,7 @@ describe("glass", () => {
   it("ships the -webkit- prefix beside every backdrop-filter", () => {
     const plain = [...css.matchAll(/(?<!-webkit-)backdrop-filter\s*:/g)].length;
     const prefixed = [...css.matchAll(/-webkit-backdrop-filter\s*:/g)].length;
+    expect(plain).toBeGreaterThan(0);
     expect(prefixed).toBe(plain);
   });
 
