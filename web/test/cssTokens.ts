@@ -9,12 +9,19 @@ export function readStyles(): string {
   return readFileSync(fileURLToPath(new URL("../src/styles.css", import.meta.url)), "utf8");
 }
 
+/** The banner comment both functions below split on — one definition so
+ *  `sections()` and `bannerTitles()` can never read it differently. */
+const BANNER = /^\/\*\s*(.+?)\s*-{3,}/gm;
+
 /** Split on the file's major banner comments — `/* Title ---------- *​/`.
- *  Everything before the first banner is keyed "preamble". */
+ *  Everything before the first banner is keyed "preamble".
+ *
+ *  Keyed by title, so a title that appears twice silently keeps only the
+ *  later section — see `bannerTitles()`, which is how the ratchet test
+ *  catches that instead of trusting this Map to notice its own collision. */
 export function sections(css: string): Map<string, string> {
-  const banner = /^\/\*\s*(.+?)\s*-{3,}/gm;
   const found: { title: string; start: number }[] = [];
-  for (const m of css.matchAll(banner)) {
+  for (const m of css.matchAll(BANNER)) {
     found.push({ title: m[1], start: m.index ?? 0 });
   }
   const out = new Map<string, string>();
@@ -23,6 +30,13 @@ export function sections(css: string): Map<string, string> {
     out.set(s.title, css.slice(s.start, found[i + 1]?.start ?? css.length));
   });
   return out;
+}
+
+/** Every banner title, in file order, with duplicates kept rather than
+ *  collapsed — unlike `sections()`'s Map, which silently keeps only the
+ *  last section when a title repeats. */
+export function bannerTitles(css: string): string[] {
+  return [...css.matchAll(BANNER)].map((m) => m[1]);
 }
 
 /** Custom properties declared on a bare `:root` (not on a class or attribute).

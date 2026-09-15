@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blend, contrast, readStyles, rootTokens, sections } from "./cssTokens";
+import { bannerTitles, blend, contrast, readStyles, rootTokens, sections } from "./cssTokens";
 
 // @vitest-environment node
 
@@ -133,6 +133,25 @@ describe("palette-tinted ground", () => {
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
 const CONVERTED = ["App chrome", "Creation chat"];
+
+/** `sections()` keys a Map by banner title, which has two silent bypasses
+ *  the loop above cannot see: a duplicate title anywhere in the file makes
+ *  `Map.set` drop the earlier section entirely (its bytes belong to no
+ *  surviving key), and either bypass leaves raw hex in the orphaned
+ *  remainder unpoliced while every existing guard still passes. */
+describe("ratchet integrity", () => {
+  it("gives every banner section a unique title, so one cannot silently replace another", () => {
+    const titles = bannerTitles(css);
+    const duplicates = titles.filter((t, i) => titles.indexOf(t) !== i);
+    expect(duplicates).toEqual([]);
+  });
+
+  it("accounts for the entire file across the preamble and every section, so no bytes fall outside enforcement", () => {
+    const parts = sections(css);
+    const total = [...parts.values()].reduce((sum, part) => sum + part.length, 0);
+    expect(total).toBe(css.length);
+  });
+});
 
 describe("no raw hex in converted sections", () => {
   const parts = sections(css);
