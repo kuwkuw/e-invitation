@@ -795,6 +795,14 @@ the same day — unlike three of the iterations above, nothing here was owed.
 - **One surface converted, five still on literals.** The editor is the only
   converted surface; landing, gallery, guest, manage and crash still carry raw
   hex, named individually below.
+- **A section is not a surface.** The ratchet's unit is a stylesheet section
+  (`App chrome`, `Creation chat`); adr-018 §8's scope boundary's unit is a
+  surface. Tokenising those two sections also touched two things §8 lists as
+  out of scope — the language switcher shared by the landing, guest and
+  manage screens, and the share-panel/BYOK-panel shells — because both live
+  inside those sections. Kept rather than reverted: the deltas are
+  imperceptible or improvements (the globe icon's contrast goes
+  2.22:1 → 3.20:1). The next conversion should expect the same mismatch.
 - **Not every bespoke shadow consolidated.** Three — `.ls-seg.active`,
   `.cc-share-panel` and `.cc-skeleton` — stayed literal `rgba()` rather than
   snapping to `--e-1`/`--e-2`/`--e-3`, a
