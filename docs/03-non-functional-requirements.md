@@ -12,12 +12,33 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **101.2 kB gzipped** (317.7 kB raw), measured 2026-09-12 with
-  `pnpm --filter inv-app-web build`. **+9.1 kB of that is the invitation
-  gallery** ([adr-017](decisions/adr-017-invitation-gallery.md)) — 24 sample
-  invitations in two languages, two screens and their styles. That ADR's §5
-  records why the content stays in the bundle and re-derives its revisit
-  trigger as 115 kB.
+  **113.5 kB gzipped** (375.0 kB raw), measured 2026-09-15 with
+  `pnpm --filter inv-app-web build`. **This is the first time the line counts
+  CSS as well as JS** — 11.86 kB gzipped CSS (56.76 kB raw) plus 101.60 kB
+  gzipped JS (318.28 kB raw) — because the material system
+  ([adr-018](decisions/adr-018-material-system.md)) grew `styles.css`'s built
+  output large enough that leaving it out would hide most of what a converted
+  surface costs; no earlier figure on this line included CSS at all. The JS
+  side alone barely moved — 101.2 kB → 101.60 kB gzipped since 2026-09-12,
+  because the token block landed in `styles.css` rather than in a component —
+  so nearly all of the headline increase is CSS newly being counted, not new
+  weight. **The 115 kB revisit trigger needs re-deriving, not comparing
+  against directly**: it was set under the old JS-only method, and holding it
+  up against the new CSS+JS total conflates two different metrics — the same
+  mistake that cost adr-017 a threshold derived from a number 3.2 kB wrong,
+  now approached from the other direction. Re-derived under this line's new
+  definition — 115 kB JS-only plus the 11.86 kB gzipped CSS now counted —
+  [adr-017](decisions/adr-017-invitation-gallery.md) §5's equivalent trigger
+  is roughly **127 kB**, leaving roughly **13 kB of room**: the gap between
+  113.5 kB and that is the widened definition, not growth. The next surface
+  conversion should still re-measure this line rather than assume the room
+  holds, since its growth will be real. The chain of figures below
+  predates this change and is JS-only; it is not directly comparable to the
+  new headline number. **+9.1 kB of that (JS-only, at the time) was the
+  invitation gallery** ([adr-017](decisions/adr-017-invitation-gallery.md)) —
+  24 sample invitations in two languages, two screens and their styles. That
+  ADR's §5 records why the content stays in the bundle and re-derives its
+  revisit trigger as 115 kB.
   The figure before the gallery was **92.1 kB**, not the 88.9 kB this line
   carried: it had gone stale somewhere between adr-014 and adr-016, which is
   how adr-017 came to set a threshold against a number that was 3.2 kB wrong.
@@ -207,3 +228,32 @@
   ([adr-016](decisions/adr-016-public-discoverability.md) §6). The committed
   head block in `web/index.html` is generated, not hand-written:
   `server/test/seo.test.ts` fails if it drifts from what the module produces.
+- The palette→ground map in `styles.css` (`.cc-shell[data-palette="…"]`)
+  mirrors the six `.palette-*` rules **by hand**; `web/test/styles.test.ts`
+  holds the pairing by enum coverage
+  ([adr-018](decisions/adr-018-material-system.md) §1).
+
+## NFR-9 Visual system & accessibility
+
+- **One colour vocabulary.** `web/src/styles.css` holds a `:root` token block
+  that is the single source of colour, radius, elevation and motion. Converted
+  sections carry no raw hex; `web/test/styles.test.ts` enforces it with an
+  allowlist that shrinks as surfaces convert
+  ([adr-018](decisions/adr-018-material-system.md) §2).
+- **Deliberate exception:** `.palette-*`, `.type-*`, `.layout-*` and
+  `.ornament-*` keep literal values — they are mirrored by hand in
+  `server/src/og/render.ts`, where a raw hex is what keeps the mirror visible.
+- **Contrast.** Body ink (`--ink` and `--ink-muted`) meets WCAG AA (4.5:1)
+  against `--ground` — the root value and every per-palette override — and
+  against both glass surfaces **composited with their blur ignored**.
+  Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
+  large-text floor and is reserved for labels, icons, placeholders and
+  disabled states, never body copy — but that reservation is a convention,
+  not a guarantee: the tests hold the 3:1 floor and nothing about where
+  `--ink-faint` is used.
+- **Every glass surface must be legible with its blur removed.** The tint
+  carries the contrast; blur is decoration. This is what makes the
+  `prefers-reduced-transparency: reduce` fallback a token swap rather than a
+  second design.
+- **Reduced transparency and reduced motion are honoured**, not detected: the
+  two media queries above, never a device or user-agent check.
