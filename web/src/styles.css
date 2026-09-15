@@ -224,18 +224,33 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Colors come from the "creation-chat" template in the E-invitation DS
    project: neutral warm chrome, --accent accent, invitation owns all color. */
 
-.cc-shell { display: flex; flex-direction: column; height: 100dvh; background: var(--ground); }
+.cc-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background-color: var(--ground);
+  background-image:
+    radial-gradient(70% 48% at 50% 0%, var(--ground-tint-a, transparent) 0%, transparent 72%),
+    radial-gradient(60% 40% at 88% 92%, var(--ground-tint-b, transparent) 0%, transparent 70%);
+  transition: background-color var(--dur-base) var(--ease-ios);
+}
 
+/* Header: a floating pill, not a bar with a border-bottom. */
 .cc-header {
   position: relative;
   flex: 0 0 auto;
-  height: 58px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--edge);
+  height: 48px;
+  margin: 12px 14px 0;
+  border-radius: var(--r-pill);
   display: flex;
   align-items: center;
-  padding: 0 14px;
+  padding: 0 6px 0 12px;
   gap: 10px;
+  z-index: 6;
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
 }
 .cc-back {
   width: 38px; height: 38px;
@@ -313,14 +328,20 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .cc-main { flex: 1; display: flex; min-height: 0; }
 
+/* Chat: a floating panel, not a flush 440px column with a border-right. */
 .cc-chat {
-  width: 440px;
+  width: 420px;
   flex: 0 0 auto;
-  border-right: 1px solid var(--edge);
-  background: var(--surface);
+  margin: 14px 0 14px 14px;
+  border-radius: var(--r-xl);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
 }
 .cc-messages { flex: 1; overflow-y: auto; padding: 28px 32px 8px; display: flex; flex-direction: column; gap: 13px; }
 
@@ -387,7 +408,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-send.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
 
-.cc-preview { flex: 1; background: var(--ground); overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 40px; }
+.cc-preview { flex: 1; background: none; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 28px; }
 .cc-preview-inner { width: min(460px, 100%); }
 .cc-preview-inner .design-controls { margin-bottom: 14px; }
 
@@ -489,10 +510,23 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-var:hover { border-color: var(--accent); background: var(--accent-wash); }
 
+/* Near-bleed (adr-018 §3): a scoped override, so InvitationPreview.tsx is not
+   touched. It is DS-synced and rendered in four places — editor, gallery
+   cards, landing hero fan, guest page — and its props are hand-mirrored in
+   .design-sync/config.json and conventions.md, both of which have gone stale
+   before.
+
+   12px of inset rather than true full-bleed, for three reasons in the code:
+   the guest receives a card (.gr-card at both breakpoints), layout-banner's
+   title bar hangs on a negative margin with a radius tied to the card's own
+   (square corners show two wedges of background), and layout-split's 38%
+   image panel becomes a strip on a phone. */
+
 /* Mobile: preview is the hero, chat becomes a bottom sheet */
 @media (max-width: 800px) {
   .cc-main { flex-direction: column; }
-  .cc-preview { order: 1; padding: 22px; }
+  .cc-preview { order: 1; padding: 12px; align-items: flex-start; }
+  .cc-canvas .inv { box-shadow: var(--e-1); }
   .cc-chat {
     order: 2;
     width: 100%;

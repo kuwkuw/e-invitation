@@ -154,3 +154,19 @@ describe("no raw hex in converted sections", () => {
     expect(CONVERTED.filter((n) => !parts.has(n))).toEqual([]);
   });
 });
+
+describe("the editor canvas", () => {
+  it("paints the shell with the tinted ground, not a flat colour", () => {
+    const shell = /\.cc-shell\s*\{([^}]*)\}/.exec(css);
+    expect(shell).not.toBeNull();
+    expect((shell as RegExpExecArray)[1]).toMatch(/--ground-tint-a/);
+  });
+
+  it("near-bleeds the card without touching InvitationPreview's own rules", () => {
+    // The whole effect is a scoped override. .inv itself must keep its radius,
+    // because the guest page and the gallery render the same component.
+    expect(css).toMatch(/\.cc-canvas\s+\.inv\s*\{/);
+    const base = /^\.inv\s*\{([^}]*)\}/m.exec(css);
+    expect((base as RegExpExecArray)[1]).toMatch(/border-radius:\s*14px/);
+  });
+});

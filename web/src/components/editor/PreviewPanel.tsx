@@ -58,7 +58,7 @@ export function PreviewPanel({
 
   return (
     <section className="cc-preview">
-      <div className="cc-preview-inner">
+      <div className="cc-preview-inner cc-canvas">
         <DesignControls
           design={invitation.design}
           labels={t.design}
