@@ -795,10 +795,9 @@ the same day — unlike three of the iterations above, nothing here was owed.
 - **One surface converted, five still on literals.** The editor is the only
   converted surface; landing, gallery, guest, manage and crash still carry raw
   hex, named individually below.
-- **Not every bespoke shadow consolidated.** Of the bespoke `box-shadow`
-  values identified for the elevation tokens, four — `.ls-seg.active`,
-  `.cc-share-panel`, `.cc-skeleton`, and the mobile `.cc-chat` rule — stayed
-  literal `rgba()` rather than snapping to `--e-1`/`--e-2`/`--e-3`, a
+- **Not every bespoke shadow consolidated.** Three — `.ls-seg.active`,
+  `.cc-share-panel` and `.cc-skeleton` — stayed literal `rgba()` rather than
+  snapping to `--e-1`/`--e-2`/`--e-3`, a
   disclosed judgment call: the plan gave ranges for radii but none for
   shadows, and snapping unasked would have moved pixels nobody approved. This
   weakens adr-018's "~9 bespoke shadows" framing somewhat; the token exists

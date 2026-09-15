@@ -18,23 +18,21 @@
   gzipped JS (318.28 kB raw) — because the material system
   ([adr-018](decisions/adr-018-material-system.md)) grew `styles.css`'s built
   output large enough that leaving it out would hide most of what a converted
-  surface costs; no earlier figure on this line included CSS at all. Read
-  against the old JS-only method the JS side barely moved — 101.2 kB →
-  101.60 kB gzipped since 2026-09-12, because the token block landed in
-  `styles.css` rather than in a component. **The 115 kB revisit trigger
-  needs re-deriving, not comparing against directly**: it was set under the
-  old JS-only method, and holding it up against the new CSS+JS total
-  conflates two different metrics — the same mistake that cost adr-017 a
-  threshold derived from a number 3.2 kB wrong, now approached from the other
-  direction. Re-derived under this line's new definition — 115 kB JS-only
-  plus the 11.86 kB gzipped CSS now counted —
+  surface costs; no earlier figure on this line included CSS at all. The JS
+  side alone barely moved — 101.2 kB → 101.60 kB gzipped since 2026-09-12,
+  because the token block landed in `styles.css` rather than in a component —
+  so nearly all of the headline increase is CSS newly being counted, not new
+  weight. **The 115 kB revisit trigger needs re-deriving, not comparing
+  against directly**: it was set under the old JS-only method, and holding it
+  up against the new CSS+JS total conflates two different metrics — the same
+  mistake that cost adr-017 a threshold derived from a number 3.2 kB wrong,
+  now approached from the other direction. Re-derived under this line's new
+  definition — 115 kB JS-only plus the 11.86 kB gzipped CSS now counted —
   [adr-017](decisions/adr-017-invitation-gallery.md) §5's equivalent trigger
-  is roughly **127 kB**. Against that there is roughly **13 kB of room**, not
-  a near-breach: the change here is definitional, not growth, and the JS side
-  alone only moved 101.2 kB → 101.60 kB gzipped since 2026-09-12. The next
-  surface conversion should still re-measure this line rather than assume
-  that room holds, since its growth will be real rather than a widened
-  definition. The chain of figures below
+  is roughly **127 kB**, leaving roughly **13 kB of room**: the gap between
+  113.5 kB and that is the widened definition, not growth. The next surface
+  conversion should still re-measure this line rather than assume the room
+  holds, since its growth will be real. The chain of figures below
   predates this change and is JS-only; it is not directly comparable to the
   new headline number. **+9.1 kB of that (JS-only, at the time) was the
   invitation gallery** ([adr-017](decisions/adr-017-invitation-gallery.md)) —
