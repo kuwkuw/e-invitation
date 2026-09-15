@@ -1,6 +1,58 @@
 /* All families cover Cyrillic — required for Ukrainian copy. */
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400..800&family=Marck+Script&display=swap");
 
+/* Material system ------------------------------------------------------- */
+
+/* Material system (adr-018). One vocabulary for the whole app; the editor is
+   the first surface built from it. Defined here rather than in a tokens.css
+   because design-sync ships this file's closure to the DS project and a local
+   @import would not be inlined — see .design-sync/NOTES.md.
+
+   Deliberately NOT tokenised: .palette-* / .type-* / .layout-* / .ornament-*.
+   Those values are mirrored by hand in server/src/og/render.ts, where a raw
+   hex is what keeps the mirror visible. */
+:root {
+  /* Ground and surface */
+  --ground: #f3ece2;
+  --surface: #ffffff;
+
+  /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only. */
+  --ink: #23211d;
+  --ink-muted: #6b6659;
+  --ink-faint: #8d8577;
+
+  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible. */
+  --accent: #b3592e;
+  --accent-hi: #a04e27;
+  --accent-wash: #f7efe3;
+  --edge: #e4ddd0;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* Elevation */
+  --e-1: 0 1px 3px rgba(74, 55, 40, 0.08);
+  --e-2: 0 8px 24px rgba(74, 55, 40, 0.16);
+  --e-3: 0 24px 54px rgba(20, 18, 14, 0.24);
+
+  /* Motion. iOS reads as much from its easing as from its materials. */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+
+  /* Status tokens (RSVP yes / no) — see the note above. */
+  --rsvp-yes: #3d6b47;
+  --rsvp-yes-bg: #eef3ee;
+  --rsvp-yes-edge: #cfe0d1;
+  --rsvp-no: #a83f3f;
+  --rsvp-no-bg: #f6ebe9;
+  --rsvp-no-edge: #e6cfc9;
+}
+
 /* App chrome ---------------------------------------------------------- */
 
 * { box-sizing: border-box; }
@@ -10,20 +62,6 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   background: #f6f5f2;
   color: #23211d;
-}
-
-/* Status tokens (RSVP yes / no), settled by the E-invitation DS host-manage
-   template (adr-010 §9): warm, muted, AA on white (6.2:1 / 6.1:1), and --rsvp-no
-   deliberately distinct from accent terracotta #b3592e so it reads as a status,
-   not an alert. One pair everywhere — status text, pills, count tiles — in place
-   of the old scattered #2f7d4f/#a4262c literals. */
-:root {
-  --rsvp-yes: #3d6b47;
-  --rsvp-yes-bg: #eef3ee;
-  --rsvp-yes-edge: #cfe0d1;
-  --rsvp-no: #a83f3f;
-  --rsvp-no-bg: #f6ebe9;
-  --rsvp-no-edge: #e6cfc9;
 }
 
 .page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
