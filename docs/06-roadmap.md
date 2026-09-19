@@ -817,12 +817,26 @@ the same day — unlike three of the iterations above, nothing here was owed.
   it, not an implementation defect. Parked this iteration rather than
   reworked, because fixing it means repositioning the DOM and changes desktop
   too, which nothing here specified.
-- **adr-018 §7's hardware gate has not been run.** The ADR is explicit that
-  glass should not ship before a DevTools throttle pass and a check on a real
-  mid-range Android inside Viber's in-app webview — "it does not ship
-  stuttering." Neither has happened yet; this is still owed before the glass
-  direction should be trusted on the hardware hosts are actually opening
-  their invitations on.
+- **adr-018 §7's hardware gate ran on 2026-09-19 and passed** — five days
+  after the glass shipped, which is the wrong order and worth saying. A real
+  Android device, in Viber's in-app webview, scrolling the editor and opening
+  the toolbar's sheets: no stutter, no lag behind the finger. The device model
+  was not recorded, so read the result as "a real phone in the real webview"
+  rather than as a measured tier.
+
+  **What it did not establish.** The gate passed on a layout in which *no
+  blurred layer sits stationary over a scrolling backdrop* — the header and
+  composer are outside the scroller with zero overlap, and the toolbar and
+  sheets are inside it, so they move with their own backdrop. That property is
+  currently an accident of the sticky bug below, not a design choice. Any
+  change that parks a blurred layer over the moving card — the toolbar
+  reposition first among them — creates a case this gate never exercised, and
+  has to be re-run against it.
+
+  The DevTools half of §7 was not run and is close to the wrong instrument
+  anyway: `backdrop-filter` costs GPU fill rate and memory bandwidth, and a
+  CPU throttle emulates neither. The device is the gate; the throttle pass was
+  never going to be the part that decided.
 
 ## Candidate backlog
 
