@@ -38,10 +38,17 @@ Rendering: **no full-image generation.** The model only picks design tokens — 
 
 Material system (adr-018): `styles.css` opens with a `:root` token block —
 ground, glass, ink, accent, radius, elevation, motion — that is the single
-source of colour for converted surfaces. **The editor is the only converted
-surface so far**; the other five still carry literals, and
-`web/test/styles.test.ts`'s `CONVERTED` allowlist is the ratchet — each
-conversion adds a name to it. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
+source of colour for converted surfaces. **Two surfaces are converted — the
+editor and the guest page**; landing, gallery, manage and crash still carry
+literals, and `web/test/styles.test.ts`'s `CONVERTED` allowlist is the
+ratchet — each conversion adds a name to it. The hex scan is the ratchet's
+whole reach, so an accent held as `rgba(179, 89, 46, …)` passes it unseen:
+that is what `--ui-accent-rgb` is for, and why it is pinned to
+`--ui-accent` by a test rather than by a comment. Three ink tiers below
+`--ink-faint` (`--ink-disabled`, `--ink-placeholder`, `--ink-whisper`)
+were minted at the guest page's own values and clear **nothing** — not even
+3:1 — so they name a contrast debt rather than settle it; a test asserts they
+stay under 3:1 so no later edit can quietly promote them into readable text. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
 are permanently exempt: those values are mirrored by hand in the OG renderer,
 where a raw hex is what keeps the mirror visible. Glass is two classes composed
 from tokens (`.glass`, `.glass-solid` — the second carries text), and the rule

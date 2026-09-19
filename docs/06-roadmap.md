@@ -826,12 +826,35 @@ the same day — unlike three of the iterations above, nothing here was owed.
 
 ## Candidate backlog
 
-- **Five surfaces still carry raw hex** — landing, gallery, guest, manage,
-  crash. The material system ([adr-018](decisions/adr-018-material-system.md))
-  shipped with the editor as its only converted surface, and
-  `web/test/styles.test.ts`'s allowlist names the rest. The share panel, BYOK
-  panel and auth gate come first: they open from the editor header, so the seam
+- **Four surfaces still carry raw hex** — landing, gallery, manage, crash.
+  The guest page converted on 2026-09-19 (60 literals; 299 of its 306
+  declarations resolve byte-identical, the other seven are measured collapses
+  under dE 2.5), leaving the editor and the guest page as the two converted
+  surfaces in `web/test/styles.test.ts`'s allowlist. The share panel, BYOK
+  panel and auth gate come next: they open from the editor header, so the seam
   is visible at the moment the host presses Publish.
+- **The guest page has four text colours under 3:1**, found by converting it:
+  the not-found hint at 2.79:1, the input placeholder at 2.59:1, the optional
+  label and disabled submit at 2.34:1, and the wordmark at 1.90:1 — against
+  WCAG 1.4.3's 4.5:1 for text. The conversion gathered them into three named
+  tokens and asserted they stay where they are; it deliberately did not raise
+  them, because that is a visible change to the one page every guest sees.
+  Cheap to fix, and it wants NFR-9's contrast claim read at the same time.
+- **adr-018 §7's hardware gate is still unrun, and the toolbar fix is now
+  coupled to it.** A 2026-09-19 probe measured the editor's blur budget at
+  190px of a 592px screen at rest and 286px (45% of the viewport) with a
+  design sheet open — against §7's estimate of "roughly 120px of a 600px
+  screen". It also found that **no blurred layer currently sits stationary
+  over moving content**: the header and composer are outside the scroller with
+  zero overlap, and the toolbar and sheets are inside it, so they translate
+  with their own backdrop. The reason is a bug — `.cc-design` is
+  `position: sticky; bottom: 0` as the scroller's *first* child, which never
+  pins, so the design controls scroll out of view entirely (measured: top 72
+  at rest, -162 at full scroll). Fixing that gap — filed above as cosmetic —
+  is what would create the per-frame blur recompute §7 exists to prevent. Run
+  the device check first. The rule worth writing into `styles.test.ts`
+  either way: **no blurred layer may sit stationary over a scrolling
+  backdrop.**
 - ~~**The RSVP prompt is the only field anyone rewrites.**~~ — **gone cold, and
   it should be said plainly.** `field_regenerations` has read
   `{"rsvp_prompt": 6}` since before 2026-08-02 and read exactly that on
