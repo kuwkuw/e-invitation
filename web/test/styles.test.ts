@@ -43,6 +43,26 @@ describe("material tokens", () => {
     expect([...required].filter((t) => !tokens.has(t))).toEqual([]);
   });
 
+  it("keeps --ui-accent-rgb in step with --ui-accent, which it restates by hand", () => {
+    const accent = tokens.get("--ui-accent") as string;
+    const triplet = (tokens.get("--ui-accent-rgb") as string)
+      .split(",")
+      .map((n) => Number(n.trim()));
+    const fromHex = [1, 3, 5].map((i) => Number.parseInt(accent.slice(i, i + 2), 16));
+    expect(triplet).toEqual(fromHex);
+  });
+
+  it("keeps the three sub-faint inks the guest page needs, and says they clear nothing", () => {
+    // Minted at the guest page's pre-conversion values; all three are under
+    // 3:1 on --surface, so this asserts they exist and are NOT promoted into
+    // the --ink-faint tier by a later edit that assumes they are readable.
+    for (const name of ["--ink-disabled", "--ink-placeholder", "--ink-whisper"]) {
+      const value = tokens.get(name) as string;
+      expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
+      expect(contrast(value, tokens.get("--surface") as string), name).toBeLessThan(3);
+    }
+  });
+
   it("keeps the RSVP status pair, which other surfaces still read", () => {
     expect(tokens.get("--rsvp-yes")).toBe("#3d6b47");
     expect(tokens.get("--rsvp-no")).toBe("#a83f3f");
@@ -175,7 +195,7 @@ describe("palette-tinted ground", () => {
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
-const CONVERTED = ["App chrome", "Creation chat"];
+const CONVERTED = ["App chrome", "Creation chat", "Guest page"];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
  *  the loop above cannot see: a duplicate title anywhere in the file makes
