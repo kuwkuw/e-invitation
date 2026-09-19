@@ -34,6 +34,7 @@
      clears anything, and none may carry text a guest has to read. Raising
      them is a visible change to the one page every guest sees, so it belongs
      to its own approved iteration; see 06-roadmap.md. */
+  --ink-strong: #4a4438;
   --ink-disabled: #b0a996;
   --ink-placeholder: #a8a091;
   --ink-whisper: #c3bbac;
@@ -60,6 +61,7 @@
      surfaces sit on. --wash-warm-edge is the border that pairs with
      --accent-wash; --wash is the neutral one. */
   --edge-soft: #ece7dd;
+  --edge-strong: #c8c4bb;
   --wash: #f1efe9;
   --wash-warm-edge: #e7cdb8;
 
@@ -89,6 +91,30 @@
   --glass-blur: blur(20px) saturate(180%);
   --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+
+  /* Caution. The warm material the share panel's manage-token block is built
+     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
+     not decoration: adr-010 makes the manage link a subordinate, visually
+     distinct action beside the public one, and that hierarchy is the only
+     thing standing between a host and pasting the wrong link into a chat.
+
+     Two of these sit inside the dE 2.5 threshold that collapsed values
+     elsewhere in this block — --caution-wash is 2.2 from --wash and
+     --caution-surface is 1.8 from --surface — and are kept separate anyway.
+     The rule is that values collapse when they do the same *job*, not when
+     they merely measure alike; these two exist to not be the clean chrome.
+
+     The three edges are a deliberate depth ramp (block, inner field, ghost
+     button) measuring 2.9–6.0 apart, and the two faints 7.3 apart, so none
+     of them is drift. --caution-ink-masked carries the masked token itself. */
+  --caution-wash: #f8f2ea;
+  --caution-surface: #fffdfa;
+  --caution-edge: #ecdcc9;
+  --caution-edge-hi: #e4d4c0;
+  --caution-edge-strong: #dcccb6;
+  --caution-ink: #7a5638;
+  --caution-ink-faint: #a89478;
+  --caution-ink-masked: #9a8f7d;
 
   /* Status colours preserved at their existing values, deliberately. Their only
      consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
