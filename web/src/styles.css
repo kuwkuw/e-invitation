@@ -687,16 +687,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row { display: flex; gap: 8px; }
 .share-row input {
   flex: 1;
-  border: 1px solid #c8c4bb;
+  border: 1px solid var(--edge-strong);
   border-radius: 6px;
   padding: 6px 10px;
   font: inherit;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--surface);
 }
 .share-row button {
-  border: 1px solid #c8c4bb;
-  background: #fff;
+  border: 1px solid var(--edge-strong);
+  background: var(--surface);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 0.85rem;
@@ -712,19 +712,19 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center;
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
-.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: #23211d; }
-.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: #8d8577; background: #f1ede4; border: 1px solid #e4ddd0; border-radius: 999px; padding: 4px 10px; }
-.sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: #6b6659; }
+.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
+.sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
-.sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: #23211d; }
+.sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: var(--ink); }
 .sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: 6px; padding: 2px 7px; }
 .sp-link {
   display: flex; align-items: center; gap: 10px;
   height: 48px; padding: 0 14px; margin-bottom: 12px;
-  border: 1px solid #e4ddd0; border-radius: 14px; background: #f7f5f1;
-  color: #a89f8e;
+  border: 1px solid var(--edge); border-radius: 14px; background: var(--app-bg);
+  color: var(--ink-placeholder);
 }
-.sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: #23211d; }
+.sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: var(--ink); }
 
 /* The one filled accent in the panel. Nothing else competes with it — which
    is a rule about count, not about which action it is: with a native share
@@ -734,12 +734,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; height: 52px;
   border: none; border-radius: 16px;
-  background: #b3592e; color: #fff;
+  background: var(--ui-accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
   box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
   transition: background 0.15s, box-shadow 0.15s;
 }
-.sp-primary:hover { background: #9f4d26; box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
+.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
 
 /* Copy, once the share sheet has taken the primary. Still a button rather than
    a text link: pasting the link somewhere that is not a chat is ordinary, and
@@ -747,51 +747,51 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    share natively. Neutral chrome keeps it clear of the warm manage block. */
 .sp-secondary {
   width: 100%; height: 46px; margin-top: 8px;
-  border: 1px solid #e4ddd0; border-radius: 14px; background: #fff;
-  color: #4a4438; font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--edge); border-radius: 14px; background: var(--surface);
+  color: var(--ink-strong); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.sp-secondary:hover { border-color: #b3592e; color: #23211d; }
-.sp-hint { margin: 10px 0 0; text-align: center; font-size: 0.8rem; color: #8d8577; }
+.sp-secondary:hover { border-color: var(--ui-accent); color: var(--ink); }
+.sp-hint { margin: 10px 0 0; text-align: center; font-size: 0.8rem; color: var(--ink-faint); }
 
-.sp-divider { height: 1px; background: #ece7dd; margin: 18px 0; }
+.sp-divider { height: 1px; background: var(--edge-soft); margin: 18px 0; }
 
 /* Sensitive block: warm tint distinct from the clean chrome, so the eye reads
    "different kind of thing" before it reads any words. */
-.sp-manage { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px 15px; }
-.sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
+.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: 14px; padding: 14px 15px 15px; }
+.sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
 .sp-manage-warning { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.45; color: var(--rsvp-no); }
 .sp-manage-row { display: flex; align-items: center; gap: 8px; }
 .sp-manage-value {
   flex: 1; min-width: 0;
   height: 46px; display: flex; align-items: center; padding: 0 12px;
-  border: 1px solid #e4d4c0; border-radius: 12px; background: #fffdfa;
-  font-size: 0.88rem; color: #9a8f7d;
+  border: 1px solid var(--caution-edge-hi); border-radius: 12px; background: var(--caution-surface);
+  font-size: 0.88rem; color: var(--caution-ink-masked);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Outline only — never filled, so it can't be mistaken for the primary. */
 .sp-ghost {
   flex: 0 0 auto; height: 46px; padding: 0 14px;
-  border: 1px solid #dcccb6; border-radius: 12px; background: transparent;
-  color: #7a5638; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--caution-edge-strong); border-radius: 12px; background: transparent;
+  color: var(--caution-ink); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.sp-ghost:hover { border-color: #b3592e; color: #23211d; }
+.sp-ghost:hover { border-color: var(--ui-accent); color: var(--ink); }
 .sp-reveal, .sp-manage-copied {
   display: block; width: 100%; margin: 9px 0 0;
   border: none; background: none; padding: 0;
-  text-align: center; font: inherit; font-size: 0.76rem; color: #a89478;
+  text-align: center; font: inherit; font-size: 0.76rem; color: var(--caution-ink-faint);
 }
 .sp-reveal { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.sp-reveal:hover { color: #b3592e; }
-.sp-manage-copied { color: #7a5638; font-weight: 600; }
+.sp-reveal:hover { color: var(--ui-accent); }
+.sp-manage-copied { color: var(--caution-ink); font-weight: 600; }
 
 .sp-responses-link {
   display: block; margin-top: 16px;
   text-align: center; font-size: 0.9rem; font-weight: 600;
-  color: #6b6659; text-decoration: none;
+  color: var(--ink-muted); text-decoration: none;
 }
-.sp-responses-link:hover { color: #b3592e; }
+.sp-responses-link:hover { color: var(--ui-accent); }
 
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the

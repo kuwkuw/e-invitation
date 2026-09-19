@@ -195,7 +195,7 @@ describe("palette-tinted ground", () => {
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
-const CONVERTED = ["App chrome", "Creation chat", "Guest page"];
+const CONVERTED = ["App chrome", "Creation chat", "Guest page", "Share panel"];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
  *  the loop above cannot see: a duplicate title anywhere in the file makes
