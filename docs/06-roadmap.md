@@ -840,13 +840,24 @@ the same day — unlike three of the iterations above, nothing here was owed.
 
 ## Candidate backlog
 
-- **Four surfaces still carry raw hex** — landing, gallery, manage, crash.
-  The guest page converted on 2026-09-19 (60 literals; 299 of its 306
-  declarations resolve byte-identical, the other seven are measured collapses
-  under dE 2.5), leaving the editor and the guest page as the two converted
-  surfaces in `web/test/styles.test.ts`'s allowlist. The share panel, BYOK
-  panel and auth gate come next: they open from the editor header, so the seam
-  is visible at the moment the host presses Publish.
+- **What is left on raw hex**, after two conversions on 2026-09-19 — the
+  guest page (60 literals, 299 of 306 declarations byte-identical) and the
+  share panel (39 literals, 185 of 189). Remaining, by count:
+  `Host manage dashboard` 77, `Crash screen` 110 (which also holds the
+  gallery's rules — it has no banner of its own, worth giving it one),
+  `Landing page` 13, and `Design controls` 9. That last one is the cheap
+  surprise: it is part of the editor, so the editor has never actually been
+  fully converted despite being called the first converted surface.
+
+  The BYOK panel needed no pass of its own — its rules were already inside
+  `Creation chat` — and the auth gate should be checked the same way before
+  anyone plans work for it. The remaining named item from adr-018 §8 is
+  therefore smaller than that list implies.
+
+  Manage and crash are the real remaining work, and manage is where the next
+  conversion should go: the share panel pass already moved four declarations
+  on it via `ManageEmpty`, so it is the surface most likely to end up
+  half-converted by accident.
 - **The guest page has four text colours under 3:1**, found by converting it:
   the not-found hint at 2.79:1, the input placeholder at 2.59:1, the optional
   label and disabled submit at 2.34:1, and the wordmark at 1.90:1 — against

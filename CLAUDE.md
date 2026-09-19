@@ -38,10 +38,26 @@ Rendering: **no full-image generation.** The model only picks design tokens — 
 
 Material system (adr-018): `styles.css` opens with a `:root` token block —
 ground, glass, ink, accent, radius, elevation, motion — that is the single
-source of colour for converted surfaces. **Two surfaces are converted — the
-editor and the guest page**; landing, gallery, manage and crash still carry
-literals, and `web/test/styles.test.ts`'s `CONVERTED` allowlist is the
-ratchet — each conversion adds a name to it. The hex scan is the ratchet's
+source of colour for converted surfaces. `CONVERTED` in
+`web/test/styles.test.ts` is the ratchet and names four sections —
+`App chrome`, `Creation chat`, `Guest page`, `Share panel` — and each
+conversion adds a name to it. **Read that list as sections, not surfaces:**
+the editor is *almost* converted but `Design controls` still holds 9
+literals, while `Share panel` reaches past the editor into the account
+sheets and the manage dashboard. Landing, gallery, manage and crash are
+untouched. Two allowlisted sections still contain hex on purpose and the test
+knows it: `Creation chat`'s `.cc-sk` shimmer needs a stop lighter than both
+its ends, and the `Material system` banner holds the token definitions
+themselves.
+
+**Collapsing a literal onto an existing token is allowed when the two do the
+same job — not when they merely measure alike.** The guest page pass collapsed
+five values under a dE 2.5 threshold; the share panel pass then kept
+`--caution-wash` (dE 2.2 from `--wash`) and `--caution-surface` (1.8 from
+`--surface`) separate anyway, because the whole purpose of the manage-token
+block is to not read as the clean chrome it sits in. Distance is the check,
+not the rule. The `--caution-*` group is that block's material: three edges
+forming a depth ramp, two faints, a wash, a surface and an ink. The hex scan is the ratchet's
 whole reach, so an accent held as `rgba(179, 89, 46, …)` passes it unseen:
 that is what `--ui-accent-rgb` is for, and why it is pinned to
 `--ui-accent` by a test rather than by a comment. Three ink tiers below
