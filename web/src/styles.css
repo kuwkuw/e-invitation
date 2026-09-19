@@ -28,6 +28,16 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
+  /* Three tiers below --ink-faint, minted at the guest page's existing values
+     so that conversion moved no pixels. Each is under 3:1 on --surface —
+     2.34, 2.59 and 1.90 respectively — so unlike --ink-faint none of these
+     clears anything, and none may carry text a guest has to read. Raising
+     them is a visible change to the one page every guest sees, so it belongs
+     to its own approved iteration; see 06-roadmap.md. */
+  --ink-disabled: #b0a996;
+  --ink-placeholder: #a8a091;
+  --ink-whisper: #c3bbac;
+
   /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
      card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
@@ -38,6 +48,20 @@
   --accent-hi: #a04e27;
   --accent-wash: #f7efe3;
   --edge: #e4ddd0;
+
+  /* --ui-accent as an RGB triplet, for the rgba() accent tints that would
+     otherwise sit in the stylesheet as raw literals the hex ratchet cannot
+     see. It tracks --ui-accent rather than --accent for the shadowing reason
+     above, and its value must stay in step with it by hand — styles.test.ts
+     holds the pairing. */
+  --ui-accent-rgb: 179, 89, 46;
+
+  /* A softer edge than --edge, and the two quiet washes the guest page's
+     surfaces sit on. --wash-warm-edge is the border that pairs with
+     --accent-wash; --wash is the neutral one. */
+  --edge-soft: #ece7dd;
+  --wash: #f1efe9;
+  --wash-warm-edge: #e7cdb8;
 
   /* Radius */
   --r-sm: 8px;
