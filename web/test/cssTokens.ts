@@ -108,3 +108,44 @@ export function blend(fg: string, alpha: number, bg: string): string {
     .map((c) => c.toString(16).padStart(2, "0"))
     .join("")}`;
 }
+
+/** CSS with comments removed. Every scanner below works on this, so a brace
+ *  inside a prose comment can never be read as a rule boundary — styles.css
+ *  is more comment than code, and its comments quote selectors. */
+export function stripComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+/** The `{...}` span of the first at-rule matching `header`, as offsets into
+ *  the string passed in. Brace-matched rather than `[^}]*`, which stops at
+ *  the first nested rule's `}` and would report an @media block as empty. */
+export function atRuleSpan(css: string, header: RegExp): { start: number; end: number } | null {
+  const m = header.exec(css);
+  if (!m) return null;
+  const open = css.indexOf("{", m.index);
+  if (open === -1) return null;
+  let depth = 0;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === "{") depth += 1;
+    else if (css[i] === "}") {
+      depth -= 1;
+      if (depth === 0) return { start: open, end: i };
+    }
+  }
+  return null;
+}
+
+/** Every innermost rule block, with its selector list split on commas and its
+ *  offset kept so callers can ask whether a rule sits inside an at-rule span.
+ *  Innermost is what makes this work unnested: for `@media ... { .a { ... } }`
+ *  the match is `.a`, not the @media header. */
+export function ruleBlocks(css: string): { selectors: string[]; body: string; at: number }[] {
+  return [...css.matchAll(/([^{}]*)\{([^{}]*)\}/g)].map((m) => ({
+    selectors: m[1]
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    body: m[2],
+    at: m.index ?? 0,
+  }));
+}
