@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { bannerTitles, blend, contrast, readStyles, rootTokens, sections } from "./cssTokens";
+import {
+  atRuleSpan,
+  bannerTitles,
+  blend,
+  contrast,
+  readStyles,
+  rootTokens,
+  ruleBlocks,
+  sections,
+  stripComments,
+} from "./cssTokens";
 
 // @vitest-environment node
 
@@ -101,6 +111,36 @@ describe("glass", () => {
   it("degrades to opaque when the viewer asks for less transparency", () => {
     expect(css).toMatch(/@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+  });
+
+  /** The check above proves only that the block exists. A third glass surface
+   *  would blur under Reduce Transparency with every other guard still green:
+   *  the prefix test counts declarations file-wide, and the contrast test
+   *  reads the two alpha tokens it was written against. So name the
+   *  selectors — whatever sets a blur must be cleared by the fallback.
+   *
+   *  Prefixed-vs-plain parity inside the block is not re-checked here; the
+   *  `-webkit-` test above counts the whole file, reduce block included, so
+   *  clearing only one of the pair already fails it. */
+  it("clears the blur on every selector that sets one, not just the two it shipped with", () => {
+    const bare = stripComments(css);
+    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
+    expect(span, "no prefers-reduced-transparency block to scan").not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+
+    const blurred = new Set<string>();
+    const cleared = new Set<string>();
+    for (const rule of ruleBlocks(bare)) {
+      if (!/backdrop-filter\s*:/.test(rule.body)) continue;
+      const insideFallback = rule.at > start && rule.at < end;
+      const clears = insideFallback && /backdrop-filter\s*:\s*none/.test(rule.body);
+      for (const selector of rule.selectors) (clears ? cleared : blurred).add(selector);
+    }
+
+    // Guards the scan itself: a renamed class or a broken regex would leave
+    // both sets empty, and an empty subset check passes for the wrong reason.
+    expect(blurred.size).toBeGreaterThan(0);
+    expect([...blurred].filter((s) => !cleared.has(s)).sort()).toEqual([]);
   });
 });
 

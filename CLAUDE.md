@@ -20,6 +20,10 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 
 **web/** (Vite + React, port 5173, proxies `/api` → localhost:3001): `build` includes typecheck.
 
+## Browser support
+
+**Baseline Widely available is the default; a Newly available feature is allowed when it is feature-detected and degrades gracefully** — with **no polyfill and no dependency added for a fallback**: either a custom fallback of ~20 lines or fewer covers it, or the approach gets redesigned. Guest links are opened from inside Viber/Telegram/WhatsApp, so the floor is whatever webview those embed, and on iOS that is WKWebView — Safari, not Chrome, is the binding constraint on anything served to `/i/:id`. adr-018 already states the single-feature form of this rule — **every glass surface must be legible with its blur removed** — and the reason that stayed a token swap rather than a second design is that the fallback was scoped before the feature was used. Write new ones the same way. This is also the policy the `modern-web-guidance` skill reads when deciding whether a guide's fallback can be skipped.
+
 ## Architecture
 
 Pipeline (`server/src/pipeline/`): sentence → `extractBrief` (cheap model, structured `EventBrief` JSON) → **parallel** `generateCopy` + `resolveDesign` → `Invitation` JSON returned to the client. Copy and design depend only on the brief, so `generate.ts` always runs them with `Promise.all`. Latency target: sentence in → editable invitation out in ~3s.
