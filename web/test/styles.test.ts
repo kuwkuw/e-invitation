@@ -287,3 +287,49 @@ describe("the editor canvas", () => {
     expect((base as RegExpExecArray)[1]).toMatch(/border-radius:\s*14px/);
   });
 });
+
+/** The manage page is where a host reads their replies, so its quiet text has
+ *  to be quiet by size and weight rather than by being hard to see. Each row
+ *  names the ground the text actually sits on — the card (--surface) or the
+ *  page around it (--app-bg) — and the floor its role owes: AA for a
+ *  sentence, NFR-9's 3:1 label floor for a caption, label or timestamp. */
+describe("the manage page's text", () => {
+  const rules = ruleBlocks(stripComments(sections(css).get("Host manage dashboard") ?? ""));
+  const colourOf = (selector: string) => {
+    const rule = rules.find(
+      (r) => r.selectors.includes(selector) && /(?:^|[;\s])color\s*:/.test(r.body),
+    );
+    const token = rule && /(?:^|[;\s])color\s*:\s*var\((--[\w-]+)\)/.exec(rule.body);
+    return token ? token[1] : null;
+  };
+
+  const TEXT: [selector: string, ground: string, floor: number][] = [
+    [".hm-state-hint", "--surface", 4.5],
+    [".hm-empty-reassure", "--surface", 4.5],
+    [".hm-notify-scope", "--app-bg", 4.5],
+    [".hm-new-line", "--app-bg", 4.5],
+    [".hm-breakdown", "--surface", 3],
+    [".hm-updated", "--app-bg", 3],
+    [".hm-section-title", "--surface", 3],
+    [".hm-when", "--surface", 3],
+    [".hm-previous", "--surface", 3],
+    [".hm-tile-yes .hm-tile-label", "--rsvp-yes-bg", 3],
+    [".hm-tile-no .hm-tile-label", "--rsvp-no-bg", 3],
+  ];
+
+  for (const [selector, ground, floor] of TEXT) {
+    it(`puts ${selector} at ${floor}:1 or better on ${ground}`, () => {
+      const token = colourOf(selector);
+      expect(token, `${selector} has no color: var(--…) to check`).not.toBeNull();
+      const ratio = contrast(tokens.get(token as string) as string, tokens.get(ground) as string);
+      expect(ratio, `${selector} reads ${token}`).toBeGreaterThanOrEqual(floor);
+    });
+  }
+
+  it("keeps the sub-faint inks for the wordmark alone", () => {
+    const users = rules
+      .filter((r) => /var\(--ink-(?:disabled|placeholder|whisper)\)/.test(r.body))
+      .flatMap((r) => r.selectors);
+    expect(users).toEqual([".hm-brand"]);
+  });
+});

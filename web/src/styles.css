@@ -65,9 +65,11 @@
   /* The accent's family as ink, for marks that sit beside the accent rather
      than being it: the manage page's "N new since your last visit" line next
      to its accent dot, and the warm glyph inside its empty and access states.
+     --accent-ink carries a sentence, so it clears AA on --app-bg (4.61:1;
+     it was minted at 4.46:1 and moved dE 1.0 to get there).
      --accent-ink-faint is decorative only — the state's title says what the
      icon shows — so it is held to no contrast floor. */
-  --accent-ink: #8a6b57;
+  --accent-ink: #876955;
   --accent-ink-faint: #c2a98d;
 
   /* A softer edge than --edge, and the two quiet washes the guest page's
@@ -1439,7 +1441,12 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* From the "host-manage" template in the E-invitation DS project. Mobile is
    the primary case — a host checks the headcount on a phone — with a two-column
    desktop layout above 960px. The chrome stays quiet; the only colour is the
-   yes/no status pair, and the accent marks what is new. */
+   yes/no status pair, and the accent marks what is new.
+
+   Quiet is not faint. Nothing a host reads here sits on the three sub-faint
+   inks: a sentence takes --ink-muted (AA), a label or timestamp takes
+   --ink-faint (the 3:1 floor NFR-9 keeps for labels), and only the wordmark
+   stays at --ink-whisper. test/styles.test.ts holds both halves. */
 
 .hm-page { min-height: 100dvh; background: var(--app-bg); padding: 18px 16px 28px; }
 .hm-shell { max-width: 430px; margin: 0 auto; }
@@ -1464,7 +1471,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-details { margin: 6px 0 0; font-size: 0.9rem; color: var(--ink-muted); }
 
 .hm-actions { display: flex; align-items: center; gap: 8px; padding: 16px 4px 0; }
-.hm-updated { flex: 1; font-size: 0.76rem; color: var(--ink-placeholder); }
+.hm-updated { flex: 1; font-size: 0.76rem; color: var(--ink-faint); }
 .hm-btn {
   display: inline-flex; align-items: center; gap: 7px;
   height: 46px; padding: 0 12px;
@@ -1508,7 +1515,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   margin: 0; padding: 12px 0 4px;
   font-size: 0.72rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-placeholder);
+  color: var(--ink-faint);
 }
 .hm-list { list-style: none; margin: 0; padding: 0; }
 .hm-item { border-bottom: 1px solid var(--edge-soft); }
@@ -1525,7 +1532,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-name { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--ink); }
 .hm-plus { font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border-radius: 6px; padding: 2px 7px; }
 .hm-note { margin: 5px 0 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink-muted); }
-.hm-when { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-disabled); }
+.hm-when { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-faint); }
 
 .hm-pill {
   flex: 0 0 auto;
@@ -1537,14 +1544,17 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-pill-no { background: var(--rsvp-no-bg); border-color: var(--rsvp-no-edge); color: var(--rsvp-no); }
 
 /* A replaced answer: present, legible, visibly not counted. Neutral grey on
-   purpose — it must not compete with the live status, and it is not an error. */
+   purpose — it must not compete with the live status, and it is not an error.
+   The strike-through and the missing pill are what keep it out of the count;
+   it does not also need to be hard to read. Icon and time inherit the line's
+   ink rather than fading further, which put the time at 1.9:1. */
 .hm-previous {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: 0 0 0 52px; padding: 2px 0 14px;
-  font-size: 0.8rem; color: var(--ink-placeholder);
+  font-size: 0.8rem; color: var(--ink-faint);
 }
-.hm-previous-icon { display: flex; color: var(--ink-disabled); }
-.hm-previous-when { color: var(--ink-whisper); font-size: 0.76rem; }
+.hm-previous-icon { display: flex; }
+.hm-previous-when { font-size: 0.76rem; }
 
 /* Empty, access and error states — all calm, none styled as a failure. */
 .hm-empty, .hm-prompt { margin-top: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; }
@@ -1556,7 +1566,9 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: "Playfair Display", Georgia, serif; font-size: 1.4rem; font-weight: 700; color: var(--ink); }
 .hm-empty-body, .hm-state-body { margin: 0; max-width: 280px; font-size: 0.95rem; line-height: 1.55; color: var(--ink-muted); }
-.hm-empty-reassure, .hm-state-hint { margin: 14px 0 0; max-width: 270px; font-size: 0.85rem; line-height: 1.5; color: var(--ink-placeholder); }
+/* Sentences, not captions: the access hint is the one line telling a host who
+   lost their link where it is. Smaller than the body, never fainter than it. */
+.hm-empty-reassure, .hm-state-hint { margin: 14px 0 0; max-width: 270px; font-size: 0.85rem; line-height: 1.5; color: var(--ink-muted); }
 
 .hm-share-again { margin: 26px 0 8px; align-self: flex-start; font-size: 0.76rem; font-weight: 600; color: var(--ink-faint); }
 .hm-share-row { display: flex; gap: 8px; width: 100%; }
@@ -1589,11 +1601,13 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Reply email, below the responses it is about (adr-015 §7). Quiet enough that
    it never competes with the headcount, and the scope line is quieter still —
-   it is a qualifier on the sentence above it, not a second message. */
+   it is a qualifier on the sentence above it, not a second message. Quieter by
+   size only: that line is the mitigation for putting an account-wide switch on
+   an event's page, so it has to be read, and at 2.4:1 it was not. */
 .hm-notify { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin: 26px 4px 0; padding-top: 18px; border-top: 1px solid var(--edge-soft); }
 .hm-notify-copy { flex: 1 1 240px; }
 .hm-notify-text { margin: 0; font-size: 0.85rem; color: var(--ink-muted); }
-.hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-placeholder); }
+.hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-muted); }
 .hm-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
 .hm-notify-toggle:hover { color: var(--ink); }
 .hm-brand { margin: 22px 0 0; text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: var(--ink-whisper); }
