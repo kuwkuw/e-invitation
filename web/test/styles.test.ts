@@ -52,6 +52,33 @@ describe("material tokens", () => {
     expect(triplet).toEqual(fromHex);
   });
 
+  it("aliases --ink to --ui-ink, so the product's ink has a name .palette-* cannot shadow", () => {
+    expect(css).toMatch(/--ink:\s*var\(--ui-ink\);/);
+    expect(tokens.get("--ink")).toBe(tokens.get("--ui-ink"));
+  });
+
+  /** A swatch carries its own palette-* class, so on the swatch element every
+   *  name .palette-* sets is the *card's* value. --bg is read there on purpose
+   *  (it is the swatch); the product's ink, accent, edge and wash are not, and
+   *  must come from their --ui-* aliases or a non-shadowed token instead. */
+  it("never reads a palette-shadowed name for the swatch's own chrome", () => {
+    const shadowed = new Set<string>();
+    for (const m of css.matchAll(/^\.palette-[a-z]+\s*\{([^}]*)\}/gm)) {
+      for (const d of m[1].matchAll(/(--[\w-]+)\s*:/g)) shadowed.add(d[1]);
+    }
+    expect(shadowed.has("--ink")).toBe(true);
+
+    const reads: string[] = [];
+    for (const rule of ruleBlocks(stripComments(css))) {
+      if (!rule.selectors.some((s) => /\.swatch(?![\w-])/.test(s))) continue;
+      for (const v of rule.body.matchAll(/var\((--[\w-]+)/g)) {
+        if (shadowed.has(v[1]) && v[1] !== "--bg")
+          reads.push(`${rule.selectors.join(", ")}: ${v[1]}`);
+      }
+    }
+    expect(reads).toEqual([]);
+  });
+
   it("keeps the three sub-faint inks the guest page needs, and says they clear nothing", () => {
     // Minted at the guest page's pre-conversion values; all three are under
     // 3:1 on --surface, so this asserts they exist and are NOT promoted into
@@ -195,7 +222,7 @@ describe("palette-tinted ground", () => {
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
-const CONVERTED = ["App chrome", "Creation chat", "Guest page", "Share panel"];
+const CONVERTED = ["App chrome", "Creation chat", "Design controls", "Guest page", "Share panel"];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
  *  the loop above cannot see: a duplicate title anywhere in the file makes

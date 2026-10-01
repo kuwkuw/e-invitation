@@ -23,8 +23,13 @@
      ground token would repaint it warm beige instead of leaving it alone. */
   --app-bg: #f6f5f2;
 
-  /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only. */
-  --ink: #23211d;
+  /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only.
+     --ui-ink is --ink's non-shadowed alias, for the reason --ui-accent gives
+     below: .palette-* redefines --ink too, and the swatches carry a
+     palette-* class on themselves, so a ring drawn in var(--ink) around the
+     festive swatch would come out cream. */
+  --ui-ink: #23211d;
+  --ink: var(--ui-ink);
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
@@ -642,30 +647,30 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-design-sheet-body { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* Design controls -------------------------------------------------------- */
-/* Swatches reuse the palette-* custom properties from the invitation card
-   section, so option colors always track the real palettes. */
+/* The options inside the design toolbar's sheets. The four labelled rows that
+   used to hold them went with DesignControls.tsx, which the toolbar replaced.
 
-.design-controls { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.design-group { display: flex; align-items: center; gap: 10px; }
-.design-label { font-size: 0.78rem; font-weight: 600; color: #6b6659; min-width: 84px; }
-.design-options { display: flex; flex-wrap: wrap; gap: 6px; }
+   Swatches reuse the palette-* custom properties from the invitation card
+   section, so option colors always track the real palettes. That is also why
+   their selected ring reads --ui-ink rather than --ink: the palette-* class
+   sits on the swatch itself and shadows --ink there. */
 
 .design-option {
-  border: 1px solid #c8c4bb;
-  background: #fff;
+  border: 1px solid var(--edge-strong);
+  background: var(--surface);
   border-radius: 6px;
   padding: 3px 9px;
   font-size: 0.8rem;
   cursor: pointer;
 }
-.design-option.active { border-color: #23211d; box-shadow: inset 0 0 0 1px #23211d; }
+.design-option.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .design-option.font-sample { font-family: var(--font-display); font-size: 0.95rem; line-height: 1; padding: 4px 9px; }
 
 .swatch {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1px solid #c8c4bb;
+  border: 1px solid var(--edge-strong);
   background: var(--bg);
   cursor: pointer;
   padding: 0;
@@ -673,7 +678,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   align-items: center;
   justify-content: center;
 }
-.swatch.active { border-color: #23211d; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #23211d; }
+.swatch.active { border-color: var(--ui-ink); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ui-ink); }
 .swatch-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 
 /* Share panel ----------------------------------------------------------- */
