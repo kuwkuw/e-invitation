@@ -249,8 +249,13 @@
   Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
   large-text floor and is reserved for labels, icons, placeholders and
   disabled states, never body copy — but that reservation is a convention,
-  not a guarantee: the tests hold the 3:1 floor and nothing about where
-  `--ink-faint` is used.
+  not a guarantee: the tests hold the 3:1 floor and, everywhere except the
+  manage dashboard, nothing about where `--ink-faint` is used. On the manage
+  dashboard they hold the placement too: each text selector is named with the
+  ground it sits on and the floor its role owes (4.5:1 for a sentence, 3:1
+  for a label or timestamp), and no rule there but the wordmark may read the
+  three sub-faint inks below `--ink-faint`. Elsewhere — the guest page first —
+  those sub-faint inks still carry text, and that is open debt, not policy.
 - **Every glass surface must be legible with its blur removed.** The tint
   carries the contrast; blur is decoration. This is what makes the
   `prefers-reduced-transparency: reduce` fallback a token swap rather than a
