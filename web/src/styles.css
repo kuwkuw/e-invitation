@@ -28,6 +28,17 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
+  /* Three tiers below --ink-faint, minted at the guest page's existing values
+     so that conversion moved no pixels. Each is under 3:1 on --surface —
+     2.34, 2.59 and 1.90 respectively — so unlike --ink-faint none of these
+     clears anything, and none may carry text a guest has to read. Raising
+     them is a visible change to the one page every guest sees, so it belongs
+     to its own approved iteration; see 06-roadmap.md. */
+  --ink-strong: #4a4438;
+  --ink-disabled: #b0a996;
+  --ink-placeholder: #a8a091;
+  --ink-whisper: #c3bbac;
+
   /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
      card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
@@ -38,6 +49,21 @@
   --accent-hi: #a04e27;
   --accent-wash: #f7efe3;
   --edge: #e4ddd0;
+
+  /* --ui-accent as an RGB triplet, for the rgba() accent tints that would
+     otherwise sit in the stylesheet as raw literals the hex ratchet cannot
+     see. It tracks --ui-accent rather than --accent for the shadowing reason
+     above, and its value must stay in step with it by hand — styles.test.ts
+     holds the pairing. */
+  --ui-accent-rgb: 179, 89, 46;
+
+  /* A softer edge than --edge, and the two quiet washes the guest page's
+     surfaces sit on. --wash-warm-edge is the border that pairs with
+     --accent-wash; --wash is the neutral one. */
+  --edge-soft: #ece7dd;
+  --edge-strong: #c8c4bb;
+  --wash: #f1efe9;
+  --wash-warm-edge: #e7cdb8;
 
   /* Radius */
   --r-sm: 8px;
@@ -65,6 +91,30 @@
   --glass-blur: blur(20px) saturate(180%);
   --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+
+  /* Caution. The warm material the share panel's manage-token block is built
+     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
+     not decoration: adr-010 makes the manage link a subordinate, visually
+     distinct action beside the public one, and that hierarchy is the only
+     thing standing between a host and pasting the wrong link into a chat.
+
+     Two of these sit inside the dE 2.5 threshold that collapsed values
+     elsewhere in this block — --caution-wash is 2.2 from --wash and
+     --caution-surface is 1.8 from --surface — and are kept separate anyway.
+     The rule is that values collapse when they do the same *job*, not when
+     they merely measure alike; these two exist to not be the clean chrome.
+
+     The three edges are a deliberate depth ramp (block, inner field, ghost
+     button) measuring 2.9–6.0 apart, and the two faints 7.3 apart, so none
+     of them is drift. --caution-ink-masked carries the masked token itself. */
+  --caution-wash: #f8f2ea;
+  --caution-surface: #fffdfa;
+  --caution-edge: #ecdcc9;
+  --caution-edge-hi: #e4d4c0;
+  --caution-edge-strong: #dcccb6;
+  --caution-ink: #7a5638;
+  --caution-ink-faint: #a89478;
+  --caution-ink-masked: #9a8f7d;
 
   /* Status colours preserved at their existing values, deliberately. Their only
      consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
@@ -637,16 +687,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row { display: flex; gap: 8px; }
 .share-row input {
   flex: 1;
-  border: 1px solid #c8c4bb;
+  border: 1px solid var(--edge-strong);
   border-radius: 6px;
   padding: 6px 10px;
   font: inherit;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--surface);
 }
 .share-row button {
-  border: 1px solid #c8c4bb;
-  background: #fff;
+  border: 1px solid var(--edge-strong);
+  background: var(--surface);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 0.85rem;
@@ -662,19 +712,19 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center;
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
-.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: #23211d; }
-.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: #8d8577; background: #f1ede4; border: 1px solid #e4ddd0; border-radius: 999px; padding: 4px 10px; }
-.sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: #6b6659; }
+.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
+.sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
-.sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: #23211d; }
+.sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: var(--ink); }
 .sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: 6px; padding: 2px 7px; }
 .sp-link {
   display: flex; align-items: center; gap: 10px;
   height: 48px; padding: 0 14px; margin-bottom: 12px;
-  border: 1px solid #e4ddd0; border-radius: 14px; background: #f7f5f1;
-  color: #a89f8e;
+  border: 1px solid var(--edge); border-radius: 14px; background: var(--app-bg);
+  color: var(--ink-placeholder);
 }
-.sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: #23211d; }
+.sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: var(--ink); }
 
 /* The one filled accent in the panel. Nothing else competes with it — which
    is a rule about count, not about which action it is: with a native share
@@ -684,12 +734,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; height: 52px;
   border: none; border-radius: 16px;
-  background: #b3592e; color: #fff;
+  background: var(--ui-accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
   box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
   transition: background 0.15s, box-shadow 0.15s;
 }
-.sp-primary:hover { background: #9f4d26; box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
+.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
 
 /* Copy, once the share sheet has taken the primary. Still a button rather than
    a text link: pasting the link somewhere that is not a chat is ordinary, and
@@ -697,67 +747,67 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    share natively. Neutral chrome keeps it clear of the warm manage block. */
 .sp-secondary {
   width: 100%; height: 46px; margin-top: 8px;
-  border: 1px solid #e4ddd0; border-radius: 14px; background: #fff;
-  color: #4a4438; font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--edge); border-radius: 14px; background: var(--surface);
+  color: var(--ink-strong); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.sp-secondary:hover { border-color: #b3592e; color: #23211d; }
-.sp-hint { margin: 10px 0 0; text-align: center; font-size: 0.8rem; color: #8d8577; }
+.sp-secondary:hover { border-color: var(--ui-accent); color: var(--ink); }
+.sp-hint { margin: 10px 0 0; text-align: center; font-size: 0.8rem; color: var(--ink-faint); }
 
-.sp-divider { height: 1px; background: #ece7dd; margin: 18px 0; }
+.sp-divider { height: 1px; background: var(--edge-soft); margin: 18px 0; }
 
 /* Sensitive block: warm tint distinct from the clean chrome, so the eye reads
    "different kind of thing" before it reads any words. */
-.sp-manage { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px 15px; }
-.sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
+.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: 14px; padding: 14px 15px 15px; }
+.sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
 .sp-manage-warning { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.45; color: var(--rsvp-no); }
 .sp-manage-row { display: flex; align-items: center; gap: 8px; }
 .sp-manage-value {
   flex: 1; min-width: 0;
   height: 46px; display: flex; align-items: center; padding: 0 12px;
-  border: 1px solid #e4d4c0; border-radius: 12px; background: #fffdfa;
-  font-size: 0.88rem; color: #9a8f7d;
+  border: 1px solid var(--caution-edge-hi); border-radius: 12px; background: var(--caution-surface);
+  font-size: 0.88rem; color: var(--caution-ink-masked);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Outline only — never filled, so it can't be mistaken for the primary. */
 .sp-ghost {
   flex: 0 0 auto; height: 46px; padding: 0 14px;
-  border: 1px solid #dcccb6; border-radius: 12px; background: transparent;
-  color: #7a5638; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--caution-edge-strong); border-radius: 12px; background: transparent;
+  color: var(--caution-ink); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.sp-ghost:hover { border-color: #b3592e; color: #23211d; }
+.sp-ghost:hover { border-color: var(--ui-accent); color: var(--ink); }
 .sp-reveal, .sp-manage-copied {
   display: block; width: 100%; margin: 9px 0 0;
   border: none; background: none; padding: 0;
-  text-align: center; font: inherit; font-size: 0.76rem; color: #a89478;
+  text-align: center; font: inherit; font-size: 0.76rem; color: var(--caution-ink-faint);
 }
 .sp-reveal { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.sp-reveal:hover { color: #b3592e; }
-.sp-manage-copied { color: #7a5638; font-weight: 600; }
+.sp-reveal:hover { color: var(--ui-accent); }
+.sp-manage-copied { color: var(--caution-ink); font-weight: 600; }
 
 .sp-responses-link {
   display: block; margin-top: 16px;
   text-align: center; font-size: 0.9rem; font-weight: 600;
-  color: #6b6659; text-decoration: none;
+  color: var(--ink-muted); text-decoration: none;
 }
-.sp-responses-link:hover { color: #b3592e; }
+.sp-responses-link:hover { color: var(--ui-accent); }
 
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the
    invitation is the hero, the reply is a quiet white card; the attending
    toggle is the emotional center; the wordmark stays a whisper. */
 
-.gr-page { min-height: 100dvh; background: #f6f5f2; padding: 22px 20px 18px; }
-.gr-status { text-align: center; color: #6b6659; margin-top: 48px; }
+.gr-page { min-height: 100dvh; background: var(--app-bg); padding: 22px 20px 18px; }
+.gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; }
 
 .gr-layout { max-width: 430px; margin: 0 auto; }
 .gr-inv { margin-bottom: 20px; }
 .gr-lang { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 
 .gr-card {
-  background: #ffffff;
-  border: 1px solid #ece7dd;
+  background: var(--surface);
+  border: 1px solid var(--edge-soft);
   border-radius: 22px;
   box-shadow: 0 6px 20px rgba(20, 18, 14, 0.06);
   padding: 20px 18px 22px;
@@ -768,40 +818,40 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #b3592e;
+  color: var(--ui-accent);
   font-weight: 700;
   margin-bottom: 16px;
 }
 
-.gr-label { display: block; font-size: 0.8rem; font-weight: 600; color: #6b6659; margin: 18px 0 7px; }
+.gr-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); margin: 18px 0 7px; }
 .gr-label:first-of-type { margin-top: 0; }
 .gr-label.centered { text-align: center; margin-bottom: 9px; }
-.gr-optional { color: #b0a996; font-weight: 500; }
+.gr-optional { color: var(--ink-disabled); font-weight: 500; }
 
 .gr-input {
   width: 100%;
-  background: #f7f5f1;
-  border: 1px solid #e4ddd0;
+  background: var(--app-bg);
+  border: 1px solid var(--edge);
   border-radius: 14px;
   padding: 14px 15px;
   font: inherit;
   font-size: 0.95rem;
-  color: #23211d;
+  color: var(--ink);
 }
-.gr-input::placeholder { color: #a8a091; }
-.gr-input:focus { outline: none; background: #ffffff; border: 1.5px solid #b3592e; padding: 13.5px 14.5px; }
+.gr-input::placeholder { color: var(--ink-placeholder); }
+.gr-input:focus { outline: none; background: var(--surface); border: 1.5px solid var(--ui-accent); padding: 13.5px 14.5px; }
 .gr-note { min-height: 64px; line-height: 1.5; resize: vertical; }
 
-.gr-question { font-size: 1rem; font-weight: 700; color: #23211d; margin: 18px 0 10px; text-align: center; }
+.gr-question { font-size: 1rem; font-weight: 700; color: var(--ink); margin: 18px 0 10px; text-align: center; }
 
 .gr-tiles { display: flex; gap: 10px; }
 .gr-tile {
   flex: 1;
   height: 62px;
   border-radius: 16px;
-  border: 1.5px solid #e4ddd0;
-  background: #ffffff;
-  color: #23211d;
+  border: 1.5px solid var(--edge);
+  background: var(--surface);
+  color: var(--ink);
   font: inherit;
   font-size: 1rem;
   font-weight: 700;
@@ -812,13 +862,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
-.gr-tile.decline { color: #6b6659; }
-.gr-tile:hover { border-color: #b3592e; }
+.gr-tile.decline { color: var(--ink-muted); }
+.gr-tile:hover { border-color: var(--ui-accent); }
 .gr-tile.active {
-  border-color: #b3592e;
-  background: #b3592e;
-  color: #ffffff;
-  box-shadow: 0 8px 20px rgba(179, 89, 46, 0.28);
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: var(--surface);
+  box-shadow: 0 8px 20px rgba(var(--ui-accent-rgb), 0.28);
 }
 
 .gr-guests { margin-top: 18px; }
@@ -826,8 +876,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-stepper {
   display: inline-flex;
   align-items: center;
-  background: #f7f5f1;
-  border: 1px solid #e4ddd0;
+  background: var(--app-bg);
+  border: 1px solid var(--edge);
   border-radius: 999px;
   padding: 5px;
   gap: 6px;
@@ -836,19 +886,19 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #e4ddd0;
+  background: var(--surface);
+  border: 1px solid var(--edge);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #23211d;
+  color: var(--ink);
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.gr-step:hover { border-color: #b3592e; }
+.gr-step:hover { border-color: var(--ui-accent); }
 .gr-step:disabled { opacity: 0.4; cursor: default; }
-.gr-step:disabled:hover { border-color: #e4ddd0; }
-.gr-count { min-width: 52px; text-align: center; font-size: 1.35rem; font-weight: 700; color: #23211d; }
+.gr-step:disabled:hover { border-color: var(--edge); }
+.gr-count { min-width: 52px; text-align: center; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
 
 .gr-submit {
   margin-top: 20px;
@@ -856,8 +906,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   height: 56px;
   border: none;
   border-radius: 16px;
-  background: #b3592e;
-  color: #ffffff;
+  background: var(--ui-accent);
+  color: var(--surface);
   font: inherit;
   font-size: 1.02rem;
   font-weight: 700;
@@ -866,9 +916,9 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
+  box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3);
 }
-.gr-submit:disabled { background: #e7e2d8; color: #b0a996; cursor: not-allowed; box-shadow: none; }
+.gr-submit:disabled { background: var(--edge); color: var(--ink-disabled); cursor: not-allowed; box-shadow: none; }
 
 .gr-lock { opacity: 0.5; pointer-events: none; }
 @keyframes gr-spin { to { transform: rotate(360deg); } }
@@ -892,23 +942,23 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(179, 89, 46, 0.12);
+  background: rgba(var(--ui-accent-rgb), 0.12);
 }
 .gr-badge {
   position: absolute;
   inset: 11px;
   border-radius: 50%;
-  background: #b3592e;
+  background: var(--ui-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 14px 30px rgba(179, 89, 46, 0.38);
+  box-shadow: 0 14px 30px rgba(var(--ui-accent-rgb), 0.38);
   animation: gr-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
 }
 .gr-badge-muted {
   inset: 5px;
-  background: #f1efe9;
-  border: 1px solid #e4ddd0;
+  background: var(--wash);
+  border: 1px solid var(--edge);
   box-shadow: none;
 }
 .gr-tw { position: absolute; animation: gr-tw 1.8s ease-in-out infinite; }
@@ -917,24 +967,24 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-family: "Playfair Display", Georgia, serif;
   font-size: 1.7rem;
   font-weight: 700;
-  color: #23211d;
+  color: var(--ink);
   margin: 0 0 8px;
 }
-.gr-thanks-body { font-size: 0.98rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
+.gr-thanks-body { font-size: 0.98rem; color: var(--ink-muted); line-height: 1.5; margin: 0 0 20px; }
 
 .gr-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #faf1e9;
-  border: 1px solid #e7cdb8;
-  color: #b3592e;
+  background: var(--accent-wash);
+  border: 1px solid var(--wash-warm-edge);
+  color: var(--ui-accent);
   border-radius: 999px;
   padding: 10px 18px;
   font-size: 0.92rem;
   font-weight: 700;
 }
-.gr-pill.muted { background: #f1efe9; border-color: #e4ddd0; color: #6b6659; }
+.gr-pill.muted { background: var(--wash); border-color: var(--edge); color: var(--ink-muted); }
 
 .gr-change {
   display: block;
@@ -943,7 +993,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: none;
   font: inherit;
   font-size: 0.86rem;
-  color: #8d8577;
+  color: var(--ink-faint);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -951,8 +1001,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .gr-rows { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .gr-row {
-  background: #ffffff;
-  border: 1px solid #ece7dd;
+  background: var(--surface);
+  border: 1px solid var(--edge-soft);
   border-radius: 18px;
   box-shadow: 0 6px 20px rgba(20, 18, 14, 0.05);
   padding: 16px;
@@ -966,25 +1016,25 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.gr-row:hover { border-color: #b3592e; }
+.gr-row:hover { border-color: var(--ui-accent); }
 .gr-row-icon {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #faf1e9;
+  background: var(--accent-wash);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
 }
 .gr-row-text { flex: 1; }
-.gr-row-title { font-size: 0.94rem; font-weight: 700; color: #23211d; }
-.gr-row-sub { font-size: 0.78rem; color: #8d8577; margin-top: 2px; }
+.gr-row-title { font-size: 0.94rem; font-weight: 700; color: var(--ink); }
+.gr-row-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 2px; }
 
 .gr-brand {
   text-align: center;
   font-size: 0.72rem;
-  color: #c3bbac;
+  color: var(--ink-whisper);
   padding: 14px 0 4px;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -996,9 +1046,9 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    so nothing on the page gets louder. Hover moves the line only — the
    wordmark never changes colour. */
 .gr-cta { display: block; text-align: center; padding: 16px 0 4px; text-decoration: none; }
-.gr-cta-mark { font-size: 0.72rem; color: #c3bbac; letter-spacing: 0.1em; font-weight: 600; }
-.gr-cta-line { display: block; margin-top: 5px; font-size: 0.78rem; color: #8d8577; text-decoration: underline; text-underline-offset: 3px; transition: color 0.14s; }
-.gr-cta:hover .gr-cta-line { color: #6b6659; }
+.gr-cta-mark { font-size: 0.72rem; color: var(--ink-whisper); letter-spacing: 0.1em; font-weight: 600; }
+.gr-cta-line { display: block; margin-top: 5px; font-size: 0.78rem; color: var(--ink-faint); text-decoration: underline; text-underline-offset: 3px; transition: color 0.14s; }
+.gr-cta:hover .gr-cta-line { color: var(--ink-muted); }
 
 /* Not found */
 .gr-notfound {
@@ -1013,7 +1063,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: #efece6;
+  background: var(--wash);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1023,11 +1073,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-family: "Playfair Display", Georgia, serif;
   font-size: 1.55rem;
   font-weight: 700;
-  color: #23211d;
+  color: var(--ink);
   margin: 0 0 12px;
 }
-.gr-notfound-body { font-size: 0.98rem; color: #6b6659; line-height: 1.55; max-width: 320px; margin: 0; }
-.gr-notfound-hint { font-size: 0.9rem; color: #a29a8b; line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
+.gr-notfound-body { font-size: 0.98rem; color: var(--ink-muted); line-height: 1.55; max-width: 320px; margin: 0; }
+.gr-notfound-hint { font-size: 0.9rem; color: var(--ink-placeholder); line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
 .gr-notfound .gr-brand { position: absolute; bottom: 18px; left: 0; right: 0; }
 
 /* Desktop: invitation left (hero), reply card right, both centered */

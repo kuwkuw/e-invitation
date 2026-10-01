@@ -817,21 +817,69 @@ the same day — unlike three of the iterations above, nothing here was owed.
   it, not an implementation defect. Parked this iteration rather than
   reworked, because fixing it means repositioning the DOM and changes desktop
   too, which nothing here specified.
-- **adr-018 §7's hardware gate has not been run.** The ADR is explicit that
-  glass should not ship before a DevTools throttle pass and a check on a real
-  mid-range Android inside Viber's in-app webview — "it does not ship
-  stuttering." Neither has happened yet; this is still owed before the glass
-  direction should be trusted on the hardware hosts are actually opening
-  their invitations on.
+- **adr-018 §7's hardware gate ran on 2026-09-19 and passed** — five days
+  after the glass shipped, which is the wrong order and worth saying. A real
+  Android device, in Viber's in-app webview, scrolling the editor and opening
+  the toolbar's sheets: no stutter, no lag behind the finger. The device model
+  was not recorded, so read the result as "a real phone in the real webview"
+  rather than as a measured tier.
+
+  **What it did not establish.** The gate passed on a layout in which *no
+  blurred layer sits stationary over a scrolling backdrop* — the header and
+  composer are outside the scroller with zero overlap, and the toolbar and
+  sheets are inside it, so they move with their own backdrop. That property is
+  currently an accident of the sticky bug below, not a design choice. Any
+  change that parks a blurred layer over the moving card — the toolbar
+  reposition first among them — creates a case this gate never exercised, and
+  has to be re-run against it.
+
+  The DevTools half of §7 was not run and is close to the wrong instrument
+  anyway: `backdrop-filter` costs GPU fill rate and memory bandwidth, and a
+  CPU throttle emulates neither. The device is the gate; the throttle pass was
+  never going to be the part that decided.
 
 ## Candidate backlog
 
-- **Five surfaces still carry raw hex** — landing, gallery, guest, manage,
-  crash. The material system ([adr-018](decisions/adr-018-material-system.md))
-  shipped with the editor as its only converted surface, and
-  `web/test/styles.test.ts`'s allowlist names the rest. The share panel, BYOK
-  panel and auth gate come first: they open from the editor header, so the seam
-  is visible at the moment the host presses Publish.
+- **What is left on raw hex**, after two conversions on 2026-09-19 — the
+  guest page (60 literals, 299 of 306 declarations byte-identical) and the
+  share panel (39 literals, 185 of 189). Remaining, by count:
+  `Host manage dashboard` 77, `Crash screen` 110 (which also holds the
+  gallery's rules — it has no banner of its own, worth giving it one),
+  `Landing page` 13, and `Design controls` 9. That last one is the cheap
+  surprise: it is part of the editor, so the editor has never actually been
+  fully converted despite being called the first converted surface.
+
+  The BYOK panel needed no pass of its own — its rules were already inside
+  `Creation chat` — and the auth gate should be checked the same way before
+  anyone plans work for it. The remaining named item from adr-018 §8 is
+  therefore smaller than that list implies.
+
+  Manage and crash are the real remaining work, and manage is where the next
+  conversion should go: the share panel pass already moved four declarations
+  on it via `ManageEmpty`, so it is the surface most likely to end up
+  half-converted by accident.
+- **The guest page has four text colours under 3:1**, found by converting it:
+  the not-found hint at 2.79:1, the input placeholder at 2.59:1, the optional
+  label and disabled submit at 2.34:1, and the wordmark at 1.90:1 — against
+  WCAG 1.4.3's 4.5:1 for text. The conversion gathered them into three named
+  tokens and asserted they stay where they are; it deliberately did not raise
+  them, because that is a visible change to the one page every guest sees.
+  Cheap to fix, and it wants NFR-9's contrast claim read at the same time.
+- **adr-018 §7's hardware gate is still unrun, and the toolbar fix is now
+  coupled to it.** A 2026-09-19 probe measured the editor's blur budget at
+  190px of a 592px screen at rest and 286px (45% of the viewport) with a
+  design sheet open — against §7's estimate of "roughly 120px of a 600px
+  screen". It also found that **no blurred layer currently sits stationary
+  over moving content**: the header and composer are outside the scroller with
+  zero overlap, and the toolbar and sheets are inside it, so they translate
+  with their own backdrop. The reason is a bug — `.cc-design` is
+  `position: sticky; bottom: 0` as the scroller's *first* child, which never
+  pins, so the design controls scroll out of view entirely (measured: top 72
+  at rest, -162 at full scroll). Fixing that gap — filed above as cosmetic —
+  is what would create the per-frame blur recompute §7 exists to prevent. Run
+  the device check first. The rule worth writing into `styles.test.ts`
+  either way: **no blurred layer may sit stationary over a scrolling
+  backdrop.**
 - ~~**The RSVP prompt is the only field anyone rewrites.**~~ — **gone cold, and
   it should be said plainly.** `field_regenerations` has read
   `{"rsvp_prompt": 6}` since before 2026-08-02 and read exactly that on

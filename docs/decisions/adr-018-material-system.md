@@ -222,6 +222,15 @@ Android **inside Viber's in-app webview** — the environment the hosts are
 actually in, and the one nobody tests. If it cannot hold frames there, the glass
 thins or the fallback becomes the default. It does not ship stuttering.
 
+**Ran 2026-09-19, and passed** — after the glass shipped rather than before,
+which this note records rather than excuses. A real Android device in Viber's
+in-app webview scrolls the editor and works the sheets without stutter. Two
+qualifications travel with that result: the CPU-throttle half was skipped, and
+is close to the wrong instrument regardless (blur costs GPU fill rate and
+memory bandwidth, which a CPU throttle does not emulate); and the layout it
+passed on happens to have no blurred layer stationary over a scrolling
+backdrop, so it says nothing about one that does. See 06-roadmap.md.
+
 Nothing here reaches the OG image: there is no glass in the card, so satori is
 untouched.
 
