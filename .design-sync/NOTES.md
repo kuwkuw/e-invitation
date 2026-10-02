@@ -47,6 +47,31 @@ tokens — on 2026-10-02 that meant the August set, with none of the material
 system's `:root` tokens in it. Only a real resync fixes that; until one runs,
 the stylesheet and the panel disagree.
 
+## The full resync of 2026-10-02
+
+Ran the same day, from a worktree: cwd = the worktree root, driver by absolute
+path from the main checkout's `.ds-sync/`, the remote `_ds_sync.json` saved to
+the worktree's `.design-sync/.cache/remote-sync.json` first. Verdict: anchor
+ok, `InvitationPreview` unchanged, upload = styling + aux only — `_ds_bundle.css`,
+`styles.css`, `README.md`, `_ds_needs_recompile`, then `_ds_sync.json`.
+
+**`_ds_needs_recompile` is what refreshes the token panel**, not the CSS: the
+app recompiles `_ds_manifest.json` when it next opens the project and finds
+that marker, which is why a CSS-only upload never moves the panel. Expect the
+README's token count to go 25 → 75. Unverified at upload time: whether the
+recompile also rebuilds the `templates` array from the entry canvases'
+`@template` markers. If it does, a set whose manifest entry was hand-edited
+without its marker (see below) loses the edit — check the project list after
+the first open.
+
+That pass also found `conventions.md` still pointing designs at three chrome
+hex values (`#f6f5f2`, `#23211d`, `#6b6659`) from before adr-018. They all
+still exist, but `#f6f5f2` is now `--app-bg`, deliberately *not* the
+`--ground` converted surfaces sit on, and nothing told the design agent that
+`.palette-*` shadows `--ink`/`--accent`/`--wash`/`--edge`. It now names the
+`:root` tokens instead. **Diff that paragraph against the `:root` block on
+every resync** — like the pixel figures below, no validator reads it.
+
 ## Marking a template set superseded (2026-10-02)
 
 `creation-chat` was the first, per adr-018 §9. Three places, nothing deleted:
