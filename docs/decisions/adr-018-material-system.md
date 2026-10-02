@@ -282,6 +282,14 @@ pixel figure stale with nothing catching it). The rule: any template set this
 iteration supersedes is marked superseded **in the same pass** that lands the
 CSS citing its replacement. `creation-chat` is the set this one supersedes.
 
+**Done 2026-10-02, seventeen days late** — the CSS landed on 2026-09-15 and the
+DS project was not even re-synced until the same day as this note, so for that
+stretch the design agent held the old set *and* the old stylesheet. The set is
+renamed "Superseded · Creation chat (pre-glass)" in the project's template
+list, its entry canvas carries the same marker and a banner naming the spec
+that replaced it, and nothing was deleted. `styles.css`'s Creation chat
+section no longer cites it as its source.
+
 `NOTES.md` also records that registering a new template set needs an entry
 canvas with specific markers, and that two attempts were spent discovering it.
 

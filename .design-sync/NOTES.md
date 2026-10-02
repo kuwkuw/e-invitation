@@ -38,8 +38,33 @@ That 2026-10-02 upload was the first since **2026-08-02**: adr-018 says to
 re-sync after `styles.css` changes, and two months and 27 stylesheet commits —
 the gallery, discoverability and the whole material system — went by without
 one. `templates/` loads the bundle through `ds-base.js`, so mockups that use
-app classes render against the new CSS from now on; `creation-chat` is the set
-adr-018 §9 says is superseded.
+app classes render against the new CSS from now on.
+
+**What this shortcut does not refresh: the token panel.** `_ds_manifest.json`'s
+`tokens` array is compiled by the CLI resync from the CSS, and the app never
+recompiles it, so after a CSS-only upload the panel still lists the old
+tokens — on 2026-10-02 that meant the August set, with none of the material
+system's `:root` tokens in it. Only a real resync fixes that; until one runs,
+the stylesheet and the panel disagree.
+
+## Marking a template set superseded (2026-10-02)
+
+`creation-chat` was the first, per adr-018 §9. Three places, nothing deleted:
+
+1. The set's `templates` entry in `_ds_manifest.json` — `name` and
+   `description` — because that array is what the project list renders and the
+   app never recompiles it. Change only those two fields; the file is uploaded
+   whole, so re-read it immediately before writing.
+2. The entry canvas's `<!-- @template name="…" description="…" -->` marker,
+   with the same text, so a resync that compiles from markers keeps the label.
+3. A banner at the top of the entry canvas, so anyone who opens it reads the
+   status before the mockups. Shift the canvas's other blocks and its height
+   down to make room rather than overlapping them.
+
+Name it `Superseded · <old name>` so it sorts and reads as such in the list,
+and keep the description under 200 characters — the app cuts longer ones
+mid-word. The captured `.thumbnail` still shows the old canvas until the app
+recaptures it.
 
 ## Known render warns
 

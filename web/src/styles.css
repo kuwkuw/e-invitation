@@ -302,8 +302,10 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .field-head button:disabled { opacity: 0.5; cursor: default; }
 
 /* Creation chat ---------------------------------------------------------- */
-/* Colors come from the "creation-chat" template in the E-invitation DS
-   project: neutral warm chrome, --accent accent, invitation owns all color. */
+/* The "creation-chat" template in the E-invitation DS project was this
+   section's first spec. adr-018 superseded it, and the DS project marks it so;
+   the material system above is the spec now. What carried over: neutral warm
+   chrome, --accent accent, invitation owns all color. */
 
 .cc-shell {
   display: flex;
