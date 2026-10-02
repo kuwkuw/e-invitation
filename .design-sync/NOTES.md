@@ -13,6 +13,34 @@
 
 - **Claude Design token annotations live in `web/src/styles.css`**: inline `/* @kind color */` on every `--wash` declaration (base `.inv` + five `palette-*`; minimal has no wash) and `/* @kind font */` on `.landing`'s `--lp-display`. The DS app's token panel reads them from the declaration line in `_ds_bundle.css`. They were originally patched remotely by the design agent and reverted by every sync — now upstream, so they persist. Don't strip these comments; verify `grep -c "@kind" ds-bundle/_ds_bundle.css` ≥ 7 after build.
 
+## A CSS-only sync without the converter (2026-10-02)
+
+`.ds-sync/` is gitignored machine state, so a cloud session has no converter.
+It does not need one when **only `web/src/styles.css` changed**:
+`_ds_bundle.css` is a byte-for-byte copy of `styles.css` (the remote one was
+verified identical to `05159a2`'s), and the project's own `styles.css` is a
+one-line `@import "./_ds_bundle.css"`. Upload just that file, after checking:
+
+- no other converter input moved since the last sync — `InvitationPreview.tsx`
+  and its runtime imports (today only `import type`), `config.json`,
+  `conventions.md`, `previews/` — or the JS bundle, `.d.ts` and preview card
+  are stale too and this shortcut is wrong;
+- the `Invitation card` section is text-identical, so `renderHashes` in
+  `_ds_sync.json` still describes what the card renders;
+- `@kind` count ≥ 7, and no local `@import`/`url()` has appeared that the
+  converter would have inlined.
+
+Leave `_ds_sync.json` alone. Its `styleSha` is not a plain sha256 of the CSS,
+so it cannot be recomputed by hand; left stale, the next real resync sees a
+style change and re-uploads the same bytes, which is harmless.
+
+That 2026-10-02 upload was the first since **2026-08-02**: adr-018 says to
+re-sync after `styles.css` changes, and two months and 27 stylesheet commits —
+the gallery, discoverability and the whole material system — went by without
+one. `templates/` loads the bundle through `ds-base.js`, so mockups that use
+app classes render against the new CSS from now on; `creation-chat` is the set
+adr-018 §9 says is superseded.
+
 ## Known render warns
 
 - `[FONT_REMOTE] "Cormorant Garamond", "Marck Script", "Segoe Script", "Manrope", "Playfair Display"` — expected; families served by the Google Fonts `@import` at runtime (Manrope/Playfair joined the warn when the landing page moved their usage into `styles.css`, 2026-07-16).
