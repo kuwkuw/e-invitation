@@ -24,7 +24,7 @@ interface Props {
 
 type Segment = "palette" | "typography" | "layout" | "ornament" | "background";
 
-// Mirrors the ::before content in styles.css, same as DesignControls did.
+// Mirrors the ::before content in styles.css.
 const ORNAMENT_GLYPHS: Record<DesignTokens["ornament"], string> = {
   none: "—",
   floral: "✿",
@@ -40,8 +40,9 @@ const ORNAMENT_GLYPHS: Record<DesignTokens["ornament"], string> = {
  * raises a sheet; pressing it again closes it. The sheet stays open after a
  * choice so the host can try the next one without re-opening.
  *
- * The swatches still carry `palette-*`, so their colours track styles.css
- * without duplicating a value here — the same property DesignControls had.
+ * The swatches carry `palette-*`, so their colours track styles.css without
+ * duplicating a value here. That class also shadows `--ink` on the swatch
+ * itself, which is why its selected ring reads `--ui-ink` (styles.css).
  */
 export function DesignToolbar({
   design,

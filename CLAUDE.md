@@ -39,13 +39,16 @@ Rendering: **no full-image generation.** The model only picks design tokens — 
 Material system (adr-018): `styles.css` opens with a `:root` token block —
 ground, glass, ink, accent, radius, elevation, motion — that is the single
 source of colour for converted surfaces. `CONVERTED` in
-`web/test/styles.test.ts` is the ratchet and names four sections —
-`App chrome`, `Creation chat`, `Guest page`, `Share panel` — and each
-conversion adds a name to it. **Read that list as sections, not surfaces:**
-the editor is *almost* converted but `Design controls` still holds 9
-literals, while `Share panel` reaches past the editor into the account
-sheets and the manage dashboard. Landing, gallery, manage and crash are
-untouched. Two allowlisted sections still contain hex on purpose and the test
+`web/test/styles.test.ts` is the ratchet and names six sections —
+`App chrome`, `Creation chat`, `Design controls`, `Guest page`,
+`Host manage dashboard`, `Share panel` — and each conversion adds a name to
+it. **Read that list as sections, not surfaces:** `Share panel` reaches past
+the editor into the account sheets (`SignOutSheet`, `DeleteAccountSheet`), but
+not into the manage dashboard, whose share row is its own `.hm-share-row`. The
+editor, guest page and manage dashboard are fully converted; the landing page
+(13 literals, plus 18 in `Landing: returning-host block`, which speaks the
+landing's own `#4a3728` ink) and `Crash screen` (110, which silently also
+holds the gallery's rules) are what is left. Two allowlisted sections still contain hex on purpose and the test
 knows it: `Creation chat`'s `.cc-sk` shimmer needs a stop lighter than both
 its ends, and the `Material system` banner holds the token definitions
 themselves.
@@ -60,11 +63,22 @@ not the rule. The `--caution-*` group is that block's material: three edges
 forming a depth ramp, two faints, a wash, a surface and an ink. The hex scan is the ratchet's
 whole reach, so an accent held as `rgba(179, 89, 46, …)` passes it unseen:
 that is what `--ui-accent-rgb` is for, and why it is pinned to
-`--ui-accent` by a test rather than by a comment. Three ink tiers below
-`--ink-faint` (`--ink-disabled`, `--ink-placeholder`, `--ink-whisper`)
-were minted at the guest page's own values and clear **nothing** — not even
-3:1 — so they name a contrast debt rather than settle it; a test asserts they
-stay under 3:1 so no later edit can quietly promote them into readable text. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
+`--ui-accent` by a test rather than by a comment. **`.palette-*` shadows
+`--ink`, `--accent`, `--wash` and `--edge` on whatever element carries it** —
+the card, but also each design-sheet swatch, which carries its own
+`palette-*` class — so the product's ink and accent there must be read through
+their non-shadowed aliases `--ui-ink` and `--ui-accent`; a test fails if a
+swatch rule reads a shadowed name other than its deliberate `--bg`. Two ink
+tiers below `--ink-faint` (`--ink-placeholder`, `--ink-whisper`) clear
+**nothing** — not even 3:1 — and a test asserts they stay under it, so no later
+edit can quietly promote them into readable text. **No text anyone has to read
+sits on them**: the manage dashboard and then the guest page moved every such
+text off, a sentence onto `--ink-muted` and a label, placeholder or timestamp
+onto `--ink-faint`, and a per-selector table in `styles.test.ts` holds each to
+the ground it sits on and the floor its role owes (`textFloors`). What still
+reads the two is named by a test — the INVINTO wordmarks (a logotype) and the
+`.sp-link` glyph — and a new reader fails it. A third tier, `--ink-disabled`,
+went with its last user. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
 are permanently exempt: those values are mirrored by hand in the OG renderer,
 where a raw hex is what keeps the mirror visible. Glass is two classes composed
 from tokens (`.glass`, `.glass-solid` — the second carries text), and the rule

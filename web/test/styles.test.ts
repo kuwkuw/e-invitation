@@ -52,11 +52,41 @@ describe("material tokens", () => {
     expect(triplet).toEqual(fromHex);
   });
 
-  it("keeps the three sub-faint inks the guest page needs, and says they clear nothing", () => {
-    // Minted at the guest page's pre-conversion values; all three are under
-    // 3:1 on --surface, so this asserts they exist and are NOT promoted into
-    // the --ink-faint tier by a later edit that assumes they are readable.
-    for (const name of ["--ink-disabled", "--ink-placeholder", "--ink-whisper"]) {
+  it("aliases --ink to --ui-ink, so the product's ink has a name .palette-* cannot shadow", () => {
+    expect(css).toMatch(/--ink:\s*var\(--ui-ink\);/);
+    expect(tokens.get("--ink")).toBe(tokens.get("--ui-ink"));
+  });
+
+  /** A swatch carries its own palette-* class, so on the swatch element every
+   *  name .palette-* sets is the *card's* value. --bg is read there on purpose
+   *  (it is the swatch); the product's ink, accent, edge and wash are not, and
+   *  must come from their --ui-* aliases or a non-shadowed token instead. */
+  it("never reads a palette-shadowed name for the swatch's own chrome", () => {
+    const shadowed = new Set<string>();
+    for (const m of css.matchAll(/^\.palette-[a-z]+\s*\{([^}]*)\}/gm)) {
+      for (const d of m[1].matchAll(/(--[\w-]+)\s*:/g)) shadowed.add(d[1]);
+    }
+    expect(shadowed.has("--ink")).toBe(true);
+
+    const reads: string[] = [];
+    for (const rule of ruleBlocks(stripComments(css))) {
+      if (!rule.selectors.some((s) => /\.swatch(?![\w-])/.test(s))) continue;
+      for (const v of rule.body.matchAll(/var\((--[\w-]+)/g)) {
+        if (shadowed.has(v[1]) && v[1] !== "--bg")
+          reads.push(`${rule.selectors.join(", ")}: ${v[1]}`);
+      }
+    }
+    expect(reads).toEqual([]);
+  });
+
+  it("keeps the two sub-faint inks under 3:1, so they are never mistaken for readable", () => {
+    // Both are under 3:1 on --surface, so this asserts they are NOT promoted
+    // into the --ink-faint tier by a later edit that assumes they are readable.
+    // Who may read them is held by "sub-faint inks" below.
+    expect(tokens.has("--ink-disabled"), "--ink-disabled was retired with its last user").toBe(
+      false,
+    );
+    for (const name of ["--ink-placeholder", "--ink-whisper"]) {
       const value = tokens.get(name) as string;
       expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
       expect(contrast(value, tokens.get("--surface") as string), name).toBeLessThan(3);
@@ -195,7 +225,14 @@ describe("palette-tinted ground", () => {
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
-const CONVERTED = ["App chrome", "Creation chat", "Guest page", "Share panel"];
+const CONVERTED = [
+  "App chrome",
+  "Creation chat",
+  "Design controls",
+  "Guest page",
+  "Host manage dashboard",
+  "Share panel",
+];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
  *  the loop above cannot see: a duplicate title anywhere in the file makes
@@ -251,5 +288,84 @@ describe("the editor canvas", () => {
     expect(css).toMatch(/\.cc-canvas\s+\.inv\s*\{/);
     const base = /^\.inv\s*\{([^}]*)\}/m.exec(css);
     expect((base as RegExpExecArray)[1]).toMatch(/border-radius:\s*14px/);
+  });
+});
+
+/** Quiet text has to be quiet by size and weight rather than by being hard to
+ *  see. Each row names the ground the text actually sits on — a card
+ *  (--surface), the page around it (--app-bg), or its own control — and the
+ *  floor its role owes: AA for a sentence, NFR-9's 3:1 label floor for a
+ *  caption, label, placeholder or timestamp. A selector here must set its
+ *  colour as `color: var(--token)`, or the row fails rather than passing
+ *  unchecked. */
+function textFloors(section: string, rows: [selector: string, ground: string, floor: number][]) {
+  const rules = ruleBlocks(stripComments(sections(css).get(section) ?? ""));
+  const colourOf = (selector: string) => {
+    const rule = rules.find(
+      (r) => r.selectors.includes(selector) && /(?:^|[;\s])color\s*:/.test(r.body),
+    );
+    const token = rule && /(?:^|[;\s])color\s*:\s*var\((--[\w-]+)\)/.exec(rule.body);
+    return token ? token[1] : null;
+  };
+
+  for (const [selector, ground, floor] of rows) {
+    it(`puts ${selector} at ${floor}:1 or better on ${ground}`, () => {
+      const token = colourOf(selector);
+      expect(token, `${selector} has no color: var(--…) to check`).not.toBeNull();
+      const ratio = contrast(tokens.get(token as string) as string, tokens.get(ground) as string);
+      expect(ratio, `${selector} reads ${token}`).toBeGreaterThanOrEqual(floor);
+    });
+  }
+}
+
+/** Where a host reads their replies. */
+describe("the manage page's text", () => {
+  textFloors("Host manage dashboard", [
+    [".hm-state-hint", "--surface", 4.5],
+    [".hm-empty-reassure", "--surface", 4.5],
+    [".hm-notify-scope", "--app-bg", 4.5],
+    [".hm-new-line", "--app-bg", 4.5],
+    [".hm-breakdown", "--surface", 3],
+    [".hm-updated", "--app-bg", 3],
+    [".hm-section-title", "--surface", 3],
+    [".hm-when", "--surface", 3],
+    [".hm-previous", "--surface", 3],
+    [".hm-tile-yes .hm-tile-label", "--rsvp-yes-bg", 3],
+    [".hm-tile-no .hm-tile-label", "--rsvp-no-bg", 3],
+  ]);
+});
+
+/** The one page every guest sees, usually inside a messenger's webview. The
+ *  not-found page is a bare .gr-page, not a card, so its text sits on
+ *  --app-bg; the placeholder is measured on the input at rest, which is the
+ *  darker of its two backgrounds; the disabled submit on its own fill. */
+describe("the guest page's text", () => {
+  textFloors("Guest page", [
+    [".gr-status", "--app-bg", 4.5],
+    [".gr-thanks-body", "--surface", 4.5],
+    [".gr-notfound-body", "--app-bg", 4.5],
+    [".gr-notfound-hint", "--app-bg", 4.5],
+    [".gr-label", "--surface", 3],
+    [".gr-optional", "--surface", 3],
+    [".gr-input::placeholder", "--app-bg", 3],
+    [".gr-submit:disabled", "--edge", 3],
+    [".gr-change", "--surface", 3],
+    [".gr-row-sub", "--surface", 3],
+    [".gr-cta-line", "--app-bg", 3],
+  ]);
+});
+
+/** The two inks below --ink-faint clear nothing, so every rule that reads one
+ *  is named here and none of them is text anyone has to read: the INVINTO
+ *  wordmarks are a logotype, and .sp-link's colour reaches only the link
+ *  glyph, since its value sets its own --ink. A new name in this list is a
+ *  contrast regression until shown otherwise. */
+describe("sub-faint inks", () => {
+  it("are read only by the wordmarks and one decorative icon", () => {
+    const users = ruleBlocks(stripComments(css))
+      .filter((r) => /var\(--ink-(?:placeholder|whisper)\)/.test(r.body))
+      .flatMap((r) => r.selectors)
+      .sort();
+    expect(users).toEqual([".gr-brand", ".gr-cta-mark", ".hm-brand", ".sp-link"]);
   });
 });

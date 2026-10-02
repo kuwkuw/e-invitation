@@ -840,33 +840,66 @@ the same day — unlike three of the iterations above, nothing here was owed.
 
 ## Candidate backlog
 
-- **What is left on raw hex**, after two conversions on 2026-09-19 — the
-  guest page (60 literals, 299 of 306 declarations byte-identical) and the
-  share panel (39 literals, 185 of 189). Remaining, by count:
-  `Host manage dashboard` 77, `Crash screen` 110 (which also holds the
-  gallery's rules — it has no banner of its own, worth giving it one),
-  `Landing page` 13, and `Design controls` 9. That last one is the cheap
-  surprise: it is part of the editor, so the editor has never actually been
-  fully converted despite being called the first converted surface.
+- **What is left on raw hex**, after four conversions — the guest page and
+  the share panel on 2026-09-19 (60 literals, 299 of 306 declarations
+  byte-identical; 39, 185 of 189), then `Design controls` and the manage
+  dashboard on 2026-10-01 (9 literals, 28 of 28; 59 literals, 339 of 350).
+  The editor, the guest page and the manage dashboard are now fully
+  converted. Remaining: `Crash screen` 110 (which also holds the gallery's
+  rules — it has no banner of its own, worth giving it one before converting
+  either), `Landing page` 13, and `Landing: returning-host block` 18. The
+  last two are one job, not two: both speak the landing page's own ink
+  (`#4a3728`, 8.6 from the nearest token), which is the second "ink" adr-018's
+  context names, and whether it becomes a token or collapses onto `--ink` is
+  the landing conversion's real decision.
+
+  Two corrections to what this entry used to say. The manage dashboard was
+  given as 77 literals; that figure was its own section (59) plus the
+  returning-host block's (18). And the share-panel pass had **not** moved
+  four declarations on it via `ManageEmpty` — that component's share row is
+  `.hm-share-row`, in the manage section, and the `sp-*`/`share-row` rules
+  reach only the editor and the two account sheets. The reason given for
+  doing manage next was wrong; doing it next was still right, as it is where
+  the host reads their replies.
+
+  `Design controls` turned out to be half dead: four of its eight rules
+  styled `DesignControls.tsx`, which the segmented toolbar replaced and left
+  imported by nothing. Both were deleted. The conversion also found the
+  swatches carry their own `palette-*` class, so `var(--ink)` on one is the
+  card's ink — `--ui-ink` was minted for the reason `--ui-accent` was.
 
   The BYOK panel needed no pass of its own — its rules were already inside
   `Creation chat` — and the auth gate should be checked the same way before
-  anyone plans work for it. The remaining named item from adr-018 §8 is
-  therefore smaller than that list implies.
+  anyone plans work for it.
+- ~~**The guest page has four text colours under 3:1**~~ — **fixed
+  2026-10-02**, the same way as the manage dashboard. The figures below were
+  measured on white, and the worst one was understated: the disabled "Send
+  reply" label — the state every guest meets first — sits on its own beige
+  fill, at 1.74:1, not 2.34. The hint and the placeholder, measured on the
+  page and the input they really sit on, were 2.38. Sentences now read
+  `--ink-muted` and the optional label and placeholder `--ink-faint`; the
+  disabled label takes `--ink-muted` because `--ink-faint` reaches only 2.70:1
+  on that fill. The wordmark stays. `--ink-disabled` lost its last user and
+  was retired. Original entry:
 
-  Manage and crash are the real remaining work, and manage is where the next
-  conversion should go: the share panel pass already moved four declarations
-  on it via `ManageEmpty`, so it is the surface most likely to end up
-  half-converted by accident.
-- **The guest page has four text colours under 3:1**, found by converting it:
+  Found by converting it:
   the not-found hint at 2.79:1, the input placeholder at 2.59:1, the optional
   label and disabled submit at 2.34:1, and the wordmark at 1.90:1 — against
   WCAG 1.4.3's 4.5:1 for text. The conversion gathered them into three named
   tokens and asserted they stay where they are; it deliberately did not raise
   them, because that is a visible change to the one page every guest sees.
-  Cheap to fix, and it wants NFR-9's contrast claim read at the same time.
-- **adr-018 §7's hardware gate is still unrun, and the toolbar fix is now
-  coupled to it.** A 2026-09-19 probe measured the editor's blur budget at
+
+  **The manage dashboard has now been through exactly this fix** (2026-10-01),
+  as its own commit after its conversion, and it is the template: a sentence
+  takes `--ink-muted`, a label or timestamp `--ink-faint`, the wordmark stays
+  where it is, and `styles.test.ts` names each selector with the ground it sits
+  on and the floor its role owes. The worst case it fixed was the hint telling
+  a locked-out host where their manage link is, at 2.59:1. The guest page's
+  version is the same size of job; it waits only on someone deciding the guest
+  page may move.
+- **The toolbar fix is coupled to adr-018 §7's hardware gate.** The gate ran
+  and passed on 2026-09-19 (see the shipped section above), but only on the
+  layout as it stands, which this entry explains. A 2026-09-19 probe measured the editor's blur budget at
   190px of a 592px screen at rest and 286px (45% of the viewport) with a
   design sheet open — against §7's estimate of "roughly 120px of a 600px
   screen". It also found that **no blurred layer currently sits stationary
@@ -876,8 +909,8 @@ the same day — unlike three of the iterations above, nothing here was owed.
   `position: sticky; bottom: 0` as the scroller's *first* child, which never
   pins, so the design controls scroll out of view entirely (measured: top 72
   at rest, -162 at full scroll). Fixing that gap — filed above as cosmetic —
-  is what would create the per-frame blur recompute §7 exists to prevent. Run
-  the device check first. The rule worth writing into `styles.test.ts`
+  is what would create the per-frame blur recompute §7 exists to prevent, so
+  the device check has to be re-run against the fixed layout. The rule worth writing into `styles.test.ts`
   either way: **no blurred layer may sit stationary over a scrolling
   backdrop.**
 - ~~**The RSVP prompt is the only field anyone rewrites.**~~ — **gone cold, and

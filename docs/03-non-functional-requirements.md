@@ -249,8 +249,14 @@
   Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
   large-text floor and is reserved for labels, icons, placeholders and
   disabled states, never body copy — but that reservation is a convention,
-  not a guarantee: the tests hold the 3:1 floor and nothing about where
-  `--ink-faint` is used.
+  not a guarantee: the tests hold the 3:1 floor and, everywhere except the
+  manage dashboard and the guest page, nothing about where `--ink-faint` is
+  used. On those two they hold the placement too: each text selector is named
+  with the ground it sits on and the floor its role owes (4.5:1 for a
+  sentence, 3:1 for a label, placeholder or timestamp). Below `--ink-faint`,
+  the two sub-faint inks are readable by an explicit list of rules — the
+  INVINTO wordmarks and one decorative icon — across the whole stylesheet,
+  and nothing else may read them.
 - **Every glass surface must be legible with its blur removed.** The tint
   carries the contrast; blur is decoration. This is what makes the
   `prefers-reduced-transparency: reduce` fallback a token swap rather than a
