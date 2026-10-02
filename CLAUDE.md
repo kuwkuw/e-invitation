@@ -68,16 +68,17 @@ that is what `--ui-accent-rgb` is for, and why it is pinned to
 the card, but also each design-sheet swatch, which carries its own
 `palette-*` class — so the product's ink and accent there must be read through
 their non-shadowed aliases `--ui-ink` and `--ui-accent`; a test fails if a
-swatch rule reads a shadowed name other than its deliberate `--bg`. Three ink tiers below
-`--ink-faint` (`--ink-disabled`, `--ink-placeholder`, `--ink-whisper`)
-were minted at the guest page's own values and clear **nothing** — not even
-3:1 — so they name a contrast debt rather than settle it; a test asserts they
-stay under 3:1 so no later edit can quietly promote them into readable text.
-The manage dashboard is the first surface to pay that debt down rather than
-gather it: there a sentence takes `--ink-muted`, a label or timestamp
-`--ink-faint`, and only the wordmark a sub-faint tier — a per-selector table in
-`styles.test.ts` holds each to its ground and floor. The guest page's four
-sub-3:1 colours are still owed. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
+swatch rule reads a shadowed name other than its deliberate `--bg`. Two ink
+tiers below `--ink-faint` (`--ink-placeholder`, `--ink-whisper`) clear
+**nothing** — not even 3:1 — and a test asserts they stay under it, so no later
+edit can quietly promote them into readable text. **No text anyone has to read
+sits on them**: the manage dashboard and then the guest page moved every such
+text off, a sentence onto `--ink-muted` and a label, placeholder or timestamp
+onto `--ink-faint`, and a per-selector table in `styles.test.ts` holds each to
+the ground it sits on and the floor its role owes (`textFloors`). What still
+reads the two is named by a test — the INVINTO wordmarks (a logotype) and the
+`.sp-link` glyph — and a new reader fails it. A third tier, `--ink-disabled`,
+went with its last user. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
 are permanently exempt: those values are mirrored by hand in the OG renderer,
 where a raw hex is what keeps the mirror visible. Glass is two classes composed
 from tokens (`.glass`, `.glass-solid` — the second carries text), and the rule

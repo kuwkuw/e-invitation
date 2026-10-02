@@ -33,14 +33,15 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
-  /* Three tiers below --ink-faint, minted at the guest page's existing values
-     so that conversion moved no pixels. Each is under 3:1 on --surface —
-     2.34, 2.59 and 1.90 respectively — so unlike --ink-faint none of these
-     clears anything, and none may carry text a guest has to read. Raising
-     them is a visible change to the one page every guest sees, so it belongs
-     to its own approved iteration; see 06-roadmap.md. */
+  /* Two tiers below --ink-faint, and neither carries text anyone has to read.
+     Both are under 3:1 on --surface (2.59 and 1.90), so unlike --ink-faint
+     they clear nothing: --ink-placeholder is left on one decorative icon
+     (.sp-link's glyph, beside a URL drawn in --ink), and --ink-whisper on the
+     INVINTO wordmarks, a logotype. They were three, minted at the guest page's
+     values when it converted; the guest page and the manage dashboard have
+     since moved all their text off them, and --ink-disabled went with its last
+     user. test/styles.test.ts names every rule allowed to read these two. */
   --ink-strong: #4a4438;
-  --ink-disabled: #b0a996;
   --ink-placeholder: #a8a091;
   --ink-whisper: #c3bbac;
 
@@ -817,7 +818,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Guest page ------------------------------------------------------------ */
 /* From the "guest-rsvp" template in the E-invitation DS project: the
    invitation is the hero, the reply is a quiet white card; the attending
-   toggle is the emotional center; the wordmark stays a whisper. */
+   toggle is the emotional center; the wordmark stays a whisper.
+
+   The wordmark is the only whisper. As on the manage dashboard, a sentence
+   takes --ink-muted (AA), a label or placeholder --ink-faint (3:1), and
+   test/styles.test.ts holds each to the ground it sits on. */
 
 .gr-page { min-height: 100dvh; background: var(--app-bg); padding: 22px 20px 18px; }
 .gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; }
@@ -847,7 +852,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); margin: 18px 0 7px; }
 .gr-label:first-of-type { margin-top: 0; }
 .gr-label.centered { text-align: center; margin-bottom: 9px; }
-.gr-optional { color: var(--ink-disabled); font-weight: 500; }
+.gr-optional { color: var(--ink-faint); font-weight: 500; }
 
 .gr-input {
   width: 100%;
@@ -859,7 +864,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-size: 0.95rem;
   color: var(--ink);
 }
-.gr-input::placeholder { color: var(--ink-placeholder); }
+.gr-input::placeholder { color: var(--ink-faint); }
 .gr-input:focus { outline: none; background: var(--surface); border: 1.5px solid var(--ui-accent); padding: 13.5px 14.5px; }
 .gr-note { min-height: 64px; line-height: 1.5; resize: vertical; }
 
@@ -939,7 +944,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   gap: 10px;
   box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3);
 }
-.gr-submit:disabled { background: var(--edge); color: var(--ink-disabled); cursor: not-allowed; box-shadow: none; }
+/* Disabled until the guest has a name and an answer, so this is the state
+   every guest meets first, and its label still has to say what the button
+   does. --ink-faint reaches only 2.70:1 on --edge; --ink-muted gives 4.24:1,
+   and the missing accent fill and shadow are what say "not yet". */
+.gr-submit:disabled { background: var(--edge); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
 
 .gr-lock { opacity: 0.5; pointer-events: none; }
 @keyframes gr-spin { to { transform: rotate(360deg); } }
@@ -1098,7 +1107,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   margin: 0 0 12px;
 }
 .gr-notfound-body { font-size: 0.98rem; color: var(--ink-muted); line-height: 1.55; max-width: 320px; margin: 0; }
-.gr-notfound-hint { font-size: 0.9rem; color: var(--ink-placeholder); line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
+.gr-notfound-hint { font-size: 0.9rem; color: var(--ink-muted); line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
 .gr-notfound .gr-brand { position: absolute; bottom: 18px; left: 0; right: 0; }
 
 /* Desktop: invitation left (hero), reply card right, both centered */

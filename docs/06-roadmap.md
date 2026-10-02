@@ -871,7 +871,18 @@ the same day — unlike three of the iterations above, nothing here was owed.
   The BYOK panel needed no pass of its own — its rules were already inside
   `Creation chat` — and the auth gate should be checked the same way before
   anyone plans work for it.
-- **The guest page has four text colours under 3:1**, found by converting it:
+- ~~**The guest page has four text colours under 3:1**~~ — **fixed
+  2026-10-02**, the same way as the manage dashboard. The figures below were
+  measured on white, and the worst one was understated: the disabled "Send
+  reply" label — the state every guest meets first — sits on its own beige
+  fill, at 1.74:1, not 2.34. The hint and the placeholder, measured on the
+  page and the input they really sit on, were 2.38. Sentences now read
+  `--ink-muted` and the optional label and placeholder `--ink-faint`; the
+  disabled label takes `--ink-muted` because `--ink-faint` reaches only 2.70:1
+  on that fill. The wordmark stays. `--ink-disabled` lost its last user and
+  was retired. Original entry:
+
+  Found by converting it:
   the not-found hint at 2.79:1, the input placeholder at 2.59:1, the optional
   label and disabled submit at 2.34:1, and the wordmark at 1.90:1 — against
   WCAG 1.4.3's 4.5:1 for text. The conversion gathered them into three named

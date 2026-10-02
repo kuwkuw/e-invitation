@@ -79,11 +79,14 @@ describe("material tokens", () => {
     expect(reads).toEqual([]);
   });
 
-  it("keeps the three sub-faint inks the guest page needs, and says they clear nothing", () => {
-    // Minted at the guest page's pre-conversion values; all three are under
-    // 3:1 on --surface, so this asserts they exist and are NOT promoted into
-    // the --ink-faint tier by a later edit that assumes they are readable.
-    for (const name of ["--ink-disabled", "--ink-placeholder", "--ink-whisper"]) {
+  it("keeps the two sub-faint inks under 3:1, so they are never mistaken for readable", () => {
+    // Both are under 3:1 on --surface, so this asserts they are NOT promoted
+    // into the --ink-faint tier by a later edit that assumes they are readable.
+    // Who may read them is held by "sub-faint inks" below.
+    expect(tokens.has("--ink-disabled"), "--ink-disabled was retired with its last user").toBe(
+      false,
+    );
+    for (const name of ["--ink-placeholder", "--ink-whisper"]) {
       const value = tokens.get(name) as string;
       expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
       expect(contrast(value, tokens.get("--surface") as string), name).toBeLessThan(3);
@@ -288,13 +291,15 @@ describe("the editor canvas", () => {
   });
 });
 
-/** The manage page is where a host reads their replies, so its quiet text has
- *  to be quiet by size and weight rather than by being hard to see. Each row
- *  names the ground the text actually sits on — the card (--surface) or the
- *  page around it (--app-bg) — and the floor its role owes: AA for a
- *  sentence, NFR-9's 3:1 label floor for a caption, label or timestamp. */
-describe("the manage page's text", () => {
-  const rules = ruleBlocks(stripComments(sections(css).get("Host manage dashboard") ?? ""));
+/** Quiet text has to be quiet by size and weight rather than by being hard to
+ *  see. Each row names the ground the text actually sits on — a card
+ *  (--surface), the page around it (--app-bg), or its own control — and the
+ *  floor its role owes: AA for a sentence, NFR-9's 3:1 label floor for a
+ *  caption, label, placeholder or timestamp. A selector here must set its
+ *  colour as `color: var(--token)`, or the row fails rather than passing
+ *  unchecked. */
+function textFloors(section: string, rows: [selector: string, ground: string, floor: number][]) {
+  const rules = ruleBlocks(stripComments(sections(css).get(section) ?? ""));
   const colourOf = (selector: string) => {
     const rule = rules.find(
       (r) => r.selectors.includes(selector) && /(?:^|[;\s])color\s*:/.test(r.body),
@@ -303,7 +308,19 @@ describe("the manage page's text", () => {
     return token ? token[1] : null;
   };
 
-  const TEXT: [selector: string, ground: string, floor: number][] = [
+  for (const [selector, ground, floor] of rows) {
+    it(`puts ${selector} at ${floor}:1 or better on ${ground}`, () => {
+      const token = colourOf(selector);
+      expect(token, `${selector} has no color: var(--…) to check`).not.toBeNull();
+      const ratio = contrast(tokens.get(token as string) as string, tokens.get(ground) as string);
+      expect(ratio, `${selector} reads ${token}`).toBeGreaterThanOrEqual(floor);
+    });
+  }
+}
+
+/** Where a host reads their replies. */
+describe("the manage page's text", () => {
+  textFloors("Host manage dashboard", [
     [".hm-state-hint", "--surface", 4.5],
     [".hm-empty-reassure", "--surface", 4.5],
     [".hm-notify-scope", "--app-bg", 4.5],
@@ -315,21 +332,40 @@ describe("the manage page's text", () => {
     [".hm-previous", "--surface", 3],
     [".hm-tile-yes .hm-tile-label", "--rsvp-yes-bg", 3],
     [".hm-tile-no .hm-tile-label", "--rsvp-no-bg", 3],
-  ];
+  ]);
+});
 
-  for (const [selector, ground, floor] of TEXT) {
-    it(`puts ${selector} at ${floor}:1 or better on ${ground}`, () => {
-      const token = colourOf(selector);
-      expect(token, `${selector} has no color: var(--…) to check`).not.toBeNull();
-      const ratio = contrast(tokens.get(token as string) as string, tokens.get(ground) as string);
-      expect(ratio, `${selector} reads ${token}`).toBeGreaterThanOrEqual(floor);
-    });
-  }
+/** The one page every guest sees, usually inside a messenger's webview. The
+ *  not-found page is a bare .gr-page, not a card, so its text sits on
+ *  --app-bg; the placeholder is measured on the input at rest, which is the
+ *  darker of its two backgrounds; the disabled submit on its own fill. */
+describe("the guest page's text", () => {
+  textFloors("Guest page", [
+    [".gr-status", "--app-bg", 4.5],
+    [".gr-thanks-body", "--surface", 4.5],
+    [".gr-notfound-body", "--app-bg", 4.5],
+    [".gr-notfound-hint", "--app-bg", 4.5],
+    [".gr-label", "--surface", 3],
+    [".gr-optional", "--surface", 3],
+    [".gr-input::placeholder", "--app-bg", 3],
+    [".gr-submit:disabled", "--edge", 3],
+    [".gr-change", "--surface", 3],
+    [".gr-row-sub", "--surface", 3],
+    [".gr-cta-line", "--app-bg", 3],
+  ]);
+});
 
-  it("keeps the sub-faint inks for the wordmark alone", () => {
-    const users = rules
-      .filter((r) => /var\(--ink-(?:disabled|placeholder|whisper)\)/.test(r.body))
-      .flatMap((r) => r.selectors);
-    expect(users).toEqual([".hm-brand"]);
+/** The two inks below --ink-faint clear nothing, so every rule that reads one
+ *  is named here and none of them is text anyone has to read: the INVINTO
+ *  wordmarks are a logotype, and .sp-link's colour reaches only the link
+ *  glyph, since its value sets its own --ink. A new name in this list is a
+ *  contrast regression until shown otherwise. */
+describe("sub-faint inks", () => {
+  it("are read only by the wordmarks and one decorative icon", () => {
+    const users = ruleBlocks(stripComments(css))
+      .filter((r) => /var\(--ink-(?:placeholder|whisper)\)/.test(r.body))
+      .flatMap((r) => r.selectors)
+      .sort();
+    expect(users).toEqual([".gr-brand", ".gr-cta-mark", ".hm-brand", ".sp-link"]);
   });
 });
