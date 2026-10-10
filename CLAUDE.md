@@ -12,7 +12,7 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 
 - `pnpm install` — all workspaces (new native deps needing postinstall scripts must be added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`)
 - `pnpm dev` — both dev servers in parallel
-- `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces
+- `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces. `pnpm test` runs the two suites **one after the other** (`--workspace-concurrency=1`), and that is deliberate: each Vitest sizes its pool to every core, so running both at once oversubscribed the CPU, and the 19 server files whose `beforeAll` imports and builds the whole app (~3 s alone) stretched to 6–9 s, intermittently past Vitest's 10 s hook timeout. Sequential costs no wall time (~50 s either way), because the CPU is saturated either way.
 - `pnpm lint` (Biome, root `biome.jsonc`) / `pnpm lint:fix` / `pnpm format` — one config for both workspaces. CSS formatting is off on purpose: `styles.css` keeps its compact one-line token rules so they stay scannable against the OG renderer's maps. `.gitattributes` pins LF so the formatter sees the same bytes on Windows and in CI.
 - `pnpm --filter inv-app-server <script>` — one workspace (`inv-app-web` for web)
 
