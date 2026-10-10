@@ -5,6 +5,24 @@ or NFR. This is how the design workspace is organised, not what the product
 does. One dated amendment to [adr-018](../../decisions/adr-018-material-system.md)
 §9; no new ADR, because design-sync decisions live in `.design-sync/NOTES.md`.
 
+## Outcome (2026-10-10): partial, and flatter than specified
+
+This spec describes the intended end state. What landed differs in four
+ways, and `.design-sync/NOTES.md` is the current record:
+
+- **Partial.** Three sets moved: `guest-rsvp-extras`, `brand-name` and
+  `feedback-sheet`. The other eight are still in the DS and are cited as DS
+  until they move.
+- **Flat, not `screens/<set>/`.** Claude Design's "start from template"
+  copies a set to the design project's root and renames the entry canvas to
+  the template's name. Its own copy was kept rather than paid for twice.
+- **The binding is a snapshot**, and Claude Design offers no refresh. After
+  every DS sync, the bound files are rewritten by DesignSync (NOTES has the
+  steps).
+- **The project is named "E-invitation design"**
+  (`530d4226-b043-40eb-bdc2-326eed222b0f`). The concepts project was deleted
+  by its owner, so there is no `explorations/` folder.
+
 ## Context
 
 There are three Claude Design projects, and the one that matters holds two
