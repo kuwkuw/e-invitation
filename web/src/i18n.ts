@@ -112,7 +112,7 @@ export interface UiStrings {
   copyManageLink: string;
   manageLinkCopied: string;
   viewResponses: string;
-  // Host accounts (adr-014). Copy is verbatim from the DS `AuthGateSpec`,
+  // Host accounts (adr-014). Copy is verbatim from the design project's `AuthGateSpec`,
   // `ShareSignedIn` and `LandingSignedInStates` boards. The forbidden words
   // recorded there — sign up / register / create an account / required, and
   // their Ukrainian equivalents — must not reappear here: the gate says what
@@ -174,7 +174,7 @@ export interface AuthStrings {
   invitationCount: string;
   /** The nav link once this browser holds tokens the account has not filed —
    *  a fact about what is here, not an offer, and the only acknowledgement a
-   *  signed-out host gets that their events exist (DS `LandingListIsAccount`).
+   *  signed-out host gets that their events exist (design project `LandingListIsAccount`).
    *  The separator carries a thin space (U+2009) either side, which is
    *  typographic only — `.lp-nav-signin`'s `nowrap` is what actually keeps the
    *  count from wrapping away from its label. Note it defeats exact text
@@ -968,7 +968,7 @@ export const GUEST: Record<Language, GuestStrings> = {
 };
 
 // Host response dashboard at /manage/:id. Copy follows the "host-manage"
-// template in the E-invitation DS project: every access state stays calm —
+// screens in the E-invitation design project: every access state stays calm —
 // none of them is the host's fault, and all of them have the same one-step
 // recovery (paste your manage link).
 export interface ManageStrings {

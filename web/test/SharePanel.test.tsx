@@ -150,7 +150,7 @@ describe("native share", () => {
   });
 });
 
-// adr-014 §5 / DS `ShareSignedIn`. The hierarchy above must survive intact;
+// adr-014 §5 / design project `ShareSignedIn`. The hierarchy above must survive intact;
 // what changes is how much work it takes to reach the manage link.
 describe("signed in", () => {
   function renderSignedIn(manageShown: boolean, onToggleManage = () => {}) {
@@ -221,7 +221,7 @@ describe("SharePanel reply notifications", () => {
   });
 
   // The off state is read from the glyph, so both lines can stay at exactly
-  // the same size, weight and colour (DS NotifyLine §3).
+  // the same size, weight and colour (design project NotifyLine §3).
   it("carries the state in the icon, not in the type", () => {
     const on = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
     const onText = on.container.querySelector(".sp-notify-text") as HTMLElement;

@@ -2,7 +2,7 @@ import type { AuthStrings } from "../i18n";
 
 /**
  * Who this browser is signed in as, what we send them, and the way out
- * (adr-014 + adr-015 §7, DS `LandingSignedInStates` / `LandingAccountNotify`).
+ * (adr-014 + adr-015 §7, design project `LandingSignedInStates` / `LandingAccountNotify`).
  *
  * It lives in the **footer of the invitations card**, not in the page header.
  * The account exists only for that list, so it signs that list. In the header

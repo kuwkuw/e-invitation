@@ -135,7 +135,7 @@ describe("reply notification", () => {
   });
 
   // The count is the headline, not the lead: it is the only thing that changes
-  // between messages, so it is what the eye should catch (DS NotifyEmail).
+  // between messages, so it is what the eye should catch (design project NotifyEmail).
   it("leads with the count and headers with the title", () => {
     const rendered = notification();
     const countAt = rendered.html.indexOf("3 нові відповіді");

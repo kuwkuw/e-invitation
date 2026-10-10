@@ -1,5 +1,5 @@
-// Line icons for the host dashboard, traced from the "host-manage" template
-// in the E-invitation DS project. currentColor throughout so they inherit the
+// Line icons for the host dashboard, traced from the "host-manage" screens
+// in the E-invitation design project. currentColor throughout so they inherit the
 // quiet chrome tones rather than carrying colour of their own.
 
 export function RefreshIcon() {

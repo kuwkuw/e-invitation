@@ -18,7 +18,7 @@ import type { Language } from "./types";
 
 // Public page behind the share link: the invitation plus an RSVP form.
 // Guests never register; everything is keyed by the invitation id.
-// Visuals follow templates/guest-rsvp in the E-invitation DS project:
+// Visuals follow `GuestRsvp` in the E-invitation design project:
 // invitation is the hero, the reply is a quiet white card below/beside it.
 export function GuestPage({ id }: { id: string }) {
   const { published, status } = usePublishedInvitation(id);

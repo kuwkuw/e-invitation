@@ -22,7 +22,7 @@ import type { Language } from "./types";
  * invitation's replies once the editor tab is gone (adr-010 §1).
  *
  * Composition only; access logic lives in `useHostManage`. The layout follows
- * the "host-manage" template in the E-invitation DS project: mobile-first,
+ * the "host-manage" screens in the E-invitation design project: mobile-first,
  * chrome stays quiet, colour belongs to the yes/no statuses alone.
  */
 export function ManagePage({ id }: { id: string }) {

@@ -89,8 +89,8 @@ export function LandingPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const signedIn = account.status === "signed_in" && account.email !== null;
-  // **The list is the view of whichever store owns the identity** (DS
-  // `LandingListIsAccount`). Publishing already requires an account, so a list
+  // **The list is the view of whichever store owns the identity** (design
+  // project `LandingListIsAccount`). Publishing already requires an account, so a list
   // rendered to someone without one is a second source of truth about "your
   // events" that contradicts the first. Where accounts cannot exist at all
   // (adr-014 §7) the rule points at the other store rather than making an
@@ -112,7 +112,7 @@ export function LandingPage() {
   // for nothing.
   const showNavCount = account.status === "signed_out" && heldCount > 0;
   // Two conditions, and both render the line **absent** rather than disabled
-  // (DS LandingAccountNotify): a deployment that cannot send mail must promise
+  // (design project LandingAccountNotify): a deployment that cannot send mail must promise
   // nothing, and before the first invitation a preference about replies is
   // about nothing. It appears with the first published invitation.
   const canNotify = signedIn && account.notifications && mine.length > 0;
@@ -211,7 +211,7 @@ export function LandingPage() {
         </div>
       </header>
 
-      {/* Reading order per the DS Returning template: header → your events →
+      {/* Reading order per the design project's Returning board: header → your events →
           pitch. Whoever the list is not for — a first-time visitor, and now a
           signed-out host on a deployment that has accounts — sees the page
           begin at the pitch. */}
@@ -226,7 +226,7 @@ export function LandingPage() {
               <AccountFooter
                 email={account.email}
                 // Sign-out now takes the list off the page while leaving every
-                // token in place, so it asks first (DS `LandingListIsAccount`).
+                // token in place, so it asks first (design project `LandingListIsAccount`).
                 onSignOut={() => setConfirmingSignOut(true)}
                 notify={canNotify ? { enabled: notify.enabled, onToggle: notify.toggle } : null}
                 t={AUTH[lang]}

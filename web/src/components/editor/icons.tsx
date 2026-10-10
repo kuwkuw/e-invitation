@@ -143,7 +143,7 @@ export const LockIcon = () => (
   </svg>
 );
 
-/** Reply notifications, on (adr-015 §7). The DS carries one envelope glyph
+/** Reply notifications, on (adr-015 §7). The design project carries one envelope glyph
  *  across the share panel, the not-found page and the unsubscribe page. */
 export const MailIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">

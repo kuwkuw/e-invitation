@@ -39,10 +39,10 @@ interface Props {
  * below a divider, in its own warm "sensitive" block, masked by default, with
  * a quiet outline button and an explicit warning. There is no server-side
  * protection against a host pasting the wrong one into a group chat, so this
- * hierarchy is the safeguard (adr-010 §3, "share-panel" DS template).
+ * hierarchy is the safeguard (adr-010 §3, "share-panel" design-project screens).
  *
- * For a signed-in host the block collapses to one row behind "Show" (DS
- * `ShareSignedIn`). That block had been carrying two different messages in one
+ * For a signed-in host the block collapses to one row behind "Show" (design
+ * project `ShareSignedIn`). That block had been carrying two different messages in one
  * piece of copy — *keep this safe, it is your only way back* and *do not send
  * this to anyone*. An account makes the first untrue and leaves the second
  * exactly as true, so they are separated: the keeping moves up into a quiet

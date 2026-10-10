@@ -4,7 +4,7 @@
 // navigation, and `useInvitationEditor` holds the invitation entirely in
 // memory. Without this the host would come back from Google to an empty
 // editor — losing their work at the exact moment they committed to it, which
-// is worse than the gate itself. The DS `AuthGateSpec` says the same thing in
+// is worse than the gate itself. The design project's `AuthGateSpec` says the same thing in
 // its own words: without a saved draft the `returning` state is impossible and
 // the whole sheet falls apart into two screens.
 //

@@ -1,5 +1,5 @@
 // The reply-notification message itself: subject, HTML part, text part.
-// Built from the DS `templates/rsvp-notifications/NotifyEmail` mockup.
+// Built from the design project's `NotifyEmail` mockup.
 //
 // What it deliberately does not contain is the point of adr-015 §3 — no guest
 // name, no yes/no, no party size, no note. A title, a count and a link. Every

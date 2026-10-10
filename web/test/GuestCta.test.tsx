@@ -48,7 +48,7 @@ describe("GuestCta", () => {
 
   it("keeps the wordmark at the whisper it was", () => {
     renderCta("uk");
-    // Values inherited from .gr-brand — the DS guest-rsvp intent is that the
+    // Values inherited from .gr-brand — the design project's guest-rsvp intent is that the
     // mark does not get louder when it gains a job (adr-013 §7).
     const mark = screen.getByText("INVINTO");
     expect(mark.className).toBe("gr-cta-mark");

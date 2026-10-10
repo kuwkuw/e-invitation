@@ -6,7 +6,7 @@
 // composition is deliberately the *same* one as the guest page's "invitation
 // not found" state — same 96px circle, same Playfair heading, same widths —
 // which is what makes a page outside the SPA still read as part of the product
-// when it has access to none of the product's state (DS NotifyUnsub).
+// when it has access to none of the product's state (design project NotifyUnsub).
 //
 // **No external requests.** Both icons are inline SVG and there is no webfont
 // link: this page's whole job is to work when opened cold from an inbox, and a
@@ -82,7 +82,7 @@ const MAIL_OFF_ICON = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 <path d="M3.2 19.8L20.8 4.7" stroke="#a29a8b" stroke-width="1.7" stroke-linecap="round"/>
 </svg>`;
 
-/** The dashed envelope: in the DS this means "there is nothing here", which is
+/** The dashed envelope: in the design project this means "there is nothing here", which is
  *  exactly what a token we cannot resolve should say. */
 const MAIL_GONE_ICON = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 <rect x="3" y="6" width="18" height="13" rx="2.5" stroke="#b7ae9e" stroke-width="1.6" stroke-dasharray="3 2.4"/>

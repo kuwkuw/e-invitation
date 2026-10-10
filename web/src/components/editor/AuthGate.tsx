@@ -2,7 +2,7 @@ import type { GateState } from "../../hooks/usePublishing";
 import type { AuthStrings } from "../../i18n";
 
 /**
- * The sign-in gate (adr-014 §2, DS `templates/auth-gate`).
+ * The sign-in gate (adr-014 §2, design project `AuthGate`).
  *
  * It is deliberately **the first frame of the share sheet**, not a screen of
  * its own: same container, same anchor, same rounded top edge the links will

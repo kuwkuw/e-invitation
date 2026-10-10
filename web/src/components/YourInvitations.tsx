@@ -13,14 +13,14 @@ const VISIBLE = 3;
 
 /**
  * "Your invitations" — the returning-host state of the landing page, not a
- * separate page (adr-010 §4, "landing-page" DS Returning template).
+ * separate page (adr-010 §4, "landing-page" design-project Returning board).
  *
  * Deliberately quiet: a plain surface card with a modest heading, above the
  * pitch but never louder than it. "Create" stays the only accent button on
  * the page.
  *
- * **The list is the view of whichever store owns the identity** (DS
- * `LandingListIsAccount`). Where accounts exist it is the account's, and the
+ * **The list is the view of whichever store owns the identity** (design
+ * project `LandingListIsAccount`). Where accounts exist it is the account's, and the
  * caller renders this only for a signed-in host; where they cannot exist
  * (adr-014 §7) the identity is the browser and the list is this browser's.
  * There is no in-between state, so nothing here contrasts the two: signed in

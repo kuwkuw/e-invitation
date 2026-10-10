@@ -23,8 +23,8 @@ export function manageUrl(id: string, manageToken: string): string {
  *  across the redirect, and what `PublishResult` structurally satisfies. */
 type Republishable = { id: string; manage_token: string };
 
-/** The frames of the publish sheet before the links exist (adr-014 §2, DS
- *  `AuthGateStates`). Not separate screens: one container whose contents
+/** The frames of the publish sheet before the links exist (adr-014 §2, design
+ *  project `AuthGateStates`). Not separate screens: one container whose contents
  *  change, mounted the moment the host presses Publish. */
 export type GateState = "prompt" | "redirecting" | "returning" | "declined" | "failed";
 
@@ -255,7 +255,7 @@ export function usePublishing(
     authCode: options.authCode ?? null,
     /** Signed-in hosts get the manage block collapsed behind "Show": they
      *  rarely need it, and the warning then appears with the copy button it
-     *  guards, never without it (DS `ShareSignedIn`). */
+     *  guards, never without it (design project `ShareSignedIn`). */
     manageShown,
     toggleManageShown: () => setManageShown((open) => !open),
     /** Whether the panel offers the share sheet as its primary action. False

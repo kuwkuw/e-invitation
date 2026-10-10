@@ -106,8 +106,8 @@ describe("the returning host's landing list", () => {
     expect(screen.getByText("Хрестини Даринки", inList)).toBeTruthy();
   });
 
-  // The list is the view of whichever store owns the identity (DS
-  // `LandingListIsAccount`). Publishing already requires an account, so a list
+  // The list is the view of whichever store owns the identity (design
+  // project `LandingListIsAccount`). Publishing already requires an account, so a list
   // rendered to someone without one is a second source of truth about "your
   // events" that contradicts the first.
   it("does not show the list to a signed-out host where accounts exist", async () => {
@@ -162,7 +162,7 @@ describe("the landing sign-in link", () => {
   // The card no longer renders for them, so the door is the only place the
   // page can admit their events exist. A fact about what is already in this
   // browser, not an offer — and it disappears on sign-in because the list
-  // replaces it (DS `LandingListIsAccount`, case 1).
+  // replaces it (design project `LandingListIsAccount`, case 1).
   it("counts what this browser holds once the card is gone", async () => {
     localStorage.setItem(manageTokenKey("zzz999"), "0123456789abcdef0123456789abcdef");
     localStorage.setItem(manageTokenKey("yyy888"), "fedcba9876543210fedcba9876543210");

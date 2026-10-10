@@ -303,8 +303,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .field-head button:disabled { opacity: 0.5; cursor: default; }
 
 /* Creation chat ---------------------------------------------------------- */
-/* The "creation-chat" template in the E-invitation DS project was this
-   section's first spec. adr-018 superseded it, and the DS project marks it so;
+/* The "creation-chat" screens in the E-invitation design project were this
+   section's first spec. adr-018 superseded them, and the project marks them so;
    the material system above is the spec now. What carried over: neutral warm
    chrome, --accent accent, invitation owns all color. */
 
@@ -699,7 +699,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .swatch-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 
 /* Share panel ----------------------------------------------------------- */
-/* From the "share-panel" template in the E-invitation DS project. Two links
+/* From the "share-panel" screens in the E-invitation design project. Two links
    that must never be confused: the public one is the single filled accent,
    first; the manage link sits below a divider in its own warm "sensitive"
    block, masked, with a quiet outline button. Nothing server-side stops a
@@ -816,7 +816,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .sp-responses-link:hover { color: var(--ui-accent); }
 
 /* Guest page ------------------------------------------------------------ */
-/* From the "guest-rsvp" template in the E-invitation DS project: the
+/* From the "guest-rsvp" screens in the E-invitation design project: the
    invitation is the hero, the reply is a quiet white card; the attending
    toggle is the emotional center; the wordmark stays a whisper.
 
@@ -1449,7 +1449,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 
 /* Host manage dashboard --------------------------------------------------- */
-/* From the "host-manage" template in the E-invitation DS project. Mobile is
+/* From the "host-manage" screens in the E-invitation design project. Mobile is
    the primary case — a host checks the headcount on a phone — with a two-column
    desktop layout above 960px. The chrome stays quiet; the only colour is the
    yes/no status pair, and the accent marks what is new.
@@ -1782,8 +1782,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .cr-action:hover { background: #a04e27; }
 .cr-brand { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
 
-/* Sign-in gate (adr-014 §2). From the "auth-gate" template in the E-invitation
-   DS project. It is the first frame of the share sheet, not a screen: same
+/* Sign-in gate (adr-014 §2). From the "auth-gate" screens in the E-invitation
+   design project. It is the first frame of the share sheet, not a screen: same
    container, same rounded top edge, and the invitation stays visible behind a
    scrim because that is what makes interrupting a committed host tolerable.
    No filled accent lives here until a public link exists — the one exception
@@ -1831,14 +1831,14 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .ag-grab { display: none; }
 }
 
-/* Share panel, signed-in variant (adr-014 §5, DS "ShareSignedIn"). The
+/* Share panel, signed-in variant (adr-014 §5, design project "ShareSignedIn"). The
    hierarchy above is untouched: the public link stays first and stays the only
    filled accent. What changes is that the manage block collapses to one row —
    and with it collapses the copy button, so the warning it guards is never
    absent while the button is present. */
 /* 10px, not 14: this and .sp-notify below it are one stack of quiet account
    facts, and the tighter gap groups them instead of reading as three
-   equally-spaced rows (DS "NotifyLine" §4). */
+   equally-spaced rows (design project "NotifyLine" §4). */
 .sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
 .sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: #8aa98f; }
 .sp-manage-collapsed { width: 100%; background: #faf6f0; border: 1px solid #f0e5d6; border-radius: 12px; display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
@@ -1849,7 +1849,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
 .sp-manage-hide:hover { color: #7a5638; }
 
-/* Reply notifications (adr-015 §7, DS "rsvp-notifications/NotifyLine").
+/* Reply notifications (adr-015 §7, design project "rsvp-notifications/NotifyLine").
    Same values as .sp-account-note above — the two are one stack of quiet facts
    about the account, which is why that note's bottom margin is 10px not 14.
 
@@ -1868,11 +1868,11 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
 .sp-notify-toggle:hover { color: #7a5638; }
 
-/* Landing account footer + account deletion (adr-014 §9, DS
-   "LandingSignedInStates"). The footer signs the invitations card because the
+/* Landing account footer + account deletion (adr-014 §9, design
+   project "LandingSignedInStates"). The footer signs the invitations card because the
    account exists for that list and nothing else. */
 /* The footer is a block, not a row: the identity line keeps the old flex
-   layout and the notification line (adr-015 §7, DS LandingAccountNotify) sits
+   layout and the notification line (adr-015 §7, design project LandingAccountNotify) sits
    under it. Heights: 46px with no mail line, 111px with one line of text,
    129px when Ukrainian "off" wraps to two at 375px — 11 + 24 + 5 + text + 40
    + 12. The growth lands on the quietest block of the page, below the list. */

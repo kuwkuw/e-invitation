@@ -58,7 +58,7 @@ describe("YourInvitations", () => {
 
   // The list only renders without an account where accounts cannot exist
   // (adr-014 §7), and there "on this device" contrasts with nothing — it would
-  // be noise about the only possible state (DS `LandingListIsAccount`).
+  // be noise about the only possible state (design project `LandingListIsAccount`).
   it("carries no subtitle when the list is not the account's", () => {
     const { container } = render(<YourInvitations invitations={make(2)} t={t} />, { wrapper });
     expect(container.querySelector(".lp-yours-sub")).toBeNull();

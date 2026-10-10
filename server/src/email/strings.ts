@@ -1,5 +1,5 @@
-// Email copy, both languages (adr-015 §9), from the DS
-// `templates/rsvp-notifications` mockups.
+// Email copy, both languages (adr-015 §9), from the design project's
+// `RsvpNotifications` mockups.
 //
 // The first user-facing strings on the server that are not a prompt. NFR-5's
 // rule is that copy lives in one place per side — `web/src/i18n.ts` on the
@@ -91,7 +91,7 @@ export function fill(template: string, values: Record<string, string>): string {
 
 /** The title above the count is composition, not prose — past two lines it
  *  stops being a header. The footer keeps the untruncated title, where it sits
- *  inside a sentence instead (DS NotifyEmail). */
+ *  inside a sentence instead (design project NotifyEmail). */
 export function truncateTitle(title: string, max = 90): string {
   return title.length <= max ? title : `${title.slice(0, max - 1).trimEnd()}…`;
 }

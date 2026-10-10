@@ -37,7 +37,7 @@ function renderList(props: Partial<Parameters<typeof YourInvitations>[0]> = {}) 
 }
 
 describe("returning-host list", () => {
-  // adr-014, DS `LandingSignedInStates`: today's signed-out variant is
+  // adr-014, design project `LandingSignedInStates`: today's signed-out variant is
   // untouched. No sign-in offer here — that would be an advertisement where a
   // host simply wants their list.
   it("is unchanged when signed out", () => {
@@ -135,7 +135,7 @@ describe("delete account confirmation", () => {
     expect(screen.getByText(auth.copyAllLinksDone)).toBeTruthy();
   });
 
-  // Deliberately absent per the DS board — each of these would shout
+  // Deliberately absent per the design-project board — each of these would shout
   // "irreversible catastrophe" at a host whose invitations all survive.
   it("has no filled red button and no type-to-confirm", () => {
     const { container } = renderSheet();
@@ -156,8 +156,8 @@ describe("delete account confirmation", () => {
   });
 });
 
-// adr-015 §7's durable home for the account-wide switch (DS
-// LandingAccountNotify). The share panel discloses it at publish; this is
+// adr-015 §7's durable home for the account-wide switch (design
+// project LandingAccountNotify). The share panel discloses it at publish; this is
 // where it lives afterwards.
 describe("AccountFooter reply notifications", () => {
   const notifyOn = { enabled: true, onToggle: () => {} };
@@ -256,7 +256,7 @@ describe("AccountFooter reply notifications", () => {
 });
 
 /**
- * Sign-out confirmation (DS `LandingListIsAccount`, case 2).
+ * Sign-out confirmation (design project `LandingListIsAccount`, case 2).
  *
  * Sign-out could be immediate while the list was the browser's. Now it is the
  * account's view, so signing out takes the list off the page while leaving

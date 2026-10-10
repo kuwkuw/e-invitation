@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { AuthStrings } from "../i18n";
 
 /**
- * Account deletion (adr-014 §9, DS `LandingSignedInStates`).
+ * Account deletion (adr-014 §9, design project `LandingSignedInStates`).
  *
  * Almost every host will assume deleting the account deletes their events and
  * breaks their guests' links. It does neither. So the reassurance is not fine
@@ -14,7 +14,7 @@ import type { AuthStrings } from "../i18n";
  * because it really is small) → a chance to keep the one thing that is lost →
  * cancel, wide and outlined, with delete as a text link beneath it.
  *
- * Deliberately absent, per the DS board: no filled red button, no
+ * Deliberately absent, per the design-project board: no filled red button, no
  * type-DELETE-to-confirm, no fine print, and no "this cannot be undone" — true,
  * but it would be the loudest sentence on a screen whose whole job is to say
  * the opposite.

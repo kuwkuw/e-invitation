@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { AuthStrings } from "../i18n";
 
 /**
- * Sign-out confirmation (DS `LandingListIsAccount`, case 2).
+ * Sign-out confirmation (design project `LandingListIsAccount`, case 2).
  *
  * Sign-out used to be immediate, and could be: the list was the browser's, so
  * ending the session took only the email. Now the list is the account's view,

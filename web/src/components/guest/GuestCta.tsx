@@ -6,8 +6,8 @@ import type { GuestStrings } from "../../i18n";
  * of the share loop 07-monetization §3 says is the only acquisition channel
  * the economics can afford.
  *
- * The wordmark keeps the exact values it had as a static `gr-brand`. The DS
- * guest-rsvp template states the intent this has to respect — the wordmark
+ * The wordmark keeps the exact values it had as a static `gr-brand`. The design
+ * project's guest-rsvp screens state the intent this has to respect — the wordmark
  * stays a whisper — so the action is one muted line beneath it, in the same
  * treatment as `gr-change` elsewhere on the page. Nothing on the page gets
  * louder; one thing becomes legible as an action. (The template phrases that
