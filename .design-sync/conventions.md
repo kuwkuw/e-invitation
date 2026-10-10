@@ -15,7 +15,9 @@ The core component is `InvitationPreview`. Its entire appearance is driven by th
 | `layout` | `classic` `banner` `split` |
 | `ornament` | `none` `floral` `geometric` `sparkle` |
 
-Each token maps 1:1 to a CSS class (`palette-warm`, `type-serif`, `layout-banner`, `ornament-floral`) defined in `_ds_bundle.css`. **Never invent new token values, pass CSS, or restyle the card internals** — pick from the enums. Palettes set the custom properties `--bg`, `--ink`, `--accent`, `--wash`, `--edge`; typography sets `--font-display`/`--font-body`. If you style your own surrounding UI, reuse those custom properties from a `.inv` context or the app-chrome palette in `styles.css` (page background `#f6f5f2`, ink `#23211d`, muted `#6b6659`).
+Each token maps 1:1 to a CSS class (`palette-warm`, `type-serif`, `layout-banner`, `ornament-floral`) defined in `_ds_bundle.css`. **Never invent new token values, pass CSS, or restyle the card internals** — pick from the enums. Palettes set the custom properties `--bg`, `--ink`, `--accent`, `--wash`, `--edge`; typography sets `--font-display`/`--font-body`.
+
+If you style your own surrounding UI, use the app's material tokens — the `:root` block at the top of `_ds_bundle.css` (adr-018) — rather than raw hex: `--ground` (page ground), `--surface`, `--ui-ink` / `--ink-muted` / `--ink-faint` (text tiers; `--ink-faint` clears only 3:1, so labels, never sentences), `--ui-accent`, `--edge`, the `--r-*` radii and `--e-*` elevations, and the `.glass` / `.glass-solid` classes (`.glass-solid` for anything that carries text). **Inside a `.inv` card, or on any element that carries a `palette-*` class, `--ink`, `--accent`, `--wash` and `--edge` are the card's own** — read the product's through `--ui-ink` and `--ui-accent`. `--ink-placeholder` and `--ink-whisper` sit below 3:1: never put readable text on them.
 
 The `copy` prop carries the six text slots of an invitation: `title`, `greeting`, `body`, `details_line` (supports `\n` line breaks), `rsvp_prompt`, `closing`. Realistic, human copy — Ukrainian or English.
 
