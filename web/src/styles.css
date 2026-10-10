@@ -210,8 +210,6 @@ body {
   color: var(--ink);
 }
 
-.page { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
-
 .header { display: flex; align-items: center; justify-content: space-between; }
 .header h1 { font-size: 1.4rem; margin: 0; }
 
@@ -277,15 +275,6 @@ button.primary {
 button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .error { color: var(--danger); }
-
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(280px, 420px) 1fr;
-  gap: 28px;
-  margin-top: 28px;
-  align-items: start;
-}
-@media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
 
 .editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
 
