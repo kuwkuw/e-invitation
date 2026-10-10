@@ -290,6 +290,16 @@ list, its entry canvas carries the same marker and a banner naming the spec
 that replaced it, and nothing was deleted. `styles.css`'s Creation chat
 section no longer cites it as its source.
 
+**Amended 2026-10-10: screens are leaving the DS project.** The E-invitation
+DS is to hold the system only, and product screens are moving to a regular
+**E-invitation design** project that binds it
+([spec](../superpowers/specs/2026-10-02-design-project-split-design.md)).
+Three sets have moved so far; `creation-chat` is among the eight that have
+not, and keeps its superseded label wherever it lives. This section's
+material spec still belongs to the DS when it is built. "The segmented
+toolbar and its sheets" are screen work and belong to the design project.
+Read "DS project" above as it was true on the day it was written.
+
 `NOTES.md` also records that registering a new template set needs an entry
 canvas with specific markers, and that two attempts were spent discovering it.
 

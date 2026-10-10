@@ -1,5 +1,7 @@
 # inv-app invitation design system — conventions
 
+This design system is **the system**: the invitation card, its closed design tokens, and the app's material (the adr-018 `:root` tokens and glass). INVINTO's product screens are designed in a separate project, **E-invitation design**, which binds this DS. Two template sets here are component specs and belong to the system: `card-background` and `lang-switcher`. The other template sets you may find here (landing, share panel, guest RSVP, host dashboard, auth gate, gallery, RSVP notifications, the superseded creation chat) are older screen mockups waiting to move to that project. Read them as a record of how a screen was decided, never as components to build from, and don't add new screens here.
+
 ## Setup
 
 No provider or wrapper is required. Components are self-contained; everything they need ships in `styles.css` and its `@import` closure (`_ds_bundle.css` + Google Fonts). Make sure that stylesheet is loaded — without it cards render as unstyled text. Fonts (Playfair Display, Cormorant Garamond, Manrope, Marck Script) load from Google Fonts at runtime and all cover Cyrillic — this DS is bilingual Ukrainian/English and copy is frequently Ukrainian.
@@ -45,4 +47,4 @@ The optional `background` prop is an **opaque server-issued asset id** (adr-009)
 />
 ```
 
-Give the card a constrained column on a neutral page background; it centers itself and carries its own shadow, border, padding and a 380 px min-height. For reference, the app renders it in a ~590 px column (`.page` caps at 1080 px; `.workspace` splits `minmax(280px, 420px) 1fr` with a 28 px gap, collapsing to one column under 800 px).
+Give the card a constrained column on a neutral page background; it centers itself and carries its own shadow, border, padding and a 380 px min-height. For reference, the editor renders it up to 460 px wide (`.cc-preview-inner`: `width: min(460px, 100%)`), centred on the palette-tinted ground with 28 px of padding.
