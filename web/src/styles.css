@@ -1071,7 +1071,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 
 /* gr-cta: the same whisper, now the only link back to the product (adr-013
-   §7, DS templates/guest-rsvp-extras/GuestCta). The mark keeps .gr-brand's
+   §7, design project GuestCta). The mark keeps .gr-brand's
    exact values; the action is one muted line beneath it, matching .gr-change,
    so nothing on the page gets louder. Hover moves the line only — the
    wordmark never changes colour. */
