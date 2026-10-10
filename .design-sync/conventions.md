@@ -1,6 +1,6 @@
 # inv-app invitation design system — conventions
 
-This design system is **the system**: the invitation card, its closed design tokens, and the app's material (the adr-018 `:root` tokens and glass). INVINTO's product screens are designed in a separate project, **E-invitation design**, which binds this DS. Two template sets here are component specs and belong to the system: `card-background` and `lang-switcher`. The other template sets you may find here (landing, share panel, guest RSVP, host dashboard, auth gate, gallery, RSVP notifications, the superseded creation chat) are older screen mockups waiting to move to that project. Read them as a record of how a screen was decided, never as components to build from, and don't add new screens here.
+This design system is **the system**: the invitation card, its closed design tokens, and the app's material (the adr-018 `:root` tokens and glass). INVINTO's product screens are designed in a separate project, **E-invitation design**, which binds this DS. The only two template sets here are component specs, `card-background` and `lang-switcher`. Every screen mockup (landing, editor, share panel, guest RSVP, host dashboard, notifications, gallery) lives in that project. Don't add screens here.
 
 ## Setup
 

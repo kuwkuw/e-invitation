@@ -5,17 +5,19 @@ or NFR. This is how the design workspace is organised, not what the product
 does. One dated amendment to [adr-018](../../decisions/adr-018-material-system.md)
 §9; no new ADR, because design-sync decisions live in `.design-sync/NOTES.md`.
 
-## Outcome (2026-10-10): partial, and flatter than specified
+## Outcome (2026-10-10): complete, and flatter than specified
 
-This spec describes the intended end state. What landed differs in four
-ways, and `.design-sync/NOTES.md` is the current record:
+This spec describes the intended end state. What landed differs in the
+details below, and `.design-sync/NOTES.md` is the current record:
 
-- **Partial.** Three sets moved: `guest-rsvp-extras`, `brand-name` and
-  `feedback-sheet`. The other eight are still in the DS and are cited as DS
-  until they move.
-- **Flat, not `screens/<set>/`.** Claude Design's "start from template"
-  copies a set to the design project's root and renames the entry canvas to
-  the template's name. Its own copy was kept rather than paid for twice.
+- **Complete, in two passes.** Three sets moved first (`guest-rsvp-extras`,
+  `brand-name`, `feedback-sheet`) and the other eight on the same day, by
+  asking the design project's own assistant to copy them from the bound DS.
+  That copy is byte-exact.
+- **Flat, not `screens/<set>/`.** Every set sits at the design project's root
+  with its original file names (only the first set's entry was renamed to
+  "Guest RSVP Phase 2"). The app's own copy was kept rather than paid for
+  twice.
 - **The binding is a snapshot**, and Claude Design offers no refresh. After
   every DS sync, the bound files are rewritten by DesignSync (NOTES has the
   steps).

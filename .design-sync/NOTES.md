@@ -9,7 +9,7 @@
 - Fonts load via a Google Fonts `@import` at the top of `web/src/styles.css` (deliberately moved there from `index.html` so the DS `styles.css` closure carries the fonts). All four families cover Cyrillic — required for Ukrainian copy; don't substitute without checking Cyrillic support. **`index.html` now carries a `<link>` to the same URL as well** (adr-016 §8, 2026-08-21): an `@import` is discovered only after the stylesheet containing it has been parsed, which held first paint for a round trip. The duplicate is deliberate and the two must stay in sync — the `@import` is what keeps the DS closure self-contained, so **do not remove it** when the `<link>` looks redundant; the browser resolves the second request from cache.
 - validate prints ".d.ts parse check skipped — typescript not in node_modules": typescript is installed in `.ds-sync/node_modules` but validate resolves from cwd. Harmless for one hand-written props body.
 - **Windows EPERM on rebuild**: a driver run started right after a previous validate can die with `Error: EPERM … rm '\\?\C:\projects\inv-app\ds-bundle'` — a chromium/file handle from the render check is still open on the output dir. Fix is `rm -rf ds-bundle` then re-run the driver; it is not a converter bug and needs no config change.
-- **Two Claude Design projects since the 2026-10-02 split** (spec: `docs/superpowers/specs/2026-10-02-design-project-split-design.md`). **E-invitation DS** (`53daa9fc-5618-4769-9cff-7fbf338169de`, this sync's target) is the system: `InvitationPreview`, the stylesheet and its tokens, and the `card-background` and `lang-switcher` template sets. **E-invitation design** (`530d4226-b043-40eb-bdc2-326eed222b0f`, a regular project, never a sync target) binds the DS at `_ds/e-invitation-ds-53daa9fc-5618-4769-9cff-7fbf338169de/` and holds product screens, flat at its root: `Guest RSVP Phase 2` and `GuestCta` (from `guest-rsvp-extras`), `BrandName`, and `FeedbackMain`/`FeedbackSpec`/`FeedbackStates`. **The split is partial**: `auth-gate`, `creation-chat`, `gallery`, `guest-rsvp`, `host-manage`, `landing-page`, `rsvp-notifications` and `share-panel` are still under the DS's `templates/` and still cited as DS until they move (see "Moving a screen set to the design project" below). In this repo "DS" means the DS project; a board in the design project is cited as ``design project `Name` ``. The older "Design System" project (`d96adb40-4a0f-401c-8e5a-7a518a31b5d5`, 16 token cards from `scripts/build-design-cards.mjs`) is retired, though not yet deleted: the DS token panel and the `InvitationPreview` card cover every enum, nothing reads it, and the script has no live target. The "E-invitation Design System" exploration (`350a2663-afbf-4816-8ab4-e51a7bbabb71`) was deleted by its owner during the split, its concepts canvas with it.
+- **Two Claude Design projects since the 2026-10-02 split** (spec: `docs/superpowers/specs/2026-10-02-design-project-split-design.md`). **E-invitation DS** (`53daa9fc-5618-4769-9cff-7fbf338169de`, this sync's target) is the system: `InvitationPreview`, the stylesheet and its tokens, and the `card-background` and `lang-switcher` template sets. **E-invitation design** (`530d4226-b043-40eb-bdc2-326eed222b0f`, a regular project, never a sync target) binds the DS at `_ds/e-invitation-ds-53daa9fc-5618-4769-9cff-7fbf338169de/` and holds **every product screen**, flat at its root: all eleven former DS screen sets (sign-in gate, creation chat, gallery, guest RSVP and its Phase 2 add-ons, host dashboard, landing, RSVP notifications, share panel, feedback sheet, brand name), 56 canvases in all, sharing one root `ds-base.js` and `support.js`. The split finished on 2026-10-10 (see "How the screen sets moved" below). In this repo "DS" means the DS project; a board in the design project is cited as ``design project `Name` ``. The older "Design System" project (`d96adb40-4a0f-401c-8e5a-7a518a31b5d5`, 16 token cards from `scripts/build-design-cards.mjs`) is retired, though not yet deleted: the DS token panel and the `InvitationPreview` card cover every enum, nothing reads it, and the script has no live target. The "E-invitation Design System" exploration (`350a2663-afbf-4816-8ab4-e51a7bbabb71`) was deleted by its owner during the split, its concepts canvas with it. A stray "Share Panel Post-Publish" project (`f72dfa3f-013a-4495-ba22-f10a16818cf1`), made by a home-screen "start from template" during the move, holds duplicates only and can be deleted.
 - **The binding is a snapshot, not live.** After the DS's `_ds_manifest.json` was rewritten on 2026-10-10, the copy under `_ds/<folder>/` in the design project still listed the old template set. The binding is a fixed six-file copy (`README.md`, `_adherence.oxlintrc.json`, `_ds_bundle.css`, `_ds_bundle.js`, `_ds_manifest.json`, `styles.css`) taken when the project was bound. That is also why a probe file written anywhere else in the DS could never show up in it, and why the first freshness probe was inconclusive. **After every DS sync, refresh the binding**, or the screens render against the previous stylesheet. That is the two-month sync gap below, one level further out. Claude Design offers no refresh for a bound DS (2026-10-10), so the refresh is a DesignSync write into `_ds/<folder>/` of the design project, from the bytes just uploaded to the DS: `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and `styles.css` from `ds-bundle/` by `localPath`, plus the DS's current `_ds_manifest.json`. Leave `_adherence.oxlintrc.json` alone; the app generates it and it changes only with the component. Check by reading the bound `README.md` or grepping the bound `_ds_bundle.css` for text that changed in the sync.
 
 - **Claude Design token annotations live in `web/src/styles.css`**: inline `/* @kind color */` on every `--wash` declaration (base `.inv` + five `palette-*`; minimal has no wash) and `/* @kind font */` on `.landing`'s `--lp-display`. The DS app's token panel reads them from the declaration line in `_ds_bundle.css`. They were originally patched remotely by the design agent and reverted by every sync — now upstream, so they persist. Don't strip these comments; verify `grep -c "@kind" ds-bundle/_ds_bundle.css` ≥ 7 after build.
@@ -76,6 +76,12 @@ every resync** — like the pixel figures below, no validator reads it.
 
 ## Marking a template set superseded (2026-10-02)
 
+`creation-chat` has since moved to the E-invitation design project
+(2026-10-10), its label and banner intact. The steps below now apply only to
+a **system** set superseded in the DS; a superseded screen in the design
+project needs only step 3's banner, since a regular project has no template
+list.
+
 `creation-chat` was the first, per adr-018 §9. Three places, nothing deleted:
 
 1. The set's `templates` entry in `_ds_manifest.json` — `name` and
@@ -93,34 +99,38 @@ and keep the description under 200 characters — the app cuts longer ones
 mid-word. The captured `.thumbnail` still shows the old canvas until the app
 recaptures it.
 
-## Moving a screen set to the design project (learned 2026-10-10)
+## How the screen sets moved (2026-10-02 → 2026-10-10)
 
-Three sets moved on 2026-10-10. The eight still in the DS move the same way,
-one set at a time, and nothing leaves the DS before its copy is verified.
+All eleven are moved. This is the record, and the method if a set ever has to
+move between projects again. Nothing left the DS before its copy was verified.
 
-1. **Copy it with Claude Design's own "start from template".** In E-invitation
-   design, start a file from the DS template. The app copies the set to the
-   project **root** (not a folder), renames the entry canvas to the template's
-   name (`Phase2.dc.html` became `Guest RSVP Phase 2.dc.html`), rewrites
-   `ds-base.js`'s base to `_ds/<folder>`, and brings `support.js` and
-   `.thumbnail`. Canvas names are distinct across all sets, so the flat
-   layout does not collide. This costs nothing.
-2. **Then confirm with `list_files`.** On 2026-10-10 eight sets reported as
-   started produced no files at all. What had been seen was the DS's own
-   template list, shown through the binding.
-3. **A set with no `templates` entry cannot be started from a template**
-   (`brand-name` and `feedback-sheet` had none). Copy it through DesignSync:
-   `get_file`, stage on disk, `write_files` with `localPath`, then write a
-   second copy from the **DS source** and `diff` the two. Re-reading the
-   design project's copy proves nothing, because it returns the staged bytes.
-   Through the agent's context this costs about 25 KB per canvas, twice.
-4. **Only then prune the DS.** Drop the set's entry from `_ds_manifest.json`:
-   re-read it, transcribe it twice and `cmp` the copies, check every token
-   against `web/src/styles.css`, and change `templates` only. Then delete
-   `templates/<set>/**` by explicit path, never a glob that could reach a
-   system set.
-5. **Repoint the repo's citations of that set** from DS to
-   ``design project `Name` ``, and update the partial-split list above.
+1. **The method that works: ask the design project's own assistant.** In
+   E-invitation design's chat: *"Add the '<template name>' template from the
+   E-invitation DS design system to this project as new files."* It runs a
+   real copy step, not a rewrite: `AuthGateMain.dc.html` was byte-identical to
+   the DS source. It keeps the project's root `ds-base.js`/`support.js` and
+   reports any reference that points outside the project. One message moved
+   seven sets (44 canvases). The agent can send that message itself from the
+   in-app browser, once the user has signed in to claude.ai there.
+2. **The trap: "start from template" on the Claude Design home screen makes a
+   new project per template.** It does not add files to an existing one. That
+   is how the stray "Share Panel Post-Publish" project appeared. Three
+   "done"s in a row produced no files in E-invitation design for this reason.
+   **Always confirm with `list_files`** on the right project id.
+3. **A set with no `templates` entry** (`brand-name` and `feedback-sheet` had
+   none) was copied through DesignSync: `get_file`, stage on disk,
+   `write_files` with `localPath`, then a second copy written from the **DS
+   source** and `diff`ed against the first. This caught a real slip (two
+   invented trailing zeros in an SVG path). Re-reading the design project's
+   copy proves nothing, because it returns the staged bytes. It costs about
+   25 KB of the agent's context per canvas, twice.
+4. **Only then prune the DS.** Drop the sets' entries from `_ds_manifest.json`:
+   build the new file by script from a verified copy (two transcriptions,
+   `cmp`, every token checked against `web/src/styles.css`), change
+   `templates` only. Then delete `templates/<set>/**` by explicit path, never
+   a glob that could reach a system set. Opening the DS afterwards consumed
+   `_ds_needs_recompile`, and the recompile kept the trimmed list.
+5. **Repoint the repo's citations** from DS to ``design project `Name` ``.
 
 ## Known render warns
 
@@ -134,7 +144,7 @@ one set at a time, and nothing leaves the DS before its copy is verified.
 - The authored preview (`.design-sync/previews/InvitationPreview.tsx`) hard-codes realistic copy; it tracks the pipeline's copy shape (`title/greeting/body/details_line/rsvp_prompt/closing`). A schema rename breaks it loudly (compile), a semantic change only stales it quietly.
 - Google Fonts are fetched at runtime — render checks need network for true typography; offline runs fall back to Georgia/Segoe and screenshots will look wrong without being a regression.
 - Build assumptions: pnpm v10 workspace install from repo root; converter deps staged in `.ds-sync/` (npm, isolated); playwright chromium cached at `%LOCALAPPDATA%\ms-playwright`.
-- **The DS project holds more than this sync produces — never sweep it.** Alongside our 13 files it carries a `templates/` tree authored *in* claude.ai/design: the two system sets (`card-background`, `lang-switcher`) and, until they move, eight screen sets (`auth-gate`, `creation-chat`, `gallery`, `guest-rsvp`, `host-manage`, `landing-page`, `rsvp-notifications`, `share-panel`). It also carries app-generated `Canvas.dc.html`, `support.js`, `_ds_manifest.json`, `_adherence.oxlintrc.json` and `uploads/`. **That list has been wrong before** (`brand-name`, `feedback-sheet` and `gallery` were all missing from it until 2026-09-12), so treat it as a reminder that the tree is larger than this sync, not as an inventory. None are converter output. With a healthy anchor this is safe automatically (`deletePaths` only ever names our own paths). **The trap is the no-anchor branch of §5**, which says to review `list_files` for "files this build doesn't produce" and put them in `deletes`. Applied literally here, that deletes every mockup still in the DS. If the anchor is ever missing, pass `deletes: []` and re-anchor instead. **The design project is never a sync target**: the only thing this pipeline writes to `530d4226-b043-40eb-bdc2-326eed222b0f` is the binding refresh above, into `_ds/<folder>/` and nowhere else.
+- **The DS project holds more than this sync produces — never sweep it.** Alongside our 13 files it carries a `templates/` tree authored *in* claude.ai/design: the two system sets (`card-background`, `lang-switcher`); every screen set moved to the design project on 2026-10-10. It also carries app-generated `Canvas.dc.html`, `support.js`, `_ds_manifest.json`, `_adherence.oxlintrc.json` and `uploads/`. **That list has been wrong before** (`brand-name`, `feedback-sheet` and `gallery` were all missing from it until 2026-09-12), so treat it as a reminder that the tree is larger than this sync, not as an inventory. None are converter output. With a healthy anchor this is safe automatically (`deletePaths` only ever names our own paths). **The trap is the no-anchor branch of §5**, which says to review `list_files` for "files this build doesn't produce" and put them in `deletes`. Applied literally here, that deletes the system's two template sets. If the anchor is ever missing, pass `deletes: []` and re-anchor instead. **The design project is never a sync target**: the only thing this pipeline writes to `530d4226-b043-40eb-bdc2-326eed222b0f` is the binding refresh above, into `_ds/<folder>/` and nowhere else.
 
 ## Registering a new template set (learned 2026-09-12)
 
@@ -158,7 +168,11 @@ appear** in the project, and two attempts were spent discovering that:
    set is invisible however correct its markers are. The proof is that
    `brand-name`'s `@dsCard` was never compiled in either. A hand-added entry
    is `{name, description, folder, entryPath}`; `thumbnail` is optional and the
-   app captures one later.
+   app captures one later. **Correction (2026-10-10):** the app *does*
+   recompile the manifest when it opens the project and finds
+   `_ds_needs_recompile`, which every CLI resync writes. It kept hand-edited
+   labels and a hand-trimmed list. Whether it would *add* a set from its
+   markers alone is still unverified, so keep adding the entry by hand.
 
 `ds-base.js` is a nine-line loader (`base = '../..'`) and can be copied
 verbatim into a new folder. `support.js` is app-generated and a folder works
