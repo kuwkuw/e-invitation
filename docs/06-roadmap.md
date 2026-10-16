@@ -840,18 +840,41 @@ the same day — unlike three of the iterations above, nothing here was owed.
 
 ## Candidate backlog
 
-- **What is left on raw hex**, after four conversions — the guest page and
+- **What is left on raw hex**, after five conversions — the guest page and
   the share panel on 2026-09-19 (60 literals, 299 of 306 declarations
   byte-identical; 39, 185 of 189), then `Design controls` and the manage
-  dashboard on 2026-10-01 (9 literals, 28 of 28; 59 literals, 339 of 350).
-  The editor, the guest page and the manage dashboard are now fully
-  converted. Remaining: `Crash screen` 110 (which also holds the gallery's
-  rules — it has no banner of its own, worth giving it one before converting
-  either), `Landing page` 13, and `Landing: returning-host block` 18. The
-  last two are one job, not two: both speak the landing page's own ink
-  (`#4a3728`, 8.6 from the nearest token), which is the second "ink" adr-018's
-  context names, and whether it becomes a token or collapses onto `--ink` is
-  the landing conversion's real decision.
+  dashboard on 2026-10-01 (9 literals, 28 of 28; 59 literals, 339 of 350),
+  then the landing page on 2026-10-16 (43 literals across three sections;
+  78 of 84 computed colours on `/` unchanged, before the ink). The editor,
+  the guest page, the manage dashboard and the landing page are now fully
+  converted.
+
+  The landing's real decision went the way the editor's had: its ink,
+  `#4a3728`, collapsed onto `--ink` at dE 16.5, as its own commit so it can
+  be reverted alone. The value is the warm *card's* ink, which the landing
+  had borrowed for its chrome; `.palette-warm` keeps it. Four signed-in
+  lines that sat under their floor (the cross-device line and the delete link
+  at 2.38:1) were raised in a commit after the conversion, the manage
+  dashboard's way, and the reply-email toggle now matches its twin on
+  `/manage/:id`.
+
+  `Crash screen` used to be quoted at 110. That was every rule after its
+  banner — the last one in the file — and the crash screen itself is 12. The
+  tail now has banners of its own, so what remains reads as it is:
+  `Sign-in gate` 35, `Gallery` 22, `Account sheets` 14, `Crash screen` 12,
+  `Share panel: signed in` 10 and `Reply notifications` 5. The account
+  sheets are the sign-out and delete sheets: they open from the landing but
+  are built on the gate's `.ag-*` shell, so the gate's pass should take them,
+  along with `.sp-notify-toggle`, which still borrows the manage-token
+  block's warm pair. The ratchet also cannot see colours held as SVG
+  attributes in components; the landing's icons now stroke `currentColor`,
+  but the guest page's, the editor's and the gate's still carry hex.
+
+  Found in passing, and not a colour: **the gallery's headings have never
+  rendered in Playfair.** `.gl h1`, `.gl h2` and `.gl-tile-name` read
+  `var(--lp-display)`, which is declared only on `.landing`, and the gallery
+  pages are not inside it — so every heading on the seven indexed gallery
+  pages falls back to the body's system sans-serif.
 
   Two corrections to what this entry used to say. The manage dashboard was
   given as 77 literals; that figure was its own section (59) plus the
