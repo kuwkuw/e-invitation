@@ -33,11 +33,6 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
-  /* The landing page's ink, which is the warm card's own (.palette-warm sets
-     the same value) borrowed for the page's chrome. dE 8.6 from the nearest
-     token, --ink-strong, which is a button label's tier and not this job. */
-  --ink-warm: #4a3728;
-
   /* Two tiers below --ink-faint, and neither carries text anyone has to read.
      Both are under 3:1 on --surface (2.59 and 1.90), so unlike --ink-faint
      they clear nothing: --ink-placeholder is left on one decorative icon
@@ -1261,7 +1256,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   --lp-display: "Playfair Display", Georgia, serif; /* @kind font */
 
   background: var(--app-bg);
-  color: var(--ink-warm);
+  color: var(--ink);
   font-family: "Manrope", system-ui, sans-serif;
   min-height: 100vh;
 }
@@ -1297,7 +1292,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   justify-content: space-between;
   align-items: center;
 }
-.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--ink-warm); font-weight: 700; }
+.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--ink); font-weight: 700; }
 /* Deliberately the quietest thing in the nav: "Create" stays the only accent on
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
@@ -1317,7 +1312,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    space-between, so without it a third child floats orphaned in the middle
    instead of sitting beside the wordmark it belongs to. */
 .lp-nav-gallery { font-size: 0.85rem; color: var(--ink-muted); text-decoration: none; margin: 0 auto 0 20px; white-space: nowrap; }
-.lp-nav-gallery:hover { color: var(--ink-warm); }
+.lp-nav-gallery:hover { color: var(--ink); }
 /* Kept at every width the bar can hold it. Below 800 the "Create" button is
    already hidden, so a phone's nav is the wordmark, the language switcher and
    this — and hiding it there would take the gallery's only in-app entry point
@@ -1669,7 +1664,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-yours-head h2 {
   margin: 0;
   font-family: var(--lp-display);
-  font-size: 1.25rem; font-weight: 700; color: var(--ink-warm);
+  font-size: 1.25rem; font-weight: 700; color: var(--ink);
 }
 /* Says where the list comes from, instead of implying an account. */
 .lp-yours-sub { font-size: 0.8rem; color: var(--ink-faint); }
@@ -1705,7 +1700,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 .lp-yours-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .lp-yours-title {
-  font-size: 1rem; font-weight: 700; color: var(--ink-warm);
+  font-size: 1rem; font-weight: 700; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: var(--ink-faint); }
