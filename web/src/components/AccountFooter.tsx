@@ -54,19 +54,26 @@ export function AccountFooter({
             never carries the state alone; without that, a struck envelope
             beside an address could read as "this address is broken". */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="4" y="6" width="16" height="12" rx="2" stroke="#b0a99a" strokeWidth="1.7" />
+          <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.7" />
           <path
             d="M4.5 8l7.5 5.5L19.5 8"
-            stroke="#b0a99a"
+            stroke="currentColor"
             strokeWidth="1.7"
             strokeLinecap="round"
           />
           {off && (
             <>
               {/* The knockout is the footer's own background, not white — this
-                  block sits on #fbfaf7 where the share panel sits on white. */}
-              <path d="M4 19L20 5" stroke="#fbfaf7" strokeWidth="3.4" strokeLinecap="round" />
-              <path d="M4 19L20 5" stroke="#a29a8b" strokeWidth="1.7" strokeLinecap="round" />
+                  block sits on a tinted strip where the share panel sits on
+                  white. Its colour comes from .lp-account-knockout, beside
+                  the footer's background, so the two cannot drift apart. */}
+              <path
+                className="lp-account-knockout"
+                d="M4 19L20 5"
+                strokeWidth="3.4"
+                strokeLinecap="round"
+              />
+              <path d="M4 19L20 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
             </>
           )}
         </svg>

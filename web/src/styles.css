@@ -33,6 +33,11 @@
   --ink-muted: #6b6659;
   --ink-faint: #8d8577;
 
+  /* The landing page's ink, which is the warm card's own (.palette-warm sets
+     the same value) borrowed for the page's chrome. dE 8.6 from the nearest
+     token, --ink-strong, which is a button label's tier and not this job. */
+  --ink-warm: #4a3728;
+
   /* Two tiers below --ink-faint, and neither carries text anyone has to read.
      Both are under 3:1 on --surface (2.59 and 1.90), so unlike --ink-faint
      they clear nothing: --ink-placeholder is left on one decorative icon
@@ -1253,17 +1258,10 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    Manrope UI. Composes the real InvitationPreview card in the hero fan. */
 
 .landing {
-  --lp-bg: #f6f5f2;
-  --lp-surface: #ffffff;
-  --lp-ink: #4a3728;
-  --lp-muted: #6b6659;
-  --lp-border: #e4ddd0;
-  --lp-accent: #b3592e;
-  --lp-accent-wash: #f7efe3;
   --lp-display: "Playfair Display", Georgia, serif; /* @kind font */
 
-  background: var(--lp-bg);
-  color: var(--lp-ink);
+  background: var(--app-bg);
+  color: var(--ink-warm);
   font-family: "Manrope", system-ui, sans-serif;
   min-height: 100vh;
 }
@@ -1272,15 +1270,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .lp-cta {
   border: none;
   cursor: pointer;
-  background: var(--lp-accent);
-  color: #fff;
+  background: var(--accent);
+  color: var(--surface);
   font: inherit;
   font-weight: 700;
   font-size: 1.05rem;
   padding: 16px 32px;
   border-radius: 8px;
 }
-.lp-cta:hover { background: #9d4d26; }
+.lp-cta:hover { background: var(--accent-hi); }
 .lp-cta-sm { font-size: 0.95rem; padding: 11px 22px; }
 /* The prerendered landing CTA is a real <a> so a crawler has an edge to follow
    and a visitor can act before React mounts (adr-016 §10); React swaps in the
@@ -1292,25 +1290,25 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--lp-surface);
-  border-bottom: 1px solid var(--lp-border);
+  background: var(--surface);
+  border-bottom: 1px solid var(--edge);
   padding: 18px clamp(22px, 5vw, 64px);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--lp-ink); font-weight: 700; }
+.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--ink-warm); font-weight: 700; }
 /* Deliberately the quietest thing in the nav: "Create" stays the only accent on
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
    for. Matches .lp-account-out, the other muted account control. */
-.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: #6b6659; text-decoration: none; padding: 2px 4px; white-space: nowrap; }
-.lp-nav-signin:hover { color: #23211d; text-decoration: underline; }
+.lp-nav-signin { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink-muted); text-decoration: none; padding: 2px 4px; white-space: nowrap; }
+.lp-nav-signin:hover { color: var(--ink); text-decoration: underline; }
 /* The count rides the same colour, weight and size — it must not read as a
    notification badge, which would promise unread things there are none of.
-   #6b6659 on white is 5.72:1; the quieter #8f887a would be 3.52:1 and fail AA,
-   and this line is now the host's only route to their own events. `nowrap`
-   above is what keeps the number from wrapping away from its label. */
+   --ink-muted on white is 5.72:1; the quieter --ink-faint would be 3.65:1 and
+   fail AA, and this line is now the host's only route to their own events.
+   `nowrap` above is what keeps the number from wrapping away from its label. */
 .lp-brand-mono { display: none; }
 /* The landing nav's way into the gallery (adr-017 §8). Quiet chrome: it sits
    beside the wordmark, not beside the call to action, and must never read as a
@@ -1318,8 +1316,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* `margin-right: auto` rather than a margin on the left: the bar is
    space-between, so without it a third child floats orphaned in the middle
    instead of sitting beside the wordmark it belongs to. */
-.lp-nav-gallery { font-size: 0.85rem; color: var(--lp-muted); text-decoration: none; margin: 0 auto 0 20px; white-space: nowrap; }
-.lp-nav-gallery:hover { color: var(--lp-ink); }
+.lp-nav-gallery { font-size: 0.85rem; color: var(--ink-muted); text-decoration: none; margin: 0 auto 0 20px; white-space: nowrap; }
+.lp-nav-gallery:hover { color: var(--ink-warm); }
 /* Kept at every width the bar can hold it. Below 800 the "Create" button is
    already hidden, so a phone's nav is the wordmark, the language switcher and
    this — and hiding it there would take the gallery's only in-app entry point
@@ -1336,7 +1334,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   align-items: center;
 }
 .lp-hero-copy h1 { margin: 0 0 20px; font-size: clamp(2.15rem, 4vw, 3.2rem); line-height: 1.1; max-width: 11ch; }
-.lp-hero-copy p { margin: 0 0 28px; max-width: 38ch; color: var(--lp-muted); font-size: 1.15rem; line-height: 1.55; }
+.lp-hero-copy p { margin: 0 0 28px; max-width: 38ch; color: var(--ink-muted); font-size: 1.15rem; line-height: 1.55; }
 
 /* Hero fan: three real invitation cards, overlapped and rotated. */
 .lp-fan { display: flex; justify-content: center; align-items: flex-start; }
@@ -1358,36 +1356,36 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--lp-accent-wash);
-  color: var(--lp-accent);
+  background: var(--accent-wash);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
 }
 .lp-step-title { font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
-.lp-step-text { color: var(--lp-muted); font-size: 1rem; line-height: 1.55; max-width: 26ch; margin: 0 auto; }
+.lp-step-text { color: var(--ink-muted); font-size: 1rem; line-height: 1.55; max-width: 26ch; margin: 0 auto; }
 
 .lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.lp-chip { background: var(--lp-accent-wash); color: var(--lp-accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
+.lp-chip { background: var(--accent-wash); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
 
-.lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--lp-surface); border-top: 1px solid var(--lp-border); border-bottom: 1px solid var(--lp-border); }
+.lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--surface); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
 .lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
 .lp-rsvp-copy h2 { margin: 0 0 14px; font-size: clamp(1.5rem, 3vw, 2.1rem); }
-.lp-rsvp-copy p { margin: 0; color: var(--lp-muted); font-size: 1.1rem; line-height: 1.6; max-width: 36ch; }
-.lp-rsvp-card { background: var(--lp-bg); border: 1px solid var(--lp-border); border-radius: 16px; padding: 28px; }
+.lp-rsvp-copy p { margin: 0; color: var(--ink-muted); font-size: 1.1rem; line-height: 1.6; max-width: 36ch; }
+.lp-rsvp-card { background: var(--app-bg); border: 1px solid var(--edge); border-radius: 16px; padding: 28px; }
 .lp-rsvp-summary { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
-.lp-rsvp-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--lp-border); font-size: 1rem; }
+.lp-rsvp-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--edge); font-size: 1rem; }
 .lp-rsvp-row:last-child { border-bottom: none; }
 .lp-rsvp-status { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .lp-rsvp-yes { color: var(--rsvp-yes); }
 .lp-rsvp-no { color: var(--rsvp-no); }
-.lp-rsvp-wait { color: var(--lp-muted); }
+.lp-rsvp-wait { color: var(--ink-muted); }
 
 .lp-final { padding: clamp(56px, 7vw, 88px) clamp(22px, 5vw, 64px); text-align: center; }
 .lp-final h2 { margin: 0 0 26px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
 
-.lp-footer { padding: 26px clamp(22px, 5vw, 64px); text-align: center; color: var(--lp-muted); font-size: 0.9rem; border-top: 1px solid var(--lp-border); }
+.lp-footer { padding: 26px clamp(22px, 5vw, 64px); text-align: center; color: var(--ink-muted); font-size: 0.9rem; border-top: 1px solid var(--edge); }
 
 /* Sticky bottom CTA: mobile only. */
 .lp-sticky-cta { display: none; }
@@ -1434,8 +1432,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
     display: flex;
     position: sticky;
     bottom: 0;
-    background: var(--lp-surface);
-    border-top: 1px solid var(--lp-border);
+    background: var(--surface);
+    border-top: 1px solid var(--edge);
     padding: 14px clamp(22px, 5vw, 64px);
     justify-content: center;
   }
@@ -1671,40 +1669,46 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-yours-head h2 {
   margin: 0;
   font-family: var(--lp-display);
-  font-size: 1.25rem; font-weight: 700; color: #4a3728;
+  font-size: 1.25rem; font-weight: 700; color: var(--ink-warm);
 }
 /* Says where the list comes from, instead of implying an account. */
-.lp-yours-sub { font-size: 0.8rem; color: #8d8577; }
+.lp-yours-sub { font-size: 0.8rem; color: var(--ink-faint); }
 
-.lp-yours-card { background: #fff; border: 1px solid #e4ddd0; border-radius: 14px; overflow: hidden; }
+.lp-yours-card { background: var(--surface); border: 1px solid var(--edge); border-radius: 14px; overflow: hidden; }
 
 .lp-yours-row {
   display: flex; align-items: center; gap: 14px;
   padding: 14px 16px;
   text-decoration: none; color: inherit;
-  border-bottom: 1px solid #f0eadf;
+  border-bottom: 1px solid var(--edge-soft);
   transition: background 0.12s;
 }
 .lp-yours-row:last-child { border-bottom: none; }
-.lp-yours-row:hover { background: #faf8f4; }
-.lp-yours-row svg { flex: 0 0 auto; color: #b0a99a; }
+.lp-yours-row:hover { background: var(--app-bg); }
+/* The chevron is decoration: the whole row is the link, and its title says
+   where it goes. */
+.lp-yours-row svg { flex: 0 0 auto; color: var(--ink-placeholder); }
 
 /* Monogram tinted by the invitation's own palette — the row reads as that
-   event, without re-rendering the card or inventing an avatar for a person. */
+   event, without re-rendering the card or inventing an avatar for a person.
+   --bg and --accent are read from the row's own palette-* class on purpose,
+   as a swatch reads --bg. --bg has no :root value, so an entry whose palette
+   is unknown falls back to the ground; --accent always resolves, to the
+   product's own when no palette sets it. */
 .lp-yours-mono {
   flex: 0 0 auto;
   width: 42px; height: 42px; border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--lp-display); font-size: 1.3rem;
-  background: var(--bg, #f1ede4); color: var(--accent, #b3592e);
+  background: var(--bg, var(--ground)); color: var(--accent);
 }
 
 .lp-yours-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .lp-yours-title {
-  font-size: 1rem; font-weight: 700; color: #4a3728;
+  font-size: 1rem; font-weight: 700; color: var(--ink-warm);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: #8d8577; }
+.lp-yours-when { margin-top: 2px; font-size: 0.82rem; color: var(--ink-faint); }
 
 /* Response count + "new" badge (adr-012 §6). A fixed min-width, reserved from
    the first render, keeps the chevron from moving when counts fill in async;
@@ -1716,20 +1720,20 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
   text-align: right;
 }
-.lp-yours-count { font-size: 0.82rem; color: #8d8577; }
+.lp-yours-count { font-size: 0.82rem; color: var(--ink-faint); }
 /* The same accent that flags new rows in the dashboard (adr-010 §9), as a dot
    before the number so the marker reads at a glance without a legend. */
-.lp-yours-new { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; color: #b3592e; }
-.lp-yours-new::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #b3592e; }
+.lp-yours-new { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; color: var(--accent); }
+.lp-yours-new::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 
 .lp-yours-more {
   display: flex; align-items: center; justify-content: center;
   width: 100%; padding: 13px;
-  border: none; border-top: 1px solid #f0eadf; background: #fcfaf6;
-  font: inherit; font-size: 0.88rem; font-weight: 700; color: #b3592e;
+  border: none; border-top: 1px solid var(--edge-soft); background: var(--app-bg);
+  font: inherit; font-size: 0.88rem; font-weight: 700; color: var(--accent);
   cursor: pointer;
 }
-.lp-yours-more:hover { background: #f7f2e9; }
+.lp-yours-more:hover { background: var(--accent-wash); }
 
 @media (max-width: 800px) {
   .lp-yours { padding-top: 4px; }
@@ -1885,29 +1889,34 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    under it. Heights: 46px with no mail line, 111px with one line of text,
    129px when Ukrainian "off" wraps to two at 375px — 11 + 24 + 5 + text + 40
    + 12. The growth lands on the quietest block of the page, below the list. */
-.lp-account { border-top: 1px solid #f0eadf; background: #fbfaf7; padding: 11px 14px 12px; }
+.lp-account { border-top: 1px solid var(--edge-soft); background: var(--app-bg); padding: 11px 14px 12px; }
 .lp-account-id { display: flex; align-items: center; gap: 10px; min-height: 24px; }
-.lp-account-id svg { flex: 0 0 auto; }
-.lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: #8d8577; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 2px 4px; }
-.lp-account-out:hover { color: #23211d; }
+/* The envelope is decoration beside the address it stands for. Its strike,
+   when mail is off, is cut out of the envelope by a knockout stroke in the
+   footer's own background — the same token as .lp-account's, so the gap can
+   never show as a ring of a different colour. */
+.lp-account-id svg { flex: 0 0 auto; color: var(--ink-placeholder); }
+.lp-account-knockout { stroke: var(--app-bg); }
+.lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
+.lp-account-out:hover { color: var(--ink); }
 
 /* 26px = the 16px glyph + its 10px gap, so the sentence starts under the
    address rather than under the envelope. */
 .lp-account-mail { margin-top: 5px; padding-left: 26px; }
-.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: #8d8577; }
-.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
-.lp-notify-all:hover { color: #7a5638; }
+.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: var(--ink-faint); }
+.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--caution-ink-faint); cursor: pointer; transition: color 0.14s; }
+.lp-notify-all:hover { color: var(--caution-ink); }
 @media (min-width: 900px) { .lp-account { padding: 11px 20px 12px; } }
 /* One line, in the faintest colour on the page: this is the payoff, not an
    announcement. */
-.lp-cross-device { display: flex; align-items: flex-start; gap: 7px; margin: 9px 2px 0; font-size: 0.79rem; color: #a29a8b; line-height: 1.45; }
-.lp-cross-device svg { flex: 0 0 auto; margin-top: 2px; }
-.lp-signed-in-empty { padding: 22px 18px 20px; text-align: center; font-size: 0.95rem; color: #6b6659; line-height: 1.5; }
+.lp-cross-device { display: flex; align-items: flex-start; gap: 7px; margin: 9px 2px 0; font-size: 0.79rem; color: var(--ink-placeholder); line-height: 1.45; }
+.lp-cross-device svg { flex: 0 0 auto; margin-top: 2px; color: var(--ink-placeholder); }
+.lp-signed-in-empty { padding: 22px 18px 20px; text-align: center; font-size: 0.95rem; color: var(--ink-muted); line-height: 1.5; }
 /* Quieter than sign-out, which is quieter than everything else on the card. */
 .lp-delete-account { margin: 10px 2px 0; }
-.lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: #a29a8b; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
-.lp-delete-link:hover { color: #a83f3f; }
+.lp-delete-link { border: none; background: none; font: inherit; font-size: 0.78rem; color: var(--ink-placeholder); cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
+.lp-delete-link:hover { color: var(--rsvp-no); }
 
 /* Account sheets -------------------------------------------------------- */
 /* Sign-out and account deletion (adr-014 §9). Both open from the landing

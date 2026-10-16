@@ -231,6 +231,9 @@ const CONVERTED = [
   "Design controls",
   "Guest page",
   "Host manage dashboard",
+  "Landing page",
+  "Landing: account footer",
+  "Landing: returning-host block",
   "Share panel",
 ];
 
@@ -356,16 +359,30 @@ describe("the guest page's text", () => {
 });
 
 /** The two inks below --ink-faint clear nothing, so every rule that reads one
- *  is named here and none of them is text anyone has to read: the INVINTO
- *  wordmarks are a logotype, and .sp-link's colour reaches only the link
- *  glyph, since its value sets its own --ink. A new name in this list is a
- *  contrast regression until shown otherwise. */
+ *  is named here. The INVINTO wordmarks are a logotype; .sp-link's colour
+ *  reaches only the link glyph, since its value sets its own --ink; and the
+ *  landing's three `svg` rules colour aria-hidden icons, each beside words
+ *  that say what it shows. `.lp-cross-device` and `.lp-delete-link` are text,
+ *  carried onto --ink-placeholder at their old value by the landing's
+ *  conversion so that a conversion stays a conversion — they are owed a
+ *  raise. A new name in this list is a contrast regression until shown
+ *  otherwise. */
 describe("sub-faint inks", () => {
-  it("are read only by the wordmarks and one decorative icon", () => {
+  it("are read only by the wordmarks, decorative icons, and two lines owed a raise", () => {
     const users = ruleBlocks(stripComments(css))
       .filter((r) => /var\(--ink-(?:placeholder|whisper)\)/.test(r.body))
       .flatMap((r) => r.selectors)
       .sort();
-    expect(users).toEqual([".gr-brand", ".gr-cta-mark", ".hm-brand", ".sp-link"]);
+    expect(users).toEqual([
+      ".gr-brand",
+      ".gr-cta-mark",
+      ".hm-brand",
+      ".lp-account-id svg",
+      ".lp-cross-device",
+      ".lp-cross-device svg",
+      ".lp-delete-link",
+      ".lp-yours-row svg",
+      ".sp-link",
+    ]);
   });
 });
