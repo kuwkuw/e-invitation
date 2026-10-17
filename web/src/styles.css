@@ -81,6 +81,14 @@
   --wash: #f1efe9;
   --wash-warm-edge: #e7cdb8;
 
+  /* Type. The product's display face, read by the landing's and the
+     gallery's headings, which sit on different roots. It is not called
+     --font-display because that is the card's name, which .inv sets and
+     .type-* shadows, so a heading that read it inside a card would come out
+     in the invitation's face. The @kind annotation is the one design-sync's
+     token panel reads; .design-sync/NOTES.md counts it. */
+  --ui-font-display: "Playfair Display", Georgia, serif; /* @kind font */
+
   /* Radius */
   --r-sm: 8px;
   --r-md: 12px;
@@ -1253,14 +1261,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    Manrope UI. Composes the real InvitationPreview card in the hero fan. */
 
 .landing {
-  --lp-display: "Playfair Display", Georgia, serif; /* @kind font */
-
   background: var(--app-bg);
   color: var(--ink);
   font-family: "Manrope", system-ui, sans-serif;
   min-height: 100vh;
 }
-.landing h1, .landing h2 { font-family: var(--lp-display); font-weight: 700; }
+.landing h1, .landing h2 { font-family: var(--ui-font-display); font-weight: 700; }
 
 .lp-cta {
   border: none;
@@ -1292,7 +1298,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   justify-content: space-between;
   align-items: center;
 }
-.lp-brand { font-family: var(--lp-display); font-size: 1.3rem; color: var(--ink); font-weight: 700; }
+.lp-brand { font-family: var(--ui-font-display); font-size: 1.3rem; color: var(--ink); font-weight: 700; }
 /* Deliberately the quietest thing in the nav: "Create" stays the only accent on
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
@@ -1663,7 +1669,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-yours-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .lp-yours-head h2 {
   margin: 0;
-  font-family: var(--lp-display);
+  font-family: var(--ui-font-display);
   font-size: 1.25rem; font-weight: 700; color: var(--ink);
 }
 /* Says where the list comes from, instead of implying an account. */
@@ -1694,7 +1700,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   flex: 0 0 auto;
   width: 42px; height: 42px; border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--lp-display); font-size: 1.3rem;
+  font-family: var(--ui-font-display); font-size: 1.3rem;
   background: var(--bg, var(--ground)); color: var(--accent);
 }
 
@@ -1947,8 +1953,11 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    makes. The card itself is `InvitationPreview` unchanged; everything below is
    the frame. */
 .gl { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; color: #23211d; }
-.gl h1 { font-family: var(--lp-display); font-weight: 700; font-size: 2.2rem; line-height: 1.15; margin: 0 0 14px; }
-.gl h2 { font-family: var(--lp-display); font-weight: 700; font-size: 1.2rem; margin: 0 0 14px; }
+.gl h1 { font-family: var(--ui-font-display); font-weight: 700; font-size: 2.2rem; line-height: 1.15; margin: 0 0 14px; }
+/* Not `.gl h2`: the card's own title is an h2, and `.gl h2` outranks
+   `.inv-title`, so the examples' titles lost their own face, and most of
+   them their size too. The page's only h2 of its own is this one. */
+.gl-others h2 { font-family: var(--ui-font-display); font-weight: 700; font-size: 1.2rem; margin: 0 0 14px; }
 .gl-intro { color: #6b6659; line-height: 1.65; max-width: 70ch; margin: 0 0 34px; }
 .gl-crumbs { display: flex; flex-wrap: wrap; gap: 7px; font-size: 0.8rem; color: #8d8577; margin-bottom: 18px; }
 .gl-crumbs a { color: inherit; text-decoration: none; }
@@ -1978,7 +1987,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .gl-tile-shot { display: block; height: 190px; background: #f3efe8; overflow: hidden; position: relative; }
 .gl-tile-shot-inner { display: block; position: absolute; top: 14px; left: 50%; width: 420px; margin-left: -210px; transform: scale(0.46); transform-origin: top center; pointer-events: none; }
 .gl-tile-body { display: block; padding: 16px 18px 18px; }
-.gl-tile-name { display: block; font-family: var(--lp-display); font-size: 1.2rem; margin-bottom: 4px; }
+.gl-tile-name { display: block; font-family: var(--ui-font-display); font-size: 1.2rem; margin-bottom: 4px; }
 .gl-tile-count { display: block; font-size: 0.84rem; color: #8d8577; }
 
 .gl-others { margin-top: 40px; padding-top: 26px; border-top: 1px solid #e4ddd0; }

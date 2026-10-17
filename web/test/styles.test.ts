@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   atRuleSpan,
@@ -414,6 +416,81 @@ describe("sub-faint inks", () => {
       ".lp-cross-device svg",
       ".lp-yours-row svg",
       ".sp-link",
+    ]);
+  });
+});
+
+/** The display face is on :root because its readers sit on different roots:
+ *  the landing's headings under .landing, the gallery's under a bare .gl. It
+ *  used to be declared on .landing alone, so every heading on the seven
+ *  indexed gallery pages read an undefined property and fell back to the
+ *  body's system sans, with nothing in any log to say so. */
+describe("the display face", () => {
+  it("is a :root token, and carries the one @kind font annotation design-sync reads", () => {
+    expect(tokens.get("--ui-font-display")).toMatch(/^"Playfair Display",/);
+    const annotated = css.split("\n").filter((line) => line.includes("@kind font"));
+    expect(annotated).toHaveLength(1);
+    expect(annotated[0]).toMatch(/^\s*--ui-font-display:/);
+  });
+
+  /** A custom property declared on a class reaches only that class's subtree.
+   *  The card's own names are the one sanctioned case: .inv sets them and
+   *  .palette-* / .type-* override them, for the card and for the swatches
+   *  that carry those classes. Anything else read without a fallback has to
+   *  be on :root, or a page outside the declaring class reads nothing. */
+  it("is reachable from every page, like every property read without a fallback", () => {
+    const rules = ruleBlocks(stripComments(css));
+    const card = new Set<string>();
+    for (const r of rules) {
+      if (!r.selectors.every((s) => /^\.(?:inv|palette-[a-z]+|type-[a-z]+)$/.test(s))) continue;
+      for (const d of r.body.matchAll(/(--[\w-]+)\s*:/g)) card.add(d[1]);
+    }
+    expect(card.has("--font-display")).toBe(true);
+
+    const unreachable: string[] = [];
+    for (const r of rules) {
+      for (const v of r.body.matchAll(/var\((--[\w-]+)\)/g)) {
+        if (!tokens.has(v[1]) && !card.has(v[1]))
+          unreachable.push(`${r.selectors.join(", ")}: ${v[1]}`);
+      }
+    }
+    expect(unreachable).toEqual([]);
+  });
+});
+
+/** InvitationPreview's title is an h2, and a page rule such as `.gl h2`
+ *  (0,1,1) outranks `.inv-title` (0,1,0) on every card beneath it. The gallery
+ *  had one, and its examples' titles lost their own face, most of them their
+ *  size too. So every rule that styles a bare h2 from above is named here,
+ *  each known to hold no card (`.editor` and `.preview` match no element
+ *  today) except `.landing h2`, which does: it sets the hero fan's three
+ *  titles in Playfair 700, the script and the sans sample included. Fixing
+ *  that changes the landing, so it is left to a pass of its own. */
+describe("the card's title", () => {
+  it("is an h2", () => {
+    const preview = readFileSync(
+      fileURLToPath(new URL("../src/components/InvitationPreview.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(preview).toMatch(/<h2 \{\.\.\.fieldProps\("title", "inv-title"\)\}>/);
+  });
+
+  it("is reached by no page rule for a bare h2 but the one known leak", () => {
+    const bare = new Set(
+      ruleBlocks(stripComments(css))
+        .flatMap((r) => r.selectors)
+        .map((s) => s.replace(/\s+/g, " "))
+        .filter((s) => /[\s>+~]h2$/.test(s)),
+    );
+    expect([...bare].sort()).toEqual([
+      ".editor h2",
+      ".gl-others h2",
+      ".landing h2",
+      ".lp-final h2",
+      ".lp-rsvp-copy h2",
+      ".lp-steps h2",
+      ".lp-yours-head h2",
+      ".preview h2",
     ]);
   });
 });
