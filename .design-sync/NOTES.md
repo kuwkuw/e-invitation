@@ -83,12 +83,16 @@ and in the README's count. Same setup as 2026-10-02, plus `pnpm install`
 first, since a fresh worktree has no `web/node_modules`. Same verdict: anchor
 ok, `InvitationPreview` unchanged, styling + aux. The README's tokens went
 75 → 68. The binding got `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and
-`styles.css` the same day, and the bound README reads 68. **Its
-`_ds_manifest.json` was not rewritten**: the DS's own copy still listed the
-`--lp-*` tokens, because the recompile waits for the app to open the DS, so
-copying it then would have refreshed nothing. Open the DS, then copy its
-manifest into the binding. This ran before the gallery-font change that moves
-`--lp-display` to `:root`, so that change needs a sync of its own.
+`styles.css` the same day, and the bound README reads 68. **Copy the
+manifest only after the DS has been opened**: until then the DS's own copy
+still listed the `--lp-*` tokens, so a copy would have refreshed nothing. Open
+it at `claude.ai/design/p/<id>?noredir=1`, not from the home screen, whose DS
+entries are template buttons (the "start from template" trap below). The
+marker was gone within seconds. The recompiled manifest differed only by the
+seven tokens, with both `templates` entries kept. It went into the binding as
+two transcriptions that `cmp` agreed on, every token checked as a literal
+`name: value` in `styles.css`. This ran before the gallery-font change that
+moves `--lp-display` to `:root`, so that change needs a sync of its own.
 
 ## Marking a template set superseded (2026-10-02)
 
