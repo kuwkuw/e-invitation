@@ -231,6 +231,9 @@ const CONVERTED = [
   "Design controls",
   "Guest page",
   "Host manage dashboard",
+  "Landing page",
+  "Landing: account footer",
+  "Landing: returning-host block",
   "Share panel",
 ];
 
@@ -355,17 +358,62 @@ describe("the guest page's text", () => {
   ]);
 });
 
+/** The front door. Most of the page sits on --app-bg; the nav, the replies
+ *  demo's band and the invitations card are --surface; a chip on its own
+ *  wash. The account footer is a strip in --app-bg inside the white card, and
+ *  the two lines under the card sit on the page — so both read --app-bg. */
+describe("the landing page's text", () => {
+  textFloors("Landing page", [
+    [".lp-cta", "--accent", 4.5],
+    [".lp-nav-signin", "--surface", 4.5],
+    [".lp-nav-gallery", "--surface", 3],
+    [".lp-hero-copy p", "--app-bg", 4.5],
+    [".lp-step-text", "--app-bg", 4.5],
+    [".lp-chip", "--accent-wash", 3],
+    [".lp-rsvp-copy p", "--surface", 4.5],
+    [".lp-rsvp-yes", "--app-bg", 3],
+    [".lp-rsvp-no", "--app-bg", 3],
+    [".lp-rsvp-wait", "--app-bg", 3],
+    [".lp-footer", "--app-bg", 4.5],
+  ]);
+  textFloors("Landing: returning-host block", [
+    [".lp-yours-sub", "--app-bg", 3],
+    [".lp-yours-when", "--surface", 3],
+    [".lp-yours-count", "--surface", 3],
+    [".lp-yours-new", "--surface", 3],
+    [".lp-yours-more", "--app-bg", 3],
+  ]);
+  textFloors("Landing: account footer", [
+    [".lp-account-mail p", "--app-bg", 4.5],
+    [".lp-cross-device", "--app-bg", 4.5],
+    [".lp-signed-in-empty", "--surface", 4.5],
+    [".lp-account-email", "--app-bg", 3],
+    [".lp-account-out", "--app-bg", 3],
+    [".lp-notify-all", "--app-bg", 3],
+    [".lp-delete-link", "--app-bg", 3],
+  ]);
+});
+
 /** The two inks below --ink-faint clear nothing, so every rule that reads one
  *  is named here and none of them is text anyone has to read: the INVINTO
- *  wordmarks are a logotype, and .sp-link's colour reaches only the link
- *  glyph, since its value sets its own --ink. A new name in this list is a
- *  contrast regression until shown otherwise. */
+ *  wordmarks are a logotype; .sp-link's colour reaches only the link glyph,
+ *  since its value sets its own --ink; and the landing's three `svg` rules
+ *  colour aria-hidden icons, each beside words that say what it shows. A new
+ *  name in this list is a contrast regression until shown otherwise. */
 describe("sub-faint inks", () => {
-  it("are read only by the wordmarks and one decorative icon", () => {
+  it("are read only by the wordmarks and decorative icons", () => {
     const users = ruleBlocks(stripComments(css))
       .filter((r) => /var\(--ink-(?:placeholder|whisper)\)/.test(r.body))
       .flatMap((r) => r.selectors)
       .sort();
-    expect(users).toEqual([".gr-brand", ".gr-cta-mark", ".hm-brand", ".sp-link"]);
+    expect(users).toEqual([
+      ".gr-brand",
+      ".gr-cta-mark",
+      ".hm-brand",
+      ".lp-account-id svg",
+      ".lp-cross-device svg",
+      ".lp-yours-row svg",
+      ".sp-link",
+    ]);
   });
 });

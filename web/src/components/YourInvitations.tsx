@@ -137,8 +137,24 @@ export function YourInvitations({
         // otherwise. One line, in the faintest colour on the page.
         <p className="lp-cross-device">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="5" width="12" height="9" rx="1.6" stroke="#b0a99a" strokeWidth="1.6" />
-            <rect x="14" y="11" width="7" height="10" rx="1.6" stroke="#b0a99a" strokeWidth="1.6" />
+            <rect
+              x="3"
+              y="5"
+              width="12"
+              height="9"
+              rx="1.6"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <rect
+              x="14"
+              y="11"
+              width="7"
+              height="10"
+              rx="1.6"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
           </svg>
           <span>{auth.crossDevice}</span>
         </p>
