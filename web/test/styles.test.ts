@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   atRuleSpan,
@@ -414,6 +416,89 @@ describe("sub-faint inks", () => {
       ".lp-cross-device svg",
       ".lp-yours-row svg",
       ".sp-link",
+    ]);
+  });
+});
+
+/** The display face is on :root because its readers sit on different roots:
+ *  the landing's headings under .landing, the gallery's under a bare .gl. It
+ *  used to be declared on .landing alone, so every heading on the seven
+ *  indexed gallery pages read an undefined property and fell back to the
+ *  body's system sans, with nothing in any log to say so. */
+describe("the display face", () => {
+  it("is a :root token, and carries the one @kind font annotation design-sync reads", () => {
+    expect(tokens.get("--ui-font-display")).toMatch(/^"Playfair Display",/);
+    const annotated = css.split("\n").filter((line) => line.includes("@kind font"));
+    expect(annotated).toHaveLength(1);
+    expect(annotated[0]).toMatch(/^\s*--ui-font-display:/);
+  });
+
+  /** A custom property declared on a class reaches only that class's subtree.
+   *  The card's own names are the one sanctioned case: .inv sets them and
+   *  .palette-* / .type-* override them, for the card and for the swatches
+   *  that carry those classes. Anything else read without a fallback has to
+   *  be on :root, or a page outside the declaring class reads nothing. */
+  it("is reachable from every page, like every property read without a fallback", () => {
+    const rules = ruleBlocks(stripComments(css));
+    const card = new Set<string>();
+    for (const r of rules) {
+      if (!r.selectors.every((s) => /^\.(?:inv|palette-[a-z]+|type-[a-z]+)$/.test(s))) continue;
+      for (const d of r.body.matchAll(/(--[\w-]+)\s*:/g)) card.add(d[1]);
+    }
+    expect(card.has("--font-display")).toBe(true);
+
+    const unreachable: string[] = [];
+    for (const r of rules) {
+      for (const v of r.body.matchAll(/var\((--[\w-]+)\)/g)) {
+        if (!tokens.has(v[1]) && !card.has(v[1]))
+          unreachable.push(`${r.selectors.join(", ")}: ${v[1]}`);
+      }
+    }
+    expect(unreachable).toEqual([]);
+  });
+
+  /** Ten chrome headings once named the face themselves. The card's own
+   *  .inv and .type-serif keep theirs: they are the card's typography,
+   *  mirrored by hand in the OG renderer, not the product's. */
+  it("is named only by the token, outside the card's own typography", () => {
+    const named = [...sections(css)]
+      .filter(([name]) => name !== "Invitation card")
+      .map(([name, body]) => [name, stripComments(body).match(/"Playfair Display"/g)?.length ?? 0])
+      .filter(([, count]) => count);
+    expect(named).toEqual([["Material system", 1]]);
+  });
+});
+
+/** InvitationPreview's title is an h2, and so are the account sheets'
+ *  `.ag-title`s. A page rule such as `.gl h2` (0,1,1) outranks a single class
+ *  (0,1,0) on every one of them beneath it. The gallery had one, and its
+ *  examples' titles lost their own face, most of them their size too; the
+ *  landing had `.landing h2`, which set the hero fan's titles in Playfair
+ *  whatever their type and the sign-out and delete sheets' titles in bold.
+ *  So every rule that styles a bare h2 from above is named here, and each
+ *  names a section that holds only the page's own heading. */
+describe("headings that carry their own class", () => {
+  it("include the card's title, which is an h2", () => {
+    const preview = readFileSync(
+      fileURLToPath(new URL("../src/components/InvitationPreview.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(preview).toMatch(/<h2 \{\.\.\.fieldProps\("title", "inv-title"\)\}>/);
+  });
+
+  it("are reached by no page rule for a bare h2", () => {
+    const bare = new Set(
+      ruleBlocks(stripComments(css))
+        .flatMap((r) => r.selectors)
+        .map((s) => s.replace(/\s+/g, " "))
+        .filter((s) => /[\s>+~]h2$/.test(s)),
+    );
+    expect([...bare].sort()).toEqual([
+      ".gl-others h2",
+      ".lp-final h2",
+      ".lp-rsvp-copy h2",
+      ".lp-steps h2",
+      ".lp-yours-head h2",
     ]);
   });
 });
