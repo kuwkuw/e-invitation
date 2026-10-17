@@ -12,7 +12,7 @@
 - **Two Claude Design projects since the 2026-10-02 split** (spec: `docs/superpowers/specs/2026-10-02-design-project-split-design.md`). **E-invitation DS** (`53daa9fc-5618-4769-9cff-7fbf338169de`, this sync's target) is the system: `InvitationPreview`, the stylesheet and its tokens, and the `card-background` and `lang-switcher` template sets. **E-invitation design** (`530d4226-b043-40eb-bdc2-326eed222b0f`, a regular project, never a sync target) binds the DS at `_ds/e-invitation-ds-53daa9fc-5618-4769-9cff-7fbf338169de/` and holds **every product screen**, flat at its root: all eleven former DS screen sets (sign-in gate, creation chat, gallery, guest RSVP and its Phase 2 add-ons, host dashboard, landing, RSVP notifications, share panel, feedback sheet, brand name), 56 canvases in all, sharing one root `ds-base.js` and `support.js`. The split finished on 2026-10-10 (see "How the screen sets moved" below). In this repo "DS" means the DS project; a board in the design project is cited as ``design project `Name` ``. The older "Design System" project (`d96adb40-4a0f-401c-8e5a-7a518a31b5d5`, 16 token cards from `scripts/build-design-cards.mjs`) is retired, though not yet deleted: the DS token panel and the `InvitationPreview` card cover every enum, nothing reads it, and the script has no live target. The "E-invitation Design System" exploration (`350a2663-afbf-4816-8ab4-e51a7bbabb71`) was deleted by its owner during the split, its concepts canvas with it. A stray "Share Panel Post-Publish" project (`f72dfa3f-013a-4495-ba22-f10a16818cf1`), made by a home-screen "start from template" during the move, holds duplicates only and can be deleted.
 - **The binding is a snapshot, not live.** After the DS's `_ds_manifest.json` was rewritten on 2026-10-10, the copy under `_ds/<folder>/` in the design project still listed the old template set. The binding is a fixed six-file copy (`README.md`, `_adherence.oxlintrc.json`, `_ds_bundle.css`, `_ds_bundle.js`, `_ds_manifest.json`, `styles.css`) taken when the project was bound. That is also why a probe file written anywhere else in the DS could never show up in it, and why the first freshness probe was inconclusive. **After every DS sync, refresh the binding**, or the screens render against the previous stylesheet. That is the two-month sync gap below, one level further out. Claude Design offers no refresh for a bound DS (2026-10-10), so the refresh is a DesignSync write into `_ds/<folder>/` of the design project, from the bytes just uploaded to the DS: `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and `styles.css` from `ds-bundle/` by `localPath`, plus the DS's current `_ds_manifest.json`. Leave `_adherence.oxlintrc.json` alone; the app generates it and it changes only with the component. Check by reading the bound `README.md` or grepping the bound `_ds_bundle.css` for text that changed in the sync.
 
-- **Claude Design token annotations live in `web/src/styles.css`**: inline `/* @kind color */` on every `--wash` declaration (base `.inv` + five `palette-*`; minimal has no wash) and `/* @kind font */` on `.landing`'s `--lp-display`. The DS app's token panel reads them from the declaration line in `_ds_bundle.css`. They were originally patched remotely by the design agent and reverted by every sync — now upstream, so they persist. Don't strip these comments; verify `grep -c "@kind" ds-bundle/_ds_bundle.css` ≥ 7 after build.
+- **Claude Design token annotations live in `web/src/styles.css`**: inline `/* @kind color */` on every `--wash` declaration (base `.inv` + five `palette-*`; minimal has no wash) and `/* @kind font */` on `.landing`'s `--lp-display`. The DS app's token panel reads them from the declaration line in `_ds_bundle.css`. They were originally patched remotely by the design agent and reverted by every sync — now upstream, so they persist. Don't strip these comments; verify `grep -c '/\* @kind' ds-bundle/_ds_bundle.css` ≥ 7 after build. The bare `"@kind"` pattern also counts the comment above the palettes that explains the annotations, so it reads 8 and would still pass with one annotation lost (2026-10-17).
 
 ## A CSS-only sync without the converter (2026-10-02)
 
@@ -73,6 +73,22 @@ still exist, but `#f6f5f2` is now `--app-bg`, deliberately *not* the
 `.palette-*` shadows `--ink`/`--accent`/`--wash`/`--edge`. It now names the
 `:root` tokens instead. **Diff that paragraph against the `:root` block on
 every resync** — like the pixel figures below, no validator reads it.
+
+## The resync of 2026-10-17 (PR 88, the landing on tokens)
+
+A full resync, though only `styles.css` had moved (the DS README already
+matched `conventions.md`): PR 88 dropped `.landing`'s seven `--lp-*` colour
+properties, and the CSS-only shortcut would have left them in the token panel
+and in the README's count. Same setup as 2026-10-02, plus `pnpm install`
+first, since a fresh worktree has no `web/node_modules`. Same verdict: anchor
+ok, `InvitationPreview` unchanged, styling + aux. The README's tokens went
+75 → 68. The binding got `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and
+`styles.css` the same day, and the bound README reads 68. **Its
+`_ds_manifest.json` was not rewritten**: the DS's own copy still listed the
+`--lp-*` tokens, because the recompile waits for the app to open the DS, so
+copying it then would have refreshed nothing. Open the DS, then copy its
+manifest into the binding. This ran before the gallery-font change that moves
+`--lp-display` to `:root`, so that change needs a sync of its own.
 
 ## Marking a template set superseded (2026-10-02)
 
