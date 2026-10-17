@@ -469,16 +469,16 @@ describe("the display face", () => {
   });
 });
 
-/** InvitationPreview's title is an h2, and a page rule such as `.gl h2`
- *  (0,1,1) outranks `.inv-title` (0,1,0) on every card beneath it. The gallery
- *  had one, and its examples' titles lost their own face, most of them their
- *  size too. So every rule that styles a bare h2 from above is named here,
- *  each known to hold no card (`.editor` and `.preview` match no element
- *  today) except `.landing h2`, which does: it sets the hero fan's three
- *  titles in Playfair 700, the script and the sans sample included. Fixing
- *  that changes the landing, so it is left to a pass of its own. */
-describe("the card's title", () => {
-  it("is an h2", () => {
+/** InvitationPreview's title is an h2, and so are the account sheets'
+ *  `.ag-title`s. A page rule such as `.gl h2` (0,1,1) outranks a single class
+ *  (0,1,0) on every one of them beneath it. The gallery had one, and its
+ *  examples' titles lost their own face, most of them their size too; the
+ *  landing had `.landing h2`, which set the hero fan's titles in Playfair
+ *  whatever their type and the sign-out and delete sheets' titles in bold.
+ *  So every rule that styles a bare h2 from above is named here, and each
+ *  names a section that holds only the page's own heading. */
+describe("headings that carry their own class", () => {
+  it("include the card's title, which is an h2", () => {
     const preview = readFileSync(
       fileURLToPath(new URL("../src/components/InvitationPreview.tsx", import.meta.url)),
       "utf8",
@@ -486,7 +486,7 @@ describe("the card's title", () => {
     expect(preview).toMatch(/<h2 \{\.\.\.fieldProps\("title", "inv-title"\)\}>/);
   });
 
-  it("is reached by no page rule for a bare h2 but the one known leak", () => {
+  it("are reached by no page rule for a bare h2", () => {
     const bare = new Set(
       ruleBlocks(stripComments(css))
         .flatMap((r) => r.selectors)
@@ -494,14 +494,11 @@ describe("the card's title", () => {
         .filter((s) => /[\s>+~]h2$/.test(s)),
     );
     expect([...bare].sort()).toEqual([
-      ".editor h2",
       ".gl-others h2",
-      ".landing h2",
       ".lp-final h2",
       ".lp-rsvp-copy h2",
       ".lp-steps h2",
       ".lp-yours-head h2",
-      ".preview h2",
     ]);
   });
 });

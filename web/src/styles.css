@@ -220,9 +220,6 @@ body {
   color: var(--ink);
 }
 
-.header { display: flex; align-items: center; justify-content: space-between; }
-.header h1 { font-size: 1.4rem; margin: 0; }
-
 /* Language switcher — canonical chrome pill from the "lang-switcher"
    template: white tongue on a warm track, no accent color. */
 .ls-track {
@@ -285,8 +282,6 @@ button.primary {
 button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .error { color: var(--danger); }
-
-.editor h2, .preview h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
 
 .field { margin-bottom: 14px; }
 .field-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
@@ -1268,7 +1263,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   font-family: "Manrope", system-ui, sans-serif;
   min-height: 100vh;
 }
-.landing h1, .landing h2 { font-family: var(--ui-font-display); font-weight: 700; }
+/* The landing's own headings, by section. Not `.landing h2`: the hero fan's
+   cards and the account sheets each title themselves with an h2 of their
+   own class, and `.landing h2` outranks a single class, so it set every
+   card title in Playfair whatever its type, and the sheets' titles in bold.
+   .lp-yours-head h2 sets its own face below. */
+.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2 { font-family: var(--ui-font-display); font-weight: 700; }
 
 .lp-cta {
   border: none;

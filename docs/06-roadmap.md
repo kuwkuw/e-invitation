@@ -879,9 +879,13 @@ the same day — unlike three of the iterations above, nothing here was owed.
   The fix turned up a second leak behind the first: the card's title is an
   `h2`, and `.gl h2` outranks `.inv-title`, so every example in the gallery
   had lost its title's own face and most had lost its size; the rule is now
-  `.gl-others h2`. `.landing h2` does the same to the hero fan's three
-  titles, setting the script and sans samples in Playfair 700. It is left
-  for a pass of its own, because fixing it changes the landing.
+  `.gl-others h2`. `.landing h2` did the same to the hero fan's three
+  titles, setting the script and sans samples in Playfair, and to the
+  sign-out and delete sheets, which open inside `.landing` and lost
+  `.ag-title`'s regular weight to it. It now names the landing's own
+  sections instead (fixed 2026-10-17, its own commit). That fix also
+  deleted `.header`, `.header h1` and `.editor h2, .preview h2` from
+  `App chrome`, which matched no element.
 
   Two corrections to what this entry used to say. The manage dashboard was
   given as 77 literals; that figure was its own section (59) plus the
