@@ -456,6 +456,17 @@ describe("the display face", () => {
     }
     expect(unreachable).toEqual([]);
   });
+
+  /** Ten chrome headings once named the face themselves. The card's own
+   *  .inv and .type-serif keep theirs: they are the card's typography,
+   *  mirrored by hand in the OG renderer, not the product's. */
+  it("is named only by the token, outside the card's own typography", () => {
+    const named = [...sections(css)]
+      .filter(([name]) => name !== "Invitation card")
+      .map(([name, body]) => [name, stripComments(body).match(/"Playfair Display"/g)?.length ?? 0])
+      .filter(([, count]) => count);
+    expect(named).toEqual([["Material system", 1]]);
+  });
 });
 
 /** InvitationPreview's title is an h2, and a page rule such as `.gl h2`

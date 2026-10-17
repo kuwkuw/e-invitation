@@ -81,12 +81,14 @@
   --wash: #f1efe9;
   --wash-warm-edge: #e7cdb8;
 
-  /* Type. The product's display face, read by the landing's and the
-     gallery's headings, which sit on different roots. It is not called
-     --font-display because that is the card's name, which .inv sets and
-     .type-* shadows, so a heading that read it inside a card would come out
-     in the invitation's face. The @kind annotation is the one design-sync's
-     token panel reads; .design-sync/NOTES.md counts it. */
+  /* Type. The product's display face, for every chrome heading: the
+     landing's and the gallery's, which sit on different roots, and those of
+     the editor, the sheets, the guest page, the manage page and the crash
+     screen. It is not called --font-display because that is the card's
+     name, which .inv sets
+     and .type-* shadows, so a heading that read it inside a card would come
+     out in the invitation's face. The @kind annotation is the one
+     design-sync's token panel reads; .design-sync/NOTES.md counts it. */
   --ui-font-display: "Playfair Display", Georgia, serif; /* @kind font */
 
   /* Radius */
@@ -419,7 +421,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-messages { flex: 1; overflow-y: auto; padding: 28px 32px 8px; display: flex; flex-direction: column; gap: 13px; }
 
 .cc-start { padding-top: 20px; }
-.cc-start-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.8rem; color: var(--ink); line-height: 1.15; }
+.cc-start-title { font-family: var(--ui-font-display); font-size: 1.8rem; color: var(--ink); line-height: 1.15; }
 .cc-start-hint { margin-top: 12px; color: var(--ink-muted); font-size: 0.98rem; line-height: 1.55; }
 .cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .cc-chips { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 9px; }
@@ -731,7 +733,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center;
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
-.sp-title { flex: 1; margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+.sp-title { flex: 1; margin: 0; font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 700; color: var(--ink); }
 .sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
 .sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
@@ -991,7 +993,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-tw { position: absolute; animation: gr-tw 1.8s ease-in-out infinite; }
 
 .gr-thanks-title {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--ui-font-display);
   font-size: 1.7rem;
   font-weight: 700;
   color: var(--ink);
@@ -1097,7 +1099,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   margin-bottom: 24px;
 }
 .gr-notfound-title {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--ui-font-display);
   font-size: 1.55rem;
   font-weight: 700;
   color: var(--ink);
@@ -1481,7 +1483,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--accent);
 }
-.hm-title { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.5rem; line-height: 1.15; font-weight: 700; color: var(--ink); }
+.hm-title { margin: 0; font-family: var(--ui-font-display); font-size: 1.5rem; line-height: 1.15; font-weight: 700; color: var(--ink); }
 .hm-details { margin: 6px 0 0; font-size: 0.9rem; color: var(--ink-muted); }
 
 .hm-actions { display: flex; align-items: center; gap: 8px; padding: 16px 4px 0; }
@@ -1502,7 +1504,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Headcount — the number the host came for. */
 .hm-headcount-top { display: flex; align-items: baseline; gap: 12px; }
-.hm-bignum { font-family: "Playfair Display", Georgia, serif; font-size: 3.1rem; line-height: 0.9; color: var(--rsvp-yes); }
+.hm-bignum { font-family: var(--ui-font-display); font-size: 3.1rem; line-height: 0.9; color: var(--rsvp-yes); }
 .hm-bigunit { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
 .hm-breakdown { margin: 8px 0 0; font-size: 0.82rem; color: var(--ink-faint); }
 
@@ -1578,7 +1580,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 20px;
 }
-.hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: "Playfair Display", Georgia, serif; font-size: 1.4rem; font-weight: 700; color: var(--ink); }
+.hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: var(--ui-font-display); font-size: 1.4rem; font-weight: 700; color: var(--ink); }
 .hm-empty-body, .hm-state-body { margin: 0; max-width: 280px; font-size: 0.95rem; line-height: 1.55; color: var(--ink-muted); }
 /* Sentences, not captions: the access hint is the one line telling a host who
    lost their link where it is. Smaller than the body, never fainter than it. */
@@ -1776,7 +1778,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .cr-title {
   margin: 0 0 12px;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--ui-font-display);
   font-size: 1.45rem; font-weight: 700; color: #23211d;
 }
 .cr-body { margin: 0; max-width: 320px; font-size: 0.95rem; line-height: 1.55; color: #6b6659; }
@@ -1801,7 +1803,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(35, 33, 29, 0.30); display: flex; align-items: flex-end; justify-content: center; }
 .ag-sheet { width: 100%; max-width: 460px; background: #fff; border-radius: 26px 26px 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(20, 18, 14, 0.16); }
 .ag-grab { width: 40px; height: 5px; border-radius: 999px; background: #e4ddd0; margin: 0 auto 18px; }
-.ag-title { font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
+.ag-title { font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
 .ag-title-inline { margin: 0; }
 .ag-returning-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .ag-why { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
@@ -1926,7 +1928,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    with it rather than with the landing. */
 .da-title { margin-bottom: 16px; }
 .da-keep { background: #f4f7f4; border: 1px solid #d9e5da; border-radius: 16px; padding: 17px 16px 15px; margin-bottom: 16px; }
-.da-keep-head { font-family: "Playfair Display", Georgia, serif; font-size: 1.18rem; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
+.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
 .da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: #3f4f42; line-height: 1.45; }
 .da-keep-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
 .da-keep-list svg { margin-top: 2px; }
