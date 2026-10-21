@@ -261,6 +261,83 @@ lands in spam, silently, for everyone.
    `#t=` fragment, its unsubscribe link opens a confirm page without
    unsubscribing, and pressing the button turns replies off across the account.
 
+## Backups
+
+**Everything the product holds lives on the one volume at `/data`**:
+invitation records with their RSVPs (one JSON file per id), `app.db`
+(accounts, keyring, sessions, notification preferences), `metrics.json` and
+`backgrounds/`. Losing the volume loses every published invitation and every
+guest reply, so it is backed up at two levels.
+
+**1. A consistent database copy, written by the app.** Every hour
+(`DB_SNAPSHOT_MINUTES`, default 60, `0` disables) the server writes
+`/data/snapshots/app.db` with SQLite's `VACUUM INTO`
+([snapshot.ts](../server/src/snapshot.ts)). The live `app.db` runs in WAL
+mode — two files that change together — and a platform snapshot is only
+point-in-time ("may not capture in-flight writes"), so it could catch them
+out of step. The copy is one self-contained file. It is written only after
+`PRAGMA quick_check` passes, so a damaged database never replaces the last
+good copy, and never at boot, so a restart over a damaged file cannot either.
+Everything else on the volume is written whole and renamed into place, so it
+is safe to snapshot at any instant. `/healthz` reports
+`db_snapshot.last_at`; it is `null` until one interval after boot, so alert
+on it being **stale**, not on it being null. A deployment without sign-in has
+no `app.db`, and the snapshot is skipped.
+
+**2. Volume backups, on a schedule, in Northflank.** Volume → *Backups*.
+Keep two schedules:
+
+- **daily**, 03:30 Kyiv (00:30 UTC), retained **14 days**
+- **weekly**, Sunday, retained **90 days**
+
+The docs page for volume backups still says scheduling is manual-only, but the
+API has it, so if the UI has no schedule control, create them with a
+Northflank API token (*Account → API tokens*, scope: Volumes → Backups):
+
+```sh
+NF=https://api.northflank.com/v1/projects/<project-id>/volumes/<volume-id>/backup-schedules
+curl -X POST "$NF" -H "Authorization: Bearer $NORTHFLANK_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"scheduling":{"interval":"daily","hour":[0],"minute":[30]},"retentionTime":14}'
+curl -X POST "$NF" -H "Authorization: Bearer $NORTHFLANK_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"scheduling":{"interval":"weekly","day":[6],"hour":[0],"minute":[30]},"retentionTime":90}'
+```
+
+(`day` counts from Monday = 0, so Sunday is 6; hours are UTC.)
+
+**Also take a manual backup before any deploy that changes what is stored** —
+a new field on an invitation record, a new table or column in `db.ts` — since
+there is no down-migration.
+
+### Restore
+
+A restore creates a **new** volume; it never overwrites the old one, which
+stays as it was until you delete it.
+
+1. Volume → *Backups* → pick the backup → **Create volume** (or *Create
+   volume → From source → From backup*). Same size or larger, SSD.
+2. Service → *Volumes*: detach the current volume and attach the new one at
+   **`/data`**. The service restarts on it.
+3. Check `/healthz`, open a known `/i/:id` and its `/manage/:id`, and sign in.
+4. **If `app.db` will not open or fails `PRAGMA integrity_check`**, use the
+   consistent copy: with the service stopped (or from a shell on it),
+   `cp /data/snapshots/app.db /data/app.db && rm -f /data/app.db-wal /data/app.db-shm`,
+   then start it again. At most one snapshot interval of sign-ins and
+   keyring links is lost; invitations and RSVPs are not in `app.db`.
+5. Once it is confirmed good, delete the old volume.
+
+### Restore drill
+
+A backup nobody has restored is a hope, not a backup. **Once a quarter**, and
+after any change to how `/data` is laid out: restore the latest backup into a
+new volume, attach it to a **temporary second service** (not the live one —
+two instances must never share `/data`, see *Why one service*), and check
+that a known invitation, its RSVPs and a sign-in all come back. Note the date
+here.
+
+- Last drill: _not yet run_
+
 ## Local smoke test
 
 ```sh

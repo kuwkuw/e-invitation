@@ -20,6 +20,7 @@ import { registerOgRoutes } from "./routes/og.js";
 import { registerSeoRoutes } from "./routes/seo.js";
 import { registerUnsubscribeRoutes } from "./routes/unsubscribe.js";
 import { prerenderKey, renderShell, shellMeta } from "./seo.js";
+import { lastSnapshotAt, snapshotIntervalMinutes } from "./snapshot.js";
 
 export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
   // trustProxy: behind the hosting proxy (Northflank) request.protocol must
@@ -108,6 +109,10 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     // rather than at boot like `auth`, because it is one env lookup and an
     // operator adding the key wants /healthz to agree without a restart.
     notifications: { configured: emailConfigured(), window_minutes: notifyWindowMinutes() },
+    // The consistent app.db copy every volume backup carries (snapshot.ts).
+    // `last_at` is null until the first interval has passed since boot, so an
+    // alert should fire on it being stale, not on it being null.
+    db_snapshot: { interval_minutes: snapshotIntervalMinutes(), last_at: lastSnapshotAt() },
   }));
   registerAuthRoutes(app);
   registerAccountRoutes(app);
