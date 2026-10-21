@@ -26,3 +26,9 @@ updates:
     schedule:
       interval: monthly
     labels: [dependencies]
+    # Node's major is pinned in .npmrc, .nvmrc, engines and both FROM lines,
+    # and moves to an LTS line by decision. A Dockerfile-only major bump
+    # always fails CI against the other three, so only minor/patch come here.
+    ignore:
+      - dependency-name: node
+        update-types: [version-update:semver-major]
