@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.34.2",
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "pnpm --parallel -r dev",
@@ -16,6 +16,6 @@
     "format": "biome format --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15"
+    "@biomejs/biome": "^2.6.2"
   }
 }

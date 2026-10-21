@@ -24,6 +24,12 @@
   "css": {
     "formatter": { "enabled": false }
   },
+  // Biome 2.6 started formatting Markdown. The docs are hand-laid prose and
+  // tables cited by line from ARCHITECTURE.md and the ADRs; reflowing them
+  // would churn every file and break those citations for no reader's gain.
+  "markdown": {
+    "formatter": { "enabled": false }
+  },
   "linter": {
     "enabled": true,
     "rules": {

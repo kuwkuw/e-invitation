@@ -11,7 +11,7 @@ question, the question is in *Open questions* rather than answered by inference.
 | Path | Package name | Stack |
 |---|---|---|
 | `server/` | `inv-app-server` | Fastify 5, TypeScript, ESM (`server/package.json:5,14`) |
-| `web/` | `inv-app-web` | React 18 + react-router-dom 7 on Vite 5 (`web/package.json:17-19,29`) |
+| `web/` | `inv-app-web` | React 19 + react-router-dom 7 on Vite 8 (`web/package.json`) |
 
 Everything else at the root is non-package: `docs/` (specs + 15 ADRs), `scripts/build-design-cards.mjs`,
 `.design-sync/` (design-tool sync metadata, excluded from lint at `biome.jsonc:11`), `.claude/`,

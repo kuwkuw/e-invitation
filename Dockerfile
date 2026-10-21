@@ -1,5 +1,5 @@
 # Build stage: pnpm workspace — build the SPA and compile the server.
-FROM node:22.23.3-alpine AS build
+FROM node:24.22.0-alpine AS build
 RUN corepack enable
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
@@ -13,7 +13,7 @@ RUN pnpm --filter inv-app-web build && pnpm --filter inv-app-server build
 # Runtime stage: server prod deps only + built artifacts. The server serves
 # the SPA from ../web/dist (see server/src/app.ts), so the layout mirrors the
 # repo: /app/server + /app/web/dist.
-FROM node:22.23.3-alpine
+FROM node:24.22.0-alpine
 RUN corepack enable
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
