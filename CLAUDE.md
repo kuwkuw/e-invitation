@@ -8,7 +8,7 @@ E-invitation web app: the user describes an event in one sentence → AI generat
 
 ## Commands
 
-pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From the root:
+pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm; the version comes from `packageManager` via Corepack, which Node 25+ no longer bundles — `npm install -g corepack && corepack enable` once per machine, and the Dockerfile does the same. From the root:
 
 - `pnpm install` — all workspaces (new native deps needing postinstall scripts must be added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`)
 - `pnpm dev` — both dev servers in parallel
