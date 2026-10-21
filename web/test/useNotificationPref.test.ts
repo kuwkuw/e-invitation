@@ -49,7 +49,11 @@ describe("useNotificationPref", () => {
   it("writes the new value and keeps what the server confirms", async () => {
     const spy = stubFetch({ get: ok(true), put: ok(false) });
     const { result } = renderHook(() => useNotificationPref(true));
-    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+    // Wait for the state, not just the call (as below): under React 19 the
+    // read's setState can still be uncommitted when the fetch has been made,
+    // and toggling the default would send `true` instead.
+    await waitFor(() => expect(result.current.enabled).toBe(true));
+    expect(spy).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       await result.current.toggle();

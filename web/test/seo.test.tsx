@@ -15,6 +15,14 @@ import { applyDocumentMeta, langFromSearch, routeMeta } from "../src/seo";
  * `/`'s canonical keeps claiming every screen is the home page.
  */
 
+/** Reports the router's current URL, so a language toggle can be checked as
+ *  navigation rather than as component state. At module scope: a component
+ *  declared inside `describe` is a new type on every call (noComponentHookFactories). */
+function Url() {
+  const location = useLocation();
+  return <output data-testid="url">{`${location.pathname}${location.search}`}</output>;
+}
+
 describe("langFromSearch", () => {
   it("reads the two languages that exist and nothing else", () => {
     expect(langFromSearch("?lang=en")).toBe("en");
@@ -159,13 +167,6 @@ describe("the landing page's language URL", () => {
         throw new Error(`unexpected fetch: ${url}`);
       }),
     );
-  }
-
-  /** Renders the page and reports the router's current URL, so a language
-   *  toggle can be checked as navigation rather than as component state. */
-  function Url() {
-    const location = useLocation();
-    return <output data-testid="url">{`${location.pathname}${location.search}`}</output>;
   }
 
   function renderLanding(entry: string) {

@@ -223,6 +223,10 @@ export async function renderOgPng(invitation: Invitation): Promise<Buffer> {
     {
       width: "100%",
       height: "100%",
+      // Satori 0.28 counted padding inside the box; later versions follow CSS
+      // and add it on top, which pushed every card's content off-centre by half
+      // the padding (90px right on classic, 48px down on all three).
+      boxSizing: "border-box",
       display: "flex",
       flexDirection: "column",
       alignItems: isSplit ? "flex-start" : "center",

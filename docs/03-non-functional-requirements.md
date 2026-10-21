@@ -12,7 +12,20 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **113.5 kB gzipped** (375.0 kB raw), measured 2026-09-15 with
+  **136.2 kB gzipped** (471.6 kB raw, CSS + JS), measured 2026-10-21 with
+  `pnpm --filter inv-app-web build` — 11.82 kB CSS plus 124.37 kB JS.
+  **This crossed the ~127 kB revisit trigger re-derived below, and that was
+  decided, not drifted into**: +22.7 kB of it is React 19 alone (the same
+  tree on Vite 8 builds to 101.70 kB JS under React 18.3), taken because
+  React 18 receives no further releases and the ecosystem is moving to
+  19-only peers. Nothing else in that upgrade (Vite 8, TypeScript 7, Node 24)
+  moved the number. The revisit this triggered is answered by that decision;
+  **the next trigger is 145 kB** (CSS + JS, gzipped), set the way the last
+  one was — this line's figure plus roughly the room the old trigger left.
+  Growth past it is real growth, and a code-split of the editor off the guest
+  path (`/i/:id` needs none of it) is the first lever to reach for. The
+  figures below predate the upgrade and are kept as the record.
+- Previously **113.5 kB gzipped** (375.0 kB raw), measured 2026-09-15 with
   `pnpm --filter inv-app-web build`. **This is the first time the line counts
   CSS as well as JS** — 11.86 kB gzipped CSS (56.76 kB raw) plus 101.60 kB
   gzipped JS (318.28 kB raw) — because the material system
