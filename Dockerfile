@@ -1,6 +1,8 @@
 # Build stage: pnpm workspace — build the SPA and compile the server.
-FROM node:24.22.0-alpine AS build
-RUN corepack enable
+FROM node:26.12.0-alpine AS build
+# Node 25+ no longer bundles Corepack; install it from npm (exact version)
+# so `packageManager` in package.json still decides which pnpm runs.
+RUN npm install -g corepack@0.36.0 && corepack enable
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY server/package.json server/package.json
@@ -13,8 +15,10 @@ RUN pnpm --filter inv-app-web build && pnpm --filter inv-app-server build
 # Runtime stage: server prod deps only + built artifacts. The server serves
 # the SPA from ../web/dist (see server/src/app.ts), so the layout mirrors the
 # repo: /app/server + /app/web/dist.
-FROM node:24.22.0-alpine
-RUN corepack enable
+FROM node:26.12.0-alpine
+# Node 25+ no longer bundles Corepack; install it from npm (exact version)
+# so `packageManager` in package.json still decides which pnpm runs.
+RUN npm install -g corepack@0.36.0 && corepack enable
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY server/package.json server/package.json

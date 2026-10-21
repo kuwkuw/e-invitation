@@ -18,6 +18,7 @@ pnpm monorepo — one install and one command for both servers:
 
 ```sh
 cp server/.env.example server/.env   # add your ANTHROPIC_API_KEY
+npm install -g corepack && corepack enable   # once; Node 25+ no longer bundles Corepack
 pnpm install
 pnpm dev   # API on 3001 + UI on 5173
 ```
