@@ -191,7 +191,18 @@
   publish-rate, `views_per_publish` and `new_hosts_per_publish`) at
   `GET /api/metrics` (FR-7).
 - The regenerate-rate is the primary quality KPI (see
-  [01-vision.md](01-vision.md)).
+  [01-vision.md](01-vision.md)). It is measured **after** release; before
+  release, the LLM eval ([server/eval/](../server/eval/README.md)) runs the
+  real pipeline over a fixed set of sentences on every PR that touches
+  prompts or routing, and nightly. It checks what the product cannot afford
+  to get wrong (language, no invented facts, stated facts kept, no
+  placeholders), not wording quality, which stays the regenerate-rate's job.
+- **Model reachability is probed, not inferred.** `/healthz` reports provider
+  *key presence*, which cannot see a routed model being retired or moved to a
+  paid tier (2026-09-12, [adr-007](decisions/adr-007-in-process-providers.md)).
+  The nightly eval workflow sends one request to every routed model, fails
+  when a primary is unreachable, and fails when any call was served by a
+  fallback.
 - `new_hosts_per_publish` is the primary **commercial** KPI —
   [07-monetization.md](07-monetization.md) §5.1 gates every option on it. It is
   collected by the share-loop instrumentation in

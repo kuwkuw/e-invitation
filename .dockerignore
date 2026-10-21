@@ -12,3 +12,5 @@ ds-bundle
 docs
 scripts
 *.md
+# Eval harness and its cases: CI and local only, never shipped
+server/eval

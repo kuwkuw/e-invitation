@@ -1,0 +1,98 @@
+# LLM eval + model reachability probe, against real providers.
+#
+# The ordinary suite mocks the LLM boundary, so a prompt edit or a routing
+# change otherwise ships unmeasured. This runs nightly (strict: a fallback
+# serving any call fails the run, which is how the 2026-09-12 Groq tier change
+# would have surfaced) and on PRs that touch prompts, routing or the eval.
+#
+# Secrets: GROQ_API_KEY and GEMINI_API_KEY (required), ANTHROPIC_API_KEY
+# (optional, probes the paid fallbacks). Use keys from a SEPARATE project
+# from production: Gemini's free tier is ~20 requests/day and this run spends
+# ~7 of them; sharing the operator key would eat production's copy quota.
+# Without the secrets (forks, Dependabot) the job skips rather than fails.
+name: LLM eval
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # 06:17 Kyiv
+  workflow_dispatch:
+    inputs:
+      generate:
+        description: Cases run through the full pipeline (copy uses Gemini quota)
+        default: "6"
+      model:
+        description: Pin every task to one routed model (blank = real routing)
+        default: ""
+  pull_request:
+    paths:
+      - server/src/pipeline/**
+      - server/src/llm/**
+      - server/src/schemas.ts
+      - server/eval/**
+      - .github/workflows/llm-eval.yml
+
+# One run at a time: two overlapping runs would double the quota spend.
+concurrency:
+  group: llm-eval
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - id: keys
+        run: |
+          if [ -z "$GROQ_API_KEY" ] || [ -z "$GEMINI_API_KEY" ]; then
+            echo "::notice::LLM eval skipped: GROQ_API_KEY / GEMINI_API_KEY secrets are not available to this run."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.keys.outputs.ok == 'true'
+        uses: actions/checkout@v7
+      - if: steps.keys.outputs.ok == 'true'
+        uses: pnpm/action-setup@v6
+      - if: steps.keys.outputs.ok == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.keys.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - id: probe
+        if: steps.keys.outputs.ok == 'true'
+        run: pnpm --filter inv-app-server probe -- --out "$RUNNER_TEMP/probe.json"
+
+      # Runs even when the probe failed: the eval then shows which fallbacks
+      # carried each task and what that did to quality.
+      - id: eval
+        if: steps.keys.outputs.ok == 'true' && (success() || steps.probe.outcome == 'failure')
+        env:
+          GENERATE: ${{ inputs.generate || '6' }}
+          MODEL: ${{ inputs.model }}
+          STRICT: ${{ github.event_name == 'schedule' && '--strict-routing' || '' }}
+        run: |
+          pnpm --filter inv-app-server eval -- \
+            --generate "$GENERATE" \
+            ${MODEL:+--model "$MODEL"} \
+            $STRICT \
+            --out "$RUNNER_TEMP/eval.json"
+
+      - if: always() && steps.keys.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-eval-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/probe.json
+            ${{ runner.temp }}/eval.json
+          if-no-files-found: ignore
+          retention-days: 30
