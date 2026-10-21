@@ -247,7 +247,10 @@ describe("reply notifications", () => {
 
       record = reply(record, "Іван", new Date(Date.now() - 1000).toISOString());
       await notifyNewReplies(record, BASE);
-      record = reply(record, "Олег", new Date().toISOString());
+      // A second ahead, not `new Date()`: `countNewSince` is strictly after the
+      // stamp the first send just wrote, so a reply created in that same
+      // millisecond counts as already seen — the test failed ~3 runs in 5.
+      record = reply(record, "Олег", new Date(Date.now() + 1000).toISOString());
       await notifyNewReplies(record, BASE);
 
       expect(spy).toHaveBeenCalledTimes(2);

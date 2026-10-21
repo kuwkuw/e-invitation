@@ -1,0 +1,56 @@
+# The gate every change to main passes through. Northflank builds and deploys
+# on every push to main and runs none of this, so without a required check
+# here a red suite still ships. Make "verify" and "docker" required status
+# checks on main (Settings → Rules) for this file to mean anything.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # .npmrc's use-node-version makes pnpm run scripts on the exact pinned
+      # Node, so the suite runs on what production runs.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Build before test: the server's SPA-shell tests (spaBuilt.ts) skip
+      # themselves when web/dist is missing, which hides 15 of them.
+      - run: pnpm build
+      - run: pnpm test
+      # Production dependencies only, high and above: a dev-only advisory
+      # should not block a deploy, a runtime one should.
+      - run: pnpm audit --prod --audit-level high
+
+  docker:
+    # The image Northflank deploys, built the same way, so a Dockerfile break
+    # is caught on the PR rather than in the platform's build log.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

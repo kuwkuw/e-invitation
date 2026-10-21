@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Product
 
-E-invitation web app: the user describes an event in one sentence → AI generates an editable invitation → share link + RSVP page (not yet built). Bilingual Ukrainian/English; guests never register; sharing targets Viber/Telegram/WhatsApp.
+E-invitation web app: the user describes an event in one sentence → AI generates an editable invitation → share link + guest RSVP page. Bilingual Ukrainian/English; guests never register; sharing targets Viber/Telegram/WhatsApp.
 
 ## Commands
 
@@ -15,6 +15,7 @@ pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm. From
 - `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces. `pnpm test` runs the two suites **one after the other** (`--workspace-concurrency=1`), and that is deliberate: each Vitest sizes its pool to every core, so running both at once oversubscribed the CPU, and the 19 server files whose `beforeAll` imports and builds the whole app (~3 s alone) stretched to 6–9 s, intermittently past Vitest's 10 s hook timeout. Sequential costs no wall time (~50 s either way), because the CPU is saturated either way.
 - `pnpm lint` (Biome, root `biome.jsonc`) / `pnpm lint:fix` / `pnpm format` — one config for both workspaces. CSS formatting is off on purpose: `styles.css` keeps its compact one-line token rules so they stay scannable against the OG renderer's maps. `.gitattributes` pins LF so the formatter sees the same bytes on Windows and in CI.
 - `pnpm --filter inv-app-server <script>` — one workspace (`inv-app-web` for web)
+- CI (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `build`, `test` (build first, or the 15 SPA-shell tests skip themselves), `pnpm audit --prod --audit-level high` and a Docker build on every PR and push to `main`. Northflank deploys every push to `main` and runs none of it, so work on a branch and merge through a PR with CI green; never push to `main` directly. Node is pinned in three places that must move together: `.npmrc` (`use-node-version`), `.nvmrc`, and both `FROM` lines in the `Dockerfile`.
 
 **server/** (Fastify API, port 3001): dev server reloads via tsx watch. Provider keys live in `server/.env` (see `.env.example`): `GROQ_API_KEY` + `GEMINI_API_KEY` are the free-tier MVP pair the default routes run on; `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are optional paid fallbacks. The server boots keyless but generation then fails. Tests mock the LLM boundary — no keys needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.
 

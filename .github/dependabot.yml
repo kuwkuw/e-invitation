@@ -1,0 +1,28 @@
+# Weekly, grouped, so one PR a week carries the patch/minor churn and CI
+# decides whether it is safe. Majors (React 19, Vite 6+, Vitest 3+, TS 6+)
+# come as their own PRs: each is a deliberate migration, not a bump.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Kyiv
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]
