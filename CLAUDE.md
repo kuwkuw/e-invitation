@@ -49,6 +49,12 @@ pnpm monorepo (`server`, `web`). Use pnpm, not npm. Its version comes from
 - **Stacked PRs:** merge the lower one before the one on top, or retarget the
   top one to `main` first. Otherwise it merges into the lower branch and never
   reaches `main`.
+- Hooks in `.claude/settings.json` enforce part of this (scripts in
+  `.claude/hooks/`, tested by `server/test/claudeHooks.test.ts`): no commit
+  on `main` and no push to it; Biome on every edited file, with what it
+  can't fix sent back to you; a reminder naming an edited file's hand-kept
+  twin, or the eval for a prompt; and a typecheck of changed workspaces before
+  you finish. Respect a hook's message; don't route around it.
 - Node is pinned in four places that move together: `.npmrc`
   (`use-node-version`), `.nvmrc`, `engines` in `package.json`, and both `FROM`
   lines in the `Dockerfile`.
@@ -84,7 +90,9 @@ reads this policy.
 ## Rules that span both sides
 
 **Hand-kept mirrors.** Each pair below has no shared source, so change both
-sides in one pass:
+sides in one pass. The `TWINS` table in `.claude/hooks/after-edit.mjs`
+reminds you when you edit one side; keep it in step with this list (a test
+checks the paths):
 
 - `server/src/schemas.ts` (the source of truth) ↔ `web/src/types.ts`
 - the server's `InvitationId` ↔ `isInvitationId` in `web/src/invitationId.ts`
