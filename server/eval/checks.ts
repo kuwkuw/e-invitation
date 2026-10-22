@@ -103,10 +103,29 @@ export function numbersIn(text: string): Set<string> {
   return new Set((text.match(/\d+/g) ?? []).map((n) => String(Number(n))));
 }
 
+// Month names → their number, so "12 серпня" restated as "12.08" (or
+// "August 12" as "12/08") is a reformatting, not an invented fact. Ukrainian
+// stems cover every case form; English matches the full name or its
+// abbreviation.
+const MONTHS: [RegExp, number][] = [
+  [/січ|jan/i, 1],
+  [/лют|feb/i, 2],
+  [/берез|mar(?:ch)?\b/i, 3],
+  [/квіт|apr/i, 4],
+  [/трав|\bmay\b/i, 5],
+  [/черв|jun/i, 6],
+  [/лип|jul/i, 7],
+  [/серп|aug/i, 8],
+  [/верес|sep/i, 9],
+  [/жовт|oct/i, 10],
+  [/листоп|nov/i, 11],
+  [/груд|dec/i, 12],
+];
+
 /** Every number the copy states must come from the sentence. A 12-hour time
- *  may be restated as 24-hour ("7pm" → "19:00"), and "00" minutes are
- *  formatting, not a fact. Anything else — a year, a date, a time — the
- *  model invented. */
+ *  may be restated as 24-hour ("7pm" → "19:00"), a named month as its number
+ *  ("серпня" → "08"), and "00" minutes are formatting, not a fact. Anything
+ *  else — a year, a date, an end time — the model invented. */
 export function inventedNumbers(copyText: string, input: string): string[] {
   const allowed = numbersIn(input);
   for (const n of [...allowed]) {
@@ -114,8 +133,17 @@ export function inventedNumbers(copyText: string, input: string): string[] {
     if (v >= 1 && v <= 12) allowed.add(String(v + 12));
     if (v >= 13 && v <= 24) allowed.add(String(v - 12));
   }
+  for (const [name, month] of MONTHS) if (name.test(input)) allowed.add(String(month));
   allowed.add("0");
   return [...numbersIn(copyText)].filter((n) => !allowed.has(n));
+}
+
+/** Where a number appears, so a failure shows the sentence it sits in rather
+ *  than a bare digit. */
+export function whereNumber(fields: [string, string][], n: string): string {
+  const re = new RegExp(`(?<!\\d)0*${n}(?!\\d)`);
+  const hit = fields.find(([, v]) => re.test(v));
+  return hit ? `${n} in ${hit[0]}: "${hit[1]}"` : n;
 }
 
 const PLACEHOLDER =
@@ -183,7 +211,9 @@ export function checkCopy(input: string, invitation: Invitation): CheckResult[] 
   results.push({
     check: "copy.no_invented_numbers",
     pass: invented.length === 0,
-    detail: invented.length ? `not in the sentence: ${invented.join(", ")}` : undefined,
+    detail: invented.length
+      ? `not in the sentence: ${invented.map((n) => whereNumber(fields, n)).join("; ")}`
+      : undefined,
   });
 
   // A stated date/time/venue must reach the card. Numbers are compared as

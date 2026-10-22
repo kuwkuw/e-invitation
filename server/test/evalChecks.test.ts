@@ -120,6 +120,13 @@ describe("inventedNumbers", () => {
     expect(inventedNumbers("о 07:00", "о 7")).toEqual([]);
   });
 
+  it("allows a named month restated as its number", () => {
+    expect(inventedNumbers("12.08, 18:00", "12 серпня о 18:00")).toEqual([]);
+    expect(inventedNumbers("20/09, 3:00 PM", "September 20th at 3:00 PM")).toEqual([]);
+    // ...but only the month the sentence named.
+    expect(inventedNumbers("12.09", "12 серпня")).toEqual(["9"]);
+  });
+
   it("flags a year or date the sentence never gave", () => {
     expect(inventedNumbers("12 серпня 2026 року", "12 серпня")).toEqual(["2026"]);
     expect(inventedNumbers("Чекаємо 15 числа", "без дати")).toEqual(["15"]);
@@ -163,6 +170,14 @@ describe("checkCopy", () => {
     });
     const input = "Birthday drinks for Max on 3 March at 9pm, Пивоварня, Львів";
     expect(failed(checkCopy(input, inv))).toEqual([]);
+  });
+
+  it("shows where an invented number sits", () => {
+    const inv = invitation(brief(), { details_line: "12 серпня, 18:00–22:00, Кафе «Затишок»" });
+    const check = checkCopy(INPUT, inv).find((r) => r.check === "copy.no_invented_numbers");
+    expect(check?.detail).toBe(
+      'not in the sentence: 22 in details_line: "12 серпня, 18:00–22:00, Кафе «Затишок»"',
+    );
   });
 
   it("catches an invented year and a dropped time", () => {
