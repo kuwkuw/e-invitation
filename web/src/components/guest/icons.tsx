@@ -52,10 +52,10 @@ export const ChevronIcon = () => (
 
 export const CalendarIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="#b3592e" strokeWidth="1.7" />
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
     <path
       d="M3.5 9.5h17M8 2.8v4M16 2.8v4"
-      stroke="#b3592e"
+      stroke="currentColor"
       strokeWidth="1.7"
       strokeLinecap="round"
     />
@@ -66,11 +66,11 @@ export const PinIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
       d="M12 21s-7-6.3-7-11a7 7 0 1114 0c0 4.7-7 11-7 11z"
-      stroke="#b3592e"
+      stroke="currentColor"
       strokeWidth="1.7"
       strokeLinejoin="round"
     />
-    <circle cx="12" cy="10" r="2.4" stroke="#b3592e" strokeWidth="1.7" />
+    <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
   </svg>
 );
 
@@ -78,7 +78,7 @@ export const LinkIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
       d="M9 15l6-6M11 6.5l1-1a3.5 3.5 0 015 5l-2 2M13 17.5l-1 1a3.5 3.5 0 01-5-5l2-2"
-      stroke="#b3592e"
+      stroke="currentColor"
       strokeWidth="1.8"
       strokeLinecap="round"
     />

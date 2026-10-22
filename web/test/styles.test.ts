@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
@@ -432,7 +433,7 @@ describe("the landing page's text", () => {
     [".lp-nav-gallery", "--surface", 3],
     [".lp-hero-copy p", "--app-bg", 4.5],
     [".lp-step-text", "--app-bg", 4.5],
-    [".lp-chip", "--accent-wash", 3],
+    [".lp-chip", "--surface", 3],
     [".lp-rsvp-copy p", "--surface", 4.5],
     [".lp-rsvp-yes", "--app-bg", 3],
     [".lp-rsvp-no", "--app-bg", 3],
@@ -455,6 +456,38 @@ describe("the landing page's text", () => {
     [".lp-notify-all", "--app-bg", 3],
     [".lp-delete-link", "--app-bg", 3],
   ]);
+});
+
+/** The hex ratchet reads only styles.css, so an accent written into a
+ *  component as a literal goes stale without a sound when the token moves:
+ *  the guest page kept terracotta icons beside adr-019's oxblood that way.
+ *  Guest components colour the accent through currentColor instead. */
+describe("the guest page's components", () => {
+  it("never name the accent as a literal, past or present", () => {
+    const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
+    const accents = ["#b3592e", tokens.get("--ui-accent") as string];
+    const named = readdirSync(dir)
+      .filter((file) => file.endsWith(".tsx"))
+      .flatMap((file) => {
+        const source = readFileSync(join(dir, file), "utf8").toLowerCase();
+        return accents.filter((a) => source.includes(a)).map((a) => `${file}: ${a}`);
+      });
+    expect(named).toEqual([]);
+  });
+});
+
+/** --accent-wash is #f7efe3 and the paper ground is #f4efe6: 1.00:1, so a
+ *  borderless wash fill on the page simply vanishes. The landing's chips and
+ *  step icons sat exactly there, and are card stock with a ruled edge now. */
+describe("the landing's chips and step icons", () => {
+  it("sit on card stock with a ruled edge, not on a wash the ground has swallowed", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Landing page") ?? ""));
+    for (const selector of [".lp-chip", ".lp-step-icon"]) {
+      const body = rules.find((r) => r.selectors.includes(selector))?.body ?? "";
+      expect(body, selector).toMatch(/background:\s*var\(--surface\)/);
+      expect(body, selector).toMatch(/border:\s*1px solid var\(--edge\)/);
+    }
+  });
 });
 
 /** The two inks below --ink-faint clear nothing, so every rule that reads one
@@ -499,6 +532,20 @@ describe("the chrome's faces (adr-019 §2)", () => {
       "--ui-font-display",
       "--ui-font-body",
     ]);
+  });
+
+  /** index.html links the same URL so the fonts request starts while the app
+   *  CSS is still downloading; the @import then resolves from cache. A link
+   *  left on an older URL silently re-serialises the new faces behind the
+   *  stylesheet and costs a second fonts.css request. */
+  it("preloads exactly the font URL the stylesheet imports", () => {
+    const imported = /@import url\("([^"]+)"\)/.exec(css)?.[1];
+    const html = readFileSync(fileURLToPath(new URL("../index.html", import.meta.url)), "utf8");
+    const linked = /<link\s+rel="stylesheet"\s+href="(https:\/\/fonts\.googleapis\.com[^"]+)"/.exec(
+      html,
+    )?.[1];
+    expect(imported).toBeDefined();
+    expect(linked?.replaceAll("&amp;", "&")).toBe(imported);
   });
 
   it("requests exactly the axes adr-019 §2 settles, and keeps the four card families", () => {

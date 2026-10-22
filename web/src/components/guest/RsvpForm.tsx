@@ -40,7 +40,7 @@ export function RsvpForm({ form, t }: Props) {
             >
               <CheckIcon
                 size={18}
-                color={form.attending === true ? "#ffffff" : "#b3592e"}
+                color="currentColor"
                 width={form.attending === true ? 2.4 : 2.2}
               />
               {t.yes}

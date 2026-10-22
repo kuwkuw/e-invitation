@@ -46,7 +46,9 @@
   --ink-placeholder: #857d6f;
   --ink-whisper: #8d8577;
 
-  /* Accent: adr-019's oxblood. White on --accent is 8.21:1, which is what makes Publish legible.
+  /* Accent: adr-019's oxblood. White on --accent is 8.21:1, and the --surface
+     most accent buttons set their label in is 7.75:1: that is what makes
+     Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
      card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
      anything meaning the *product's* accent there must read --ui-accent
@@ -896,6 +898,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .gr-tile.decline { color: var(--ink-muted); }
+/* The Yes mark is the accent until it is chosen, then takes the tile's ink. */
+.gr-tile:not(.decline):not(.active) > svg { color: var(--ui-accent); }
 .gr-tile:hover { border-color: var(--ui-accent); }
 .gr-tile.active {
   border-color: var(--ui-accent);
@@ -953,8 +957,9 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 /* Disabled until the guest has a name and an answer, so this is the state
    every guest meets first, and its label still has to say what the button
-   does. --ink-faint reaches only 2.70:1 on --edge; --ink-muted gives 4.24:1,
-   and the missing accent fill and shadow are what say "not yet". */
+   does. On adr-019's --edge-soft, --ink-faint reaches only 3.33:1 and
+   --ink-muted gives 5.30:1; the missing accent fill and shadow are what say
+   "not yet". */
 .gr-submit:disabled { background: var(--edge-soft); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
 
 .gr-lock { opacity: 0.5; pointer-events: none; }
@@ -1059,6 +1064,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   height: 44px;
   border-radius: 12px;
   background: var(--accent-wash);
+  color: var(--ui-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1268,8 +1274,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .ornament-geometric { outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: -12px; }
 
 /* Landing page --------------------------------------------------------- */
-/* "Тепла класика" direction: warm terracotta accent + Playfair display,
-   Manrope UI. Composes the real InvitationPreview card in the hero fan. */
+/* adr-019's paper direction: oxblood accent, Literata display, Golos Text
+   UI. Composes the real InvitationPreview card in the hero fan. */
 
 .landing {
   background: var(--app-bg);
@@ -1323,8 +1329,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-nav-signin:hover { color: var(--ink); text-decoration: underline; }
 /* The count rides the same colour, weight and size — it must not read as a
    notification badge, which would promise unread things there are none of.
-   --ink-muted on white is 5.72:1; the quieter --ink-faint would be 3.65:1 and
-   fail AA, and this line is now the host's only route to their own events.
+   --ink-muted on --surface is 6.73:1; the quieter --ink-faint would be 4.23:1
+   and fail AA, and this line is now the host's only route to their own events.
    `nowrap` above is what keeps the number from wrapping away from its label. */
 .lp-brand-mono { display: none; }
 /* The landing nav's way into the gallery (adr-017 §8). Quiet chrome: it sits
@@ -1381,7 +1387,10 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--accent-wash);
+  /* Card stock with a ruled edge: --accent-wash is the paper ground's own
+     colour (1.00:1), so a wash fill vanished on it (adr-019). */
+  background: var(--surface);
+  border: 1px solid var(--edge);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -1392,7 +1401,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-step-text { color: var(--ink-muted); font-size: 1rem; line-height: 1.55; max-width: 26ch; margin: 0 auto; }
 
 .lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.lp-chip { background: var(--accent-wash); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
+.lp-chip { background: var(--surface); border: 1px solid var(--edge); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
 
 .lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--surface); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
 .lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
