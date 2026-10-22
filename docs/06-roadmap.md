@@ -614,6 +614,34 @@ a share sheet does not move `new_hosts_per_publish` by itself. This doc's four
 previous warnings about building for hosts who are not here yet all still
 stand.
 
+**The mark, and what would count as an answer.** Registered on 2026-08-08,
+when the share sheet went live, so a later reading can't be bent to fit what
+was hoped for. (Written then on a branch whose commit never reached `main`;
+restored 2026-10-22.) The counters at that moment:
+
+| | at the mark |
+|---|---|
+| generations | 21 |
+| publishes | 12 |
+| RSVPs | 11 |
+| guest-page views | 6 |
+| referred generations | 0 |
+
+The post-share-sheet rate is `(views_now − 6) / (publishes_now − 12)` from
+`/api/metrics`. That arithmetic replaces a second baseline because
+`markBaseline` has one slot, already frozen for the auth gate (adr-014 §7),
+and the counters are monotonic and durable. Against a "before" of 0.5–0.8:
+
+- **under 1.0** views per post-mark publish: the sheet changed nothing. An
+  invitation goes to a group, so a link that reaches anyone should clear one.
+  Friction was not the explanation, and §5.1's honest conclusion gets closer.
+- **1.0 to 3.0**: ambiguous. Keep accumulating; don't spend an iteration on it.
+- **above 3.0**: links are reaching groups, and the gap was mostly friction.
+
+Ten post-mark publishes is the minimum worth reading. At the rate then (two in
+six days) that is about a month, which was itself the finding: the binding
+constraint is publish volume, not any feature in the backlog.
+
 ## Shipped: public discoverability
 
 Settled in [adr-016](decisions/adr-016-public-discoverability.md) (accepted),
@@ -1008,3 +1036,56 @@ the same day — unlike three of the iterations above, nothing here was owed.
   [adr-011](decisions/adr-011-client-router.md), which records the original
   declining evaluation, the fact that none of its revisit triggers had fired,
   and what widening the scope past declarative mode would take.
+
+### Recovered: a review of the shipped surfaces
+
+A review on 2026-07-24 added the items below. They were written on a stacked
+branch merged after its base had already reached `main`, so they never
+arrived; they were restored on 2026-10-22 after checking each one against the
+code as it stands. "Wait for a host to ask" is the right answer for a feature
+and the wrong one for a gap, which is why these are kept apart.
+
+**Gaps: things the app implies it does but doesn't.**
+
+- **Edit after publish.** A published invitation can't be loaded back into the
+  editor: `/create` always starts blank and nothing rehydrates it from a
+  published record. A host who spots a wrong venue after sending the link to
+  forty people can only publish a new invitation, which mints a new id and
+  orphans the link guests already have, the failure adr-010 §Context describes
+  for responses, still open for the invitation. The server side exists
+  (publishing with `id` + `manage_token` appends a version, FR-3.2). The open
+  questions deserve an ADR: republish on every edit or on an explicit action,
+  what a guest sees mid-edit, and whether the manage view stays read-only.
+- **The RSVP write endpoint has no limit.** `POST /api/invitations/:id/rsvp` is
+  the only unauthenticated write in the app and has no per-IP allowance, no
+  per-record cap and no global limiter, and each reply rewrites the whole
+  record file. adr-008's guardrails cover LLM spend only; this costs disk, and
+  the link is designed to land in group chats. Small: a per-IP allowance
+  through `consumeIpAllowance`, or a cap per record, with a note extending
+  adr-008 rather than a new ADR.
+- **No deletion or retention.** Guests type names and notes into a record
+  nobody can remove: not the guest, not the host, not a timer. NFR-4 says
+  "minimal data" and nothing about how long it lives, so today it's forever.
+  Invitation deletion is the natural unit, and it overlaps RSVP deletion above.
+- **Accessibility beyond contrast.** NFR-9 now sets contrast floors, but
+  nothing states or tests keyboard use, focus order or screen-reader labels
+  for a public, mobile-first app whose core interaction is a form. Write the
+  requirement together with an audit against it, not before.
+
+**Enabler: a structured event date.** `EventBrief.date` and `.time` are free
+text "as written by the user", so nothing knows when the event is.
+`isPastDate` and the `.ics` export parse prose, best-effort. A `date_iso`
+beside the free text is the ceiling on a guest-page "this has passed" state,
+an RSVP deadline the host sets, sorting the landing list by event date, and
+host reminders. The model already extracts the prose; the timezone question
+has to be settled deliberately. Do it before something needs it urgently.
+
+**Unported: the 2026-08-02 design pass (PR #66).** Merged into its base
+branch a minute after that branch reached `main`, so none of it shipped. It
+made reply email **one checkbox** on all three surfaces (share panel, landing
+footer, manage page), restyled the landing's sign-in link as a quiet pair with
+the language switcher (never beside the Create button), and recorded what the
+pass overturned in FR-11/FR-12, adr-010, adr-015 and this doc. It predates the
+material system, so it would need reworking rather than merging; weigh it in
+the direction-A redesign. The code and docs are on the branch
+`feat/ds-notify-checkbox`, kept for that purpose.
