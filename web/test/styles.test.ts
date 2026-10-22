@@ -160,11 +160,28 @@ describe("glass", () => {
   // reduced-transparency fallback cannot be a second design.
   it("keeps ink legible on both surfaces with the blur ignored", () => {
     const ground = tokens.get("--ground") as string;
-    const over = (alphaToken: string) => blend("#ffffff", Number(tokens.get(alphaToken)), ground);
+    const surface = tokens.get("--surface") as string;
+    const over = (alphaToken: string) => blend(surface, Number(tokens.get(alphaToken)), ground);
     for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
       expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
       expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it("is opaque paper since adr-019: the tint is --surface at alpha 1, and nothing blurs", () => {
+    expect(tokens.get("--glass-tint")).toBe(tokens.get("--surface"));
+    expect(tokens.get("--glass-tint-solid")).toBe(tokens.get("--surface"));
+    expect(Number(tokens.get("--glass-alpha"))).toBe(1);
+    expect(Number(tokens.get("--glass-alpha-solid"))).toBe(1);
+    expect(tokens.get("--glass-blur")).toBe("none");
+  });
+
+  it("leaves reduced transparency no tokens to swap, since nothing is translucent", () => {
+    const bare = stripComments(css);
+    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
+    expect(span).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    expect(bare.slice(start, end)).not.toMatch(/:root/);
   });
 
   it("degrades to opaque when the viewer asks for less transparency", () => {
@@ -200,6 +217,36 @@ describe("glass", () => {
     // both sets empty, and an empty subset check passes for the wrong reason.
     expect(blurred.size).toBeGreaterThan(0);
     expect([...blurred].filter((s) => !cleared.has(s)).sort()).toEqual([]);
+  });
+});
+
+/** adr-019 §3: a material may wrap the card (the deckled mat does), never sit
+ *  on it or inside it — that is what keeps the OG renderer's mirror honest. */
+describe("paper materials (adr-019 §3)", () => {
+  const MATERIALS = ["grain", "deckle", "seal"];
+  const names = (compound: string) =>
+    MATERIALS.filter((m) => new RegExp(`\\.${m}(?![\\w-])`).test(compound));
+
+  it("never sit on the card or inside it", () => {
+    const selectors = ruleBlocks(stripComments(css)).flatMap((r) => r.selectors);
+    const onOrInside = selectors.flatMap((s) => {
+      const parts = s.split(/\s*[\s>+~]\s*/).filter(Boolean);
+      const at = parts.findIndex((p) => /\.inv[\w-]*/.test(p));
+      return at === -1 ? [] : [{ s, parts: parts.slice(at) }];
+    });
+    expect(onOrInside.length, "no card selectors found to scan").toBeGreaterThan(0);
+    expect(
+      onOrInside.filter(({ parts }) => parts.some((p) => names(p).length)).map(({ s }) => s),
+    ).toEqual([]);
+  });
+
+  it("are never rendered by InvitationPreview", () => {
+    const preview = readFileSync(
+      fileURLToPath(new URL("../src/components/InvitationPreview.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(preview).toMatch(/className/);
+    expect(preview).not.toMatch(/\b(?:grain|deckle|seal)\b/);
   });
 });
 

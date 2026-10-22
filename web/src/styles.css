@@ -112,15 +112,17 @@
   --dur-fast: 160ms;
   --dur-base: 280ms;
 
-  /* Glass. The alpha is a token of its own so the contrast test can composite
-     the surface over the ground without parsing an rgba() string. */
-  --glass-alpha: 0.62;
-  --glass-alpha-solid: 0.82;
-  --glass-tint: rgba(255, 255, 255, 0.62);
-  --glass-tint-solid: rgba(255, 255, 255, 0.82);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+  /* Glass, now paper (adr-019 §4.1): card stock at full opacity, no blur,
+     a ruled hairline for an edge. The alpha stays a token of its own so the
+     contrast test can composite the surface over the ground without parsing
+     an rgba() string — at 1 the composite is just --surface. */
+  --glass-alpha: 1;
+  --glass-alpha-solid: 1;
+  --glass-tint: var(--surface);
+  --glass-tint-solid: var(--surface);
+  --glass-blur: none;
+  --glass-edge: inset 0 0 0 1px var(--edge);
+  --glass-shadow: var(--e-2);
 
   /* Caution. The warm material the share panel's manage-token block is built
      from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
@@ -168,13 +170,16 @@
   --rsvp-no-label: #8a5a54;
 }
 
-/* Glass surfaces (adr-018). Two, not one: .glass-solid carries text and so
-   takes more tint and less blur than a toolbar does.
+/* Glass surfaces (adr-018), opaque paper since adr-019 §4.1. Two, not one:
+   under glass .glass-solid carried text and so took more tint and less blur
+   than a toolbar did; under paper both are card stock.
 
-   The rule that makes the fallback below trivially correct: **every glass
-   surface must be legible with its blur removed.** The tint alone carries the
-   contrast; blur is decoration on top. test/styles.test.ts asserts exactly
-   that, compositing each tint over --ground with blur ignored. */
+   adr-018's rule is what made that a token swap rather than a rewrite:
+   **every glass surface must be legible with its blur removed.** The tint
+   always carried the contrast, so taking the blur away moved no text.
+   test/styles.test.ts still composites each tint over --ground. The class
+   names, and the reduced-transparency block below, go in adr-019's rename
+   step (9). */
 .glass {
   background: var(--glass-tint);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -188,10 +193,10 @@
   box-shadow: var(--glass-edge), var(--glass-shadow);
 }
 
-/* iOS's own Reduce Transparency, and its web equivalent. Because of the rule
-   above this is a token swap, not a second design. */
+/* iOS's own Reduce Transparency, and its web equivalent. Nothing is
+   translucent under paper, so there are no tokens left to swap; the blur
+   reset stays until the rename step removes the block (adr-019 §4.1). */
 @media (prefers-reduced-transparency: reduce) {
-  :root { --glass-tint: #faf7f2; --glass-tint-solid: #fffdfa; }
   .glass,
   .glass-solid { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
