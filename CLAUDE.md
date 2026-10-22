@@ -106,7 +106,7 @@ reads this policy.
 | RSVP reply emails | `server/src/email/`, `notifications.ts` | adr-015 | server |
 | Share loop instrumentation | `views.ts`, `useViewBeacon`, `GuestCta` | adr-013 | both |
 | SEO, prerendering, gallery | `server/src/seo.ts`, `web/src/prerender.ts`, `web/src/gallery/` | adr-016, 017 | both |
-| Material system (styles) | `web/src/styles.css`, `web/test/styles.test.ts` | adr-018 | web |
+| Material system (styles) | `web/src/styles.css`, `web/test/styles.test.ts` | adr-018, 019 | web |
 | Client routing | `web/src/AppRoutes.tsx` | adr-011 | web |
 | Deployment, domain, volume | `Dockerfile`, `docs/05-deployment.md` | | |
 

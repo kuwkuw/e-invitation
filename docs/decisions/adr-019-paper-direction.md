@@ -108,6 +108,28 @@ a fill should be.) That row's ground changes in the test; every other guest
 `textFloors` row keeps its selector, ground and floor, and is re-measured
 against the new values rather than re-pointed.
 
+**Amended 2026-10-22, step 1.** Putting the table into the stylesheet and
+running the tests moved four things this section had stated:
+
+- **The sub-faint tier is now held by order, not by a ceiling.** At 3.44:1 on
+  `--surface` the whisper above breaks the test that kept both sub-faint inks
+  under 3:1. The owner kept the darker whisper, so that test became an
+  ordering one — whisper < placeholder < `--ink-faint` on `--surface` — and
+  `--ink-placeholder` was re-derived to `#857d6f` (3.84). The rule about which
+  selectors may read them is unchanged.
+- **`--accent-ink`, which the table above omits, moved `#876955` →
+  `#846652`.** At its old value it falls to 4.38:1 on paper, under
+  `.hm-new-line`'s 4.5 floor. Same hue, the smallest move that clears it
+  (4.58).
+- **No test pins `--caution-*`.** The sentence above saying one "runs
+  unchanged" was wrong: the dE distances live only in a stylesheet comment.
+  The group stays at its glass values in step 1; its kraft re-tune, and a
+  test that pins its distance, belong to the share-panel step (5), where its
+  board is.
+- **Elevation got numbers:** `--e-1` `0 1px 2px rgba(28, 26, 23, 0.06)`,
+  `--e-2` `0 4px 12px rgba(28, 26, 23, 0.1)`, `--e-3`
+  `0 12px 32px rgba(28, 26, 23, 0.16)`. `--glass-shadow` reads `--e-2`.
+
 ### 2. Type: Literata and Golos Text for the chrome; the card's faces untouched
 
 - `--ui-font-display`: Playfair Display → **Literata** (opsz 7–72, 400/500,
@@ -125,6 +147,27 @@ The fonts arrive through the Google Fonts `@import`, so NFR-1's bundle line
 (CSS + JS, gzipped) does not count them. Step 1 re-measures that line as usual
 **and** records the added font transfer beside it, because a messenger
 webview's first load pays for both.
+
+**Amended 2026-10-22, step 1.** Measured with `node scripts/measure-fonts.mjs`
+(latin + cyrillic woff2), and three changes followed:
+
+- **Golos Text is requested at 400–800, not 400–600.** The chrome already
+  sets 700 and 800 in about 80 rules, which would otherwise be synthesized.
+  The variable file is 58.7 kB at either range, so the wider request costs
+  nothing.
+- **Every rule that reads `--ui-font-display` sets 400 or 500**, held by a
+  test. Sixteen chrome headings at 700 dropped to 500, since Literata is
+  requested at 400–500 and anything heavier is a faux bold.
+- **The wordmark's 0.32 em is the desktop tracking.** At phone width the
+  tracked Literata wordmark took the signed-out landing nav to 419 px, so it
+  overflowed every phone narrower than that; before this direction it fit a
+  360 px phone with nothing to spare. Below 560 px the nav wordmark is
+  1.02 rem at 0.12 em, the size the counted nav already used, and it fits at
+  360–414 px in both nav states.
+
+The opsz axis ships, as decided above: a page in the chrome's two faces
+fetches 189.3 kB of them (Literata 130.6, Golos 58.7), and 72.1 kB more where
+it sets italic. NFR-1 records it.
 
 ### 3. Three paper materials, all chrome, all CSS
 
@@ -504,7 +547,10 @@ implementation (#82) and #66 among them.
 - **A contrast row fails in `cssTokens.ts`** → move the value, never the floor.
   The table above is computed, but the test is the judge.
 - **NFR-1's trigger, or a visibly slow first load in a messenger webview** →
-  drop Literata's italic axis first and set the pull-quotes upright.
+  drop Literata's **optical-size** axis first (130.6 kB → about 59 kB, on
+  every page), then its italic (72.1 kB, and only on pages that set it) with
+  the pull-quotes set upright. *Corrected 2026-10-22: this said italic first,
+  before either was measured.*
 - **The envelope stutters on the real-device check** → it ships as a
   cross-fade, and the first-open rule stays.
 - **A guest or host objects to the direction** before the host-side steps

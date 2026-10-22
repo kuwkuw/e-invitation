@@ -12,8 +12,11 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **136.2 kB gzipped** (471.6 kB raw, CSS + JS), measured 2026-10-21 with
-  `pnpm --filter inv-app-web build` — 11.82 kB CSS plus 124.37 kB JS.
+  **136.3 kB gzipped** (471.9 kB raw, CSS + JS), measured 2026-10-22 with
+  `pnpm --filter inv-app-web build` — 11.89 kB CSS plus 124.37 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s paper re-skin, which
+  added 0.07 kB: new token values cost no bytes. It was 136.2 kB (471.6 kB
+  raw) on 2026-10-21, 11.82 kB CSS plus the same JS.
   **This crossed the ~127 kB revisit trigger re-derived below, and that was
   decided, not drifted into**: +22.7 kB of it is React 19 alone (the same
   tree on Vite 8 builds to 101.70 kB JS under React 18.3), taken because
@@ -25,6 +28,17 @@
   Growth past it is real growth, and a code-split of the editor off the guest
   path (`/i/:id` needs none of it) is the first lever to reach for. The
   figures below predate the upgrade and are kept as the record.
+- **Fonts are outside that line**, because they arrive from Google Fonts at
+  first paint rather than in the build, and a messenger webview pays for
+  them all the same. Since adr-019 the chrome is set in two faces: a page
+  fetches **189.3 kB** of them (Literata 130.6 kB, Golos Text 58.7 kB; latin
+  and cyrillic woff2, the subsets a page in either language needs), plus
+  72.1 kB where it sets Literata italic, plus whichever card faces the
+  invitation uses. Measured 2026-10-22 with `node scripts/measure-fonts.mjs`,
+  which reads the stylesheet's own `@import`; re-run it when that changes.
+  Literata's optical-size axis is most of its cost (130.6 kB against 59 kB
+  without it), so it is the first thing to drop if this needs to come down,
+  before italic (adr-019, revisit triggers).
 - Previously **113.5 kB gzipped** (375.0 kB raw), measured 2026-09-15 with
   `pnpm --filter inv-app-web build`. **This is the first time the line counts
   CSS as well as JS** — 11.86 kB gzipped CSS (56.76 kB raw) plus 101.60 kB
@@ -269,7 +283,8 @@
   `server/src/og/render.ts`, where a raw hex is what keeps the mirror visible.
 - **Contrast.** Body ink (`--ink` and `--ink-muted`) meets WCAG AA (4.5:1)
   against `--ground` — the root value and every per-palette override — and
-  against both glass surfaces **composited with their blur ignored**.
+  against both chrome surfaces, opaque `--surface` since
+  [adr-019](decisions/adr-019-paper-direction.md).
   Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
   large-text floor and is reserved for labels, icons, placeholders and
   disabled states, never body copy — but that reservation is a convention,
@@ -280,10 +295,16 @@
   (4.5:1 for a sentence, 3:1 for a label, placeholder or timestamp). Below
   `--ink-faint`, the two sub-faint inks are readable by an explicit list of
   rules — the INVINTO wordmarks and four aria-hidden decorative icons —
-  across the whole stylesheet, and nothing else may read them.
-- **Every glass surface must be legible with its blur removed.** The tint
-  carries the contrast; blur is decoration. This is what makes the
-  `prefers-reduced-transparency: reduce` fallback a token swap rather than a
-  second design.
+  across the whole stylesheet, and nothing else may read them. They are held
+  below `--ink-faint` by order (whisper, then placeholder, then faint), not
+  by a ceiling: adr-019's whisper clears 3:1.
+- **Every chrome surface is opaque, and no material sits on the card.** Under
+  adr-018 the rule was that every glass surface must be legible with its blur
+  removed — the tint carried the contrast — and that is what let
+  [adr-019](decisions/adr-019-paper-direction.md) replace glass with paper by
+  a token swap: the two glass classes are now card stock at full opacity
+  with no blur. Its paper materials (grain, the deckled mat, the seal) may
+  wrap the card but never sit on `.inv` or inside it, which keeps the OG
+  renderer's mirror honest; `web/test/styles.test.ts` holds both.
 - **Reduced transparency and reduced motion are honoured**, not detected: the
   two media queries above, never a device or user-agent check.
