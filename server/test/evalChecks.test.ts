@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { CASES } from "../eval/cases.js";
 import { checkBrief, checkCopy, inventedNumbers, norm } from "../eval/checks.js";
+import { type LlmCall, primaryRateLimited, retryHintMs } from "../eval/harness.js";
 import type { EventBrief, Invitation } from "../src/schemas.js";
 
 const brief = (over: Partial<EventBrief> = {}): EventBrief => ({
@@ -193,5 +194,48 @@ describe("checkCopy", () => {
       closing: "До зустрічі!",
     });
     expect(failed(checkCopy("Запрошую всіх на новосілля, буде піца і настолки", inv))).toEqual([]);
+  });
+});
+
+describe("rate-limit handling", () => {
+  it("reads the wait a provider asks for, in the forms Groq and Gemini use", () => {
+    expect(
+      retryHintMs(
+        "groq 429: Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): Limit 8000, Used 7652, Requested 812. Please try again in 3.48s.",
+      ),
+    ).toBe(3480);
+    expect(retryHintMs("Please try again in 1m3.5s")).toBe(63500);
+    expect(retryHintMs("Please try again in 450ms")).toBe(450);
+    expect(retryHintMs("gemini 429: Quota exceeded. Please retry in 41.2s.")).toBe(41200);
+    expect(retryHintMs("gemini 429: RESOURCE_EXHAUSTED")).toBeNull();
+  });
+
+  const call = (over: Partial<LlmCall>): LlmCall => ({
+    task: "brief_extraction",
+    model: "openai/gpt-oss-120b",
+    fallback: false,
+    ok: false,
+    latency_ms: 10,
+    ...over,
+  });
+
+  it("treats only a quota refusal of the primary as rate-limited", () => {
+    // The eval's own burst: primary refused, a fallback answered. Not scored.
+    expect(
+      primaryRateLimited([
+        call({ error_class: "quota" }),
+        call({ model: "gemini-2.5-flash", fallback: true, ok: true }),
+      ]),
+    ).toBeDefined();
+    // A primary that is gone (auth) is real routing degradation: scored, and
+    // --strict-routing fails on the fallback that served it.
+    expect(primaryRateLimited([call({ error_class: "auth" })])).toBeUndefined();
+    // A fallback's quota is not the primary's.
+    expect(
+      primaryRateLimited([
+        call({ error_class: "auth" }),
+        call({ fallback: true, error_class: "quota" }),
+      ]),
+    ).toBeUndefined();
   });
 });

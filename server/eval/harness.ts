@@ -78,6 +78,36 @@ export function pinRoutes(model: string, tasks: Task[] = Object.keys(TASK_ROUTES
   };
 }
 
+/** How long a provider asked us to wait, read from its 429 body. Groq says
+ *  "Please try again in 7.66s" (or "in 1m3.2s"); Gemini says
+ *  "Please retry in 41.2s". Null when no hint is given. */
+export function retryHintMs(message: string): number | null {
+  const m = /(?:try again|retry) in\s+(?:(\d+)m)?\s*(\d+(?:\.\d+)?)\s*(ms|s)\b/i.exec(message);
+  if (!m) return null;
+  const minutes = m[1] ? Number(m[1]) : 0;
+  const value = Number(m[2]);
+  return Math.ceil(minutes * 60_000 + (m[3]?.toLowerCase() === "ms" ? value : value * 1000));
+}
+
+/** The primary model was refused for quota: the eval's own traffic, or a
+ *  provider limit, not a property of the prompt. A fallback that answered
+ *  after it is not what the run set out to measure. */
+export function primaryRateLimited(calls: LlmCall[]): LlmCall | undefined {
+  return calls.find((c) => !c.ok && !c.fallback && c.error_class === "quota");
+}
+
+/** Spaces out the starts of requests across workers, so a run stays under a
+ *  per-minute limit instead of discovering it. */
+export function pacer(intervalMs: number) {
+  let nextSlot = 0;
+  return async () => {
+    const now = Date.now();
+    const wait = Math.max(0, nextSlot - now);
+    nextSlot = Math.max(now, nextSlot) + intervalMs;
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  };
+}
+
 /** Operator key per provider, the same env vars /healthz reports. */
 export const PROVIDER_KEY_ENV: Record<string, string> = {
   anthropic: "ANTHROPIC_API_KEY",

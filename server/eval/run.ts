@@ -6,7 +6,14 @@
 //   --only <a,b>       run only these case ids
 //   --model <id>       pin every task to one routed model, no fallbacks —
 //                      for trying a replacement before changing routing.ts
-//   --concurrency N    parallel cases (default 2; Groq's free tier is ~30 rpm)
+//   --concurrency N    parallel cases (default 1)
+//   --pace-ms N        minimum gap between case starts (default 8000): the
+//                      free tiers limit tokens and requests *per minute*, and
+//                      a run that bursts measures the limit, not the prompts
+//   --retries N        retries for a case whose primary model was rate-limited
+//                      (default 3), waiting as long as the provider asks
+//   --max-unscored 0.1 share of cases still rate-limited after retries above
+//                      which the run fails as inconclusive
 //   --min-brief 0.9    pass rate below which the run fails
 //   --min-copy 0.85
 //   --strict-routing   fail if any call was served by a fallback model
@@ -26,10 +33,13 @@ import {
   captureGatewayLogs,
   type LlmCall,
   PROVIDER_KEY_ENV,
+  pacer,
   parseArgs,
   percentile,
   pinRoutes,
+  primaryRateLimited,
   publish,
+  retryHintMs,
   withCalls,
 } from "./harness.js";
 
@@ -40,6 +50,10 @@ interface CaseResult {
   brief: CheckResult[];
   copy: CheckResult[];
   error?: string;
+  /** Still rate-limited on the primary after every retry: not scored. */
+  rateLimited?: boolean;
+  /** Attempts discarded because the primary was rate-limited. */
+  retries: number;
   calls: LlmCall[];
   output?: unknown;
 }
@@ -49,7 +63,10 @@ const num = (key: string, fallback: number) =>
   typeof args[key] === "string" ? Number(args[key]) : fallback;
 
 const generateCount = num("generate", 6);
-const concurrency = Math.max(1, num("concurrency", 2));
+const concurrency = Math.max(1, num("concurrency", 1));
+const pace = pacer(Math.max(0, num("pace-ms", 8000)));
+const maxRetries = Math.max(0, num("retries", 3));
+const maxUnscored = num("max-unscored", 0.1);
 const minBrief = num("min-brief", 0.9);
 const minCopy = num("min-copy", 0.85);
 const strictRouting = args["strict-routing"] === true;
@@ -82,20 +99,47 @@ interface Output {
   invitation?: Invitation;
 }
 
-async function runCase(c: EvalCase, full: boolean): Promise<CaseResult> {
-  const { value, error, calls } = await withCalls(async (): Promise<Output> => {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Wait the provider's hint (plus a margin), or back off when it gave none. */
+function backoffMs(limited: LlmCall, attempt: number): number {
+  const hint = limited.error ? retryHintMs(limited.error) : null;
+  return Math.min(65_000, hint !== null ? hint + 1_000 : 15_000 * (attempt + 1));
+}
+
+async function attemptCase(c: EvalCase, full: boolean) {
+  await pace();
+  return withCalls(async (): Promise<Output> => {
     if (!full) return { brief: await extractBrief(c.input) };
     const invitation = await generateInvitation(c.input);
     return { brief: invitation.brief, invitation };
   });
+}
+
+async function runCase(c: EvalCase, full: boolean): Promise<CaseResult> {
+  let run = await attemptCase(c, full);
+  let retries = 0;
+  for (let limited = primaryRateLimited(run.calls); limited && retries < maxRetries; ) {
+    const wait = backoffMs(limited, retries);
+    process.stderr.write(
+      `  ⏸ ${c.id}: ${limited.model} rate-limited, retrying in ${Math.round(wait / 1000)}s\n`,
+    );
+    await sleep(wait);
+    retries++;
+    run = await attemptCase(c, full);
+    limited = primaryRateLimited(run.calls);
+  }
+  const { value, error, calls } = run;
   const result: CaseResult = {
     id: c.id,
     input: c.input,
     generated: full,
     brief: [],
     copy: [],
+    retries,
     calls,
   };
+  if (primaryRateLimited(calls)) result.rateLimited = true;
   if (error || !value) {
     result.error = describeError(error);
     return result;
@@ -116,7 +160,8 @@ async function runAll(cases: EvalCase[], generate: Set<string>): Promise<CaseRes
       results[i] = await runCase(c, generate.has(c.id));
       const r = results[i] as CaseResult;
       const ok = !r.error && [...r.brief, ...r.copy].every((x) => x.pass);
-      process.stderr.write(`${ok ? "✓" : "✗"} ${c.id}${r.error ? ` — ${r.error}` : ""}\n`);
+      const mark = r.rateLimited ? "⏸" : ok ? "✓" : "✗";
+      process.stderr.write(`${mark} ${c.id}${r.error ? ` — ${r.error}` : ""}\n`);
     }
   };
   await Promise.all(Array.from({ length: concurrency }, worker));
@@ -131,7 +176,12 @@ const tally = (keys: string[]) => {
   return [...counts].sort().map(([key, n]) => `- ${key}: ${n}`);
 };
 
-function summarize(results: CaseResult[]) {
+function summarize(all: CaseResult[]) {
+  // A case still rate-limited after its retries says nothing about the
+  // prompt, and its fallback answer is not what the run set out to measure:
+  // it is counted, not scored.
+  const unscored = all.filter((r) => r.rateLimited);
+  const results = all.filter((r) => !r.rateLimited);
   const calls = results.flatMap((r) => r.calls);
   const okCalls = calls.filter((c) => c.ok);
   const generated = results.filter((r) => r.generated);
@@ -150,6 +200,14 @@ function summarize(results: CaseResult[]) {
       rate: generated.length ? copyPass / generated.length : 1,
       min: minCopy,
     },
+    unscored: {
+      count: unscored.length,
+      total: all.length,
+      rate: all.length ? unscored.length / all.length : 0,
+      max: maxUnscored,
+      ids: unscored.map((r) => r.id),
+    },
+    retries: all.reduce((n, r) => n + r.retries, 0),
     fallbacks: okCalls.filter((c) => c.fallback).length,
     calls: okCalls.length,
     cost_usd: okCalls.reduce((sum, c) => sum + (c.cost_usd ?? 0), 0),
@@ -164,7 +222,9 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 function headline(s: Summary): string[] {
   const row = (label: string, r: Summary["brief"]) =>
-    `| ${label} | ${r.rate >= r.min ? "✅" : "❌"} ${r.passed}/${r.total} (${pct(r.rate)}) | ${pct(r.min)} |`;
+    r.total === 0
+      ? `| ${label} | — none scored | ${pct(r.min)} |`
+      : `| ${label} | ${r.rate >= r.min ? "✅" : "❌"} ${r.passed}/${r.total} (${pct(r.rate)}) | ${pct(r.min)} |`;
   return [
     `## LLM eval${pinned ? ` — pinned to \`${pinned}\`` : ""}`,
     "",
@@ -172,8 +232,23 @@ function headline(s: Summary): string[] {
     "|---|---|---|",
     row("Brief extraction", s.brief),
     row("Full generation", s.copy),
+    unscoredRow(s),
     `| Served by a fallback | ${s.fallbacks ? "⚠️" : "✅"} ${s.fallbacks} of ${s.calls} calls | ${strictRouting ? "0 (strict)" : "reported"} |`,
     `| Cost | $${s.cost_usd.toFixed(4)} | |`,
+  ];
+}
+
+function unscoredRow(s: Summary): string {
+  const u = s.unscored;
+  const icon = u.rate > u.max ? "❌" : u.count ? "⚠️" : "✅";
+  return `| Rate-limited, not scored | ${icon} ${u.count}/${u.total} (${s.retries} retries) | ≤ ${pct(u.max)} |`;
+}
+
+function unscoredSection(s: Summary): string[] {
+  if (!s.unscored.count) return [];
+  return [
+    "",
+    `**Rate-limited, not scored (${s.unscored.count})**: provider limits, not prompt quality: ${s.unscored.ids.join(", ")}`,
   ];
 }
 
@@ -204,7 +279,9 @@ function routingSection(s: Summary): string[] {
 }
 
 function failureSection(results: CaseResult[]): string[] {
-  const failures = results.filter((r) => !passed([...r.brief, ...r.copy], r.error));
+  const failures = results.filter(
+    (r) => !r.rateLimited && !passed([...r.brief, ...r.copy], r.error),
+  );
   if (!failures.length) return [];
   return [
     "",
@@ -221,10 +298,18 @@ function failureSection(results: CaseResult[]): string[] {
 function report(results: CaseResult[]) {
   const s = summarize(results);
   const fail =
-    s.brief.rate < s.brief.min || s.copy.rate < s.copy.min || (strictRouting && s.fallbacks > 0);
+    s.brief.rate < s.brief.min ||
+    s.copy.rate < s.copy.min ||
+    s.unscored.rate > s.unscored.max ||
+    (strictRouting && s.fallbacks > 0);
   const { okCalls: _ok, failedCalls: _failed, ...summary } = s;
   return {
-    markdown: [...headline(s), ...routingSection(s), ...failureSection(results)].join("\n"),
+    markdown: [
+      ...headline(s),
+      ...unscoredSection(s),
+      ...routingSection(s),
+      ...failureSection(results),
+    ].join("\n"),
     fail,
     json: { pinned: pinned ?? null, summary, results },
   };
