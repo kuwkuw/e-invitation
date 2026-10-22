@@ -12,10 +12,10 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **136.3 kB gzipped** (471.9 kB raw, CSS + JS), measured 2026-10-22 with
-  `pnpm --filter inv-app-web build` — 11.89 kB CSS plus 124.37 kB JS, after
+  **136.3 kB gzipped** (472.1 kB raw, CSS + JS), measured 2026-10-22 with
+  `pnpm --filter inv-app-web build` — 11.91 kB CSS plus 124.37 kB JS, after
   [adr-019](decisions/adr-019-paper-direction.md)'s paper re-skin, which
-  added 0.07 kB: new token values cost no bytes. It was 136.2 kB (471.6 kB
+  added 0.09 kB: new token values cost no bytes. It was 136.2 kB (471.6 kB
   raw) on 2026-10-21, 11.82 kB CSS plus the same JS.
   **This crossed the ~127 kB revisit trigger re-derived below, and that was
   decided, not drifted into**: +22.7 kB of it is React 19 alone (the same

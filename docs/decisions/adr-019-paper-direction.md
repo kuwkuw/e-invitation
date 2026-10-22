@@ -129,6 +129,19 @@ running the tests moved four things this section had stated:
 - **Elevation got numbers:** `--e-1` `0 1px 2px rgba(28, 26, 23, 0.06)`,
   `--e-2` `0 4px 12px rgba(28, 26, 23, 0.1)`, `--e-3`
   `0 12px 32px rgba(28, 26, 23, 0.16)`. `--glass-shadow` reads `--e-2`.
+- **"Re-skin by editing `:root` alone" holds for colour, not geometry.** The
+  radius and elevation tokens reach the editor, whose sections read them
+  (`Creation chat` alone has 29 `var(--r-*)` reads); the guest page, share
+  panel, manage dashboard and landing still set literal px radii and rgba
+  shadows, so their corners stayed where they were while the editor's went
+  to 3–6 px. Steps 3–6 move each surface's geometry onto the tokens as they
+  rebuild it.
+- **`--accent-wash` is the paper ground's own colour** (`#f7efe3` on
+  `#f4efe6`, 1.00:1), so a borderless wash fill on the page vanishes. The
+  landing's chips and step icons sat exactly there and became card stock
+  with an `--edge` hairline; every other wash sits on a surface or carries
+  a border. The token's re-tune toward the oxblood family is left to the
+  steps that own its readers.
 
 ### 2. Type: Literata and Golos Text for the chrome; the card's faces untouched
 
@@ -164,6 +177,12 @@ webview's first load pays for both.
   360 px phone with nothing to spare. Below 560 px the nav wordmark is
   1.02 rem at 0.12 em, the size the counted nav already used, and it fits at
   360–414 px in both nav states.
+- **A third nav state already overflowed, and still does.** Signed out with
+  the sign-in link but no held tokens — what every first-time visitor sees
+  where sign-in is configured — needs the wordmark, the gallery link, the
+  sign-in link and the switcher on one line: 62 px too wide at 360 px on
+  `main`, 63 px here, still over at 414. It predates this direction and is
+  left to the landing step (4), which rebuilds that nav.
 
 The opsz axis ships, as decided above: a page in the chrome's two faces
 fetches 189.3 kB of them (Literata 130.6, Golos 58.7), and 72.1 kB more where
@@ -547,9 +566,9 @@ implementation (#82) and #66 among them.
 - **A contrast row fails in `cssTokens.ts`** → move the value, never the floor.
   The table above is computed, but the test is the judge.
 - **NFR-1's trigger, or a visibly slow first load in a messenger webview** →
-  drop Literata's **optical-size** axis first (130.6 kB → about 59 kB, on
-  every page), then its italic (72.1 kB, and only on pages that set it) with
-  the pull-quotes set upright. *Corrected 2026-10-22: this said italic first,
+  drop Literata's **optical-size** axis first (130.6 kB → 59.0 kB, on every
+  page), then its italic (32.1 kB once opsz is gone, 72.1 kB with it, and
+  only on pages that set it) with the pull-quotes set upright. *Corrected 2026-10-22: this said italic first,
   before either was measured.*
 - **The envelope stutters on the real-device check** → it ships as a
   cross-fade, and the first-open rule stays.
