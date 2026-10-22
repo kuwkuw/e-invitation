@@ -1,13 +1,18 @@
 # Spec — the paper direction (A2)
 
-**Date:** 2026-10-21 · **Status:** chosen visually, not yet settled as an ADR ·
+**Date:** 2026-10-21 · **Status:** settled as
+[adr-019](../../decisions/adr-019-paper-direction.md) on 2026-10-22 ·
 **Lands as:** amends NFR-9's token values and adds four FR changes (§9). Keeps
 the adr-018 *system* — the `:root` block, the `CONVERTED` ratchet, the contrast
 tests — and replaces its *direction*.
 
-Intended to be settled as **adr-019** before implementation, following this
-repo's pattern (`Settle X as adr-N` → implementation plan → PRs). Written to
-convert to that structure nearly verbatim.
+**The ADR wins where the two differ.** It settles §9 (9.1 accepted as its own
+PR, 9.2's derived default accepted and its override deferred, 9.3 deferred, 9.4
+accepted), takes in PR #66's unported design pass as its §10 (which changes
+§6.5 and §8.5 below: the reply-email control becomes a checkbox), pins the
+envelope's read of `inv-viewed:<id>` to before the view beacon writes it, and
+corrects §9.3's citation — 07-monetization §6 rejects per-guest *pricing*, not
+named links. Next: an implementation plan, then the PRs in §11's order.
 
 ## Context
 
