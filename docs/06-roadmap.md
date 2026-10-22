@@ -1086,6 +1086,8 @@ made reply email **one checkbox** on all three surfaces (share panel, landing
 footer, manage page), restyled the landing's sign-in link as a quiet pair with
 the language switcher (never beside the Create button), and recorded what the
 pass overturned in FR-11/FR-12, adr-010, adr-015 and this doc. It predates the
-material system, so it would need reworking rather than merging; weigh it in
-the direction-A redesign. The code and docs are on the branch
-`feat/ds-notify-checkbox`, kept for that purpose.
+material system, so it would need reworking rather than merging. **Taken into
+the paper direction** ([adr-019](decisions/adr-019-paper-direction.md) §10):
+redone on paper tokens in the landing, editor and manage steps, not merged. The
+code and docs stay on the branch `feat/ds-notify-checkbox` as the reference
+until the manage step lands.
