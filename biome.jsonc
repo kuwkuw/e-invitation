@@ -89,7 +89,7 @@
       // override (e.g. `.cc-preview-inner .design-controls`) is often authored
       // before the base rule (`.design-controls`). Specificity already yields
       // the correct cascade regardless of source order, so descending
-      // specificity here is deliberate, not a bug (see CLAUDE.md on the
+      // specificity here is deliberate, not a bug (see web/CLAUDE.md on the
       // intentionally compact, scannable CSS structure).
       "includes": ["**/*.css"],
       "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } }

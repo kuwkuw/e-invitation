@@ -43,12 +43,12 @@ Two things make D1 a better fit here than it would be in a generic app:
 
 1. **The app is already shaped like an iOS app.** `FieldSheet`, `SignOutSheet`,
    `DeleteAccountSheet`, and the auth gate as *the first frame of the share
-   sheet* ([adr-014](../../decisions/adr-014-host-accounts.md) §2) — four
+   sheet* ([adr-014](../../../decisions/adr-014-host-accounts.md) §2) — four
    iterations of bottom sheets built without calling them that. This names a
    grammar the codebase was already converging on.
 2. **It leaves the invitation card alone.** The card's token→style map has a
    hand-mirrored twin in the OG renderer
-   ([adr-003](../../decisions/adr-003-no-image-generation.md); `server/src/og/render.ts`),
+   ([adr-003](../../../decisions/adr-003-no-image-generation.md); `server/src/og/render.ts`),
    and `og.test.ts` enforces enum coverage but not colour equality. D1 puts
    glass in the *chrome*; the card and its six palettes ship unchanged.
 
@@ -65,7 +65,7 @@ taste:
   `inv palette-${…} type-${…}`) that must match the React components'. With
   semantic classes a mismatch is one grep away; with utility strings the drift
   is silent, and that markup is what crawlers read
-  ([adr-016](../../decisions/adr-016-public-discoverability.md) §10).
+  ([adr-016](../../../decisions/adr-016-public-discoverability.md) §10).
 - The CSS is load-bearing documentation — nearly every section carries the
   reasoning for its decision on the rule itself. Utility strings in JSX have
   nowhere to put that.
@@ -356,6 +356,6 @@ canvas with specific markers, and that two attempts were spent discovering it
   is not working; either convert the rest in one pass or drop the pretence that
   it is coming.
 - **`backgrounds` usage moves off 0** (currently 0 lifetime,
-  [adr-009](../../decisions/adr-009-ai-background-layer.md)) → the AI background
+  [adr-009](../../../decisions/adr-009-ai-background-layer.md)) → the AI background
   layer interacts with the tinted ground and the scrim spec, and would need
   re-checking against the glass.

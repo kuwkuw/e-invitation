@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, pnpm workspaces, Fastify (server), Vite + React + react-router-dom declarative mode (web), vitest + @testing-library/react under jsdom, Biome.
 
-**Spec:** [docs/decisions/adr-017-invitation-gallery.md](../../decisions/adr-017-invitation-gallery.md)
+**Spec:** [docs/decisions/adr-017-invitation-gallery.md](../../../decisions/adr-017-invitation-gallery.md)
 
 ## Global Constraints
 
