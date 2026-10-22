@@ -293,7 +293,7 @@ section no longer cites it as its source.
 **Amended 2026-10-10: the screens left the DS project.** The E-invitation
 DS now holds the system only, and every product screen lives in a regular
 **E-invitation design** project that binds it
-([spec](../superpowers/specs/2026-10-02-design-project-split-design.md)).
+([spec](../superpowers/archive/specs/2026-10-02-design-project-split-design.md)).
 `creation-chat` moved with them, its superseded label and banner intact. This section's
 material spec still belongs to the DS when it is built. "The segmented
 toolbar and its sheets" are screen work and belong to the design project.

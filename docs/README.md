@@ -19,7 +19,12 @@ Conventions:
 
 - Requirements carry stable IDs (`FR-x`, `NFR-x`) so code reviews and ADRs can
   reference them.
-- Docs describe **what is built and why**; `CLAUDE.md` at the repo root holds
-  agent-facing working instructions and stays the source for commands.
+- Docs describe **what is built and why**. Agent-facing working instructions
+  live in `CLAUDE.md` (repo-wide, and the source for commands) and in
+  `server/CLAUDE.md` / `web/CLAUDE.md` (loaded when working in that folder).
+  They state rules and point here for the reasons.
+- `superpowers/` holds design specs and implementation plans while the work is
+  in flight; once it ships they move to `superpowers/archive/`. The ADRs and
+  this folder's numbered docs are what stays current.
 - When behavior changes, update the matching requirement/architecture section
   in the same PR.
