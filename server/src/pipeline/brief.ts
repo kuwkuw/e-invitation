@@ -4,7 +4,7 @@ import { EventBrief } from "../schemas.js";
 const SYSTEM = `You extract a structured event brief from a single free-form sentence describing an event.
 
 Rules:
-- Users write in Ukrainian or English. Set "language" to "uk" or "en" to match the input language.
+- Users write in Ukrainian or English. Set "language" to "uk" or "en" to match the language of the sentence's wording. Names of people, venues and cities do not decide it: "Dinner with Olha at Кафе «Ріко», Одеса" is "en"; "Вечеря в Green Garden Hall" is "uk".
 - Never invent facts. Any field not present in the text is null (hosts: empty array).
 - Copy date/time/venue/city as the user wrote them — do not normalize or translate them.
 - "tone" is a short mood descriptor you infer from the wording (e.g. "warm and familial", "formal", "playful").
