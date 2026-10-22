@@ -85,10 +85,19 @@ The invitation carries only an opaque `background.id`
   Accounts live in SQLite **beside** it: `db.ts` opens `DATA_DIR/app.db` with
   `node:sqlite` through `createRequire`, because a plain import fails under
   Vite (Node 22 left `sqlite` out of `builtinModules`).
-- **Module caches**: `db.ts`, `auth/google.ts` and `metrics.ts` hold
-  process-lifetime state and export resets (`closeDb`, `resetJwksCache`,
-  `resetMetricsCache`). Tests give every case its own `DATA_DIR`; a new
+- **Module caches**: `db.ts`, `auth/google.ts`, `metrics.ts` and
+  `snapshot.ts` hold process-lifetime state and export resets (`closeDb`,
+  `resetJwksCache`, `resetMetricsCache`, `resetSnapshotState`). Tests give every case its own `DATA_DIR`; a new
   caching module ships with a reset too.
+- **Backups** (`docs/05-deployment.md`, Backups): everything is on the one
+  `/data` volume, backed up by Northflank volume schedules. `snapshot.ts`
+  writes a consistent `snapshots/app.db` with `VACUUM INTO` on a timer
+  (`DB_SNAPSHOT_MINUTES`), because the live WAL-mode database is two files a
+  platform snapshot can catch out of step. It never runs at boot and never
+  after a failed `quick_check`, so it can't replace the last good copy with a
+  bad one. The timer starts in `index.ts`, not `buildApp()`, so tests start
+  none. **Anything written to `DATA_DIR` must be safe to snapshot mid-write**:
+  write whole and rename, as `store.ts` and `metrics.ts` do.
 - **Metrics** (`metrics.ts`, `GET /api/metrics`): persisted to
   `DATA_DIR/metrics.json` by write-then-rename. Regenerate-rate is the copy
   quality signal; `views_per_publish` and `new_hosts_per_publish` (adr-013)

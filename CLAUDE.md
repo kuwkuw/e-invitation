@@ -121,5 +121,6 @@ Built: generation with per-field regeneration, publish with OG image, guest
 RSVP, multi-provider gateway with BYOK and cost guardrails, metrics, host
 dashboard and manage links, Google sign-in with keyring, RSVP reply email,
 share-loop instrumentation, SEO with prerendered landing and gallery, LLM
-eval and probe. Not yet built: per-key metering, RSVP deletion. Roadmap:
+eval and probe, backups (volume schedules plus an hourly consistent
+`app.db` snapshot reported on `/healthz`). Not yet built: per-key metering, RSVP deletion. Roadmap:
 `docs/06-roadmap.md`.
