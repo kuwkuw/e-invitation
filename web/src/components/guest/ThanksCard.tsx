@@ -28,7 +28,7 @@ export function ThanksCard({ attending, guestsCount, onChangeAnswer, t }: Props)
           />
           <Twinkle
             className="gr-tw"
-            style={{ top: 14, left: -10, color: "#b3592e", animationDelay: "1.1s" }}
+            style={{ top: 14, left: -10, color: "var(--ui-accent)", animationDelay: "1.1s" }}
             size={9}
           />
         </div>
@@ -46,7 +46,7 @@ export function ThanksCard({ attending, guestsCount, onChangeAnswer, t }: Props)
         {attending ? t.thanksGlad : t.declinedSorry}
       </p>
       <div className={`gr-pill${attending ? "" : " muted"}`}>
-        {attending && <CheckIcon size={16} color="#b3592e" width={2.4} />}
+        {attending && <CheckIcon size={16} width={2.4} />}
         {attending
           ? `${t.attendingPill} · ${guestsCount} ${pluralForm(guestsCount, t.guestForms)}`
           : t.declinedPill}

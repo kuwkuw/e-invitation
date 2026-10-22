@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
@@ -81,18 +82,25 @@ describe("material tokens", () => {
     expect(reads).toEqual([]);
   });
 
-  it("keeps the two sub-faint inks under 3:1, so they are never mistaken for readable", () => {
-    // Both are under 3:1 on --surface, so this asserts they are NOT promoted
-    // into the --ink-faint tier by a later edit that assumes they are readable.
+  it("keeps the two sub-faint inks below --ink-faint, so a readable tier is never one of them", () => {
+    // adr-019 darkened --ink-whisper past 3:1 on --surface, so the tier is
+    // held by order rather than by a ceiling: neither may be promoted into
+    // --ink-faint's place by a later edit that assumes they are readable.
     // Who may read them is held by "sub-faint inks" below.
     expect(tokens.has("--ink-disabled"), "--ink-disabled was retired with its last user").toBe(
       false,
     );
+    const on = (name: string) =>
+      contrast(tokens.get(name) as string, tokens.get("--surface") as string);
     for (const name of ["--ink-placeholder", "--ink-whisper"]) {
-      const value = tokens.get(name) as string;
-      expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
-      expect(contrast(value, tokens.get("--surface") as string), name).toBeLessThan(3);
+      expect(tokens.get(name), name).toMatch(/^#[0-9a-f]{6}$/);
     }
+    expect(on("--ink-whisper")).toBeLessThan(on("--ink-placeholder"));
+    expect(on("--ink-placeholder")).toBeLessThan(on("--ink-faint"));
+  });
+
+  it("collapses --app-bg onto --ground: one job, one value (adr-019 §1)", () => {
+    expect(css).toMatch(/--app-bg:\s*var\(--ground\);/);
   });
 
   it("keeps the RSVP status pair, which other surfaces still read", () => {
@@ -153,11 +161,28 @@ describe("glass", () => {
   // reduced-transparency fallback cannot be a second design.
   it("keeps ink legible on both surfaces with the blur ignored", () => {
     const ground = tokens.get("--ground") as string;
-    const over = (alphaToken: string) => blend("#ffffff", Number(tokens.get(alphaToken)), ground);
+    const surface = tokens.get("--surface") as string;
+    const over = (alphaToken: string) => blend(surface, Number(tokens.get(alphaToken)), ground);
     for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
       expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
       expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it("is opaque paper since adr-019: the tint is --surface at alpha 1, and nothing blurs", () => {
+    expect(tokens.get("--glass-tint")).toBe(tokens.get("--surface"));
+    expect(tokens.get("--glass-tint-solid")).toBe(tokens.get("--surface"));
+    expect(Number(tokens.get("--glass-alpha"))).toBe(1);
+    expect(Number(tokens.get("--glass-alpha-solid"))).toBe(1);
+    expect(tokens.get("--glass-blur")).toBe("none");
+  });
+
+  it("leaves reduced transparency no tokens to swap, since nothing is translucent", () => {
+    const bare = stripComments(css);
+    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
+    expect(span).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    expect(bare.slice(start, end)).not.toMatch(/:root/);
   });
 
   it("degrades to opaque when the viewer asks for less transparency", () => {
@@ -193,6 +218,36 @@ describe("glass", () => {
     // both sets empty, and an empty subset check passes for the wrong reason.
     expect(blurred.size).toBeGreaterThan(0);
     expect([...blurred].filter((s) => !cleared.has(s)).sort()).toEqual([]);
+  });
+});
+
+/** adr-019 §3: a material may wrap the card (the deckled mat does), never sit
+ *  on it or inside it — that is what keeps the OG renderer's mirror honest. */
+describe("paper materials (adr-019 §3)", () => {
+  const MATERIALS = ["grain", "deckle", "seal"];
+  const names = (compound: string) =>
+    MATERIALS.filter((m) => new RegExp(`\\.${m}(?![\\w-])`).test(compound));
+
+  it("never sit on the card or inside it", () => {
+    const selectors = ruleBlocks(stripComments(css)).flatMap((r) => r.selectors);
+    const onOrInside = selectors.flatMap((s) => {
+      const parts = s.split(/\s*[\s>+~]\s*/).filter(Boolean);
+      const at = parts.findIndex((p) => /\.inv[\w-]*/.test(p));
+      return at === -1 ? [] : [{ s, parts: parts.slice(at) }];
+    });
+    expect(onOrInside.length, "no card selectors found to scan").toBeGreaterThan(0);
+    expect(
+      onOrInside.filter(({ parts }) => parts.some((p) => names(p).length)).map(({ s }) => s),
+    ).toEqual([]);
+  });
+
+  it("are never rendered by InvitationPreview", () => {
+    const preview = readFileSync(
+      fileURLToPath(new URL("../src/components/InvitationPreview.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(preview).toMatch(/className/);
+    expect(preview).not.toMatch(/\b(?:grain|deckle|seal)\b/);
   });
 });
 
@@ -353,11 +408,18 @@ describe("the guest page's text", () => {
     [".gr-label", "--surface", 3],
     [".gr-optional", "--surface", 3],
     [".gr-input::placeholder", "--app-bg", 3],
-    [".gr-submit:disabled", "--edge", 3],
+    [".gr-submit:disabled", "--edge-soft", 3],
     [".gr-change", "--surface", 3],
     [".gr-row-sub", "--surface", 3],
     [".gr-cta-line", "--app-bg", 3],
   ]);
+
+  it("fills the disabled submit with --edge-soft, not the ruled line", () => {
+    const rule = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-submit:disabled"),
+    );
+    expect(rule?.body).toMatch(/background:\s*var\(--edge-soft\)/);
+  });
 });
 
 /** The front door. Most of the page sits on --app-bg; the nav, the replies
@@ -371,7 +433,7 @@ describe("the landing page's text", () => {
     [".lp-nav-gallery", "--surface", 3],
     [".lp-hero-copy p", "--app-bg", 4.5],
     [".lp-step-text", "--app-bg", 4.5],
-    [".lp-chip", "--accent-wash", 3],
+    [".lp-chip", "--surface", 3],
     [".lp-rsvp-copy p", "--surface", 4.5],
     [".lp-rsvp-yes", "--app-bg", 3],
     [".lp-rsvp-no", "--app-bg", 3],
@@ -394,6 +456,38 @@ describe("the landing page's text", () => {
     [".lp-notify-all", "--app-bg", 3],
     [".lp-delete-link", "--app-bg", 3],
   ]);
+});
+
+/** The hex ratchet reads only styles.css, so an accent written into a
+ *  component as a literal goes stale without a sound when the token moves:
+ *  the guest page kept terracotta icons beside adr-019's oxblood that way.
+ *  Guest components colour the accent through currentColor instead. */
+describe("the guest page's components", () => {
+  it("never name the accent as a literal, past or present", () => {
+    const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
+    const accents = ["#b3592e", tokens.get("--ui-accent") as string];
+    const named = readdirSync(dir)
+      .filter((file) => file.endsWith(".tsx"))
+      .flatMap((file) => {
+        const source = readFileSync(join(dir, file), "utf8").toLowerCase();
+        return accents.filter((a) => source.includes(a)).map((a) => `${file}: ${a}`);
+      });
+    expect(named).toEqual([]);
+  });
+});
+
+/** --accent-wash is #f7efe3 and the paper ground is #f4efe6: 1.00:1, so a
+ *  borderless wash fill on the page simply vanishes. The landing's chips and
+ *  step icons sat exactly there, and are card stock with a ruled edge now. */
+describe("the landing's chips and step icons", () => {
+  it("sit on card stock with a ruled edge, not on a wash the ground has swallowed", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Landing page") ?? ""));
+    for (const selector of [".lp-chip", ".lp-step-icon"]) {
+      const body = rules.find((r) => r.selectors.includes(selector))?.body ?? "";
+      expect(body, selector).toMatch(/background:\s*var\(--surface\)/);
+      expect(body, selector).toMatch(/border:\s*1px solid var\(--edge\)/);
+    }
+  });
 });
 
 /** The two inks below --ink-faint clear nothing, so every rule that reads one
@@ -425,12 +519,84 @@ describe("sub-faint inks", () => {
  *  used to be declared on .landing alone, so every heading on the seven
  *  indexed gallery pages read an undefined property and fell back to the
  *  body's system sans, with nothing in any log to say so. */
-describe("the display face", () => {
-  it("is a :root token, and carries the one @kind font annotation design-sync reads", () => {
-    expect(tokens.get("--ui-font-display")).toMatch(/^"Playfair Display",/);
+describe("the chrome's faces (adr-019 §2)", () => {
+  it("are Literata for display and Golos Text for body, each a :root token", () => {
+    expect(tokens.get("--ui-font-display")).toMatch(/^"Literata",/);
+    expect(tokens.get("--ui-font-body")).toMatch(/^"Golos Text",/);
+    expect(css).toMatch(/^body\s*\{[^}]*font-family:\s*var\(--ui-font-body\);/m);
+  });
+
+  it("carries the two @kind font annotations design-sync reads, one per face", () => {
     const annotated = css.split("\n").filter((line) => line.includes("@kind font"));
-    expect(annotated).toHaveLength(1);
-    expect(annotated[0]).toMatch(/^\s*--ui-font-display:/);
+    expect(annotated.map((line) => /^\s*(--[\w-]+):/.exec(line)?.[1])).toEqual([
+      "--ui-font-display",
+      "--ui-font-body",
+    ]);
+  });
+
+  /** index.html links the same URL so the fonts request starts while the app
+   *  CSS is still downloading; the @import then resolves from cache. A link
+   *  left on an older URL silently re-serialises the new faces behind the
+   *  stylesheet and costs a second fonts.css request. */
+  it("preloads exactly the font URL the stylesheet imports", () => {
+    const imported = /@import url\("([^"]+)"\)/.exec(css)?.[1];
+    const html = readFileSync(fileURLToPath(new URL("../index.html", import.meta.url)), "utf8");
+    const linked = /<link\s+rel="stylesheet"\s+href="(https:\/\/fonts\.googleapis\.com[^"]+)"/.exec(
+      html,
+    )?.[1];
+    expect(imported).toBeDefined();
+    expect(linked?.replaceAll("&amp;", "&")).toBe(imported);
+  });
+
+  it("requests exactly the axes adr-019 §2 settles, and keeps the four card families", () => {
+    const url = /@import url\("([^"]+)"\)/.exec(css)?.[1] ?? "";
+    for (const family of [
+      "family=Literata:ital,opsz,wght@0,7..72,400..500;1,7..72,400",
+      "family=Golos+Text:wght@400..800",
+      "family=Playfair+Display:",
+      "family=Cormorant+Garamond:",
+      "family=Manrope:",
+      "family=Marck+Script",
+    ]) {
+      expect(url).toContain(family);
+    }
+  });
+
+  /** Literata is requested at 400–500 only; any other weight is synthesized. */
+  it("sets every display-face rule at a weight Literata is requested in", () => {
+    const off = ruleBlocks(stripComments(css))
+      .filter((r) => /font-family:\s*var\(--ui-font-display\)/.test(r.body))
+      .filter((r) => !/font-weight:\s*(?:400|500)\s*(?:;|$)/.test(r.body))
+      .map((r) => r.selectors.join(", "));
+    expect(off).toEqual([]);
+  });
+
+  /** The tracked wordmark costs the landing nav 54px a phone does not have:
+   *  main's nav fit a 360px phone with nothing to spare, and Literata at
+   *  0.32em plus Golos's wider gallery link took the signed-out nav to 419px.
+   *  Measured in a browser with these rules, it fits at 360, 375, 390 and
+   *  414px in both nav states. jsdom cannot lay out, so this pins the rule
+   *  that measurement depends on. */
+  it("narrows the nav wordmark on a phone, where 0.32em overflows the nav", () => {
+    const bare = stripComments(css);
+    const span = atRuleSpan(bare, /@media\s*\(max-width:\s*560px\)/);
+    expect(span).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    const phone = ruleBlocks(bare.slice(start, end));
+    const brand = phone.find((r) => r.selectors.includes(".lp-brand"));
+    expect(brand?.body).toMatch(/font-size:\s*1\.02rem/);
+    expect(brand?.body).toMatch(/letter-spacing:\s*0\.12em/);
+    const gallery = phone.find((r) => r.selectors.includes(".lp-nav-gallery"));
+    expect(gallery?.body).toMatch(/margin-left:\s*12px/);
+  });
+
+  it("sets the INVINTO wordmarks in Literata 500, tracked 0.32em (adr-019 §2)", () => {
+    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand"]) {
+      const rule = ruleBlocks(stripComments(css)).find((r) => r.selectors.includes(selector));
+      expect(rule?.body, selector).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+      expect(rule?.body, selector).toMatch(/font-weight:\s*500/);
+      expect(rule?.body, selector).toMatch(/letter-spacing:\s*0\.32em/);
+    }
   });
 
   /** A custom property declared on a class reaches only that class's subtree.
@@ -457,15 +623,20 @@ describe("the display face", () => {
     expect(unreachable).toEqual([]);
   });
 
-  /** Ten chrome headings once named the face themselves. The card's own
-   *  .inv and .type-serif keep theirs: they are the card's typography,
-   *  mirrored by hand in the OG renderer, not the product's. */
-  it("is named only by the token, outside the card's own typography", () => {
-    const named = [...sections(css)]
-      .filter(([name]) => name !== "Invitation card")
-      .map(([name, body]) => [name, stripComments(body).match(/"Playfair Display"/g)?.length ?? 0])
-      .filter(([, count]) => count);
-    expect(named).toEqual([["Material system", 1]]);
+  /** Ten chrome headings once named the face themselves, and the landing
+   *  named Manrope for its body. The card's own .inv and .type-* keep their
+   *  faces: they are the card's typography, mirrored by hand in the OG
+   *  renderer, not the product's. */
+  it("names each chrome face only through its token, outside the card's own typography", () => {
+    const namedOutsideCard = (face: string) =>
+      [...sections(css)]
+        .filter(([name]) => name !== "Invitation card")
+        .map(([name, body]) => [name, stripComments(body).split(`"${face}"`).length - 1])
+        .filter(([, count]) => count);
+    expect(namedOutsideCard("Literata")).toEqual([["Material system", 1]]);
+    expect(namedOutsideCard("Golos Text")).toEqual([["Material system", 1]]);
+    expect(namedOutsideCard("Playfair Display")).toEqual([]);
+    expect(namedOutsideCard("Manrope")).toEqual([]);
   });
 });
 

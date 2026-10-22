@@ -1,10 +1,12 @@
 /* All families cover Cyrillic — required for Ukrainian copy. */
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400..800&family=Marck+Script&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..500;1,7..72,400&family=Golos+Text:wght@400..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400..800&family=Marck+Script&display=swap");
 
 /* Material system ------------------------------------------------------- */
 
-/* Material system (adr-018). One vocabulary for the whole app; the editor is
-   the first surface built from it. Defined here rather than in a tokens.css
+/* Material system (adr-018). One vocabulary for the whole app; the editor was
+   the first surface built from it. Its values are adr-019's paper direction:
+   adr-018 installed the system and chose glass, adr-019 kept the system and
+   swapped the values. Defined here rather than in a tokens.css
    because design-sync ships this file's closure to the DS project and a local
    @import would not be inlined — see .design-sync/NOTES.md.
 
@@ -13,110 +15,120 @@
    hex is what keeps the mirror visible. */
 :root {
   /* Ground and surface */
-  --ground: #f3ece2;
-  --surface: #ffffff;
+  --ground: #f4efe6;
+  --surface: #fbf8f2;
 
-  /* body's own background, preserved at its pre-branch value and deliberately
-     distinct from the ground token above. Most screens paint their own
-     opaque background over it, but .gl (the gallery) does not, and the
-     gallery is explicitly out of scope for this iteration (adr-018 §8) — the
-     ground token would repaint it warm beige instead of leaving it alone. */
-  --app-bg: #f6f5f2;
+  /* body's own background. Under glass it was held apart from --ground so the
+     gallery, which paints none of its own, would not turn beige; under paper
+     the two do the same job, so it collapses onto the ground (adr-019 §1) and
+     the gallery takes paper with everything else. */
+  --app-bg: var(--ground);
 
   /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only.
      --ui-ink is --ink's non-shadowed alias, for the reason --ui-accent gives
      below: .palette-* redefines --ink too, and the swatches carry a
      palette-* class on themselves, so a ring drawn in var(--ink) around the
      festive swatch would come out cream. */
-  --ui-ink: #23211d;
+  --ui-ink: #1c1a17;
   --ink: var(--ui-ink);
-  --ink-muted: #6b6659;
-  --ink-faint: #8d8577;
+  --ink-muted: #5e574c;
+  --ink-faint: #7e7668;
 
-  /* Two tiers below --ink-faint, and neither carries text anyone has to read.
-     Both are under 3:1 on --surface (2.59 and 1.90), so unlike --ink-faint
-     they clear nothing: --ink-placeholder is left on one decorative icon
-     (.sp-link's glyph, beside a URL drawn in --ink), and --ink-whisper on the
-     INVINTO wordmarks, a logotype. They were three, minted at the guest page's
-     values when it converted; the guest page and the manage dashboard have
-     since moved all their text off them, and --ink-disabled went with its last
+  /* Two tiers below --ink-faint, and neither carries text anyone has to read:
+     --ink-placeholder is left on one decorative icon (.sp-link's glyph,
+     beside a URL drawn in --ink), and --ink-whisper on the INVINTO wordmarks,
+     a logotype. adr-019 darkened the whisper to 3.44:1 on --surface, with the
+     placeholder at 3.84, so the tier is defined by order below --ink-faint
+     (4.23) rather than by staying under 3:1. They were three, minted at the
+     guest page's values when it converted; --ink-disabled went with its last
      user. test/styles.test.ts names every rule allowed to read these two. */
   --ink-strong: #4a4438;
-  --ink-placeholder: #a8a091;
-  --ink-whisper: #c3bbac;
+  --ink-placeholder: #857d6f;
+  --ink-whisper: #8d8577;
 
-  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
+  /* Accent: adr-019's oxblood. White on --accent is 8.21:1, and the --surface
+     most accent buttons set their label in is 7.75:1: that is what makes
+     Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
      card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
      anything meaning the *product's* accent there must read --ui-accent
      instead — the two are tied together so they cannot drift. */
-  --ui-accent: #b3592e;
+  --ui-accent: #8c2f2b;
   --accent: var(--ui-accent);
-  --accent-hi: #a04e27;
+  --accent-hi: #73241f;
   --accent-wash: #f7efe3;
-  --edge: #e4ddd0;
+  --edge: #d6ccba;
 
   /* --ui-accent as an RGB triplet, for the rgba() accent tints that would
      otherwise sit in the stylesheet as raw literals the hex ratchet cannot
      see. It tracks --ui-accent rather than --accent for the shadowing reason
      above, and its value must stay in step with it by hand — styles.test.ts
      holds the pairing. */
-  --ui-accent-rgb: 179, 89, 46;
+  --ui-accent-rgb: 140, 47, 43;
 
   /* The accent's family as ink, for marks that sit beside the accent rather
      than being it: the manage page's "N new since your last visit" line next
      to its accent dot, and the warm glyph inside its empty and access states.
-     --accent-ink carries a sentence, so it clears AA on --app-bg (4.61:1;
-     it was minted at 4.46:1 and moved dE 1.0 to get there).
+     --accent-ink carries a sentence, so it clears AA on --app-bg (4.58:1 on
+     paper; it was #876955 under glass, which falls to 4.38 there, and moved
+     the minimum in its own hue to get back over).
      --accent-ink-faint is decorative only — the state's title says what the
      icon shows — so it is held to no contrast floor. */
-  --accent-ink: #876955;
+  --accent-ink: #846652;
   --accent-ink-faint: #c2a98d;
 
   /* A softer edge than --edge, and the two quiet washes the guest page's
      surfaces sit on. --wash-warm-edge is the border that pairs with
      --accent-wash; --wash is the neutral one. */
-  --edge-soft: #ece7dd;
+  --edge-soft: #e6ddcd;
   --edge-strong: #c8c4bb;
   --wash: #f1efe9;
   --wash-warm-edge: #e7cdb8;
 
-  /* Type. The product's display face, for every chrome heading: the
-     landing's and the gallery's, which sit on different roots, and those of
-     the editor, the sheets, the guest page, the manage page and the crash
-     screen. It is not called --font-display because that is the card's
-     name, which .inv sets
-     and .type-* shadows, so a heading that read it inside a card would come
-     out in the invitation's face. The @kind annotation is the one
-     design-sync's token panel reads; .design-sync/NOTES.md counts it. */
-  --ui-font-display: "Playfair Display", Georgia, serif; /* @kind font */
+  /* Type (adr-019 §2). The product's display face, Literata, for every chrome
+     heading: the landing's and the gallery's, which sit on different roots,
+     and those of the editor, the sheets, the guest page, the manage page and
+     the crash screen. It is requested at 400–500 only, so every rule that
+     reads it sets one of those weights; anything heavier is synthesized.
+     Golos Text is the chrome's body face, Cyrillic-first; the chrome used to
+     inherit the system stack. Neither is called --font-display/--font-body,
+     because those are the card's names, which .inv sets and .type-* shadows,
+     so chrome that read them inside a card would come out in the
+     invitation's face. The @kind annotations are the ones design-sync's
+     token panel reads; .design-sync/NOTES.md counts them. */
+  --ui-font-display: "Literata", Georgia, serif; /* @kind font */
+  --ui-font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif; /* @kind font */
 
-  /* Radius */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  /* Radius: stationery corners (adr-019 §1). The pill stays for the language
+     switch. */
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 4px;
+  --r-xl: 6px;
   --r-pill: 999px;
 
-  /* Elevation */
-  --e-1: 0 1px 3px rgba(74, 55, 40, 0.08);
-  --e-2: 0 8px 24px rgba(74, 55, 40, 0.16);
-  --e-3: 0 24px 54px rgba(20, 18, 14, 0.24);
+  /* Elevation: paper lies on a table and doesn't float, so flatter shadows
+     in the ink's own warm black. */
+  --e-1: 0 1px 2px rgba(28, 26, 23, 0.06);
+  --e-2: 0 4px 12px rgba(28, 26, 23, 0.1);
+  --e-3: 0 12px 32px rgba(28, 26, 23, 0.16);
 
   /* Motion. iOS reads as much from its easing as from its materials. */
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --dur-fast: 160ms;
   --dur-base: 280ms;
 
-  /* Glass. The alpha is a token of its own so the contrast test can composite
-     the surface over the ground without parsing an rgba() string. */
-  --glass-alpha: 0.62;
-  --glass-alpha-solid: 0.82;
-  --glass-tint: rgba(255, 255, 255, 0.62);
-  --glass-tint-solid: rgba(255, 255, 255, 0.82);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 24px rgba(74, 55, 40, 0.16);
+  /* Glass, now paper (adr-019 §4.1): card stock at full opacity, no blur,
+     a ruled hairline for an edge. The alpha stays a token of its own so the
+     contrast test can composite the surface over the ground without parsing
+     an rgba() string — at 1 the composite is just --surface. */
+  --glass-alpha: 1;
+  --glass-alpha-solid: 1;
+  --glass-tint: var(--surface);
+  --glass-tint-solid: var(--surface);
+  --glass-blur: none;
+  --glass-edge: inset 0 0 0 1px var(--edge);
+  --glass-shadow: var(--e-2);
 
   /* Caution. The warm material the share panel's manage-token block is built
      from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
@@ -164,13 +176,16 @@
   --rsvp-no-label: #8a5a54;
 }
 
-/* Glass surfaces (adr-018). Two, not one: .glass-solid carries text and so
-   takes more tint and less blur than a toolbar does.
+/* Glass surfaces (adr-018), opaque paper since adr-019 §4.1. Two, not one:
+   under glass .glass-solid carried text and so took more tint and less blur
+   than a toolbar did; under paper both are card stock.
 
-   The rule that makes the fallback below trivially correct: **every glass
-   surface must be legible with its blur removed.** The tint alone carries the
-   contrast; blur is decoration on top. test/styles.test.ts asserts exactly
-   that, compositing each tint over --ground with blur ignored. */
+   adr-018's rule is what made that a token swap rather than a rewrite:
+   **every glass surface must be legible with its blur removed.** The tint
+   always carried the contrast, so taking the blur away moved no text.
+   test/styles.test.ts still composites each tint over --ground. The class
+   names, and the reduced-transparency block below, go in adr-019's rename
+   step (9). */
 .glass {
   background: var(--glass-tint);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -184,10 +199,10 @@
   box-shadow: var(--glass-edge), var(--glass-shadow);
 }
 
-/* iOS's own Reduce Transparency, and its web equivalent. Because of the rule
-   above this is a token swap, not a second design. */
+/* iOS's own Reduce Transparency, and its web equivalent. Nothing is
+   translucent under paper, so there are no tokens left to swap; the blur
+   reset stays until the rename step removes the block (adr-019 §4.1). */
 @media (prefers-reduced-transparency: reduce) {
-  :root { --glass-tint: #faf7f2; --glass-tint-solid: #fffdfa; }
   .glass,
   .glass-solid { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
@@ -215,7 +230,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-body);
   background: var(--app-bg);
   color: var(--ink);
 }
@@ -416,7 +431,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-messages { flex: 1; overflow-y: auto; padding: 28px 32px 8px; display: flex; flex-direction: column; gap: 13px; }
 
 .cc-start { padding-top: 20px; }
-.cc-start-title { font-family: var(--ui-font-display); font-size: 1.8rem; color: var(--ink); line-height: 1.15; }
+.cc-start-title { font-family: var(--ui-font-display); font-size: 1.8rem; font-weight: 500; color: var(--ink); line-height: 1.15; }
 .cc-start-hint { margin-top: 12px; color: var(--ink-muted); font-size: 0.98rem; line-height: 1.55; }
 .cc-start-examples { margin-top: 28px; font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .cc-chips { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 9px; }
@@ -728,7 +743,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   display: flex; align-items: center; justify-content: center;
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
-.sp-title { flex: 1; margin: 0; font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+.sp-title { flex: 1; margin: 0; font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 500; color: var(--ink); }
 .sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
 .sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
@@ -883,6 +898,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .gr-tile.decline { color: var(--ink-muted); }
+/* The Yes mark is the accent until it is chosen, then takes the tile's ink. */
+.gr-tile:not(.decline):not(.active) > svg { color: var(--ui-accent); }
 .gr-tile:hover { border-color: var(--ui-accent); }
 .gr-tile.active {
   border-color: var(--ui-accent);
@@ -940,9 +957,10 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 /* Disabled until the guest has a name and an answer, so this is the state
    every guest meets first, and its label still has to say what the button
-   does. --ink-faint reaches only 2.70:1 on --edge; --ink-muted gives 4.24:1,
-   and the missing accent fill and shadow are what say "not yet". */
-.gr-submit:disabled { background: var(--edge); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
+   does. On adr-019's --edge-soft, --ink-faint reaches only 3.33:1 and
+   --ink-muted gives 5.30:1; the missing accent fill and shadow are what say
+   "not yet". */
+.gr-submit:disabled { background: var(--edge-soft); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
 
 .gr-lock { opacity: 0.5; pointer-events: none; }
 @keyframes gr-spin { to { transform: rotate(360deg); } }
@@ -990,7 +1008,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-thanks-title {
   font-family: var(--ui-font-display);
   font-size: 1.7rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink);
   margin: 0 0 8px;
 }
@@ -1046,6 +1064,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   height: 44px;
   border-radius: 12px;
   background: var(--accent-wash);
+  color: var(--ui-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1057,11 +1076,12 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 .gr-brand {
   text-align: center;
+  font-family: var(--ui-font-display);
   font-size: 0.72rem;
   color: var(--ink-whisper);
   padding: 14px 0 4px;
-  letter-spacing: 0.1em;
-  font-weight: 600;
+  letter-spacing: 0.32em;
+  font-weight: 500;
 }
 
 /* gr-cta: the same whisper, now the only link back to the product (adr-013
@@ -1096,7 +1116,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-notfound-title {
   font-family: var(--ui-font-display);
   font-size: 1.55rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink);
   margin: 0 0 12px;
 }
@@ -1254,13 +1274,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .ornament-geometric { outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: -12px; }
 
 /* Landing page --------------------------------------------------------- */
-/* "Тепла класика" direction: warm terracotta accent + Playfair display,
-   Manrope UI. Composes the real InvitationPreview card in the hero fan. */
+/* adr-019's paper direction: oxblood accent, Literata display, Golos Text
+   UI. Composes the real InvitationPreview card in the hero fan. */
 
 .landing {
   background: var(--app-bg);
   color: var(--ink);
-  font-family: "Manrope", system-ui, sans-serif;
+  font-family: var(--ui-font-body);
   min-height: 100vh;
 }
 /* The landing's own headings, by section. Not `.landing h2`: the hero fan's
@@ -1268,7 +1288,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    own class, and `.landing h2` outranks a single class, so it set every
    card title in Playfair whatever its type, and the sheets' titles in bold.
    .lp-yours-head h2 sets its own face below. */
-.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2 { font-family: var(--ui-font-display); font-weight: 700; }
+.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2 { font-family: var(--ui-font-display); font-weight: 500; }
 
 .lp-cta {
   border: none;
@@ -1300,7 +1320,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   justify-content: space-between;
   align-items: center;
 }
-.lp-brand { font-family: var(--ui-font-display); font-size: 1.3rem; color: var(--ink); font-weight: 700; }
+.lp-brand { font-family: var(--ui-font-display); font-size: 1.3rem; color: var(--ink); font-weight: 500; letter-spacing: 0.32em; }
 /* Deliberately the quietest thing in the nav: "Create" stays the only accent on
    the page, and a first-time visitor has no account to sign in to. Kept through
    the 800px breakpoint that hides .lp-cta — a new phone is the case it exists
@@ -1309,8 +1329,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-nav-signin:hover { color: var(--ink); text-decoration: underline; }
 /* The count rides the same colour, weight and size — it must not read as a
    notification badge, which would promise unread things there are none of.
-   --ink-muted on white is 5.72:1; the quieter --ink-faint would be 3.65:1 and
-   fail AA, and this line is now the host's only route to their own events.
+   --ink-muted on --surface is 6.73:1; the quieter --ink-faint would be 4.23:1
+   and fail AA, and this line is now the host's only route to their own events.
    `nowrap` above is what keeps the number from wrapping away from its label. */
 .lp-brand-mono { display: none; }
 /* The landing nav's way into the gallery (adr-017 §8). Quiet chrome: it sits
@@ -1327,7 +1347,15 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    away from exactly the visitors it is written for, who arrive on phones. It
    gives up its space only against the held-token count, which is a sentence
    rather than a word and wins a narrow bar. */
-@media (max-width: 560px) { .lp-nav-counted .lp-nav-gallery { display: none; } }
+/* At phone width adr-019's tracked wordmark is 54px the nav does not have:
+   before it, the signed-out nav fit a 360px phone with nothing to spare. The
+   size is the one the counted nav already shrinks to below 800px; 0.32em
+   stays the desktop tracking. Measured fitting at 360–414px in both states. */
+@media (max-width: 560px) {
+  .lp-nav-counted .lp-nav-gallery { display: none; }
+  .lp-brand { font-size: 1.02rem; letter-spacing: 0.12em; }
+  .lp-nav-gallery { margin-left: 12px; }
+}
 
 .lp-hero {
   padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);
@@ -1359,7 +1387,10 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--accent-wash);
+  /* Card stock with a ruled edge: --accent-wash is the paper ground's own
+     colour (1.00:1), so a wash fill vanished on it (adr-019). */
+  background: var(--surface);
+  border: 1px solid var(--edge);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -1370,7 +1401,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-step-text { color: var(--ink-muted); font-size: 1rem; line-height: 1.55; max-width: 26ch; margin: 0 auto; }
 
 .lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.lp-chip { background: var(--accent-wash); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
+.lp-chip { background: var(--surface); border: 1px solid var(--edge); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
 
 .lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--surface); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
 .lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
@@ -1483,7 +1514,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--accent);
 }
-.hm-title { margin: 0; font-family: var(--ui-font-display); font-size: 1.5rem; line-height: 1.15; font-weight: 700; color: var(--ink); }
+.hm-title { margin: 0; font-family: var(--ui-font-display); font-size: 1.5rem; line-height: 1.15; font-weight: 500; color: var(--ink); }
 .hm-details { margin: 6px 0 0; font-size: 0.9rem; color: var(--ink-muted); }
 
 .hm-actions { display: flex; align-items: center; gap: 8px; padding: 16px 4px 0; }
@@ -1504,7 +1535,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Headcount — the number the host came for. */
 .hm-headcount-top { display: flex; align-items: baseline; gap: 12px; }
-.hm-bignum { font-family: var(--ui-font-display); font-size: 3.1rem; line-height: 0.9; color: var(--rsvp-yes); }
+.hm-bignum { font-family: var(--ui-font-display); font-size: 3.1rem; font-weight: 500; line-height: 0.9; color: var(--rsvp-yes); }
 .hm-bigunit { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
 .hm-breakdown { margin: 8px 0 0; font-size: 0.82rem; color: var(--ink-faint); }
 
@@ -1580,7 +1611,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 20px;
 }
-.hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: var(--ui-font-display); font-size: 1.4rem; font-weight: 700; color: var(--ink); }
+.hm-empty-title, .hm-state-title { margin: 0 0 12px; font-family: var(--ui-font-display); font-size: 1.4rem; font-weight: 500; color: var(--ink); }
 .hm-empty-body, .hm-state-body { margin: 0; max-width: 280px; font-size: 0.95rem; line-height: 1.55; color: var(--ink-muted); }
 /* Sentences, not captions: the access hint is the one line telling a host who
    lost their link where it is. Smaller than the body, never fainter than it. */
@@ -1626,7 +1657,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-muted); }
 .hm-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
 .hm-notify-toggle:hover { color: var(--ink); }
-.hm-brand { margin: 22px 0 0; text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: var(--ink-whisper); }
+.hm-brand { margin: 22px 0 0; text-align: center; font-family: var(--ui-font-display); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.32em; color: var(--ink-whisper); }
 
 /* Loading: hold the shape rather than spin. */
 .hm-skeleton { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
@@ -1672,7 +1703,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-yours-head h2 {
   margin: 0;
   font-family: var(--ui-font-display);
-  font-size: 1.25rem; font-weight: 700; color: var(--ink);
+  font-size: 1.25rem; font-weight: 500; color: var(--ink);
 }
 /* Says where the list comes from, instead of implying an account. */
 .lp-yours-sub { font-size: 0.8rem; color: var(--ink-faint); }
@@ -1702,7 +1733,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   flex: 0 0 auto;
   width: 42px; height: 42px; border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--ui-font-display); font-size: 1.3rem;
+  font-family: var(--ui-font-display); font-size: 1.3rem; font-weight: 500;
   background: var(--bg, var(--ground)); color: var(--accent);
 }
 
@@ -1779,7 +1810,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .cr-title {
   margin: 0 0 12px;
   font-family: var(--ui-font-display);
-  font-size: 1.45rem; font-weight: 700; color: #23211d;
+  font-size: 1.45rem; font-weight: 500; color: #23211d;
 }
 .cr-body { margin: 0; max-width: 320px; font-size: 0.95rem; line-height: 1.55; color: #6b6659; }
 .cr-hint { margin: 14px 0 0; max-width: 300px; font-size: 0.85rem; line-height: 1.5; color: #a29a8b; }
@@ -1928,7 +1959,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    with it rather than with the landing. */
 .da-title { margin-bottom: 16px; }
 .da-keep { background: #f4f7f4; border: 1px solid #d9e5da; border-radius: 16px; padding: 17px 16px 15px; margin-bottom: 16px; }
-.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
+.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; font-weight: 500; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
 .da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: #3f4f42; line-height: 1.45; }
 .da-keep-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
 .da-keep-list svg { margin-top: 2px; }
@@ -1955,11 +1986,11 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    makes. The card itself is `InvitationPreview` unchanged; everything below is
    the frame. */
 .gl { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; color: #23211d; }
-.gl h1 { font-family: var(--ui-font-display); font-weight: 700; font-size: 2.2rem; line-height: 1.15; margin: 0 0 14px; }
+.gl h1 { font-family: var(--ui-font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.15; margin: 0 0 14px; }
 /* Not `.gl h2`: the card's own title is an h2, and `.gl h2` outranks
    `.inv-title`, so the examples' titles lost their own face, and most of
    them their size too. The page's only h2 of its own is this one. */
-.gl-others h2 { font-family: var(--ui-font-display); font-weight: 700; font-size: 1.2rem; margin: 0 0 14px; }
+.gl-others h2 { font-family: var(--ui-font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 14px; }
 .gl-intro { color: #6b6659; line-height: 1.65; max-width: 70ch; margin: 0 0 34px; }
 .gl-crumbs { display: flex; flex-wrap: wrap; gap: 7px; font-size: 0.8rem; color: #8d8577; margin-bottom: 18px; }
 .gl-crumbs a { color: inherit; text-decoration: none; }
@@ -1989,7 +2020,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .gl-tile-shot { display: block; height: 190px; background: #f3efe8; overflow: hidden; position: relative; }
 .gl-tile-shot-inner { display: block; position: absolute; top: 14px; left: 50%; width: 420px; margin-left: -210px; transform: scale(0.46); transform-origin: top center; pointer-events: none; }
 .gl-tile-body { display: block; padding: 16px 18px 18px; }
-.gl-tile-name { display: block; font-family: var(--ui-font-display); font-size: 1.2rem; margin-bottom: 4px; }
+.gl-tile-name { display: block; font-family: var(--ui-font-display); font-size: 1.2rem; font-weight: 500; margin-bottom: 4px; }
 .gl-tile-count { display: block; font-size: 0.84rem; color: #8d8577; }
 
 .gl-others { margin-top: 40px; padding-top: 26px; border-top: 1px solid #e4ddd0; }

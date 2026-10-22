@@ -197,13 +197,21 @@ built on the sign-in gate's `.ag-*` shell, so they convert with it.
   whatever element carries it (the card, and each design-sheet swatch). There,
   read the product's colours through `--ui-ink`/`--ui-accent` (tested).
 - `--ink-placeholder` and `--ink-whisper` are **never for text anyone must
-  read** (a test keeps them under 3:1). Body text uses `--ink-muted`, labels and
+  read** (a test keeps them below `--ink-faint`: whisper < placeholder <
+  faint). Body text uses `--ink-muted`, labels and
   timestamps `--ink-faint`; `textFloors` in `styles.test.ts` holds each
   selector to its floor, and a new reader of the faint tiers fails a test.
+- **Chrome faces are tokens** (adr-019 §2): `--ui-font-display` (Literata) and
+  `--ui-font-body` (Golos Text). A rule that reads the display face sets
+  `font-weight` 400 or 500, which is all Literata is requested at (tested);
+  never name a face in a rule.
 - `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*` are permanently exempt:
   their raw hex is what keeps the OG renderer's hand mirror visible.
-- Glass is `.glass` and `.glass-solid` (the one that carries text). **Every
-  glass surface must be legible with its blur removed.**
+- Glass is `.glass` and `.glass-solid` (the one that carries text). Since
+  adr-019 both are **opaque paper** (`--surface`, no blur) and keep their
+  names until its rename step. **No paper material (`.grain`, `.deckle`,
+  `.seal`) may sit on `.inv` or inside it**; wrapping the card is fine
+  (tested).
 - The editor's ground is tinted with `data-palette` on `.cc-shell`, an
   attribute, not the `palette-*` class, which would push the card's ink into
   the chrome.
