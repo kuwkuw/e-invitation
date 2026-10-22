@@ -59,6 +59,29 @@ pnpm monorepo (`server`, `web`). Use pnpm, not npm. Its version comes from
   (`use-node-version`), `.nvmrc`, `engines` in `package.json`, and both `FROM`
   lines in the `Dockerfile`.
 
+## Reviewing
+
+Every PR gets an independent review (`.github/workflows/claude-review.yml`).
+Beyond correctness, a review of this repo checks:
+
+- **Mirrors**: a change to one side of a hand-kept pair (list below) without
+  the other.
+- **Docs in the same PR**: behaviour changed but the matching FR/NFR,
+  `docs/04-architecture.md` section or ADR did not; a new env var missing from
+  `server/.env.example` and `docs/05-deployment.md`.
+- **Prompts and routing**: a change under `server/src/pipeline/` or to
+  `routing.ts` with no eval run behind it, or a routed model without a
+  `pricing.ts` entry.
+- **Strings**: user-visible text outside `i18n.ts`, or present in one
+  language only.
+- **Stored data**: a change to what lands in `DATA_DIR` that older files can't
+  load (there is no migration step), or a write that isn't whole-then-rename.
+- **Guest surfaces**: anything served at `/i/:id` that needs a feature
+  WKWebView lacks, or breaks the `robots.txt` and `noindex` rules
+  (`server/CLAUDE.md`).
+- **Secrets and privacy**: a key, manage token or guest name reaching a log,
+  a URL query string or an email.
+
 ## Browser support
 
 Baseline Widely available by default. A Newly available feature is allowed
