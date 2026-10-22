@@ -486,12 +486,51 @@ describe("sub-faint inks", () => {
  *  used to be declared on .landing alone, so every heading on the seven
  *  indexed gallery pages read an undefined property and fell back to the
  *  body's system sans, with nothing in any log to say so. */
-describe("the display face", () => {
-  it("is a :root token, and carries the one @kind font annotation design-sync reads", () => {
-    expect(tokens.get("--ui-font-display")).toMatch(/^"Playfair Display",/);
+describe("the chrome's faces (adr-019 §2)", () => {
+  it("are Literata for display and Golos Text for body, each a :root token", () => {
+    expect(tokens.get("--ui-font-display")).toMatch(/^"Literata",/);
+    expect(tokens.get("--ui-font-body")).toMatch(/^"Golos Text",/);
+    expect(css).toMatch(/^body\s*\{[^}]*font-family:\s*var\(--ui-font-body\);/m);
+  });
+
+  it("carries the two @kind font annotations design-sync reads, one per face", () => {
     const annotated = css.split("\n").filter((line) => line.includes("@kind font"));
-    expect(annotated).toHaveLength(1);
-    expect(annotated[0]).toMatch(/^\s*--ui-font-display:/);
+    expect(annotated.map((line) => /^\s*(--[\w-]+):/.exec(line)?.[1])).toEqual([
+      "--ui-font-display",
+      "--ui-font-body",
+    ]);
+  });
+
+  it("requests exactly the axes adr-019 §2 settles, and keeps the four card families", () => {
+    const url = /@import url\("([^"]+)"\)/.exec(css)?.[1] ?? "";
+    for (const family of [
+      "family=Literata:ital,opsz,wght@0,7..72,400..500;1,7..72,400",
+      "family=Golos+Text:wght@400..800",
+      "family=Playfair+Display:",
+      "family=Cormorant+Garamond:",
+      "family=Manrope:",
+      "family=Marck+Script",
+    ]) {
+      expect(url).toContain(family);
+    }
+  });
+
+  /** Literata is requested at 400–500 only; any other weight is synthesized. */
+  it("sets every display-face rule at a weight Literata is requested in", () => {
+    const off = ruleBlocks(stripComments(css))
+      .filter((r) => /font-family:\s*var\(--ui-font-display\)/.test(r.body))
+      .filter((r) => !/font-weight:\s*(?:400|500)\s*(?:;|$)/.test(r.body))
+      .map((r) => r.selectors.join(", "));
+    expect(off).toEqual([]);
+  });
+
+  it("sets the INVINTO wordmarks in Literata 500, tracked 0.32em (adr-019 §2)", () => {
+    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand"]) {
+      const rule = ruleBlocks(stripComments(css)).find((r) => r.selectors.includes(selector));
+      expect(rule?.body, selector).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+      expect(rule?.body, selector).toMatch(/font-weight:\s*500/);
+      expect(rule?.body, selector).toMatch(/letter-spacing:\s*0\.32em/);
+    }
   });
 
   /** A custom property declared on a class reaches only that class's subtree.
@@ -518,15 +557,20 @@ describe("the display face", () => {
     expect(unreachable).toEqual([]);
   });
 
-  /** Ten chrome headings once named the face themselves. The card's own
-   *  .inv and .type-serif keep theirs: they are the card's typography,
-   *  mirrored by hand in the OG renderer, not the product's. */
-  it("is named only by the token, outside the card's own typography", () => {
-    const named = [...sections(css)]
-      .filter(([name]) => name !== "Invitation card")
-      .map(([name, body]) => [name, stripComments(body).match(/"Playfair Display"/g)?.length ?? 0])
-      .filter(([, count]) => count);
-    expect(named).toEqual([["Material system", 1]]);
+  /** Ten chrome headings once named the face themselves, and the landing
+   *  named Manrope for its body. The card's own .inv and .type-* keep their
+   *  faces: they are the card's typography, mirrored by hand in the OG
+   *  renderer, not the product's. */
+  it("names each chrome face only through its token, outside the card's own typography", () => {
+    const namedOutsideCard = (face: string) =>
+      [...sections(css)]
+        .filter(([name]) => name !== "Invitation card")
+        .map(([name, body]) => [name, stripComments(body).split(`"${face}"`).length - 1])
+        .filter(([, count]) => count);
+    expect(namedOutsideCard("Literata")).toEqual([["Material system", 1]]);
+    expect(namedOutsideCard("Golos Text")).toEqual([["Material system", 1]]);
+    expect(namedOutsideCard("Playfair Display")).toEqual([]);
+    expect(namedOutsideCard("Manrope")).toEqual([]);
   });
 });
 
