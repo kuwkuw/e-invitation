@@ -81,18 +81,25 @@ describe("material tokens", () => {
     expect(reads).toEqual([]);
   });
 
-  it("keeps the two sub-faint inks under 3:1, so they are never mistaken for readable", () => {
-    // Both are under 3:1 on --surface, so this asserts they are NOT promoted
-    // into the --ink-faint tier by a later edit that assumes they are readable.
+  it("keeps the two sub-faint inks below --ink-faint, so a readable tier is never one of them", () => {
+    // adr-019 darkened --ink-whisper past 3:1 on --surface, so the tier is
+    // held by order rather than by a ceiling: neither may be promoted into
+    // --ink-faint's place by a later edit that assumes they are readable.
     // Who may read them is held by "sub-faint inks" below.
     expect(tokens.has("--ink-disabled"), "--ink-disabled was retired with its last user").toBe(
       false,
     );
+    const on = (name: string) =>
+      contrast(tokens.get(name) as string, tokens.get("--surface") as string);
     for (const name of ["--ink-placeholder", "--ink-whisper"]) {
-      const value = tokens.get(name) as string;
-      expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
-      expect(contrast(value, tokens.get("--surface") as string), name).toBeLessThan(3);
+      expect(tokens.get(name), name).toMatch(/^#[0-9a-f]{6}$/);
     }
+    expect(on("--ink-whisper")).toBeLessThan(on("--ink-placeholder"));
+    expect(on("--ink-placeholder")).toBeLessThan(on("--ink-faint"));
+  });
+
+  it("collapses --app-bg onto --ground: one job, one value (adr-019 §1)", () => {
+    expect(css).toMatch(/--app-bg:\s*var\(--ground\);/);
   });
 
   it("keeps the RSVP status pair, which other surfaces still read", () => {
@@ -353,11 +360,18 @@ describe("the guest page's text", () => {
     [".gr-label", "--surface", 3],
     [".gr-optional", "--surface", 3],
     [".gr-input::placeholder", "--app-bg", 3],
-    [".gr-submit:disabled", "--edge", 3],
+    [".gr-submit:disabled", "--edge-soft", 3],
     [".gr-change", "--surface", 3],
     [".gr-row-sub", "--surface", 3],
     [".gr-cta-line", "--app-bg", 3],
   ]);
+
+  it("fills the disabled submit with --edge-soft, not the ruled line", () => {
+    const rule = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-submit:disabled"),
+    );
+    expect(rule?.body).toMatch(/background:\s*var\(--edge-soft\)/);
+  });
 });
 
 /** The front door. Most of the page sits on --app-bg; the nav, the replies

@@ -3,8 +3,10 @@
 
 /* Material system ------------------------------------------------------- */
 
-/* Material system (adr-018). One vocabulary for the whole app; the editor is
-   the first surface built from it. Defined here rather than in a tokens.css
+/* Material system (adr-018). One vocabulary for the whole app; the editor was
+   the first surface built from it. Its values are adr-019's paper direction:
+   adr-018 installed the system and chose glass, adr-019 kept the system and
+   swapped the values. Defined here rather than in a tokens.css
    because design-sync ships this file's closure to the DS project and a local
    @import would not be inlined — see .design-sync/NOTES.md.
 
@@ -13,70 +15,70 @@
    hex is what keeps the mirror visible. */
 :root {
   /* Ground and surface */
-  --ground: #f3ece2;
-  --surface: #ffffff;
+  --ground: #f4efe6;
+  --surface: #fbf8f2;
 
-  /* body's own background, preserved at its pre-branch value and deliberately
-     distinct from the ground token above. Most screens paint their own
-     opaque background over it, but .gl (the gallery) does not, and the
-     gallery is explicitly out of scope for this iteration (adr-018 §8) — the
-     ground token would repaint it warm beige instead of leaving it alone. */
-  --app-bg: #f6f5f2;
+  /* body's own background. Under glass it was held apart from --ground so the
+     gallery, which paints none of its own, would not turn beige; under paper
+     the two do the same job, so it collapses onto the ground (adr-019 §1) and
+     the gallery takes paper with everything else. */
+  --app-bg: var(--ground);
 
   /* Ink. --ink-faint clears 3:1, not 4.5:1 — labels and non-text only.
      --ui-ink is --ink's non-shadowed alias, for the reason --ui-accent gives
      below: .palette-* redefines --ink too, and the swatches carry a
      palette-* class on themselves, so a ring drawn in var(--ink) around the
      festive swatch would come out cream. */
-  --ui-ink: #23211d;
+  --ui-ink: #1c1a17;
   --ink: var(--ui-ink);
-  --ink-muted: #6b6659;
-  --ink-faint: #8d8577;
+  --ink-muted: #5e574c;
+  --ink-faint: #7e7668;
 
-  /* Two tiers below --ink-faint, and neither carries text anyone has to read.
-     Both are under 3:1 on --surface (2.59 and 1.90), so unlike --ink-faint
-     they clear nothing: --ink-placeholder is left on one decorative icon
-     (.sp-link's glyph, beside a URL drawn in --ink), and --ink-whisper on the
-     INVINTO wordmarks, a logotype. They were three, minted at the guest page's
-     values when it converted; the guest page and the manage dashboard have
-     since moved all their text off them, and --ink-disabled went with its last
+  /* Two tiers below --ink-faint, and neither carries text anyone has to read:
+     --ink-placeholder is left on one decorative icon (.sp-link's glyph,
+     beside a URL drawn in --ink), and --ink-whisper on the INVINTO wordmarks,
+     a logotype. adr-019 darkened the whisper to 3.44:1 on --surface, with the
+     placeholder at 3.84, so the tier is defined by order below --ink-faint
+     (4.23) rather than by staying under 3:1. They were three, minted at the
+     guest page's values when it converted; --ink-disabled went with its last
      user. test/styles.test.ts names every rule allowed to read these two. */
   --ink-strong: #4a4438;
-  --ink-placeholder: #a8a091;
-  --ink-whisper: #c3bbac;
+  --ink-placeholder: #857d6f;
+  --ink-whisper: #8d8577;
 
-  /* Accent. White on --accent is 4.79:1, which is what makes Publish legible.
+  /* Accent: adr-019's oxblood. White on --accent is 8.21:1, which is what makes Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
      card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
      anything meaning the *product's* accent there must read --ui-accent
      instead — the two are tied together so they cannot drift. */
-  --ui-accent: #b3592e;
+  --ui-accent: #8c2f2b;
   --accent: var(--ui-accent);
-  --accent-hi: #a04e27;
+  --accent-hi: #73241f;
   --accent-wash: #f7efe3;
-  --edge: #e4ddd0;
+  --edge: #d6ccba;
 
   /* --ui-accent as an RGB triplet, for the rgba() accent tints that would
      otherwise sit in the stylesheet as raw literals the hex ratchet cannot
      see. It tracks --ui-accent rather than --accent for the shadowing reason
      above, and its value must stay in step with it by hand — styles.test.ts
      holds the pairing. */
-  --ui-accent-rgb: 179, 89, 46;
+  --ui-accent-rgb: 140, 47, 43;
 
   /* The accent's family as ink, for marks that sit beside the accent rather
      than being it: the manage page's "N new since your last visit" line next
      to its accent dot, and the warm glyph inside its empty and access states.
-     --accent-ink carries a sentence, so it clears AA on --app-bg (4.61:1;
-     it was minted at 4.46:1 and moved dE 1.0 to get there).
+     --accent-ink carries a sentence, so it clears AA on --app-bg (4.58:1 on
+     paper; it was #876955 under glass, which falls to 4.38 there, and moved
+     the minimum in its own hue to get back over).
      --accent-ink-faint is decorative only — the state's title says what the
      icon shows — so it is held to no contrast floor. */
-  --accent-ink: #876955;
+  --accent-ink: #846652;
   --accent-ink-faint: #c2a98d;
 
   /* A softer edge than --edge, and the two quiet washes the guest page's
      surfaces sit on. --wash-warm-edge is the border that pairs with
      --accent-wash; --wash is the neutral one. */
-  --edge-soft: #ece7dd;
+  --edge-soft: #e6ddcd;
   --edge-strong: #c8c4bb;
   --wash: #f1efe9;
   --wash-warm-edge: #e7cdb8;
@@ -91,17 +93,19 @@
      design-sync's token panel reads; .design-sync/NOTES.md counts it. */
   --ui-font-display: "Playfair Display", Georgia, serif; /* @kind font */
 
-  /* Radius */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  /* Radius: stationery corners (adr-019 §1). The pill stays for the language
+     switch. */
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 4px;
+  --r-xl: 6px;
   --r-pill: 999px;
 
-  /* Elevation */
-  --e-1: 0 1px 3px rgba(74, 55, 40, 0.08);
-  --e-2: 0 8px 24px rgba(74, 55, 40, 0.16);
-  --e-3: 0 24px 54px rgba(20, 18, 14, 0.24);
+  /* Elevation: paper lies on a table and doesn't float, so flatter shadows
+     in the ink's own warm black. */
+  --e-1: 0 1px 2px rgba(28, 26, 23, 0.06);
+  --e-2: 0 4px 12px rgba(28, 26, 23, 0.1);
+  --e-3: 0 12px 32px rgba(28, 26, 23, 0.16);
 
   /* Motion. iOS reads as much from its easing as from its materials. */
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
@@ -942,7 +946,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    every guest meets first, and its label still has to say what the button
    does. --ink-faint reaches only 2.70:1 on --edge; --ink-muted gives 4.24:1,
    and the missing accent fill and shadow are what say "not yet". */
-.gr-submit:disabled { background: var(--edge); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
+.gr-submit:disabled { background: var(--edge-soft); color: var(--ink-muted); cursor: not-allowed; box-shadow: none; }
 
 .gr-lock { opacity: 0.5; pointer-events: none; }
 @keyframes gr-spin { to { transform: rotate(360deg); } }
