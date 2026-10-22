@@ -524,6 +524,25 @@ describe("the chrome's faces (adr-019 §2)", () => {
     expect(off).toEqual([]);
   });
 
+  /** The tracked wordmark costs the landing nav 54px a phone does not have:
+   *  main's nav fit a 360px phone with nothing to spare, and Literata at
+   *  0.32em plus Golos's wider gallery link took the signed-out nav to 419px.
+   *  Measured in a browser with these rules, it fits at 360, 375, 390 and
+   *  414px in both nav states. jsdom cannot lay out, so this pins the rule
+   *  that measurement depends on. */
+  it("narrows the nav wordmark on a phone, where 0.32em overflows the nav", () => {
+    const bare = stripComments(css);
+    const span = atRuleSpan(bare, /@media\s*\(max-width:\s*560px\)/);
+    expect(span).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    const phone = ruleBlocks(bare.slice(start, end));
+    const brand = phone.find((r) => r.selectors.includes(".lp-brand"));
+    expect(brand?.body).toMatch(/font-size:\s*1\.02rem/);
+    expect(brand?.body).toMatch(/letter-spacing:\s*0\.12em/);
+    const gallery = phone.find((r) => r.selectors.includes(".lp-nav-gallery"));
+    expect(gallery?.body).toMatch(/margin-left:\s*12px/);
+  });
+
   it("sets the INVINTO wordmarks in Literata 500, tracked 0.32em (adr-019 §2)", () => {
     for (const selector of [".lp-brand", ".gr-brand", ".hm-brand"]) {
       const rule = ruleBlocks(stripComments(css)).find((r) => r.selectors.includes(selector));

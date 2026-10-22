@@ -1341,7 +1341,15 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    away from exactly the visitors it is written for, who arrive on phones. It
    gives up its space only against the held-token count, which is a sentence
    rather than a word and wins a narrow bar. */
-@media (max-width: 560px) { .lp-nav-counted .lp-nav-gallery { display: none; } }
+/* At phone width adr-019's tracked wordmark is 54px the nav does not have:
+   before it, the signed-out nav fit a 360px phone with nothing to spare. The
+   size is the one the counted nav already shrinks to below 800px; 0.32em
+   stays the desktop tracking. Measured fitting at 360–414px in both states. */
+@media (max-width: 560px) {
+  .lp-nav-counted .lp-nav-gallery { display: none; }
+  .lp-brand { font-size: 1.02rem; letter-spacing: 0.12em; }
+  .lp-nav-gallery { margin-left: 12px; }
+}
 
 .lp-hero {
   padding: clamp(44px, 6vw, 76px) clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px);
