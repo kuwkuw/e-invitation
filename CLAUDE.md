@@ -1,151 +1,126 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repository. This file is loaded every
+session, so it holds only what applies everywhere. Area rules live beside the
+code and load when you work there: **`server/CLAUDE.md`** (API, LLM pipeline,
+accounts, email, SEO, OG) and **`web/CLAUDE.md`** (routes, hooks, styles,
+i18n, gallery). The reasons behind decisions are in `docs/decisions/` (ADRs);
+requirements carry stable ids (`FR-x`, `NFR-x`) in `docs/`.
 
 ## Product
 
-E-invitation web app: the user describes an event in one sentence → AI generates an editable invitation → share link + guest RSVP page. Bilingual Ukrainian/English; guests never register; sharing targets Viber/Telegram/WhatsApp.
+INVINTO (invinto.app): the host describes an event in one sentence → AI
+generates an editable invitation → publish a share link with a guest RSVP page
+and an OG preview. Bilingual Ukrainian/English; guests never register; sharing
+targets Viber/Telegram/WhatsApp.
 
 ## Commands
 
-pnpm monorepo (`pnpm-workspace.yaml`: `server` + `web`). Use pnpm, not npm; the version comes from `packageManager` via Corepack, which Node 25+ no longer bundles — `npm install -g corepack && corepack enable` once per machine, and the Dockerfile does the same. From the root:
+pnpm monorepo (`server`, `web`). Use pnpm, not npm. Its version comes from
+`packageManager` via Corepack, which Node 25+ no longer bundles: run
+`npm install -g corepack && corepack enable` once per machine.
 
-- `pnpm install` — all workspaces (new native deps needing postinstall scripts must be added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`)
-- `pnpm dev` — both dev servers in parallel
-- `pnpm test` / `pnpm typecheck` / `pnpm build` — recursive across workspaces. `pnpm test` runs the two suites **one after the other** (`--workspace-concurrency=1`), and that is deliberate: each Vitest sizes its pool to every core, so running both at once oversubscribed the CPU, and the 19 server files whose `beforeAll` imports and builds the whole app (~3 s alone) stretched to 6–9 s, intermittently past Vitest's 10 s hook timeout. Sequential costs no wall time (~50 s either way), because the CPU is saturated either way.
-- `pnpm lint` (Biome, root `biome.jsonc`) / `pnpm lint:fix` / `pnpm format` — one config for both workspaces. CSS formatting is off on purpose: `styles.css` keeps its compact one-line token rules so they stay scannable against the OG renderer's maps. `.gitattributes` pins LF so the formatter sees the same bytes on Windows and in CI.
-- `pnpm --filter inv-app-server <script>` — one workspace (`inv-app-web` for web)
-- CI (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `build`, `test` (build first, or the 15 SPA-shell tests skip themselves), `pnpm audit --prod --audit-level high` and a Docker build on every PR and push to `main`. Northflank deploys every push to `main` and runs none of it, so work on a branch and merge through a PR with CI green; never push to `main` directly. Node is pinned in three places that must move together: `.npmrc` (`use-node-version`), `.nvmrc`, and both `FROM` lines in the `Dockerfile`.
+- `pnpm install`: a new native dependency with a postinstall script must be
+  added to `onlyBuiltDependencies` in `pnpm-workspace.yaml`
+- `pnpm dev`: API on 3001 and UI on 5173 (Vite proxies `/api`)
+- `pnpm lint` / `pnpm lint:fix` / `pnpm format`: Biome, one root config.
+  CSS and Markdown formatting are off on purpose; `.gitattributes` pins LF
+  so the formatter sees the same bytes everywhere
+- `pnpm typecheck`, `pnpm build` (web `build` includes typecheck)
+- `pnpm test`: runs the two suites **one after the other** on purpose.
+  Running them in parallel oversubscribes the CPU and pushes the server's
+  app-building `beforeAll` hooks past Vitest's 10 s timeout
+- One workspace: `pnpm --filter inv-app-server <script>` (`inv-app-web`).
+  One test file: `pnpm --filter inv-app-server exec vitest run test/x.test.ts`;
+  one test: `... -t "name"`
+- `pnpm --filter inv-app-server probe` / `eval`: the only commands that call
+  real models (unit tests mock the LLM boundary). See `server/eval/README.md`
 
-**server/** (Fastify API, port 3001): dev server reloads via tsx watch. Provider keys live in `server/.env` (see `.env.example`): `GROQ_API_KEY` + `GEMINI_API_KEY` are the free-tier MVP pair the default routes run on; `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are optional paid fallbacks. The server boots keyless but generation then fails. Tests mock the LLM boundary — no keys needed. Single test file: `pnpm --filter inv-app-server exec vitest run test/routing.test.ts`; single test: `... vitest run -t "name"`.
+## Workflow
 
-**web/** (Vite + React, port 5173, proxies `/api` → localhost:3001): `build` includes typecheck.
+- **Never push to `main`.** Northflank deploys every push to `main` and runs
+  no checks. Work on a branch and merge through a PR with CI green.
+- CI (`.github/workflows/ci.yml`): lint, typecheck, build, test (build first,
+  or the SPA-shell tests skip themselves), `pnpm audit --prod --audit-level
+  high`, Docker build. `llm-eval.yml` runs the probe and eval nightly and on
+  PRs touching prompts or routing.
+- When behaviour changes, update the matching FR/NFR/architecture section in
+  the same PR.
+- **Stacked PRs:** merge the lower one before the one on top, or retarget the
+  top one to `main` first. Otherwise it merges into the lower branch and never
+  reaches `main`.
+- Node is pinned in four places that move together: `.npmrc`
+  (`use-node-version`), `.nvmrc`, `engines` in `package.json`, and both `FROM`
+  lines in the `Dockerfile`.
 
 ## Browser support
 
-**Baseline Widely available is the default; a Newly available feature is allowed when it is feature-detected and degrades gracefully** — with **no polyfill and no dependency added for a fallback**: either a custom fallback of ~20 lines or fewer covers it, or the approach gets redesigned. Guest links are opened from inside Viber/Telegram/WhatsApp, so the floor is whatever webview those embed, and on iOS that is WKWebView — Safari, not Chrome, is the binding constraint on anything served to `/i/:id`. adr-018 already states the single-feature form of this rule — **every glass surface must be legible with its blur removed** — and the reason that stayed a token swap rather than a second design is that the fallback was scoped before the feature was used. Write new ones the same way. This is also the policy the `modern-web-guidance` skill reads when deciding whether a guide's fallback can be skipped.
+Baseline Widely available by default. A Newly available feature is allowed
+when it is feature-detected and degrades gracefully, with **no polyfill and no
+dependency added for the fallback**: a fallback of about 20 lines or fewer, or
+redesign. Guest links open inside messenger webviews, so on iOS the floor is
+WKWebView: Safari, not Chrome, constrains anything served at `/i/:id`. Scope
+the fallback before using the feature (adr-018's "every glass surface must be
+legible with its blur removed" is the model). The `modern-web-guidance` skill
+reads this policy.
 
-## Architecture
+## Where things live
 
-Pipeline (`server/src/pipeline/`): sentence → `extractBrief` (cheap model, structured `EventBrief` JSON) → **parallel** `generateCopy` + `resolveDesign` → `Invitation` JSON returned to the client. Copy and design depend only on the brief, so `generate.ts` always runs them with `Promise.all`. Latency target: sentence in → editable invitation out in ~3s.
+| Area | Code | Decision | Notes |
+|---|---|---|---|
+| Generation pipeline, LLM gateway, routing, BYOK, guardrails | `server/src/pipeline/`, `server/src/llm/` | adr-002, 006, 007, 008 | server |
+| Evals and model probe | `server/eval/` | NFR-6 | `server/eval/README.md` |
+| Design tokens → card (no image generation) | `schemas.ts`, `InvitationPreview.tsx`, `og/render.ts` | adr-003 | both |
+| Publish, share link, OG image | `server/src/routes/`, `server/src/og/` | | server |
+| Host manage link and dashboard | `useHostManage`, `/manage/:id` | adr-010, 012 | web |
+| Host accounts (Google sign-in, keyring) | `server/src/accounts.ts`, `auth/`, `useAuthSession` | adr-014 | both |
+| RSVP reply emails | `server/src/email/`, `notifications.ts` | adr-015 | server |
+| Share loop instrumentation | `views.ts`, `useViewBeacon`, `GuestCta` | adr-013 | both |
+| SEO, prerendering, gallery | `server/src/seo.ts`, `web/src/prerender.ts`, `web/src/gallery/` | adr-016, 017 | both |
+| Material system (styles) | `web/src/styles.css`, `web/test/styles.test.ts` | adr-018 | web |
+| Client routing | `web/src/AppRoutes.tsx` | adr-011 | web |
+| Deployment, domain, volume | `Dockerfile`, `docs/05-deployment.md` | | |
 
-LLM gateway (`server/src/llm/`):
-- `routing.ts` is the **single operator switch point**: task → primary model → fallbacks (+ per-task `maxTokens`), plus `MODEL_PROVIDERS` (model → transport) and `BYOK_FALLBACK_MODELS`. Change models here and nowhere else. Routing is **free-tier-first** (adr-007): Groq `openai/gpt-oss-120b` primary for volume tasks, Gemini `gemini-2.5-flash` for copy-quality tasks, paid Claude models as fallbacks that engage only when `ANTHROPIC_API_KEY` is set. A routed model can stop being reachable with no code change — Groq moved `llama-3.3-70b-versatile` to a paid tier on 2026-09-12 and both volume tasks silently fell through to Gemini, putting a whole generation on its ~20/day tier (adr-007's closing note). `/healthz` reports a provider from **key presence**, not model reachability, so it will not show this: check `/v1/models` with the operator key.
-- `gateway.ts` `completeJson()` walks that list until a model succeeds, requests schema-conformant JSON (Anthropic structured outputs via `zodOutputFormat`; `response_format` json_schema on the compat transport), validates the response with lenient JSON extraction + zod (some providers wrap JSON in prose), and emits one JSON log line per request: task, model, fallback flag, latency, tokens, cost, and on failure an `error_class` (`auth`/`quota`/`connectivity`/`output-invalid`/`other`). When every model fails it throws `AllModelsFailedError`; the 502 body carries per-model `causes` (class only — raw messages stay in logs) and the web chat maps quota/auth causes to actionable messages. `GET /healthz` reports the effective routing (`llm.providers` key presence + per-task model walks).
-- `pricing.ts` must have an entry for every routed model — `test/routing.test.ts` enforces this.
-- Multi-provider is **in-process** (adr-007; the former LiteLLM Proxy sidecar OOM-killed on small plans): `openaiCompat.ts` calls Gemini/OpenAI/Groq/Ollama through their OpenAI-compatible `/chat/completions` endpoints with plain `fetch` — adding a provider is one entry in its `PROVIDERS` table. It owns the provider quirks the proxy used to handle: reasoning off for GPT models, Gemini thinking budget 0 via `extra_body.google.thinking_config` (otherwise reasoning consumes small `maxTokens` caps before any JSON is emitted), and the `gemma3-4b → gemma3:4b` Ollama alias. Gemini free-tier quotas: zero for `gemini-2.5-pro`, ~20 `gemini-2.5-flash` requests/day (expect daily 429s in heavy dev). Do not add a multi-provider client library — the walker plus this adapter is the whole design.
+## Rules that span both sides
 
-Rendering: **no full-image generation.** The model only picks design tokens — closed enums in `schemas.ts` (`palette`/`typography`/`layout`/`ornament`). `web/src/components/InvitationPreview.tsx` maps tokens 1:1 to CSS classes in `web/src/styles.css`; model output is never interpreted as markup or styles. Keep tokens enums-only. Both sides of that map are enum-covered by tests: `server/test/og.test.ts` for the OG renderer, `web/test/InvitationPreview.test.tsx` for the CSS classes.
+**Hand-kept mirrors.** Each pair below has no shared source, so change both
+sides in one pass:
 
-Material system (adr-018): `styles.css` opens with a `:root` token block —
-ground, glass, ink, accent, radius, elevation, motion — that is the single
-source of colour for converted surfaces. `CONVERTED` in
-`web/test/styles.test.ts` is the ratchet and names nine sections —
-`App chrome`, `Creation chat`, `Design controls`, `Guest page`,
-`Host manage dashboard`, `Landing page`, `Landing: account footer`,
-`Landing: returning-host block`, `Share panel` — and each conversion adds a
-name to it. **Read that list as sections, not surfaces:** `Share panel`
-reaches past the editor into the account sheets (`SignOutSheet`,
-`DeleteAccountSheet`), but not into the manage dashboard, whose share row is
-its own `.hm-share-row`. The editor, guest page, manage dashboard and landing
-page are fully converted; the landing speaks `--ink` like the rest of the app,
-and `.palette-warm` keeps the brown `#4a3728` it had lent the landing's
-chrome. What is left has a banner each: `Crash screen` 12, `Sign-in gate` 35,
-`Account sheets` 14 (sign-out and delete, built on the gate's `.ag-*` shell,
-so they convert with it), `Share panel: signed in` 10, `Reply notifications`
-5, `Gallery` 22. A section runs from its `/* Title ---- */` banner to the next
-one, so a rule added after the last banner silently joins it — that is how
-`Crash screen` once held six surfaces. Two allowlisted sections still contain
-hex on purpose and the test knows it: `Creation chat`'s `.cc-sk` shimmer needs
-a stop lighter than both its ends, and the `Material system` banner holds the
-token definitions themselves.
+- `server/src/schemas.ts` (the source of truth) ↔ `web/src/types.ts`
+- the server's `InvitationId` ↔ `isInvitationId` in `web/src/invitationId.ts`
+- `SEO_STRINGS` in `server/src/seo.ts` ↔ `SEO` in `web/src/i18n.ts`
+- `GALLERY_OCCASIONS` in `server/src/seo.ts` ↔ `web/src/gallery/occasions.ts`.
+  A slug on one side only is a URL offered for indexing that renders as a
+  dead link
+- `prerenderKey` in `server/src/seo.ts` ↔ `prerenderMarkers` in
+  `web/src/prerender.ts` (`<page>:<lang>`; the server's scanning regex expects
+  exactly that shape)
+- the OG renderer's token→style maps ↔ `.palette-*`/`.type-*`/`.layout-*`/
+  `.ornament-*` in `styles.css`. Enum coverage is tested on both sides
+  (`server/test/og.test.ts`, `web/test/InvitationPreview.test.tsx`)
+- the share-card PNGs and their copy ↔ `LANDING` (regenerate with
+  `node scripts/build-brand-assets.mjs`, never edit the PNGs)
+- the DS `InvitationPreview.d.ts` and `.design-sync/conventions.md` ↔ the
+  component's props
 
-**Collapsing a literal onto an existing token is allowed when the two do the
-same job — not when they merely measure alike.** The guest page pass collapsed
-five values under a dE 2.5 threshold; the share panel pass then kept
-`--caution-wash` (dE 2.2 from `--wash`) and `--caution-surface` (1.8 from
-`--surface`) separate anyway, because the whole purpose of the manage-token
-block is to not read as the clean chrome it sits in. Distance is the check,
-not the rule. The `--caution-*` group is that block's material: three edges
-forming a depth ramp, two faints, a wash, a surface and an ink. The hex scan is the ratchet's
-whole reach, so an accent held as `rgba(179, 89, 46, …)` passes it unseen:
-that is what `--ui-accent-rgb` is for, and why it is pinned to
-`--ui-accent` by a test rather than by a comment. It also reads only
-`styles.css`: an icon's `stroke="#…"` in a component is out of its sight,
-which is why the landing's icons stroke `currentColor` and take their colour
-from a rule. **`.palette-*` shadows
-`--ink`, `--accent`, `--wash` and `--edge` on whatever element carries it** —
-the card, but also each design-sheet swatch, which carries its own
-`palette-*` class — so the product's ink and accent there must be read through
-their non-shadowed aliases `--ui-ink` and `--ui-accent`; a test fails if a
-swatch rule reads a shadowed name other than its deliberate `--bg`. Two ink
-tiers below `--ink-faint` (`--ink-placeholder`, `--ink-whisper`) clear
-**nothing** — not even 3:1 — and a test asserts they stay under it, so no later
-edit can quietly promote them into readable text. **No text anyone has to read
-sits on them**: the manage dashboard, the guest page and then the landing moved
-every such text off, a sentence onto `--ink-muted` and a label, placeholder or
-timestamp onto `--ink-faint`, and a per-selector table in `styles.test.ts`
-holds each to the ground it sits on and the floor its role owes
-(`textFloors`). What still reads the two is named by a test — the INVINTO
-wordmarks (a logotype), the `.sp-link` glyph and the landing's three
-aria-hidden icons — and a new reader fails it. A third tier, `--ink-disabled`,
-went with its last user. `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*`
-are permanently exempt: those values are mirrored by hand in the OG renderer,
-where a raw hex is what keeps the mirror visible. Glass is two classes composed
-from tokens (`.glass`, `.glass-solid` — the second carries text), and the rule
-that makes the reduced-transparency fallback a token swap rather than a second
-design is that **every glass surface must be legible with its blur removed**.
-The editor's ground is tinted by the invitation being edited via
-`data-palette` on `.cc-shell` — an attribute, not the `palette-*` class, which
-would push the card's own ink and accent into the chrome. **The ratchet's unit
-is a section, not a surface**: tokenising `App chrome` and `Creation chat`
-also moved the language switcher (shared by the landing, guest and manage
-screens) and the share-panel/BYOK-panel shells, both nominally out of scope
-per adr-018 §8 — imperceptible or improving deltas, kept rather than
-reverted. The next conversion should expect the same mismatch.
+**One name.** The product is `INVINTO`, spelled as the domain, everywhere a
+name appears. It is the one untranslated string in `LANDING`, and
+`lp-brand-mono` derives its monogram from it. adr-013 and
+`docs/06-roadmap.md` quote the earlier `INVITO` from mockups on purpose,
+with a pointer to adr-016 §9: don't "fix" those.
 
-Design projects (split 2026-10-02 → 2026-10-10): two Claude Design projects, and "DS" in this repo means only the first. **E-invitation DS** is the design system — `InvitationPreview`, this stylesheet's closure and its tokens, and the `card-background`/`lang-switcher` component specs — and the only `/design-sync` target (`.design-sync/config.json`). **E-invitation design** is a regular project bound to the DS that holds every product screen (sign-in gate, creation chat, gallery, guest RSVP and its Phase 2 add-ons, host dashboard, landing, RSVP notifications, share panel, feedback sheet, brand name), flat at its root; comments cite its boards as ``design project `Name` ``, never as DS. New screen work goes there. Its copy of the DS is a snapshot that must be refreshed after every DS sync — how, and how a template set moves, is in `.design-sync/NOTES.md`.
+**Model output is data, never markup.** The model picks design tokens from
+closed enums; keep them enums-only.
 
-Web structure: six routes in `web/src/AppRoutes.tsx` (`/`, `/create`, `/gallery`, `/gallery/:occasion`, `/manage/:id`, `/i/:id`) on react-router-dom in **declarative mode only** — no data routers, loaders, or nested layouts (adr-011); `main.tsx` is just the `BrowserRouter` entry point, and the route table lives apart from it so tests can drive it through a `MemoryRouter`. A router's `:id` param is permissive, so **`isInvitationId` in `web/src/invitationId.ts` is the guard that the old route regexes used to be** — it mirrors the server's `InvitationId` and is applied in the hooks that own the fetch, so a malformed id renders a dead-link state and never reaches the API. Navigation is `useNavigate`/`<Link>`, never `location.href`; `useHostManage` takes the `#t=` manage token from `useLocation` and strips it with `navigate(..., { replace: true })` — nothing may call `history.replaceState` behind the router. Components or hooks touching either need a router wrapper in tests. The screens are composition only — state lives in `web/src/hooks/` (`useInvitationEditor` = what the invitation is, `usePublishing` = where it's published, `useHostManage` = the host's access to responses + `useHostInvitationCounts` for the landing list, `usePublishedInvitation` + `useRsvpForm` + `useViewBeacon` on the guest side, `useReferralSource` on the editor side) and markup in `web/src/components/{editor,guest,manage}/`. The editor's two date rules are deliberately unequal. A date that won't parse into a calendar start is a **nudge**: the chat asks for one once per session (FR-1.7, `datePrompted` ref) and publishing is untouched, because a save-the-date without a day is a real invitation. A date that parses into a day **already gone by** is a **gate** (FR-1.8): `useInvitationEditor` exposes `dateBlocked`, `App` disables the Publish button from it, and `usePublishing.publish` — the one funnel the press, a republish and the post-sign-in resume all run through — refuses the invitation outright, so the gate is a rule rather than a disabled button. Both sides read one predicate, `isPastDate` in `calendar.ts`, or they would drift. The refusal is said on **every** turn it is still true (no ref): it explains a disabled button, and a reason that scrolls off the top of the log explains nothing. It compares by **calendar day in the host's local time** — an event that started this morning is not past — which is also why the check is client-side and not on the server, whose "today" is UTC and would refuse a legitimate same-day publish for hosts east of it. `dateBlocked` is derived from the invitation rather than set during a generate, because the sign-in draft (adr-014 §2) restores an invitation no generate ran for. Put new state in a hook rather than in a screen: the hooks are what the tests drive (vitest runs under jsdom, `@testing-library/react` for hooks/components), and `App.tsx`/`GuestPage.tsx`/`ManagePage.tsx` are meant to stay readable at a glance. **`vite.config.ts` sets `globals: false`, so RTL never auto-cleans** — component tests using `screen` must `afterEach(cleanup)` or they start matching the previous test's DOM.
-
-Host access (adr-010): the manage token is stored at publish under `inv-manage:<id>` and read back by `/manage/:id`, which also accepts it from a `#t=` URL fragment (persisted, then stripped) or a pasted manage link. The fragment is never sent to the server — keep it out of query strings. The share panel treats the manage link as a subordinate, masked action beside the public link; that hierarchy is the only control against a host pasting the wrong one into a chat. Where `navigator.share` exists the panel's primary action is the native share sheet and copying steps down to `sp-secondary` (FR-3.6) — the hierarchy is a rule about the **count** of filled accents, not about which action is filled, and `canShare` is read once in `usePublishing` so the panel stays presentational and jsdom gets the copy-only panel by default. The sheet takes the guest link and the title as published, never the manage token, and a dismissed sheet (`AbortError`) does nothing rather than falling back to the clipboard. `web/src/hostInvitations.ts` keeps a browser-local `{id, title, published_at, palette}` index (no secrets) that the landing page lists for a returning host.
-
-Host accounts (adr-014): the **first reversal of part of adr-005**, which four earlier ADRs re-affirm by name. An account is a **keyring, not an owner** — `manage_token` stays the credential every host-facing endpoint checks in constant time, and a session's only new powers are reading back the tokens it holds and authorizing a *first* publish. `server/src/db.ts` opens SQLite (`DATA_DIR/app.db`, `node:sqlite` via `createRequire` — `sqlite` is missing from Node 22's `builtinModules`, so a plain import fails under Vite) **beside** the file store; invitation records stay one JSON file per id and `store.ts` is untouched. `server/src/accounts.ts` authorizes nothing and stores no manage token: the keyring table holds `(user_id, invitation_id)` and `routes/account.ts` joins the token off the record. Google OIDC (code + PKCE, `openid email`, no JS SDK) in `auth/google.ts`; the session is an opaque hashed id in an httpOnly `SameSite=Lax` cookie scoped to `Path=/api` so it never rides `/i/:id` or the OG request. Sign-in and the gate are separate switches: no OAuth client = no gate (§7), and `PUBLISH_REQUIRES_ACCOUNT=0` keeps publishing anonymous while sign-in is available — which is also how the ADR's revisit trigger is pulled without a deploy. Closing the gate freezes a metrics baseline (`markBaseline`) so publish-rate and `new_hosts_per_publish` stay readable across the boundary. The keyring's traffic runs **both ways** (§5, amended): `POST /api/account/claim` files what this browser can prove it holds — every `inv-manage:<id>` the keyring does not already list — into the account, or the landing list stays permanently two-class and a pre-account publish never reaches a second device. Per-item authorized like adr-012's counts, idempotent, and `linked` counts rows *inserted* so "N are now in your account" is only ever said once; linking is deliberately **not exclusive**, since two holders of one manage link are two people the product cannot tell apart. Client-side, `useAuthSession` seeds `inv-manage:<id>` and `inv-invitations` from the keyring, so **no other hook knows accounts exist** — with exactly one exception, added when the seed turned out to be unreachable: the hook also *returns* the entries, and `LandingPage` renders `mergeHostInvitations(local, account.invitations)`. The seed is async and the list's read was a synchronous `useState` initializer, so a signed-in host on a new device saw nothing until they reloaded (adr-014 §5, amended). That merge is a **union, keyring-wins-by-id** — an invitation published before this browser signed in is in no keyring and must not vanish — and `null` (no answer yet) is not `[]` (an account holding nothing). Sign-out and account deletion both leave this browser's tokens alone, and deletion keeps every invitation and RSVP (FR-11.7). The sign-in UI is built from three template sets in the E-invitation design project: the gate is the **first frame of the share sheet** (`AuthGate.tsx`), never its own screen, and it opens on the Publish press rather than on a 401 — which is why `/api/auth/session` reports `publish_gate`. The gate is not the only door: the landing nav carries one muted `lp-nav-signin` link into the same flow with `redirect_to=/` (FR-11.11), rendered only when signed out *and* configured, and deliberately not inside the invitations card. **The landing list is account-only where accounts exist** (§1, amended; design project `LandingListIsAccount`) — `showList = status === "unavailable" || signedIn`, so the list is the view of whichever store owns the identity and the signed-out-with-a-list state exists nowhere. No capability is revoked: tokens, `/manage/:id` and guest links are untouched, and what a signed-out host loses is the enumeration, which `lp-nav-signin` acknowledges by carrying the count of held tokens (`allHeldManageTokens`, thin-spaced separator — it defeats exact text matching in tests). `lp-nav-counted` on the header drives the ≤800 wordmark shrink and the ≤370 monogram, and it keys off *whether the count renders*, never the count alone. Sign-out now hides a list while changing no access, so it goes through `SignOutSheet` — the delete sheet's shape without its red. A **declined** sign-in returns to where it was started, read off the state row. `web/src/draft.ts` parks the editor's invitation before the full-page redirect and `useInvitationEditor` takes it back; without that a host returns from Google to an empty editor. `declined` and `failed` are distinct states (cancelling is a choice, not a fault) and the resume is **ref-guarded, not state-guarded**, or StrictMode mints two links for one event. In the share panel a signed-in host's manage block collapses behind "Show" — safe only because the copy button collapses with it, and the rule that **the copy button never renders without its warning** is held by a test.
-
-Browser storage: every key is `inv-*` (`inv-manage:<id>`, `inv-manage-seen:<id>`, `inv-viewed:<id>`, `inv-invitations`, `inv-llm-key`, `inv-ui-lang`, `inv-guest-lang`). Reply notifications add none — the preference is server-side per account. Per-invitation host state goes through `web/src/manageTokens.ts` — `manageTokenKey`/`manageSeenKey` plus the `readManageToken`/`writeManageToken` accessors — and **both sides of a key go through it**, so a write can't drift from the reads that depend on it. That module is two layers, memory first: an in-process map the keyring seeds on sign-in (adr-014 §5), so a signed-in host still works with storage blocked, then `localStorage` best-effort behind it. `localStorage.clear()` cannot reach the map — call `forgetHeldManageTokens()`, which is what the tests do between cases. Every `localStorage` call is wrapped in try/catch: private-mode Safari and blocked-storage settings throw on plain access, and these reads run as `useState` initializers during render, where a throw is a blank page rather than a lost preference. A blocked store degrades a feature; it never fails the action around it — notably publish, which has already succeeded server-side by the time the token is written.
-
-OG images (`server/src/og/render.ts`): satori + resvg render the share-link preview (1200×630 PNG) server-side from the same tokens — the token→style maps there mirror `web/src/styles.css` by hand and `test/og.test.ts` enforces enum coverage. Fonts are vendored TTFs in `server/assets/fonts/` (the runtime Google-Fonts `@import` can't feed satori). `GET /i/:id` serves the SPA shell (`web/dist`, when built) with the invitation's head **swapped into** it so messenger crawlers see them; `?v=<version>` on the image URL busts messenger caches on republish.
-
-Regeneration is **per-field, never whole-invitation**: `POST /api/invitations/regenerate-field` takes the brief + field + current value and returns one rewritten field.
-
-AI background layer (adr-009): `POST /api/invitations/background` is an explicit editor action (never part of the 3s generate path) — `server/src/llm/imageGen.ts` calls `gemini-2.5-flash-image` (single model, no fallback; gemini-only for BYOK) with a server-built no-text prompt, stores the PNG under `DATA_DIR/backgrounds/`, and the invitation carries only an opaque nullable `background.id` served via `GET /api/backgrounds/:id`. The client composites it under the copy with a palette-tinted scrim (`--bg-rgb` custom props in `styles.css`, spec synced from the E-invitation DS `templates/card-background` mockups); `split` confines the image to a side panel; `minimal` rejects backgrounds; the OG card stays token-only.
-
-BYOK (adr-006, transport per adr-007): the host's own provider key rides generate/regenerate requests as `x-llm-provider`/`x-llm-key` headers (browser localStorage only, editor "AI key" panel). The gateway then walks **only that provider's models** — never operator-key fallbacks; if the free-first route has none, `BYOK_FALLBACK_MODELS` applies — and spends the key directly: Anthropic keys via a per-request SDK client, Gemini/OpenAI keys as the bearer token of the in-process call. Groq/Ollama are operator-side only, never BYOK. Keys are never stored or logged (`byok: true` is the only log trace; fastify redacts the header).
-
-Share loop (adr-013): the guest→host loop is **measured, not incentivized** — no rewards, no accounts, one CTA. `web/src/components/guest/GuestCta.tsx` links the guest page back to `/create?ref=guest`; `useReferralSource` captures that parameter once at mount and strips it via the router (`navigate(..., { replace: true })` — never `history.replaceState`, adr-011 §4), then tags the generate call's `source`. `POST /api/invitations/:id/view` is the view beacon: `useViewBeacon` fires it once the invitation is **ready** (a dead link is not a view), guarded browser-side by `inv-viewed:<id>` (`viewedInvitations.ts`, flag written *before* the request so a re-invoked effect cannot double-count) and server-side by `server/src/views.ts`, an in-process `(ip, invitation)` set that drops at UTC midnight. That beacon is a counter, not a security control, and `GenerateSource` is a closed `direct`/`guest` enum on purpose — carrying the referring id would build the host graph adr-012 and adr-005 both refused.
-
-Reply notifications (adr-015): three modules, three jobs — `server/src/notifications.ts` is state, `server/src/email/send.ts` is transport (one `fetch`, no SDK, never throws — every failure is a returned reason), `server/src/email/replyNotifier.ts` decides. That split is what lets the rate limit be tested with no network and the transport with no database. **The preference is per account (`notification_prefs`, keyed by user) but the §4 window is per invitation (`notification_sends`)** — one-click unsubscribe promises to stop the *sender*, so honouring it per event earns the spam button, while a shared window would let one busy event silence another. Reply email is **opt-in** (§7, amended 2026-08-02 — the reason is deliverability on an unwarmed sending domain, not consent): absence of a prefs row means *disabled*, the eligibility join requires `enabled = 1`, and `ensurePref` mints a row that is off, so nothing that merely touches the row can start mail. The "a default that is never written cannot drift" property is kept — only its direction changed. The host is **asked at publish** in the share panel rather than told, because a switch they have to go and find is one nobody finds; the same control has durable homes on the landing footer and on `/manage/:id`, where it must state in words that it governs the whole account (an ADR note had rejected that page as "an event surface for an account-level setting" — outweighed, not overturned, and the scope line is the mitigation). Eligibility is the **keyring**: an anonymously published invitation has no row, resolves to no targets, and notifies nobody. The email is count-only — no guest name, ever (§3) — and links to bare `/manage/:id` with no `#t=`, which is what makes it safe to forward. Sending is dispatched from the RSVP route and **never awaited**; note `addRsvp` is immutable, so the notifier must be handed its *return value* or the count excludes the reply being notified about. `/unsubscribe/:token` sits **outside `/api`** (the session cookie is `Path=/api` and this URL arrives from an inbox): `GET` renders a confirm step and must never mutate — mail scanners follow links without a human — while `POST` mutates and takes no origin check, since RFC 8058 one-click is cross-origin by definition and needs a form-encoded content-type parser Fastify does not have by default.
-
-Discoverability (adr-016): the product has **one name, `INVINTO`**, spelled as the domain is (adr-016 §9) — landing wordmark, guest page, dashboard, crash screen, `.ics` `PRODID`, reply email, unsubscribe page, manifest, icons, share card and every search title. It is the one string in `LANDING` that is not translated, and `lp-brand-mono` derives its monogram from it rather than holding a second copy. adr-013 and 06-roadmap keep the earlier `INVITO` in quotations from the design mockups on purpose, each with a pointer to §9 — don't "fix" those. The SPA ships **one** `index.html`, so `server/src/seo.ts` is the single place that decides what each path's head says — search copy (`SEO_STRINGS`), the tag builder (`headTags`), the per-path resolution (`shellMeta`), `robotsTxt` and `sitemapXml`. Two callers use it: the SPA fallback in `app.ts` and `/i/:id` in `routes/og.ts`. The shell's default block sits between `<!--seo:start-->`/`<!--seo:end-->` in `web/index.html` and is **replaced, never appended to** — `og:title` is first-one-wins in every unfurler, so an appended card would unfurl every share link as the marketing page. That committed block is pinned by `test/seo.test.ts` to what `shellMeta("/", "", DEFAULT_ORIGIN)` generates, so copy edits can't leave a stale title in the file every crawler reads first. **Only `/` is indexed**; `/create`, `/manage/:id`, `/i/:id` and unknown paths are `noindex` (plus an `X-Robots-Tag` header) and name **no canonical** — noindex + canonical is a contradiction, while `og:url` is separate and survives on `/i/:id`. The one rule that must not be "tidied": `robots.txt` **does not disallow `/i/`** and explicitly `Allow`s `/api/invitations/*/og.png` before `Disallow: /api/` — messenger crawlers honour robots.txt, so either omission stops every published link unfurling (FR-3.5) with nothing in the logs; keeping guest pages out of the index is `noindex`'s job, and `noindex` has to be fetched to be read. `robots.txt`/`sitemap.xml` are routes, not files in `web/public/`: they must state an absolute origin (`CANONICAL_HOST`), and a static file would collide with `@fastify/static`'s per-file routes. `?lang=en` is the English landing page's only address (the UI toggle is a browser preference and a crawler holds none); it wins over `inv-ui-lang` and writes it, and the landing toggle moves the URL with `navigate(..., { replace: true })`. Client-side, `web/src/seo.ts` re-applies title/description/robots/canonical/`<html lang>` after a router navigation and deliberately leaves `og:*` alone (no unfurler runs JS); its copy is in `i18n.ts` as `SEO` and mirrors `SEO_STRINGS` by hand, like `types.ts` mirrors `schemas.ts` — change both in one pass. `web/public/` holds the committed brand artifacts (favicon, PWA/touch icons, the share cards, manifest); regenerate the PNGs with `node scripts/build-brand-assets.mjs` rather than editing them. The share card is **one file per language** — `SITE_IMAGE_PATHS` in `server/src/seo.ts` picks `/og-cover.png` for `/` and `/og-cover-en.png` for `/?lang=en`, because the card carries the headline and the occasion words and `?lang=en` is the page most often shared rather than typed; its copy mirrors `LANDING` by hand (a raster cannot import a table), and `test/seo.test.ts` checks a committed PNG exists behind every path in the map. The landing page's body is **prerendered into the shell at build time** (adr-016 §10): `web/src/prerender.ts` generates its copy as HTML from `LANDING` — build-time only, never import it from client code — and the `inv-prerender-landing` Vite plugin injects one block per language into `#root`. It is **not** hydration: `createRoot` discards those children, so the markup only has to say the same things in the same classes, which is what keeps `react-dom/server` out of the tree. `selectPrerender` in `server/src/seo.ts` keeps the requested language and **strips the rest on every other path** — without that a guest would watch the marketing hero sit under their share link until React replaced it. The CTAs are `<a href="/create">` so a crawler has an edge to follow; `a.lp-cta` in `styles.css` exists only for those two declarations.
-
-Invitation gallery (adr-017): `/gallery` plus six occasion pages — the content FR-13 made indexable but gave nothing to rank for. The occasion list is **mirrored by hand** in `server/src/seo.ts` (`GALLERY_OCCASIONS`) and `web/src/gallery/occasions.ts`, like `types.ts` mirrors `schemas.ts`, and this mirror bites harder than a type mirror: a slug on one side only is a URL the server offers for indexing and the client renders as a dead link. Content lives in `web/src/gallery/` — `content.uk.ts`/`content.en.ts` keyed by occasion, `designs.ts` shared across languages (tokens are presentation; translating them would mean two ways to say "romantic script"). An example is a **full `Invitation`**, not a card, because the editor regenerates fields from `invitation.brief`; every one states **no date, time, venue or city**, so a template can never age into FR-1.8's refusal to publish, and a seeded editor gets FR-1.7's nudge instead. The cards are `InvitationPreview` unchanged — there is no second card renderer, and the hub's thumbnails are `transform: scale()` in gallery CSS rather than a `compact` prop, because that prop is mirrored by hand in the DS `InvitationPreview.d.ts` and `conventions.md`, which have gone stale once already. `gallery.test.ts` holds the rules the types cannot: same ids in both languages, a **distinct palette per example** (range is what the page promises), no Cyrillic under `.en`, and nothing dated anywhere.
-
-Prerendering is **per (page × language)** since adr-017 §6: sixteen blocks in the shell, keyed `<page>:<lang>` by `prerenderMarkers` in `web/src/prerender.ts` and `prerenderKey` in `server/src/seo.ts` (mirrored by hand, and its scanning regex expects exactly that shape). `selectPrerender` **scans the shell for whatever markers are present** rather than walking a fixed list — a page added without updating such a list would leak its block onto every other page, including a guest's share link. Not an optimisation to tidy away: a gallery page that ships as an empty `#root` does not rank, which is the whole iteration.
-
-Seeding: "use this one" is `<a href="/create?sample=<id>">` — a full page load, because a crawler needs a real edge and `?sample=` must survive a reload. `useGallerySample` mirrors `useReferralSource` exactly (read once at mount, strip via `navigate(..., { replace: true })`). It is **not a new editor path**: `useInvitationEditor`'s `restored` parameter already accepted an invitation no generate produced, built for adr-014 §2's sign-in draft, and a parked draft still wins over `?sample=`. Two things had to move for the seed to mean anything — the date check lifted out of `send()` into `noteDateState` (a sample always has a null date, so the nudge lived where it could never fire for one), and `description` seeded from the example's originating sentence (otherwise the host's next chat turn generates from "12 жовтня" alone and replaces the invitation they chose).
-
-Metrics: `server/src/metrics.ts` counts generations and per-field regenerations, persisted to `DATA_DIR/metrics.json` (write-then-rename) so counters survive restarts; `GET /api/metrics` exposes the regenerate-rate (the main copy-quality signal) and publish-rate, plus the adr-013 share-loop pair — `views_per_publish` and `new_hosts_per_publish`, the number `docs/07-monetization.md` §5.1 gates every commercial option on. New scalar counters go in `SCALAR_COUNTERS` and nowhere else *in the loader* — but `load()`'s defaults, `readBaseline`'s frozen literal and `totals()` are hand-written object literals that each need the key too; TypeScript catches all three. A key absent from an older `metrics.json` starts at 0 rather than resetting the file. `gallery_generations`/`gallery_publishes` (adr-017 §7) attribute the **publish** as well as the generate, because a gallery host can publish having generated nothing; the cost is that `publish_rate` (publishes ÷ generations) now inflates and can exceed 1 — subtract `gallery_publishes` to recover what it meant. `markBaseline` is idempotent and production already froze one for the auth gate, so it is not a tool a later iteration can reuse. Per-request LLM logs come from the gateway.
-
-Guardrails (adr-008): `server/src/guardrails.ts` gates the two LLM-backed endpoints for non-BYOK requests — per-IP daily allowances (`LIMIT_GENERATIONS_PER_DAY`/`LIMIT_REGENERATIONS_PER_DAY`, 429 when over) and a daily operator budget breaker (`DAILY_BUDGET_USD`, 503 when exhausted) fed by the gateway's cost estimates. BYOK requests bypass both; `/healthz` reports limits and today's spend; env var 0 disables a guardrail.
-
-Module caches: `db.ts`, `llm`-side `auth/google.ts`, `metrics.ts` and `snapshot.ts` each hold process-lifetime state and each export an explicit reset (`closeDb`, `resetJwksCache`, `resetMetricsCache`, `resetSnapshotState`) — tests give every case its own `DATA_DIR` and would otherwise read the previous case's numbers. A new caching module ships with the same.
-
-Backups (`docs/05-deployment.md`, Backups): everything lives on the one `/data` volume, backed up by Northflank volume schedules. `server/src/snapshot.ts` writes a consistent `snapshots/app.db` with `VACUUM INTO` on a timer (`DB_SNAPSHOT_MINUTES`), because the live WAL-mode database is two files a platform snapshot can catch out of step. It never runs at boot and never after a failed `quick_check`, so it cannot replace the last good copy with a bad one; the timer starts in `index.ts`, not `buildApp()`, so tests start none. Anything written to `DATA_DIR` must stay safe to snapshot mid-write: write whole and rename, as `store.ts` and `metrics.ts` do.
-
-Schemas: `server/src/schemas.ts` (zod, v4) is the source of truth; `web/src/types.ts` mirrors it and must be updated in sync by hand.
-
-Language handling: `EventBrief.language` (`uk`/`en`) is detected from the input sentence and drives the copy language; the UI language toggle in `web/src/i18n.ts` is independent of it. Every user-visible string belongs in one of the `i18n.ts` tables, **including the landing page's demo content** — the hero's three sample invitations (`LANDING.samples`, keyed by `SampleId`, joined to `SAMPLE_DESIGNS` in `LandingPage.tsx`; the tokens are presentation and stay there) and the mocked reply names (`LANDING.rsvpNames`, keyed by `DemoGuest`, with the statuses beside them in the component). Those samples were Ukrainian literals in the component for a while: FR-6.3's "invitation text is never translated" is about a *host's* invitation on the guest page, and a mock-up is the one thing an English visitor on `/?lang=en` is there to judge. `web/test/i18n.test.ts` walks every table and fails on Cyrillic anywhere under `.en`, and on a shape (keys, array lengths) that differs between the two languages — the types only cover keys, so an English array that lost an entry, or a value left untranslated, was previously invisible. The reverse check does not exist and is not wanted: Viber, Telegram, Google, RSVP, CSV and `INVINTO` all belong in the Ukrainian tables.
+**Every user-visible string** is in an `i18n.ts` table in both languages
+(see `web/CLAUDE.md`).
 
 ## Status
 
-Implemented: generate + per-field regeneration + deterministic preview; publish (versioned snapshot + share link + OG image) + guest RSVP page; in-process multi-provider gateway with free-tier-first routing — Groq/Gemini primaries, Claude/Ollama fallbacks (adr-007, replaced the LiteLLM Proxy sidecar that OOM-killed on small plans); production Docker image (single container: API + SPA + OG, file store on a volume — see `docs/05-deployment.md` for the Northflank setup); BYOK per-request user keys (adr-006); operator-cost guardrails — per-IP daily limits + budget breaker (adr-008); durable metrics with publish-rate; guest-page add-to-calendar (.ics); RSVP CSV export; optional AI background layer (adr-009, Gemini image, palette-tinted scrim); custom-domain support (`CANONICAL_HOST` redirect + runbook in `docs/05-deployment.md`); durable host access to responses — `/manage/:id` dashboard, manage link, dedupe-aware counts, returning-host landing list (adr-010, FR-5.4–5.6); batch response counts on the returning-host list via `POST /api/invitations/counts` — the first multi-token request, per-item authorized (adr-012, FR-5.7); share-loop instrumentation — guest-page view beacon, guest CTA back to the editor, and referral-attributed generations feeding `views_per_publish` / `new_hosts_per_publish` (adr-013, FR-4.7 + FR-7.3–7.5); missing-date nudge in the editor chat, and a publish gate on a date already gone by (FR-1.7, FR-1.8); host accounts — Google sign-in, keyring, publish gate, sign-in UI, account deletion (adr-014, FR-11); RSVP notifications — count-only reply email to the signed-in host, rate-limited per invitation, account-wide unsubscribe (adr-015, FR-12); native share sheet at publish where the browser has one (FR-3.6); the invitation gallery — seven indexed pages of ready-to-use wording that seed the editor with no model call, with gallery-attributed publishes (adr-017, FR-14, amending FR-13.2); public discoverability — per-path head metadata, `robots.txt`/`sitemap.xml`, `?lang=en` for the English landing page, brand icons and a site share card, with every private surface `noindex` (adr-016, FR-13); backups — scheduled volume backups plus an hourly consistent `app.db` snapshot reported on `/healthz` (`docs/05-deployment.md`). Not yet built: per-key metering; RSVP deletion.
+Built: generation with per-field regeneration, publish with OG image, guest
+RSVP, multi-provider gateway with BYOK and cost guardrails, metrics, host
+dashboard and manage links, Google sign-in with keyring, RSVP reply email,
+share-loop instrumentation, SEO with prerendered landing and gallery, LLM
+eval and probe, backups (volume schedules plus an hourly consistent
+`app.db` snapshot reported on `/healthz`). Not yet built: per-key metering, RSVP deletion. Roadmap:
+`docs/06-roadmap.md`.

@@ -305,7 +305,7 @@ describe("gallery attribution", () => {
   });
 
   // A key absent from an older metrics.json starts at 0 rather than resetting
-  // the file — the rule CLAUDE.md states for SCALAR_COUNTERS.
+  // the file — the rule server/CLAUDE.md states for SCALAR_COUNTERS.
   it("starts at zero when the file predates the counter", async () => {
     writeFileSync(
       join(dataDir, "metrics.json"),

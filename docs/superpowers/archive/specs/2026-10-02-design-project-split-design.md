@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-02 · **Status:** approved in brainstorm · **Lands as:** no FR
 or NFR. This is how the design workspace is organised, not what the product
-does. One dated amendment to [adr-018](../../decisions/adr-018-material-system.md)
+does. One dated amendment to [adr-018](../../../decisions/adr-018-material-system.md)
 §9; no new ADR, because design-sync decisions live in `.design-sync/NOTES.md`.
 
 ## Outcome (2026-10-10): complete, and flatter than specified

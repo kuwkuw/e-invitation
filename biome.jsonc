@@ -72,11 +72,13 @@
       // The gateway's one-JSON-line-per-request log, the image path's copy of
       // it, and the mail sender's (adr-015 §5, the only record that a
       // notification was attempted) are the observability contract, not stray
-      // debugging; scripts/ are CLI tools whose output is the point.
+      // debugging; scripts/ and server/eval/ are CLI tools whose output is the
+      // point.
       "includes": [
         "server/src/llm/gateway.ts",
         "server/src/llm/imageGen.ts",
         "server/src/email/send.ts",
+        "server/eval/**",
         "scripts/**"
       ],
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
@@ -87,7 +89,7 @@
       // override (e.g. `.cc-preview-inner .design-controls`) is often authored
       // before the base rule (`.design-controls`). Specificity already yields
       // the correct cascade regardless of source order, so descending
-      // specificity here is deliberate, not a bug (see CLAUDE.md on the
+      // specificity here is deliberate, not a bug (see web/CLAUDE.md on the
       // intentionally compact, scannable CSS structure).
       "includes": ["**/*.css"],
       "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } }
