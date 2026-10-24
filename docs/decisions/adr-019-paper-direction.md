@@ -456,7 +456,7 @@ step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-landing-paper.m
 the editor waits on the two boards §7.5 names, this step needs none, and no
 code here depends on step 5's, so the order still avoids a stacked PR (§12).
 Building §8 settled what it left open, as the step's plan proposed
-(`docs/superpowers/plans/2026-10-24-manage-paper.md`):
+(`docs/superpowers/archive/plans/2026-10-24-manage-paper.md`):
 
 - **The header**: the seal, the guest page's monogram unchanged, beside the
   kicker and title, then `details_line`, then the countdown. The kicker stays
