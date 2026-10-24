@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 // Decorative inline icons for the guest page. All are aria-hidden: every one
 // sits inside a control or heading that already carries the accessible name.
 
@@ -18,35 +16,6 @@ export const CheckIcon = ({ size = 18, color = "currentColor", width = 2.2 }) =>
 export const CrossIcon = ({ size = 16, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M7 7l10 10M17 7L7 17" stroke={color} strokeWidth="2.1" strokeLinecap="round" />
-  </svg>
-);
-
-export const Twinkle = ({
-  className,
-  style,
-  size,
-}: {
-  className: string;
-  style?: CSSProperties;
-  size: number;
-}) => (
-  <svg
-    className={className}
-    style={style}
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-  >
-    <path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z" fill="currentColor" />
-  </svg>
-);
-
-/** Trailing affordance on every action row. */
-export const ChevronIcon = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M9 6l6 6-6 6" stroke="#c3bbac" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
@@ -85,17 +54,6 @@ export const LinkIcon = () => (
   </svg>
 );
 
-export const HeartIcon = () => (
-  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M12 20s-6.5-4.35-9-8.5C1.4 8.5 3 5.5 6 5.5c1.9 0 3.2 1.1 4 2.3.8-1.2 2.1-2.3 4-2.3 3 0 4.6 3 3 6-2.5 4.15-9 8.5-9 8.5z"
-      stroke="#9a9384"
-      strokeWidth="1.7"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 export const SpinnerIcon = () => (
   <svg
     className="gr-spin"
@@ -105,8 +63,8 @@ export const SpinnerIcon = () => (
     fill="none"
     aria-hidden="true"
   >
-    <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.35)" strokeWidth="2.6" />
-    <path d="M21 12a9 9 0 00-9-9" stroke="#ffffff" strokeWidth="2.6" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.35" strokeWidth="2.6" />
+    <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
   </svg>
 );
 
@@ -130,13 +88,13 @@ export const EmptyEnvelopeIcon = () => (
       width="18"
       height="13"
       rx="2.5"
-      stroke="#b7ae9e"
+      stroke="currentColor"
       strokeWidth="1.6"
       strokeDasharray="3 2.4"
     />
     <path
       d="M4 8l8 6 8-6"
-      stroke="#b7ae9e"
+      stroke="currentColor"
       strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"

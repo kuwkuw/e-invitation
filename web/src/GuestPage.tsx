@@ -2,7 +2,6 @@ import { useState } from "react";
 import { buildIcs, daysUntil, parseEventStart } from "./calendar";
 import { Countdown } from "./components/guest/Countdown";
 import { Envelope } from "./components/guest/Envelope";
-import { GuestActions } from "./components/guest/GuestActions";
 import { GuestBar } from "./components/guest/GuestBar";
 import { GuestCta } from "./components/guest/GuestCta";
 import { GuestNotFound } from "./components/guest/GuestNotFound";
@@ -146,21 +145,14 @@ export function GuestPage({ id }: { id: string }) {
 
           <div className="gr-side" id="rsvp">
             {form.sent ? (
-              <>
-                <ThanksCard
-                  attending={form.attending === true}
-                  guestsCount={form.guestsCount}
-                  onChangeAnswer={form.reopen}
-                  t={t}
-                />
-                {form.attending && (
-                  <GuestActions
-                    onShare={handleShare}
-                    shareSubtitle={copied ? t.linkCopied : t.shareHint}
-                    t={t}
-                  />
-                )}
-              </>
+              <ThanksCard
+                attending={form.attending === true}
+                guestsCount={form.guestsCount}
+                onChangeAnswer={form.reopen}
+                onShare={handleShare}
+                copied={copied}
+                t={t}
+              />
             ) : (
               <RsvpForm form={form} t={t} />
             )}

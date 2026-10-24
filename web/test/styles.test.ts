@@ -444,7 +444,6 @@ describe("the guest page's text", () => {
     [".gr-input::placeholder", "--app-bg", 3],
     [".gr-submit:disabled", "--edge-soft", 3],
     [".gr-change", "--surface", 3],
-    [".gr-row-sub", "--surface", 3],
     [".gr-cta-line", "--app-bg", 3],
   ]);
 
@@ -492,20 +491,21 @@ describe("the landing page's text", () => {
   ]);
 });
 
-/** The hex ratchet reads only styles.css, so an accent written into a
+/** The hex ratchet reads only styles.css, so a colour written into a
  *  component as a literal goes stale without a sound when the token moves:
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
- *  Guest components colour the accent through currentColor instead. */
+ *  Guest components colour everything through currentColor, set by the CSS
+ *  rule that places them, and carry no hex at all. */
 describe("the guest page's components", () => {
-  it("never name the accent as a literal, past or present", () => {
+  it("carry no hex literal at all", () => {
     const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
-    const accents = ["#b3592e", tokens.get("--ui-accent") as string];
     const named = readdirSync(dir)
       .filter((file) => file.endsWith(".tsx"))
-      .flatMap((file) => {
-        const source = readFileSync(join(dir, file), "utf8").toLowerCase();
-        return accents.filter((a) => source.includes(a)).map((a) => `${file}: ${a}`);
-      });
+      .flatMap((file) =>
+        [...readFileSync(join(dir, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
+          (m) => `${file}: ${m[0]}`,
+        ),
+      );
     expect(named).toEqual([]);
   });
 });

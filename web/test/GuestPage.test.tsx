@@ -194,3 +194,54 @@ describe("around the card (adr-019 §5.2, §9.4)", () => {
     expect(screen.queryByRole("link", { name: t.route })).toBeNull();
   });
 });
+
+describe("the reply card (adr-019 §5.3)", () => {
+  beforeEach(() => {
+    asReturningGuest();
+    vi.spyOn(api, "submitRsvp").mockResolvedValue({ ok: true });
+  });
+
+  async function answer(attending: boolean) {
+    fireEvent.change(await screen.findByPlaceholderText(t.namePlaceholder), {
+      target: { value: "Іван" },
+    });
+    fireEvent.click(screen.getByRole("radio", { name: attending ? t.yes : t.no }));
+    fireEvent.click(screen.getByRole("button", { name: t.send }));
+  }
+
+  it("asks «Ви з нами?», and that question names the choice", async () => {
+    renderPage();
+    expect(await screen.findByRole("heading", { name: t.replyTitle })).toBeDefined();
+    expect(screen.getByRole("radiogroup", { name: t.replyTitle })).toBeDefined();
+  });
+
+  it("seals a yes with a ✓, the party size, and a way to pass the link on", async () => {
+    renderPage();
+    await answer(true);
+
+    expect(await screen.findByText(t.thanksTitle)).toBeDefined();
+    const seal = document.querySelector(".gr-thanks-seal");
+    expect(seal).not.toBeNull();
+    expect(seal?.classList.contains("muted")).toBe(false);
+    expect(screen.getByText(new RegExp(t.attendingPill))).toBeDefined();
+    expect(screen.getByRole("button", { name: t.share })).toBeDefined();
+  });
+
+  it("seals a no quietly, with no share", async () => {
+    renderPage();
+    await answer(false);
+
+    expect(await screen.findByText(t.declinedTitle)).toBeDefined();
+    expect(document.querySelector(".gr-thanks-seal.muted")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: t.share })).toBeNull();
+  });
+
+  it("reopens the form with the answer intact (FR-4.4)", async () => {
+    renderPage();
+    await answer(true);
+    fireEvent.click(await screen.findByRole("button", { name: t.changeAnswer }));
+
+    expect((screen.getByPlaceholderText(t.namePlaceholder) as HTMLInputElement).value).toBe("Іван");
+    expect(screen.getByRole("radio", { name: t.yes }).getAttribute("aria-checked")).toBe("true");
+  });
+});
