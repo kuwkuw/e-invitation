@@ -887,7 +887,14 @@ export interface GuestStrings {
   guestForms: [string, string, string];
   changeAnswer: string;
   addToCalendar: string;
-  directions: string;
+  /** A maps search for the venue and city (adr-019 §9.4). */
+  route: string;
+  /** The pinned bar's anchor to the reply card. */
+  reply: string;
+  /** "{n} {form}": days to the event; `dayForms` as in relativeTime. */
+  countdown: string;
+  countdownToday: string;
+  dayForms: [string, string, string];
   share: string;
   shareHint: string;
   linkCopied: string;
@@ -929,7 +936,11 @@ export const GUEST: Record<Language, GuestStrings> = {
     guestForms: ["guest", "guests", "guests"],
     changeAnswer: "Change your reply",
     addToCalendar: "Add to calendar",
-    directions: "How to get there",
+    route: "Directions",
+    reply: "Reply",
+    countdown: "{n} {form} to go",
+    countdownToday: "It's today!",
+    dayForms: ["day", "days", "days"],
     share: "Share the invitation",
     shareHint: "Viber · Telegram · link",
     linkCopied: "Link copied!",
@@ -964,8 +975,12 @@ export const GUEST: Record<Language, GuestStrings> = {
     declinedPill: "Ви не зможете прийти",
     guestForms: ["гість", "гості", "гостей"],
     changeAnswer: "Змінити відповідь",
-    addToCalendar: "Додати в календар",
-    directions: "Як дістатися",
+    addToCalendar: "У календар",
+    route: "Маршрут",
+    reply: "Відповісти",
+    countdown: "До свята {n} {form}",
+    countdownToday: "Свято сьогодні!",
+    dayForms: ["день", "дні", "днів"],
     share: "Поділитися запрошенням",
     shareHint: "Viber · Telegram · посилання",
     linkCopied: "Посилання скопійовано!",

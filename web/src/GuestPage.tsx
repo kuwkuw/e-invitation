@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { buildIcs, parseEventStart } from "./calendar";
+import { buildIcs, daysUntil, parseEventStart } from "./calendar";
+import { Countdown } from "./components/guest/Countdown";
 import { Envelope } from "./components/guest/Envelope";
 import { GuestActions } from "./components/guest/GuestActions";
+import { GuestBar } from "./components/guest/GuestBar";
 import { GuestCta } from "./components/guest/GuestCta";
 import { GuestNotFound } from "./components/guest/GuestNotFound";
+import { QuietActions } from "./components/guest/QuietActions";
 import { RsvpForm } from "./components/guest/RsvpForm";
 import { ThanksCard } from "./components/guest/ThanksCard";
 import { InvitationPreview } from "./components/InvitationPreview";
@@ -78,8 +81,8 @@ export function GuestPage({ id }: { id: string }) {
   const { brief, copy, design } = published.invitation;
   const monogram = monogramFrom(brief.hosts);
   const place = [brief.venue, brief.city].filter(Boolean).join(", ");
-  // Hidden when the free-text date doesn't parse — better no button than a
-  // wrong day in someone's calendar.
+  // Null when the free-text date doesn't parse, which hides both the calendar
+  // action and the countdown — better nothing than a wrong day.
   const eventStart = parseEventStart(brief.date, brief.time);
 
   function handleAddToCalendar() {
@@ -97,7 +100,8 @@ export function GuestPage({ id }: { id: string }) {
   }
 
   async function handleShare() {
-    const url = window.location.href;
+    // Without the fragment: «Відповісти» may have left #rsvp on the URL.
+    const url = window.location.href.split("#")[0] ?? window.location.href;
     if (navigator.share) {
       try {
         await navigator.share({ title: copy.title, url });
@@ -121,19 +125,26 @@ export function GuestPage({ id }: { id: string }) {
         inert={envelopeUp}
         data-rising={envelope.phase === "opening" ? "" : undefined}
       >
+        <GuestBar detailsLine={copy.details_line} monogram={monogram} t={t} />
         <div className="gr-layout">
           <div className="gr-inv">
+            <div className="gr-lang">
+              <LangSwitcher globe value={chromeLang} onChange={handleLang} />
+            </div>
             <InvitationPreview
               copy={copy}
               design={design}
               background={published.invitation.background}
             />
+            <Countdown days={eventStart ? daysUntil(eventStart) : null} t={t} />
+            <QuietActions
+              onAddToCalendar={eventStart ? handleAddToCalendar : null}
+              place={place}
+              t={t}
+            />
           </div>
 
-          <div className="gr-side">
-            <div className="gr-lang">
-              <LangSwitcher globe value={chromeLang} onChange={handleLang} />
-            </div>
+          <div className="gr-side" id="rsvp">
             {form.sent ? (
               <>
                 <ThanksCard
@@ -144,9 +155,6 @@ export function GuestPage({ id }: { id: string }) {
                 />
                 {form.attending && (
                   <GuestActions
-                    when={eventStart ? [brief.date, brief.time].filter(Boolean).join(", ") : null}
-                    onAddToCalendar={handleAddToCalendar}
-                    place={place}
                     onShare={handleShare}
                     shareSubtitle={copied ? t.linkCopied : t.shareHint}
                     t={t}

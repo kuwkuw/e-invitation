@@ -884,6 +884,55 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-inv { margin-bottom: 20px; }
 .gr-lang { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 
+/* The pinned bar (adr-019 §5.2): seal, when, where and «Відповісти», on card
+   stock across the top of the page however far the guest scrolls. It cancels
+   the page's padding so it runs edge to edge, and sits under the envelope. */
+.gr-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -22px -20px 18px;
+  padding: 10px 16px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--edge);
+}
+.gr-bar-seal { width: 34px; flex: 0 0 auto; font-size: 0.7rem; }
+.gr-bar-lines { flex: 1; min-width: 0; }
+.gr-bar-when,
+.gr-bar-where { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-bar-when { font-size: 0.86rem; font-weight: 600; color: var(--ink); }
+.gr-bar-where { margin-top: 1px; font-size: 0.78rem; color: var(--ink-muted); }
+.gr-bar-reply { flex: 0 0 auto; padding: 8px 4px; font-size: 0.86rem; font-weight: 600; color: var(--ui-accent); text-decoration: none; }
+.gr-bar-reply:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Where «Відповісти» lands: below the bar, not under it. */
+#rsvp { scroll-margin-top: 72px; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Under the card: the countdown (§9.4) and the two quiet actions (§5.2). */
+.gr-countdown { margin: 18px 0 0; text-align: center; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; color: var(--ink-muted); }
+.gr-quiet { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; margin-top: 10px; }
+.gr-quiet-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.gr-quiet-action svg { width: 18px; height: 18px; }
+.gr-quiet-action:hover { color: var(--ink); }
+
 .gr-card {
   background: var(--surface);
   border: 1px solid var(--edge-soft);
