@@ -161,3 +161,32 @@ describe("the manage page's new copy (adr-019 §8)", () => {
     expect(AUTH.en.notifyStateOnEvent).toContain("not just this one");
   });
 });
+
+describe("the editor's new copy (adr-019 §7, §10)", () => {
+  it("counts replies with one placeholder per part", () => {
+    for (const lang of ["uk", "en"] as const) {
+      const chat = UI[lang].chat;
+      for (const key of ["repliesComing", "repliesNo", "repliesMaybe"] as const) {
+        expect(chat[key].match(/\{n\}/g)).toHaveLength(1);
+      }
+    }
+    expect(UI.uk.chat.repliesComing).toBe("{n} буде");
+  });
+
+  // #66's rule: the scope is in the offer, read before the host agrees.
+  it("puts the address and the account-wide scope in the share panel's offer", () => {
+    expect(AUTH.uk.notifyStateOffer).toBe("На {email} — про всі ваші запрошення.");
+    expect(AUTH.en.notifyStateOffer).toContain("every invitation in your account");
+  });
+
+  it("names the five design tabs adr-019 §7.3 lists", () => {
+    const d = UI.uk.design;
+    expect([d.palette, d.typography, d.layoutTab, d.envelope, d.background]).toEqual([
+      "Палітра",
+      "Шрифт",
+      "Макет",
+      "Конверт",
+      "Фон",
+    ]);
+  });
+});

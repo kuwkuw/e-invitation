@@ -13,8 +13,17 @@ export interface DesignStrings {
   title: string;
   palette: string;
   typography: string;
+  /** A row inside the «Макет» tab, beside `ornament`. */
   layout: string;
   ornament: string;
+  /** The tab that holds composition and ornament together (adr-019 §7.3). */
+  layoutTab: string;
+  /** The tab that shows the envelope a guest opens first (adr-019 §7.3). */
+  envelope: string;
+  /** Under the envelope still, when the brief names hosts. */
+  envelopeNote: string;
+  /** Under it when it names none, so the seal carries the brand's letter. */
+  envelopeNoHosts: string;
   values: Record<DesignValue, string>;
   background: string;
   bgAdd: string;
@@ -27,6 +36,16 @@ export interface ChatStrings {
   newInvitation: string;
   back: string;
   share: string;
+  /** The header's link to the dashboard after a publish (adr-019 §7.2): its
+   *  accessible name, and its text before the counts arrive or if they fail. */
+  repliesLink: string;
+  /** The link's text once the counts say nobody has replied yet. */
+  repliesNone: string;
+  /** FR-5.2's `guests`, the headcount, which a maybe never joins. */
+  repliesComing: string;
+  repliesNo: string;
+  /** Reported beside the headcount, never added to it (adr-019 §9.1). */
+  repliesMaybe: string;
   startTitle: string;
   startHint: string;
   tryExamples: string;
@@ -169,6 +188,10 @@ export interface AuthStrings {
    *  about a single invitation carrying a switch that governs them all.
    *  `{email}` is the signed-in address. */
   notifyStateOnEvent: string;
+  /** The share panel's off state (adr-019 §10, from PR #66): an offer, with
+   *  the address and the account-wide scope in it, read before the host
+   *  agrees. `{email}` is the signed-in address. */
+  notifyStateOffer: string;
   notifyTurnOff: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
@@ -239,6 +262,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyStateOnAccount: "For all your invitations.",
     notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
     notifyStateOnEvent: "To {email} — for all your invitations, not just this one.",
+    notifyStateOffer: "To {email} — for every invitation in your account.",
     signOut: "Sign out",
     signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
@@ -297,6 +321,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
     notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",
     notifyStateOnEvent: "Пишемо на {email} — про всі ваші запрошення, не лише про це.",
+    notifyStateOffer: "На {email} — про всі ваші запрошення.",
     signOut: "Вийти",
     signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
@@ -352,8 +377,14 @@ export const UI: Record<Language, UiStrings> = {
       title: "Design",
       palette: "Palette",
       typography: "Font",
-      layout: "Layout",
+      layout: "Composition",
       ornament: "Ornament",
+      layoutTab: "Layout",
+      envelope: "Envelope",
+      envelopeNote:
+        "Guests get the invitation in an envelope the first time they open the link. The seal is the initials from your description.",
+      envelopeNoHosts:
+        "Guests get the invitation in an envelope the first time they open the link. With no hosts named, the seal carries the INVINTO mark.",
       values: {
         warm: "Warm",
         elegant: "Elegant",
@@ -382,6 +413,11 @@ export const UI: Record<Language, UiStrings> = {
       newInvitation: "New invitation",
       back: "Back",
       share: "Share",
+      repliesLink: "Replies",
+      repliesNone: "No replies yet",
+      repliesComing: "{n} coming",
+      repliesNo: "{n} no",
+      repliesMaybe: "{n} maybe",
       startTitle: "Where shall we start?",
       startHint: "Describe your event in one sentence — I'll pick the style, colors and wording.",
       tryExamples: "Try, for example",
@@ -478,6 +514,12 @@ export const UI: Record<Language, UiStrings> = {
       typography: "Шрифт",
       layout: "Композиція",
       ornament: "Орнамент",
+      layoutTab: "Макет",
+      envelope: "Конверт",
+      envelopeNote:
+        "Гості отримують запрошення в конверті, коли вперше відкривають посилання. Печатка — ініціали з вашого опису.",
+      envelopeNoHosts:
+        "Гості отримують запрошення в конверті, коли вперше відкривають посилання. Без імен господарів печатка несе знак INVINTO.",
       values: {
         warm: "Тепла",
         elegant: "Елегантна",
@@ -506,6 +548,11 @@ export const UI: Record<Language, UiStrings> = {
       newInvitation: "Нове запрошення",
       back: "Назад",
       share: "Поділитися",
+      repliesLink: "Відповіді",
+      repliesNone: "Ще без відповідей",
+      repliesComing: "{n} буде",
+      repliesNo: "{n} ні",
+      repliesMaybe: "{n} можливо",
       startTitle: "З чого почнемо?",
       startHint:
         "Опишіть вашу подію одним реченням — я підберу стиль, кольори й оформлення запрошення.",
