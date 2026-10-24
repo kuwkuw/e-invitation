@@ -266,10 +266,6 @@
   ([adr-016](decisions/adr-016-public-discoverability.md) §6). The committed
   head block in `web/index.html` is generated, not hand-written:
   `server/test/seo.test.ts` fails if it drifts from what the module produces.
-- The palette→ground map in `styles.css` (`.cc-shell[data-palette="…"]`)
-  mirrors the six `.palette-*` rules **by hand**; `web/test/styles.test.ts`
-  holds the pairing by enum coverage
-  ([adr-018](decisions/adr-018-material-system.md) §1).
 
 ## NFR-9 Visual system & accessibility
 
@@ -282,8 +278,8 @@
   `.ornament-*` keep literal values — they are mirrored by hand in
   `server/src/og/render.ts`, where a raw hex is what keeps the mirror visible.
 - **Contrast.** Body ink (`--ink` and `--ink-muted`) meets WCAG AA (4.5:1)
-  against `--ground` — the root value and every per-palette override — and
-  against both chrome surfaces, opaque `--surface` since
+  against `--ground` and `--table`, the darker field the editor sets the card
+  on, and against both chrome surfaces, opaque `--surface` since
   [adr-019](decisions/adr-019-paper-direction.md).
   Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
   large-text floor and is reserved for labels, icons, placeholders and
@@ -305,6 +301,8 @@
   a token swap: the two glass classes are now card stock at full opacity
   with no blur. Its paper materials (grain, the deckled mat, the seal) may
   wrap the card but never sit on `.inv` or inside it, which keeps the OG
-  renderer's mirror honest; `web/test/styles.test.ts` holds both.
+  renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain is
+  the first defined, on the editor's table, and it sets only an image under
+  5% alpha, so it moves no contrast.
 - **Reduced transparency and reduced motion are honoured**, not detected: the
   two media queries above, never a device or user-agent check.

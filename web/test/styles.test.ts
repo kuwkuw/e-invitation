@@ -131,6 +131,14 @@ describe("token contrast (WCAG 2.1)", () => {
   it("keeps the accent itself visible on the ground for icons and rules", () => {
     expect(contrast(tokens.get("--accent") as string, ground())).toBeGreaterThanOrEqual(3);
   });
+
+  it("holds body ink at AA and --ink-faint at 3:1 on the table the card is set on", () => {
+    const table = tokens.get("--table") as string;
+    expect(table).toBe("#eae3d6");
+    expect(contrast(tokens.get("--ink") as string, table)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens.get("--ink-muted") as string, table)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens.get("--ink-faint") as string, table)).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe("glass", () => {
@@ -249,29 +257,20 @@ describe("paper materials (adr-019 §3)", () => {
     expect(preview).toMatch(/className/);
     expect(preview).not.toMatch(/\b(?:grain|deckle|seal)\b/);
   });
-});
 
-describe("palette-tinted ground", () => {
-  // Enum coverage, the same idiom server/test/og.test.ts uses: a seventh
-  // palette must not be able to ship an untinted editor.
-  it("gives every palette a ground entry, and invents none", () => {
-    const palettes = [...css.matchAll(/^\.palette-([a-z]+)\s/gm)].map((m) => m[1]);
-    const grounds = [...css.matchAll(/\.cc-shell\[data-palette="([a-z]+)"\]/g)].map((m) => m[1]);
-    expect([...new Set(palettes)].sort()).toEqual([...new Set(grounds)].sort());
-  });
-
-  it("keeps every ground light, so a dark card floats on light", () => {
-    // festive is a dark navy card; its ground must not follow it down.
-    for (const m of css.matchAll(/\.cc-shell\[data-palette="[a-z]+"\]\s*\{([^}]*)\}/g)) {
-      const ground = /--ground:\s*(#[0-9a-f]{6})/i.exec(m[1]);
-      expect(ground).not.toBeNull();
-      expect(
-        contrast(tokens.get("--ink") as string, (ground as RegExpExecArray)[1]),
-      ).toBeGreaterThanOrEqual(4.5);
-      expect(
-        contrast(tokens.get("--ink-muted") as string, (ground as RegExpExecArray)[1]),
-      ).toBeGreaterThanOrEqual(4.5);
-    }
+  it("defines grain as two dot layers at 3px and 7px, under 5% alpha", () => {
+    const grain = ruleBlocks(stripComments(sections(css).get("Material system") ?? "")).find((r) =>
+      r.selectors.includes(".grain"),
+    );
+    expect(grain?.body).toMatch(/background-size:\s*3px 3px,\s*7px 7px/);
+    // Only the image: a background-color or the shorthand here would paint over
+    // the colour of whatever element carries the class.
+    expect(grain?.body).not.toMatch(/background(?:-color)?\s*:/);
+    const alphas = [...(grain?.body ?? "").matchAll(/rgba\([^)]*,\s*([\d.]+)\)/g)].map((m) =>
+      Number(m[1]),
+    );
+    expect(alphas).toHaveLength(2);
+    for (const a of alphas) expect(a).toBeLessThanOrEqual(0.05);
   });
 });
 
@@ -336,10 +335,14 @@ describe("no raw hex in converted sections", () => {
 });
 
 describe("the editor canvas", () => {
-  it("paints the shell with the tinted ground, not a flat colour", () => {
+  it("sets the card on the grained table, whatever the palette (adr-019 §4.2)", () => {
     const shell = /\.cc-shell\s*\{([^}]*)\}/.exec(css);
     expect(shell).not.toBeNull();
-    expect((shell as RegExpExecArray)[1]).toMatch(/--ground-tint-a/);
+    expect((shell as RegExpExecArray)[1]).toMatch(/background-color:\s*var\(--table\)/);
+    expect(css).not.toMatch(/--ground-tint-|\[data-palette=/);
+    const app = readFileSync(fileURLToPath(new URL("../src/App.tsx", import.meta.url)), "utf8");
+    expect(app).toMatch(/className="cc-shell grain"/);
+    expect(app).toMatch(/data-palette=\{/); // kept as an unused hook (adr-019 §4.2)
   });
 
   it("near-bleeds the card without touching InvitationPreview's own rules", () => {
