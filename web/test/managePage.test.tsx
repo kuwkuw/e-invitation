@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { daysUntil, type EventStart, parseEventStart } from "../src/calendar";
@@ -169,5 +169,36 @@ describe("the summary (adr-019 §8.2)", () => {
     const { container } = renderManage();
     await screen.findByText(MANAGE.uk.guestsComing);
     expect(container.querySelector(".hm-tile")).toBeNull();
+  });
+});
+
+describe("remind guests (adr-019 §8.3)", () => {
+  it("copies the public link once someone has replied", async () => {
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    stubApi({ rsvps: [yesReply("Оксана", 1)], counts: { yes: 1, no: 0, guests: 1 } });
+    renderManage();
+    fireEvent.click(await screen.findByRole("button", { name: MANAGE.uk.remindGuests }));
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/i/${ID}`);
+    expect(await screen.findByText(MANAGE.uk.remindCopied)).toBeTruthy();
+  });
+
+  // With no replies the empty state's own share row already is this action,
+  // so the two never show together.
+  it("leaves an empty dashboard to its own share row", async () => {
+    stubApi({ rsvps: [] });
+    renderManage();
+    await screen.findByText(MANAGE.uk.emptyTitle);
+    expect(screen.queryByRole("button", { name: MANAGE.uk.remindGuests })).toBeNull();
+  });
+
+  it("copies from the empty state's share row through the same hook", async () => {
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    stubApi({ rsvps: [] });
+    renderManage();
+    fireEvent.click(await screen.findByRole("button", { name: MANAGE.uk.copyLink }));
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/i/${ID}`);
+    expect(await screen.findByText(MANAGE.uk.copied)).toBeTruthy();
   });
 });

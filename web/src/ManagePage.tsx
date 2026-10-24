@@ -8,6 +8,7 @@ import { ManageLinkPrompt } from "./components/manage/ManageLinkPrompt";
 import { ManageMessage } from "./components/manage/ManageMessage";
 import { ManageSkeleton } from "./components/manage/ManageSkeleton";
 import { NotifyControl } from "./components/manage/NotifyControl";
+import { RemindGuests } from "./components/manage/RemindGuests";
 import { ResponseList } from "./components/manage/ResponseList";
 import { SummaryCard } from "./components/manage/SummaryCard";
 import { buildRsvpCsv } from "./csv";
@@ -188,6 +189,7 @@ function ReadyDashboard({
         <div className="hm-body">
           <div className="hm-summary-col">
             <SummaryCard summary={summary} t={t} />
+            <RemindGuests url={shareUrl} t={t} />
             {newSinceLastVisit > 0 && (
               <p className="hm-new-line">
                 <span className="hm-new-dot" aria-hidden="true" />

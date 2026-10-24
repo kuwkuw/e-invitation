@@ -1804,6 +1804,20 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-count-yes .hm-count-num { color: var(--rsvp-yes); }
 .hm-count-no .hm-count-num { color: var(--rsvp-no); }
 
+/* «Нагадати гостям» (adr-019 §8.3): full width under the summary, bordered
+   and never filled. It copies the public link, which the accent means, so
+   its hover borrows the accent's border as .hm-btn's does, and no more. */
+.hm-remind {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 46px; margin-top: 12px;
+  border: 1px solid var(--edge); border-radius: var(--r-md);
+  background-color: var(--surface); color: var(--ink);
+  font: inherit; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.hm-remind:hover { border-color: var(--accent); }
+
 /* "N new since your last visit" — one dot language shared with the list. */
 .hm-new-line { display: flex; align-items: center; gap: 9px; margin: 14px 4px 0; font-size: 0.85rem; color: var(--accent-ink); }
 .hm-new-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }

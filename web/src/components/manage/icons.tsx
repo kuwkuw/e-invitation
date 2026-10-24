@@ -46,6 +46,21 @@ export function ChangedAnswerIcon() {
   );
 }
 
+/** «Нагадати гостям»: what it copies is a link. */
+export function LinkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function EnvelopeIcon() {
   return (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">

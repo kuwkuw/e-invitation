@@ -430,6 +430,7 @@ describe("the manage page's text", () => {
     [".hm-when", "--surface", 3],
     [".hm-previous", "--surface", 3],
     [".hm-count-label", "--surface", 3],
+    [".hm-remind", "--surface", 4.5],
     [".hm-count-yes .hm-count-num", "--surface", 4.5],
     [".hm-count-no .hm-count-num", "--surface", 4.5],
   ]);
