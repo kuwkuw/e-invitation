@@ -1533,21 +1533,24 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    .grain, so it takes background-color. overflow:hidden keeps a rising card
    from ever widening the page.
 
-   The envelope is three layers: its back (.lp-stage-env, the flap's
-   --kraft-deep), the card standing in it, and the front pocket (--kraft)
-   with a V cut into its top, where the seal sits. The card is bottom-
-   anchored, so its lower part stands behind the pocket and its title,
-   greeting and details line show above it. */
-.lp-stage { justify-self: center; width: min(440px, 100%); padding: 40px 20px 28px; background-color: var(--table); border-radius: var(--r-xl); overflow: hidden; }
-.lp-stage-env { position: relative; width: min(300px, 100%); height: 400px; margin: 0 auto; }
-.lp-stage-env::before { content: ""; position: absolute; inset: auto 0 0; height: 170px; background-color: var(--kraft-deep); border-radius: var(--r-sm); }
-.lp-stage-card { position: absolute; left: 50%; bottom: 20px; z-index: 1; width: 78%; margin-left: -39%; filter: drop-shadow(var(--e-2)); }
+   The envelope is three layers: its back (the flap's --kraft-deep), the
+   card standing in it, and the front pocket (--kraft) with a shallow V cut
+   into its top and the seal on its face. The card is in flow, so the
+   envelope is as tall as the card whatever its copy wraps to, and stands
+   20px off the bottom: its lower part is behind the pocket, and its title,
+   greeting, body and details line show above it. isolation keeps the three
+   layers' z-index inside the envelope, or the card would paint over the
+   page's sticky call to action. */
+.lp-stage { justify-self: center; width: min(440px, 100%); padding: 28px 20px; background-color: var(--table); border-radius: var(--r-xl); overflow: hidden; }
+.lp-stage-env { position: relative; isolation: isolate; width: min(300px, 100%); margin: 0 auto; padding-bottom: 20px; }
+.lp-stage-env::before { content: ""; position: absolute; inset: auto 0 0; height: 190px; background-color: var(--kraft-deep); border-radius: var(--r-sm); }
+.lp-stage-card { position: relative; z-index: 1; width: 78%; margin: 0 auto; filter: drop-shadow(var(--e-2)); }
 .lp-stage-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
 .lp-stage-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
 .lp-stage-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
 .lp-stage-card .inv-details { margin: 12px auto; }
-.lp-stage-pocket { position: absolute; inset: auto 0 0; z-index: 2; height: 118px; background-color: var(--kraft); border-radius: 0 0 var(--r-sm) var(--r-sm); clip-path: polygon(0 0, 50% 34%, 100% 0, 100% 100%, 0 100%); box-shadow: var(--e-1); }
-.lp-stage-seal { position: absolute; top: 40px; left: 50%; width: 52px; margin: -26px 0 0 -26px; font-size: 0.95rem; }
+.lp-stage-pocket { position: absolute; inset: auto 0 0; z-index: 2; height: 150px; background-color: var(--kraft); border-radius: 0 0 var(--r-sm) var(--r-sm); clip-path: polygon(0 0, 50% 22%, 100% 0, 100% 100%, 0 100%); }
+.lp-stage-seal { position: absolute; top: 88px; left: 50%; width: 52px; margin: -26px 0 0 -26px; font-size: 0.95rem; }
 
 /* The stat strip (adr-019 §6.3): one cell until a count is real, laid out as
    a strip so a count arrives as one more .lp-stat. */
@@ -1679,6 +1682,15 @@ a.lp-cta { display: inline-block; text-decoration: none; }
     justify-content: center;
   }
   .lp-sticky-cta .lp-cta { width: 100%; max-width: 320px; padding: 13px 0; }
+}
+
+/* On a phone the composer's one typed line has to fit: at 1.02rem the
+   sentence is about 330px of Golos and a 360px phone leaves its line 282.
+   Measured at 360 and 390px in both languages, it fits at 0.88rem with
+   12px of side padding, the size of the note beneath it. */
+@media (max-width: 420px) {
+  .lp-composer { padding-inline: 12px; }
+  .lp-composer-line { font-size: 0.88rem; }
 }
 
 /* Below 370 the size concession is not enough — brand, count and the language

@@ -706,7 +706,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     heroTitle: "An invitation from one sentence",
     heroText: "Describe your event in words — get a beautiful invitation.",
     heroPromise: "In a minute, not four working days.",
-    heroSentence: "Mariya and Andriy's wedding, 6 June, Odesa",
+    heroSentence: "Mariya & Andriy's wedding, 6 June, Odesa",
     composerLabel: "For example",
     composerNote: "Free · no sign-up for guests",
     statValue: "1 minute",
