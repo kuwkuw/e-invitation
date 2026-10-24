@@ -109,6 +109,28 @@ script that loops over `list_files`' paths and returns only matches costs a
 few lines. Check it on a pattern known to occur, or an empty result proves
 nothing.
 
+## The CSS-only sync of 2026-10-24 (adr-019 steps 1 and 2)
+
+One upload for both paper steps (#110, tokens and fonts; #111, the editor's
+table), from `main` at `802b85d`. These notes had no record of a sync after
+#110, so this one covers both. The shortcut's
+checks held: no converter input had moved since the 2026-10-17 resync, the
+`Invitation card` section hashed the same as at `a305956`, `@kind` read 8, and
+the only `@import` is Google Fonts. `web/src/styles.css` went to the DS as
+`_ds_bundle.css`, and the same file to the binding's `_ds_bundle.css`. The
+binding needed nothing else, because `README.md`, `_ds_bundle.js` and
+`styles.css` don't change in a CSS-only sync. The bound copy was read back
+and is byte-identical to `main`'s (97,037 bytes).
+
+**Stale until the next full resync:**
+- The token panel. A CSS-only upload never recompiles it (see above), so it
+  should still list the 2026-10-17 set: glass values, no `--ui-font-body`, no
+  `--table`. This follows from how the panel works; nobody opened it to look.
+- `conventions.md`'s "palette-tinted ground", noted under "Re-sync risks".
+
+Neither affects how a screen renders: the canvases read the bundle, not the
+panel.
+
 ## Marking a template set superseded (2026-10-02)
 
 `creation-chat` has since moved to the E-invitation design project
