@@ -2059,34 +2059,57 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
 .sp-notify-toggle:hover { color: #7a5638; }
 
+/* Reply email checkbox -------------------------------------------------- */
+/* Reply email as one control (adr-019 §10, from PR #66's design pass):
+   components/NotifyCheckbox.tsx. The landing footer carries it first; the
+   share panel and the manage page take it in adr-019 steps 5 and 6, which
+   is why it has a section of its own rather than living in the footer's.
+
+   - The square is the affordance and spends no fill, so it costs nothing
+     from the accent budget: adr-010 §3's hierarchy counts fills, not
+     affordances. The checked box is ink, never the accent, which on host
+     surfaces means "the public link".
+   - The whole label is the target, 44px tall; the text button this replaced
+     was about 17px.
+   - The input sits off-screen rather than display:none, which would take it
+     out of the tab order too.
+   - The empty box's edge is --ink-faint: a control's boundary owes 3:1
+     (WCAG 1.4.11), on --app-bg here and on --surface in the share panel. */
+.notify-check { position: relative; display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 7px 6px 7px 0; margin-left: -3px; cursor: pointer; }
+.notify-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.notify-box { flex: 0 0 auto; display: inline-grid; place-items: center; width: 19px; height: 19px; margin-top: 1px; border: 1.5px solid var(--ink-faint); border-radius: var(--r-sm); background-color: var(--surface); color: var(--surface); }
+.notify-input:checked + .notify-box { border-color: var(--ink-muted); background-color: var(--ink-muted); }
+.notify-input:focus-visible + .notify-box { outline: 2px solid var(--ink); outline-offset: 2px; }
+.notify-check:hover .notify-box { border-color: var(--ink-muted); }
+.notify-copy { flex: 1; min-width: 0; }
+/* The setting's name, identical in both states. */
+.notify-name { display: block; font-size: 0.86rem; font-weight: 600; line-height: 1.4; color: var(--ink); }
+/* Everything that changes, the scope included. A sentence, so --ink-muted. */
+.notify-state { display: block; margin-top: 2px; font-size: 0.8rem; line-height: 1.45; color: var(--ink-muted); overflow-wrap: anywhere; }
+
 /* Landing: account footer ----------------------------------------------- */
 /* The signed-in host's footer to the invitations card, and the lines under
    it (adr-014 §9, design project "LandingSignedInStates"). The footer signs
    the invitations card because the account exists for that list and nothing
    else. */
 /* The footer is a block, not a row: the identity line keeps the old flex
-   layout and the notification line (adr-015 §7, design project LandingAccountNotify) sits
-   under it. Heights: 46px with no mail line, 111px with one line of text,
-   129px when Ukrainian "off" wraps to two at 375px — 11 + 24 + 5 + text + 40
-   + 12. The growth lands on the quietest block of the page, below the list. */
+   layout and the reply-email checkbox (adr-015 §7, adr-019 §10) sits under
+   it. Heights: 46px with no checkbox; with one, 11 + 24 + 2 + the label (44
+   at least, more where the state line wraps) + 12. The growth lands on the
+   quietest block of the page, below the list. */
 .lp-account { border-top: 1px solid var(--edge-soft); background: var(--app-bg); padding: 11px 14px 12px; }
 .lp-account-id { display: flex; align-items: center; gap: 10px; min-height: 24px; }
-/* The envelope is decoration beside the address it stands for. Its strike,
-   when mail is off, is cut out of the envelope by a knockout stroke in the
-   footer's own background — the same token as .lp-account's, so the gap can
-   never show as a ring of a different colour. */
+/* The envelope is decoration beside the address it stands for, and never
+   struck: the checkbox carries the state (adr-019 §10). */
 .lp-account-id svg { flex: 0 0 auto; color: var(--ink-placeholder); }
-.lp-account-knockout { stroke: var(--app-bg); }
 .lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
 .lp-account-out:hover { color: var(--ink); }
 
-/* 26px = the 16px glyph + its 10px gap, so the sentence starts under the
-   address rather than under the envelope. */
-.lp-account-mail { margin-top: 5px; padding-left: 26px; }
-.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: var(--ink-muted); }
-.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; transition: color 0.14s; }
-.lp-notify-all:hover { color: var(--ink); }
+/* 26px = the 16px glyph + its 10px gap, so the checkbox starts under the
+   address rather than under the envelope; its own -3px keeps the square
+   optically flush with the address's first letter. */
+.lp-account-mail { margin-top: 2px; padding-left: 26px; }
 @media (min-width: 900px) { .lp-account { padding: 11px 20px 12px; } }
 /* One line, the smallest on the page: this is the payoff, not an
    announcement. Quiet by its size, not by being hard to read — it is a

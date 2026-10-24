@@ -321,6 +321,7 @@ const CONVERTED = [
   "Landing page",
   "Landing: account footer",
   "Landing: returning-host block",
+  "Reply email checkbox",
   "Share panel",
 ];
 
@@ -515,14 +516,53 @@ describe("the landing page's text", () => {
     [".lp-yours-more", "--app-bg", 3],
   ]);
   textFloors("Landing: account footer", [
-    [".lp-account-mail p", "--app-bg", 4.5],
     [".lp-cross-device", "--app-bg", 4.5],
     [".lp-signed-in-empty", "--surface", 4.5],
     [".lp-account-email", "--app-bg", 3],
     [".lp-account-out", "--app-bg", 3],
-    [".lp-notify-all", "--app-bg", 3],
     [".lp-delete-link", "--app-bg", 3],
   ]);
+});
+
+/** adr-019 §10. It sits on --app-bg in the landing footer, and on --surface in
+ *  the share panel and the manage page once steps 5 and 6 bring it there. */
+describe("the reply email checkbox", () => {
+  textFloors("Reply email checkbox", [
+    [".notify-name", "--app-bg", 4.5],
+    [".notify-name", "--surface", 4.5],
+    [".notify-state", "--app-bg", 4.5],
+    [".notify-state", "--surface", 4.5],
+  ]);
+
+  const rules = () => ruleBlocks(stripComments(sections(css).get("Reply email checkbox") ?? ""));
+  const body = (selector: string) =>
+    rules().find((r) => r.selectors.includes(selector))?.body ?? "";
+
+  it("fills the checked box with ink, never the accent, which means the public link", () => {
+    expect(body(".notify-input:checked + .notify-box")).toMatch(
+      /background-color:\s*var\(--ink-muted\)/,
+    );
+    expect(
+      rules()
+        .map((r) => r.body)
+        .join("\n"),
+    ).not.toMatch(/accent/);
+  });
+
+  it("edges the empty box at 3:1 on both grounds it sits on (WCAG 1.4.11)", () => {
+    const edge = /border:\s*[\d.]+px solid var\((--[\w-]+)\)/.exec(body(".notify-box"))?.[1];
+    expect(edge).toBeDefined();
+    for (const ground of ["--app-bg", "--surface"]) {
+      const ratio = contrast(tokens.get(edge as string) as string, tokens.get(ground) as string);
+      expect(ratio, ground).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("makes the whole label a 44px target and keeps the input in the tab order", () => {
+    expect(body(".notify-check")).toMatch(/min-height:\s*44px/);
+    expect(body(".notify-input")).not.toMatch(/display:\s*none/);
+    expect(body(".notify-input:focus-visible + .notify-box")).toMatch(/outline:/);
+  });
 });
 
 /** The hex ratchet reads only styles.css, so a colour written into a

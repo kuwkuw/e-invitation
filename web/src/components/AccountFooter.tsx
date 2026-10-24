@@ -1,4 +1,5 @@
 import type { AuthStrings } from "../i18n";
+import { NotifyCheckbox } from "./NotifyCheckbox";
 
 /**
  * Who this browser is signed in as, what we send them, and the way out
@@ -12,16 +13,16 @@ import type { AuthStrings } from "../i18n";
  * There is no avatar and no display name because we hold neither: the scope is
  * `openid email` and nothing else.
  *
- * **The notification line lives here because this is the only account
- * surface.** The share panel discloses it at publish, which is the moment it is
- * caused — but a moment is not an address, and until this existed the only
- * durable way to turn reply email off was to go and find one of the emails.
- * The rule this footer follows is not "one thing" but "the account": it already
- * carried two of them, they simply fit on one line.
+ * **Reply email lives here because this is the only account surface.** The
+ * share panel asks at publish, which is the moment it is caused — but a moment
+ * is not an address, and until this existed the only durable way to turn reply
+ * email off was to go and find one of the emails. Since adr-019 §10 it is a
+ * checkbox (`NotifyCheckbox`), not a sentence with a text button: under opt-in
+ * it is the only thing between the feature and its non-existence.
  *
  * What it deliberately is not: no heading over the row, because a heading is
- * the first thing that turns a fact into a settings section — the same
- * reasoning that ruled out a toggle switch. No divider between the two rows
+ * the first thing that turns a fact into a settings section — and a checkbox's
+ * caption is its sentence, so it needs none. No divider between the two rows
  * either; they are one stack about the account. And "delete account" stays
  * outside this card: the split is by consequence, not by topic — in here are
  * the things you can press and change your mind about.
@@ -35,24 +36,19 @@ export function AccountFooter({
   email: string;
   onSignOut: () => void;
   /** Reply notifications. Absent — a deployment that cannot send mail, or a
-   *  host with no invitations yet — renders no line at all rather than a
+   *  host with no invitations yet — renders no control at all rather than a
    *  disabled one: a dead control promises a feature that is not there, and
    *  before the first invitation the preference is about nothing. */
   notify?: { enabled: boolean; onToggle: () => void } | null;
   t: AuthStrings;
 }) {
-  const off = notify != null && !notify.enabled;
-
   return (
     <div className="lp-account">
       <div className="lp-account-id">
-        {/* One glyph for both rows. With mail off the *same* envelope is struck
-            rather than a second icon appearing: here the envelope means the
-            address, so a line across it means "we do not write to this
-            address" — the meaning the share panel already gives it, applied to
-            the same object. The sentence below states it in words, so the glyph
-            never carries the state alone; without that, a struck envelope
-            beside an address could read as "this address is broken". */}
+        {/* The envelope labels the address, and only that. It used to be
+            struck when mail was off, because there was no control to carry
+            the state; the checkbox below carries it now, and two state glyphs
+            in one stack would argue (adr-019 §10). */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.7" />
           <path
@@ -61,21 +57,6 @@ export function AccountFooter({
             strokeWidth="1.7"
             strokeLinecap="round"
           />
-          {off && (
-            <>
-              {/* The knockout is the footer's own background, not white — this
-                  block sits on a tinted strip where the share panel sits on
-                  white. Its colour comes from .lp-account-knockout, beside
-                  the footer's background, so the two cannot drift apart. */}
-              <path
-                className="lp-account-knockout"
-                d="M4 19L20 5"
-                strokeWidth="3.4"
-                strokeLinecap="round"
-              />
-              <path d="M4 19L20 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            </>
-          )}
         </svg>
         {/* Ellipsised, never wrapped — and "sign out" never shrinks to make room
             for it. */}
@@ -86,20 +67,17 @@ export function AccountFooter({
       </div>
 
       {notify && (
-        // Indented to the address above rather than to the glyph (16px + 10px
-        // gap) so the block reads as one vertical line of text that the
-        // envelope signs. The action is on its own line for the reason the
-        // share panel already learned: on a row that has spent its width on an
-        // ellipsised address, a baseline-aligned button has nowhere to go.
+        // Indented to the address above rather than to the glyph, so the block
+        // reads as one column of text the envelope signs. The state row never
+        // names the address: it is one line up, and saying it twice in one
+        // block is the one thing this footer has always avoided.
         <div className="lp-account-mail">
-          <p>{notify.enabled ? t.notifyOnAccount : t.notifyOff}</p>
-          <button type="button" className="lp-notify-all" onClick={notify.onToggle}>
-            {/* `notifyOptIn`, not "turn them back on": under opt-in a host
-                here may never have had reply email on, and nothing on this
-                surface can tell the two apart. The neutral label is true for
-                both; "back on" is false for one of them. */}
-            {notify.enabled ? t.notifyTurnOff : t.notifyOptIn}
-          </button>
+          <NotifyCheckbox
+            checked={notify.enabled}
+            onToggle={notify.onToggle}
+            name={t.notifyOptIn}
+            state={notify.enabled ? t.notifyStateOnAccount : t.notifyStateOffNow}
+          />
         </div>
       )}
     </div>

@@ -156,102 +156,71 @@ describe("delete account confirmation", () => {
   });
 });
 
-// adr-015 §7's durable home for the account-wide switch (design
-// project LandingAccountNotify). The share panel discloses it at publish; this is
-// where it lives afterwards.
-describe("AccountFooter reply notifications", () => {
-  const notifyOn = { enabled: true, onToggle: () => {} };
+// adr-019 §10, from PR #66's design pass. adr-015 §7's durable home for the
+// account-wide switch: under opt-in it is the only thing between the feature
+// and its non-existence, so it is a control, not a sentence with a text button.
+describe("AccountFooter reply email", () => {
+  const footer = (notify: { enabled: boolean; onToggle: () => void } | null, t = auth) =>
+    render(<AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notify} t={t} />);
+  const box = () =>
+    screen.getByRole("checkbox", { name: new RegExp(auth.notifyOptIn) }) as HTMLInputElement;
 
-  it("says what we send, without repeating the address above it", () => {
-    const { container } = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
-    );
-    const line = container.querySelector(".lp-account-mail p");
-    expect(line?.textContent).toBe(auth.notifyOnAccount);
-    // The address is on the row above; saying it twice in one block is the one
-    // change from the share panel's wording.
-    expect(line?.textContent).not.toContain("olena@example.com");
-    expect(screen.getByText(auth.notifyTurnOff)).toBeTruthy();
+  it("is a real checkbox, checked while mail is on, with the scope in its state line", () => {
+    footer({ enabled: true, onToggle: () => {} });
+    expect(box().checked).toBe(true);
+    expect(screen.getByText(auth.notifyStateOnAccount)).toBeTruthy();
   });
 
-  it("states the account-wide scope when off, and offers the way back", () => {
-    render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={{ enabled: false, onToggle: () => {} }}
-        t={auth}
-      />,
-    );
-    expect(screen.getByText(auth.notifyOff)).toBeTruthy();
-    // Neutral, not "back on": under opt-in this footer cannot tell a host who
-    // turned mail off from one who never asked for it.
+  it("keeps its name when off, and says no invitation is written about", () => {
+    footer({ enabled: false, onToggle: () => {} });
+    expect(box().checked).toBe(false);
     expect(screen.getByText(auth.notifyOptIn)).toBeTruthy();
+    expect(screen.getByText(auth.notifyStateOffNow)).toBeTruthy();
   });
 
-  it("toggles through the callback", () => {
+  it("toggles from anywhere on its label, which is the 44px target", () => {
     const onToggle = vi.fn();
-    render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={{ enabled: true, onToggle }}
-        t={auth}
-      />,
-    );
-    fireEvent.click(screen.getByText(auth.notifyTurnOff));
+    footer({ enabled: false, onToggle });
+    fireEvent.click(screen.getByText(auth.notifyStateOffNow));
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
-  // Absent, never disabled: a dead control promises a feature that is not
-  // there. This is the deployment-without-mail and the no-invitations-yet case.
-  it("renders no line at all when there is nothing to promise", () => {
-    const { container } = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} t={auth} />,
+  it("never repeats the address the row above already shows", () => {
+    const { container } = footer({ enabled: true, onToggle: () => {} });
+    expect(container.querySelector(".lp-account-mail")?.textContent).not.toContain(
+      "olena@example.com",
     );
-    expect(container.querySelector(".lp-account-mail")).toBeNull();
-    expect(screen.queryByText(auth.notifyTurnOff)).toBeNull();
-    // The identity row is untouched — this is the footer exactly as it was.
+  });
+
+  // Absent, never disabled: a deployment without mail, or a host with nothing
+  // published, has nothing to promise.
+  it("renders no control at all when there is nothing to promise", () => {
+    footer(null);
+    expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.getByText("olena@example.com")).toBeTruthy();
     expect(screen.getByText(auth.signOut)).toBeTruthy();
   });
 
-  // One glyph signs both rows: the same envelope struck through, rather than a
-  // second icon 20px away meaning something else.
-  it("strikes the envelope it already has instead of adding one", () => {
-    const on = render(
-      <AccountFooter email="olena@example.com" onSignOut={() => {}} notify={notifyOn} t={auth} />,
-    );
-    expect(on.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
-    const onStrokes = on.container.querySelectorAll(".lp-account-id svg path").length;
-    cleanup();
-
-    const off = render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={{ enabled: false, onToggle: () => {} }}
-        t={auth}
-      />,
-    );
-    expect(off.container.querySelectorAll(".lp-account-id svg")).toHaveLength(1);
-    expect(off.container.querySelectorAll(".lp-account-id svg path").length).toBeGreaterThan(
-      onStrokes,
-    );
+  // The square carries the state now. Two state glyphs in one stack would
+  // argue, so the envelope only labels the address.
+  it("labels the address with one plain envelope, struck in neither state", () => {
+    const glyph = (enabled: boolean) => {
+      const { container } = footer({ enabled, onToggle: () => {} });
+      const counts = [
+        container.querySelectorAll(".lp-account-id svg").length,
+        container.querySelectorAll(".lp-account-id svg path").length,
+      ];
+      cleanup();
+      return counts;
+    };
+    expect(glyph(false)).toEqual(glyph(true));
+    expect(glyph(true)[0]).toBe(1);
   });
 
   it("carries the copy in Ukrainian too", () => {
-    const { container } = render(
-      <AccountFooter
-        email="olena@example.com"
-        onSignOut={() => {}}
-        notify={notifyOn}
-        t={AUTH.uk}
-      />,
-    );
-    expect(container.querySelector(".lp-account-mail p")?.textContent).toBe(
-      "Ми напишемо вам, коли надійдуть відповіді.",
-    );
+    footer({ enabled: true, onToggle: () => {} }, AUTH.uk);
+    expect(screen.getByText("Пишемо про всі ваші запрошення.")).toBeTruthy();
+    expect(screen.getByText("Повідомляти про відповіді")).toBeTruthy();
   });
 });
 
