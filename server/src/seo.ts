@@ -515,6 +515,20 @@ export function shellMeta(path: string, search: string, base: string): HeadMeta 
     };
   }
 
+  // A share link that resolves to nothing: `/i/:id` hands it here instead of
+  // the invitation's own head (FR-4.6), and the app renders the dead-link
+  // state. `nofollow` like every guest page, and no canonical — the id was
+  // never anyone's page to consolidate.
+  if (path.startsWith("/i/")) {
+    return {
+      ...common,
+      ...SEO_STRINGS[lang].notFound,
+      robots: "noindex, nofollow",
+      canonical: null,
+      url: null,
+    };
+  }
+
   // Unknown paths render the landing component (AppRoutes `*`), which is a
   // kindness to a person and a trap for a crawler: every typo'd URL would be a
   // duplicate of the home page. No canonical either — pointing them at `/`

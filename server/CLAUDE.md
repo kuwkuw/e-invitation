@@ -170,7 +170,9 @@ are the SPA fallback in `app.ts` and `/i/:id` in `routes/og.ts`.
   `shellMeta("/", "", DEFAULT_ORIGIN)`.
 - **Only `/` and the gallery are indexed.** `/create`, `/manage/:id`, `/i/:id`
   and unknown paths are `noindex` with an `X-Robots-Tag` header and **no
-  canonical** (`og:url` stays on `/i/:id`).
+  canonical** (`og:url` stays on `/i/:id`). A dead `/i/:id` gets the shell with
+  `shellMeta`'s head and a **404**, never JSON: a guest opens it in a browser
+  (FR-4.6).
 - **Don't tidy `robots.txt`**: it does **not** disallow `/i/`, and it
   `Allow`s `/api/invitations/*/og.png` before `Disallow: /api/`. Messenger
   crawlers obey robots.txt, so either change silently stops every share link
