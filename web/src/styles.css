@@ -1168,6 +1168,100 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-notfound-hint { font-size: 0.9rem; color: var(--ink-muted); line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
 .gr-notfound .gr-brand { position: absolute; bottom: 18px; left: 0; right: 0; }
 
+/* The envelope (adr-019 §5.1): first open only, kraft on a dark ground,
+   sealed with the hosts' monogram. Opening runs inside 1.2 s, transform and
+   opacity only: the flap turns back (0–400 ms), the envelope drops away
+   (300–900 ms), and the ground lifts while the page rises into place
+   (600–1200 ms). useEnvelope unmounts it on a timer of the same length.
+   touch-action stops a swipe on it from scrolling the page underneath. */
+.gr-env {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+  background-color: var(--night);
+  touch-action: none;
+}
+.gr-env-body {
+  position: relative;
+  width: min(320px, 100%);
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 22px 26px;
+  background-color: var(--kraft);
+  border-radius: var(--r-sm);
+  box-shadow: var(--e-3);
+  perspective: 900px;
+}
+.gr-env-flap {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 58%;
+  background-color: var(--kraft-deep);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  backface-visibility: hidden;
+}
+.gr-env-to {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ui-font-display);
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: var(--ui-ink);
+}
+.gr-env-seal {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  width: 64px;
+  margin: -32px 0 0 -32px;
+  border: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+.gr-env-seal:focus-visible { outline: 2px solid var(--surface); outline-offset: 3px; }
+.gr-env-skip {
+  border: none;
+  background: none;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--surface);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.gr-env[data-phase="opening"] { animation: gr-env-fade 600ms var(--ease-ios) 600ms both; }
+.gr-env[data-phase="opening"] .gr-env-flap { animation: gr-env-flap 400ms var(--ease-ios) both; }
+.gr-env[data-phase="opening"] .gr-env-seal,
+.gr-env[data-phase="opening"] .gr-env-skip { animation: gr-env-fade 200ms var(--ease-ios) both; }
+.gr-env[data-phase="opening"] .gr-env-body { animation: gr-env-drop 600ms var(--ease-ios) 300ms both; }
+.gr-page[data-rising] { animation: gr-rise 600ms var(--ease-ios) 600ms both; }
+@keyframes gr-env-flap { to { transform: rotateX(180deg); } }
+@keyframes gr-env-drop { to { transform: translateY(110%); opacity: 0; } }
+@keyframes gr-env-fade { to { opacity: 0; } }
+@keyframes gr-rise { from { transform: translateY(16px); opacity: 0; } }
+/* useEnvelope never mounts the envelope under reduced motion. This covers a
+   preference switched on after the page loaded: the envelope still has to be
+   tapped away, but nothing moves. */
+@media (prefers-reduced-motion: reduce) {
+  .gr-env[data-phase="opening"],
+  .gr-env[data-phase="opening"] *,
+  .gr-page[data-rising] { animation-duration: 1ms; animation-delay: 0ms; }
+}
+
 /* Desktop: invitation left (hero), reply card right, both centered */
 @media (min-width: 960px) {
   .gr-page { display: flex; flex-direction: column; }

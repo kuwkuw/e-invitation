@@ -7,6 +7,7 @@ import { LANDING } from "./i18n";
 // letter lp-brand-mono derives from INVINTO, so the product's mark is never
 // spelled a second way.
 const TWO_PEOPLE = /\s+(?:та|і|й|and)\s+|\s*&\s*/iu;
+const BRAND_LETTER = [...LANDING.uk.brand][0] ?? "";
 
 function initial(name: string): string | null {
   const letter = /\p{L}/u.exec(name);
@@ -20,5 +21,5 @@ export function monogramFrom(hosts: string[]): string {
     .map(initial)
     .filter((letter): letter is string => letter !== null)
     .slice(0, 2);
-  return initials.length ? initials.join("&") : [...LANDING.uk.brand][0];
+  return initials.length ? initials.join("&") : BRAND_LETTER;
 }

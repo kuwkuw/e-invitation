@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { buildIcs, parseEventStart } from "./calendar";
+import { Envelope } from "./components/guest/Envelope";
 import { GuestActions } from "./components/guest/GuestActions";
 import { GuestCta } from "./components/guest/GuestCta";
 import { GuestNotFound } from "./components/guest/GuestNotFound";
@@ -9,10 +10,12 @@ import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
 import { downloadFile } from "./download";
 import { loadGuestLang, saveGuestLang } from "./guestLang";
+import { useEnvelope } from "./hooks/useEnvelope";
 import { usePublishedInvitation } from "./hooks/usePublishedInvitation";
 import { useRsvpForm } from "./hooks/useRsvpForm";
 import { useViewBeacon } from "./hooks/useViewBeacon";
 import { GUEST } from "./i18n";
+import { monogramFrom } from "./monogram";
 import { useDocumentMeta } from "./seo";
 import type { Language } from "./types";
 
@@ -25,6 +28,8 @@ export function GuestPage({ id }: { id: string }) {
   // Share-loop instrumentation (adr-013): counted here, in the client, because
   // /i/:id is server-rendered for messenger crawlers and would count unfurls.
   useViewBeacon(id, status);
+  // Decided at mount, before the beacon above writes inv-viewed:<id>.
+  const envelope = useEnvelope(id, status);
   const [langOverride, setLangOverride] = useState<Language | null>(loadGuestLang);
   const form = useRsvpForm(id);
   const [copied, setCopied] = useState(false);
@@ -71,6 +76,7 @@ export function GuestPage({ id }: { id: string }) {
   }
 
   const { brief, copy, design } = published.invitation;
+  const monogram = monogramFrom(brief.hosts);
   const place = [brief.venue, brief.city].filter(Boolean).join(", ");
   // Hidden when the free-text date doesn't parse — better no button than a
   // wrong day in someone's calendar.
@@ -105,47 +111,65 @@ export function GuestPage({ id }: { id: string }) {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // The page renders beneath the envelope from the start, inert while it is
+  // up so nobody tabs into a form they can't see, and rising as it opens.
+  const envelopeUp = envelope.phase !== "none";
   return (
-    <div className="gr-page">
-      <div className="gr-layout">
-        <div className="gr-inv">
-          <InvitationPreview
-            copy={copy}
-            design={design}
-            background={published.invitation.background}
-          />
-        </div>
-
-        <div className="gr-side">
-          <div className="gr-lang">
-            <LangSwitcher globe value={chromeLang} onChange={handleLang} />
+    <>
+      <div
+        className="gr-page"
+        inert={envelopeUp}
+        data-rising={envelope.phase === "opening" ? "" : undefined}
+      >
+        <div className="gr-layout">
+          <div className="gr-inv">
+            <InvitationPreview
+              copy={copy}
+              design={design}
+              background={published.invitation.background}
+            />
           </div>
-          {form.sent ? (
-            <>
-              <ThanksCard
-                attending={form.attending === true}
-                guestsCount={form.guestsCount}
-                onChangeAnswer={form.reopen}
-                t={t}
-              />
-              {form.attending && (
-                <GuestActions
-                  when={eventStart ? [brief.date, brief.time].filter(Boolean).join(", ") : null}
-                  onAddToCalendar={handleAddToCalendar}
-                  place={place}
-                  onShare={handleShare}
-                  shareSubtitle={copied ? t.linkCopied : t.shareHint}
+
+          <div className="gr-side">
+            <div className="gr-lang">
+              <LangSwitcher globe value={chromeLang} onChange={handleLang} />
+            </div>
+            {form.sent ? (
+              <>
+                <ThanksCard
+                  attending={form.attending === true}
+                  guestsCount={form.guestsCount}
+                  onChangeAnswer={form.reopen}
                   t={t}
                 />
-              )}
-            </>
-          ) : (
-            <RsvpForm form={form} t={t} />
-          )}
+                {form.attending && (
+                  <GuestActions
+                    when={eventStart ? [brief.date, brief.time].filter(Boolean).join(", ") : null}
+                    onAddToCalendar={handleAddToCalendar}
+                    place={place}
+                    onShare={handleShare}
+                    shareSubtitle={copied ? t.linkCopied : t.shareHint}
+                    t={t}
+                  />
+                )}
+              </>
+            ) : (
+              <RsvpForm form={form} t={t} />
+            )}
 
-          <GuestCta t={t} />
+            <GuestCta t={t} />
+          </div>
         </div>
       </div>
-    </div>
+      {envelopeUp && (
+        <Envelope
+          phase={envelope.phase === "opening" ? "opening" : "closed"}
+          title={copy.title}
+          monogram={monogram}
+          onOpen={envelope.open}
+          t={t}
+        />
+      )}
+    </>
   );
 }

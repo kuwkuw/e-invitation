@@ -894,6 +894,10 @@ export interface GuestStrings {
   /** The guest page's only link back to the product (adr-013 §7). Chrome, so
    *  the language switcher moves it (FR-6.3) — never host content. */
   ctaLine: string;
+  /** The envelope's seal (adr-019 §5.1): its accessible name, since what it
+   *  shows is the hosts' monogram. */
+  openInvitation: string;
+  skip: string;
 }
 
 export const GUEST: Record<Language, GuestStrings> = {
@@ -930,6 +934,8 @@ export const GUEST: Record<Language, GuestStrings> = {
     shareHint: "Viber · Telegram · link",
     linkCopied: "Link copied!",
     ctaLine: "Create your own invitation",
+    openInvitation: "Open the invitation",
+    skip: "Skip",
   },
   uk: {
     loading: "Завантаження…",
@@ -964,6 +970,8 @@ export const GUEST: Record<Language, GuestStrings> = {
     shareHint: "Viber · Telegram · посилання",
     linkCopied: "Посилання скопійовано!",
     ctaLine: "Створіть власне запрошення",
+    openInvitation: "Відкрити запрошення",
+    skip: "Пропустити",
   },
 };
 

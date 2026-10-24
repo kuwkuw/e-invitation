@@ -5,7 +5,7 @@ import * as api from "../src/api";
 import { GuestCta } from "../src/components/guest/GuestCta";
 import { GuestPage } from "../src/GuestPage";
 import { GUEST } from "../src/i18n";
-import type { PublishedInvitation } from "../src/types";
+import { asReturningGuest, guestFixture } from "./guestFixture";
 
 // vite.config.ts sets globals: false, so RTL never auto-cleans.
 afterEach(cleanup);
@@ -56,39 +56,17 @@ describe("GuestCta", () => {
   });
 });
 
-const published = {
-  id: "abc123",
-  version: 1,
-  invitation: {
-    brief: {
-      event_type: "birthday",
-      hosts: ["Олена"],
-      date: "12 серпня",
-      time: "18:00",
-      venue: "Кафе «Затишок»",
-      city: "Львів",
-      tone: "warm",
-      language: "uk",
-      extra_details: null,
-    },
-    copy: {
-      title: "Запрошення",
-      greeting: "Дорогі друзі!",
-      body: "Запрошуємо вас.",
-      details_line: "12 серпня, 18:00",
-      rsvp_prompt: "Підтвердіть присутність.",
-      closing: "Олена",
-    },
-    design: { palette: "warm", typography: "serif", layout: "classic", ornament: "floral" },
-    background: null,
-  },
-} as unknown as PublishedInvitation;
+const published = guestFixture();
 
 describe("GuestCta on the guest page", () => {
   // adr-013 §7 turns on this property: the native-row treatment was rejected
   // precisely because those rows exist only after an attending RSVP, so one
   // placement covering both states is the thing worth pinning.
   it("is present before and after the guest answers", async () => {
+    // A returning guest, so the envelope (adr-019 §5.1) stays out of what this
+    // test is about. Not set for the dead-link test below: a preset flag would
+    // keep the beacon quiet whether or not the link resolved.
+    asReturningGuest();
     vi.spyOn(api, "fetchInvitation").mockResolvedValue(published);
     vi.spyOn(api, "submitRsvp").mockResolvedValue({ ok: true });
     vi.spyOn(api, "recordInvitationView").mockImplementation(() => {});
