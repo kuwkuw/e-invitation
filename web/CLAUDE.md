@@ -22,7 +22,8 @@ tests drive it through a `MemoryRouter`.
   markup goes in `src/components/{editor,guest,manage}/`. Hooks:
   `useInvitationEditor` (what the invitation is), `usePublishing` (where it's
   published), `useHostManage` and `useHostInvitationCounts` (host access),
-  `usePublishedInvitation`, `useRsvpForm` and `useViewBeacon` (guest side),
+  `usePublishedInvitation`, `useRsvpForm`, `useViewBeacon` and `useEnvelope`
+  (guest side),
   `useReferralSource` and `useGallerySample` (editor entry).
 
 ## Testing
@@ -111,7 +112,10 @@ Every key is `inv-*` (`inv-manage:<id>`, `inv-manage-seen:<id>`,
 the parameter once at mount and strips it via the router. `useViewBeacon`
 fires once the invitation is **ready** (a dead link is not a view), guarded by
 `inv-viewed:<id>`, which is written *before* the request so a re-run effect
-can't double-count.
+can't double-count. `useEnvelope` reads the same flag to decide a first open
+(FR-4.8), **once at mount and never again**: the beacon writes it as soon as the
+invitation is ready, so a re-read would close the envelope during the open it
+exists for.
 
 ## SEO, prerendering, gallery (adr-016, adr-017)
 
