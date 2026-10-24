@@ -4,6 +4,7 @@ import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { GuestsSection } from "./components/landing/GuestsSection";
 import { HeroComposer } from "./components/landing/HeroComposer";
 import { HeroStage } from "./components/landing/HeroStage";
 import { SignOutSheet } from "./components/SignOutSheet";
@@ -283,6 +284,16 @@ export function LandingPage() {
         <HeroStage copy={t.sample} design={SAMPLE_DESIGN} monogram={monogram} />
       </section>
 
+      {/* The one number that is true today (adr-019 §6.3), as a strip of one
+          cell: a count joins it only once it comes from GET /api/metrics, and
+          no placeholder number ever ships. Nothing here fetches. */}
+      <section className="lp-stats">
+        <div className="lp-stat">
+          <p className="lp-stat-value">{t.statValue}</p>
+          <p className="lp-stat-label">{t.statLabel}</p>
+        </div>
+      </section>
+
       <section className="lp-steps">
         <h2>{t.howTitle}</h2>
         <div className="lp-steps-grid">
@@ -303,6 +314,8 @@ export function LandingPage() {
           </span>
         ))}
       </section>
+
+      <GuestsSection t={t} monogram={monogram} />
 
       <section className="lp-rsvp">
         <div className="lp-rsvp-inner">

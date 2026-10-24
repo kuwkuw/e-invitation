@@ -85,6 +85,9 @@ export function landingBodyHtml(lang: Language): string {
     )
     .join("");
   const chips = t.chips.map((chip) => `<span class="lp-chip">${escapeHtml(chip)}</span>`).join("");
+  const points = t.guestsPoints
+    .map((point) => `<li class="lp-guests-point">${escapeHtml(point)}</li>`)
+    .join("");
 
   return (
     `<div class="landing grain">` +
@@ -111,9 +114,20 @@ export function landingBodyHtml(lang: Language): string {
     `</div>` +
     `<p class="lp-composer-note">${escapeHtml(t.composerNote)}</p>` +
     `</div></section>` +
+    `<section class="lp-stats"><div class="lp-stat">` +
+    `<p class="lp-stat-value">${escapeHtml(t.statValue)}</p>` +
+    `<p class="lp-stat-label">${escapeHtml(t.statLabel)}</p>` +
+    `</div></section>` +
     `<section class="lp-steps"><h2>${escapeHtml(t.howTitle)}</h2>` +
     `<div class="lp-steps-grid">${steps}</div></section>` +
     `<section class="lp-chips">${chips}</section>` +
+    // The guests' copy, without the envelope still beside it: that is a
+    // picture, aria-hidden, with nothing to read.
+    `<section class="lp-guests"><div class="lp-guests-copy">` +
+    `<h2 class="lp-guests-title">${escapeHtml(t.guestsTitle)}</h2>` +
+    `<p class="lp-guests-text">${escapeHtml(t.guestsText)}</p>` +
+    `<ul class="lp-guests-points">${points}</ul>` +
+    `</div></section>` +
     `<section class="lp-rsvp"><div class="lp-rsvp-inner"><div class="lp-rsvp-copy">` +
     `<h2>${escapeHtml(t.rsvpTitle)}</h2>` +
     `<p>${escapeHtml(t.rsvpText)}</p>` +

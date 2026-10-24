@@ -1437,7 +1437,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    own class, and `.landing h2` outranks a single class, so it set every
    card title in Playfair whatever its type, and the sheets' titles in bold.
    .lp-yours-head h2 sets its own face below. */
-.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2 { font-family: var(--ui-font-display); font-weight: 500; }
+.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2, .lp-guests-title { font-family: var(--ui-font-display); font-weight: 500; }
 
 .lp-cta {
   border: none;
@@ -1549,6 +1549,13 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-stage-pocket { position: absolute; inset: auto 0 0; z-index: 2; height: 118px; background-color: var(--kraft); border-radius: 0 0 var(--r-sm) var(--r-sm); clip-path: polygon(0 0, 50% 34%, 100% 0, 100% 100%, 0 100%); box-shadow: var(--e-1); }
 .lp-stage-seal { position: absolute; top: 40px; left: 50%; width: 52px; margin: -26px 0 0 -26px; font-size: 0.95rem; }
 
+/* The stat strip (adr-019 §6.3): one cell until a count is real, laid out as
+   a strip so a count arrives as one more .lp-stat. */
+.lp-stats { display: flex; justify-content: center; gap: 48px; padding: 8px clamp(22px, 5vw, 64px) 0; }
+.lp-stat { text-align: center; }
+.lp-stat-value { margin: 0; font-family: var(--ui-font-display); font-weight: 500; font-size: clamp(1.8rem, 3.4vw, 2.4rem); line-height: 1.1; color: var(--ink); }
+.lp-stat-label { margin: 6px 0 0; font-size: 0.95rem; color: var(--ink-muted); }
+
 .lp-steps { padding: clamp(40px, 5vw, 64px); }
 .lp-steps h2 { margin: 0 0 40px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
 .lp-steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1000px; margin: 0 auto; }
@@ -1573,6 +1580,21 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 .lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .lp-chip { background: var(--surface); border: 1px solid var(--edge); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
+
+/* What guests see (adr-019 §6.2): the guest's first frame as a still beside
+   the copy. The envelope keeps the guest page's proportions (.gr-env-body):
+   4:3 kraft, a flap 58% deep, the seal on its point, the title at the foot. */
+.lp-guests { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; max-width: 1080px; margin: 0 auto; padding: clamp(32px, 4vw, 56px) clamp(22px, 5vw, 64px) clamp(48px, 6vw, 72px); }
+.lp-guests-still { display: flex; justify-content: center; padding: 44px 24px; background-color: var(--night); border-radius: var(--r-xl); }
+.lp-guests-env { position: relative; width: min(300px, 100%); aspect-ratio: 4 / 3; display: flex; align-items: flex-end; justify-content: center; padding: 0 22px 26px; background-color: var(--kraft); border-radius: var(--r-sm); box-shadow: var(--e-3); }
+.lp-guests-flap { position: absolute; inset: 0 0 auto; height: 58%; background-color: var(--kraft-deep); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.lp-guests-to { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; color: var(--ui-ink); }
+.lp-guests-seal { position: absolute; top: 58%; left: 50%; width: 60px; margin: -30px 0 0 -30px; font-size: 1.05rem; }
+.lp-guests-title { margin: 0 0 14px; font-size: clamp(1.5rem, 3vw, 2.1rem); }
+.lp-guests-text { margin: 0 0 18px; max-width: 40ch; font-size: 1.1rem; line-height: 1.6; color: var(--ink-muted); }
+.lp-guests-points { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.lp-guests-point { position: relative; padding-left: 22px; font-size: 1rem; line-height: 1.5; color: var(--ink-muted); }
+.lp-guests-point::before { content: ""; position: absolute; left: 2px; top: 0.6em; width: 7px; height: 7px; border-radius: 50%; background-color: var(--ui-accent); }
 
 .lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--surface); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
 .lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
@@ -1627,6 +1649,9 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }
   .lp-step-text { max-width: none; margin: 0; }
   .lp-rsvp-inner { grid-template-columns: 1fr; gap: 24px; }
+  /* On a phone the words come first and the picture follows them. */
+  .lp-guests { grid-template-columns: 1fr; gap: 28px; }
+  .lp-guests-copy { order: -1; }
   .lp-footer { padding-bottom: 96px; }
   .lp-sticky-cta {
     display: flex;

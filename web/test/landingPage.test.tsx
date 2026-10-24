@@ -110,3 +110,30 @@ describe("the hero stage (adr-019 §6.1)", () => {
     expect(en.container.querySelector(".lp-stage .seal")?.textContent).toBe("M&A");
   });
 });
+
+describe("the stat strip (adr-019 §6.3)", () => {
+  it("shows the one number that is true today, and fetches no other", () => {
+    const { container } = renderLanding();
+    const cells = container.querySelectorAll(".lp-stats .lp-stat");
+    expect(cells).toHaveLength(1);
+    expect(cells[0].querySelector(".lp-stat-value")?.textContent).toBe(t.statValue);
+    expect(cells[0].querySelector(".lp-stat-label")?.textContent).toBe(t.statLabel);
+    const urls = vi.mocked(fetch).mock.calls.map(([input]) => String(input));
+    expect(urls.filter((url) => url.includes("/api/metrics"))).toEqual([]);
+  });
+});
+
+describe("what guests see (adr-019 §6.2)", () => {
+  it("shows the guest's first frame as a still: the sealed envelope, beside the copy", () => {
+    const { container } = renderLanding();
+    const still = container.querySelector(".lp-guests-still") as HTMLElement;
+    expect(still.getAttribute("aria-hidden")).toBe("true");
+    expect(still.querySelector(".lp-guests-to")?.textContent).toBe(t.sample.title);
+    expect(still.querySelector(".seal")?.textContent).toBe("М&А");
+    // A picture of the envelope, not the envelope: nothing on it opens.
+    expect(still.querySelector("button, a")).toBeNull();
+    expect(screen.getByRole("heading", { level: 2, name: t.guestsTitle })).toBeTruthy();
+    const points = [...container.querySelectorAll(".lp-guests-point")].map((li) => li.textContent);
+    expect(points).toEqual(t.guestsPoints);
+  });
+});

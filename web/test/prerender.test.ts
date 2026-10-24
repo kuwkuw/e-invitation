@@ -92,6 +92,24 @@ describe("the landing hero before React mounts (adr-019 §6.1)", () => {
     },
   );
 
+  it.each(["uk", "en"] as const)(
+    "carries the stat and the guests' copy, but not their envelope (%s)",
+    (lang) => {
+      const t = LANDING[lang];
+      const block = landingBlock(lang);
+      for (const text of [
+        t.statValue,
+        t.statLabel,
+        t.guestsTitle,
+        t.guestsText,
+        ...t.guestsPoints,
+      ]) {
+        expect(block).toContain(text);
+      }
+      expect(block).not.toContain("lp-guests-still");
+    },
+  );
+
   it("puts no Ukrainian in the English landing block", () => {
     expect(landingBlock("en")).not.toMatch(/[Ѐ-ӿ]/);
   });
