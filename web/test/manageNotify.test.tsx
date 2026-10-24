@@ -96,6 +96,19 @@ describe("the manage page's notification control", () => {
             id: ID,
             version: 1,
             invitation: {
+              // The real payload always carries one (Invitation.brief isn't
+              // optional); nothing here needs a date or a host.
+              brief: {
+                event_type: "christening",
+                hosts: [],
+                date: null,
+                time: null,
+                venue: null,
+                city: null,
+                tone: "warm",
+                language: "uk",
+                extra_details: null,
+              },
               copy: {
                 title: "Хрестини Даринки",
                 greeting: "",

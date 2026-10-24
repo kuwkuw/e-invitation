@@ -1740,19 +1740,28 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    --ink-faint (the 3:1 floor NFR-9 keeps for labels), and only the wordmark
    stays at --ink-whisper. test/styles.test.ts holds both halves. */
 
-.hm-page { min-height: 100dvh; background: var(--app-bg); padding: 18px 16px 28px; }
+/* background-color, not the shorthand: the page carries .grain, whose image
+   the shorthand would wipe (adr-019 §3). */
+.hm-page { min-height: 100dvh; background-color: var(--app-bg); padding: 18px 16px 28px; }
 .hm-shell { max-width: 430px; margin: 0 auto; }
 .hm-topbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 
+/* Paper, as the guest reply card is (adr-019 §3): stock's radius and the
+   resting elevation, in place of glass's rounded tile. */
 .hm-card {
   background: var(--surface);
   border: 1px solid var(--edge);
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 18, 14, 0.05);
+  border-radius: var(--r-xl);
+  box-shadow: var(--e-2);
   padding: 22px;
 }
 
 .hm-header { padding: 4px 4px 0; }
+/* The seal beside the kicker and title (adr-019 §8.1). The text column may
+   shrink, so a long title wraps beside the seal instead of pushing it off. */
+.hm-header-row { display: flex; gap: 14px; align-items: center; }
+.hm-header-text { flex: 1; min-width: 0; }
+.hm-seal { width: 44px; flex: 0 0 auto; font-size: 0.85rem; }
 .hm-kicker {
   margin: 0 0 8px;
   font-size: 0.68rem; font-weight: 700;
@@ -1761,13 +1770,14 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .hm-title { margin: 0; font-family: var(--ui-font-display); font-size: 1.5rem; line-height: 1.15; font-weight: 500; color: var(--ink); }
 .hm-details { margin: 6px 0 0; font-size: 0.9rem; color: var(--ink-muted); }
+.hm-countdown { margin: 8px 0 0; font-family: var(--ui-font-display); font-weight: 400; font-size: 0.95rem; color: var(--ink-muted); }
 
 .hm-actions { display: flex; align-items: center; gap: 8px; padding: 16px 4px 0; }
 .hm-updated { flex: 1; font-size: 0.76rem; color: var(--ink-faint); }
 .hm-btn {
   display: inline-flex; align-items: center; gap: 7px;
   height: 46px; padding: 0 12px;
-  border: 1px solid var(--edge); border-radius: 12px;
+  border: 1px solid var(--edge); border-radius: var(--r-md);
   background: var(--surface); color: var(--ink-muted);
   font: inherit; font-size: 0.85rem; font-weight: 600;
   cursor: pointer;
@@ -1866,25 +1876,25 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-share-row { display: flex; gap: 8px; width: 100%; }
 .hm-share-row input {
   flex: 1; min-width: 0; height: 46px;
-  border: 1px solid var(--edge); border-radius: 12px;
+  border: 1px solid var(--edge); border-radius: var(--r-md);
   padding: 0 13px; font: inherit; font-size: 0.85rem; color: var(--ink-faint); background: var(--surface);
 }
 .hm-share-row button {
   flex: 0 0 auto; height: 46px; padding: 0 16px;
-  border: 1px solid var(--edge); border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--edge); border-radius: var(--r-md); background: var(--surface);
   font: inherit; font-size: 0.85rem; font-weight: 700; color: var(--ink-muted); cursor: pointer;
 }
 
 .hm-paste {
   width: 100%; height: 52px; margin-top: 24px;
-  border: 1px solid var(--edge); border-radius: 14px;
+  border: 1px solid var(--edge); border-radius: var(--r-md);
   padding: 0 15px; font: inherit; font-size: 0.9rem; background: var(--surface);
 }
 .hm-paste[aria-invalid="true"] { border-color: var(--rsvp-no); }
 .hm-reject { margin: 8px 0 0; font-size: 0.82rem; color: var(--rsvp-no); }
 .hm-primary {
   width: 100%; height: 52px; margin-top: 12px;
-  border: none; border-radius: 14px;
+  border: none; border-radius: var(--r-md);
   background: var(--accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
   box-shadow: 0 8px 20px rgba(var(--ui-accent-rgb), 0.26);
@@ -1920,6 +1930,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .hm-shell { max-width: 1080px; }
   .hm-header { border-bottom: 1px solid var(--edge); padding-bottom: 22px; }
   .hm-title { font-size: 2.1rem; }
+  .hm-seal { width: 52px; font-size: 0.95rem; }
   .hm-details { font-size: 1rem; }
   .hm-actions { padding-top: 22px; }
   /* Summary and its "N new" line hold the left rail; the list takes the rest. */
