@@ -139,6 +139,14 @@ describe("token contrast (WCAG 2.1)", () => {
     expect(contrast(tokens.get("--ink-muted") as string, table)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(tokens.get("--ink-faint") as string, table)).toBeGreaterThanOrEqual(3);
   });
+
+  it("keeps the seal's monogram, the envelope's title and its skip link legible", () => {
+    const on = (ink: string, ground: string) =>
+      contrast(tokens.get(ink) as string, tokens.get(ground) as string);
+    expect(on("--surface", "--ui-accent")).toBeGreaterThanOrEqual(4.5);
+    expect(on("--ui-ink", "--kraft")).toBeGreaterThanOrEqual(4.5);
+    expect(on("--surface", "--night")).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 describe("glass", () => {
@@ -256,6 +264,29 @@ describe("paper materials (adr-019 §3)", () => {
     );
     expect(preview).toMatch(/className/);
     expect(preview).not.toMatch(/\b(?:grain|deckle|seal)\b/);
+  });
+
+  const material = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Material system") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("defines the deckled mat as a --surface wrapper with an 11–14px pad and a polygon edge", () => {
+    const deckle = material(".deckle");
+    expect(deckle).toMatch(/background-color:\s*var\(--surface\)/);
+    expect(deckle).toMatch(/clip-path:\s*polygon\(/);
+    const pad = Number(/padding:\s*(\d+)px/.exec(deckle)?.[1]);
+    expect(pad).toBeGreaterThanOrEqual(11);
+    expect(pad).toBeLessThanOrEqual(14);
+  });
+
+  it("sets the seal's monogram in Literata italic 400, the one italic requested", () => {
+    const seal = material(".seal");
+    expect(seal).toMatch(/var\(--ui-accent\)/);
+    expect(seal).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+    expect(seal).toMatch(/font-style:\s*italic/);
+    expect(seal).toMatch(/font-weight:\s*400/);
+    expect(seal).toMatch(/color:\s*var\(--surface\)/);
   });
 
   it("defines grain as two dot layers at 3px and 7px, under 5% alpha", () => {
