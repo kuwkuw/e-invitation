@@ -18,7 +18,7 @@ import { AUTH, CRASH, GALLERY, GUEST, LANDING, MANAGE, SEO, UI } from "../src/i1
  */
 
 /** Every leaf string in a table, with the path that reached it — so a failure
- *  names `LANDING.samples.wedding.title`, not "some string". */
+ *  names `LANDING.sample.title`, not "some string". */
 function leaves(value: unknown, path: string): [string, string][] {
   if (typeof value === "string") return [[path, value]];
   if (Array.isArray(value)) return value.flatMap((v, i) => leaves(v, `${path}[${i}]`));
@@ -69,16 +69,14 @@ describe("the landing page's demo content", () => {
   // The hero and the RSVP mock are the page's only *content*, as opposed to
   // its claims about content — which makes them the part an English visitor
   // is there to judge. They live in `LANDING` so that stays true.
-  it.each(["uk", "en"] as const)("gives %s three complete sample invitations", (lang) => {
-    const samples = Object.values(LANDING[lang].samples);
-    expect(samples).toHaveLength(3);
-    for (const sample of samples) {
-      for (const line of Object.values(sample)) expect(line.trim()).not.toBe("");
-    }
+  it.each(["uk", "en"] as const)("gives %s one complete sample invitation", (lang) => {
+    const lines = Object.values(LANDING[lang].sample);
+    expect(lines).toHaveLength(6);
+    for (const line of lines) expect(line.trim()).not.toBe("");
   });
 
   it("says something different in each language", () => {
-    expect(LANDING.en.samples.wedding.title).not.toBe(LANDING.uk.samples.wedding.title);
+    expect(LANDING.en.sample.title).not.toBe(LANDING.uk.sample.title);
     expect(LANDING.en.rsvpNames.friend).not.toBe(LANDING.uk.rsvpNames.friend);
   });
 });
@@ -89,7 +87,7 @@ describe("the landing page's claims", () => {
     "types a sentence about the sample the hero raises (%s)",
     (lang) => {
       const t = LANDING[lang];
-      const details = t.samples.wedding.details_line;
+      const details = t.sample.details_line;
       const city = details.split(",").at(-1)?.trim() ?? "";
       const day = /^\d+/.exec(details)?.[0] ?? "";
       expect(city).not.toBe("");

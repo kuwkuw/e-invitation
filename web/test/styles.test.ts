@@ -19,6 +19,10 @@ import {
 const css = readStyles();
 const tokens = rootTokens(css);
 
+/** A source file under web/src, for the rules a component's markup has to keep. */
+const source = (file: string) =>
+  readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
+
 describe("material tokens", () => {
   it("declares every token the editor is built from", () => {
     const required = [
@@ -456,9 +460,6 @@ describe("the guest page's text", () => {
     [".gr-env-skip", "--night", 4.5],
   ]);
 
-  const source = (file: string) =>
-    readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
-
   it("keeps the grain on every guest page ground (adr-019 §3)", () => {
     const page = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
       r.selectors.includes(".gr-page"),
@@ -620,8 +621,12 @@ describe("the landing's motion (adr-019 §6.1)", () => {
   it("animates only inside its one no-preference block", () => {
     const { start, end } = welcome();
     const animated = ruleBlocks(landing()).filter((r) => /(?:^|[;\s])animation\s*:/.test(r.body));
-    expect(animated.flatMap((r) => r.selectors).sort()).toEqual([".lp-typing"]);
+    expect(animated.flatMap((r) => r.selectors).sort()).toEqual([".lp-stage-card", ".lp-typing"]);
     for (const r of animated) expect(r.at > start && r.at < end, r.selectors.join(", ")).toBe(true);
+  });
+
+  it("raises the card by transform and opacity alone", () => {
+    expect(keyframeProps("lp-rise")).toEqual(new Set(["transform", "opacity"]));
   });
 
   it("types by width and blinks by colour, and moves nothing else", () => {
@@ -838,5 +843,34 @@ describe("headings that carry their own class", () => {
       ".lp-steps h2",
       ".lp-yours-head h2",
     ]);
+  });
+});
+
+describe("the landing on paper (adr-019 §3)", () => {
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Landing page") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("grains the page ground and the hero's table, each coloured without the shorthand", () => {
+    for (const [selector, ground] of [
+      [".landing", "--app-bg"],
+      [".lp-stage", "--table"],
+    ]) {
+      expect(rule(selector), selector).toMatch(
+        new RegExp(`background-color:\\s*var\\(${ground}\\)`),
+      );
+      expect(rule(selector), selector).not.toMatch(/(?:^|[;\s])background\s*:/);
+    }
+    expect(source("LandingPage.tsx")).toMatch(/className="landing grain"/);
+    expect(source("prerender.ts")).toMatch(/class="landing grain"/);
+    expect(source("components/landing/HeroStage.tsx")).toMatch(/className="lp-stage grain"/);
+  });
+
+  it("sets the hero's card on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("components/landing/HeroStage.tsx")).toMatch(
+      /<div className="lp-stage-card">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    expect(rule(".lp-stage-card")).toMatch(/filter:\s*drop-shadow\(/);
   });
 });

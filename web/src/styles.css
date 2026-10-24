@@ -19,8 +19,9 @@
   --surface: #fbf8f2;
   /* The darker field a card is set on, as stationery is shown (adr-019 §4.2). */
   --table: #eae3d6;
-  /* The guest's envelope (adr-019 §5.1), its only reader: kraft stock, a
-     darker flap, and the dark ground it arrives on. */
+  /* The envelope (adr-019 §5.1): kraft stock, a darker flap, and the dark
+     ground it arrives on. The guest page's is the living one; the landing
+     draws its hero's and the still of what guests see from the same three. */
   --kraft: #c8a97e;
   --kraft-deep: #b8966a;
   --night: #24201c;
@@ -1421,16 +1422,18 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Landing page --------------------------------------------------------- */
 /* adr-019's paper direction: oxblood accent, Literata display, Golos Text
-   UI. Composes the real InvitationPreview card in the hero fan. */
+   UI. Composes the real InvitationPreview card in the hero's stage. */
 
+/* background-color, not the shorthand: the page carries .grain (adr-019 §3),
+   whose image the shorthand would wipe. */
 .landing {
-  background: var(--app-bg);
+  background-color: var(--app-bg);
   color: var(--ink);
   font-family: var(--ui-font-body);
   min-height: 100vh;
 }
-/* The landing's own headings, by section. Not `.landing h2`: the hero fan's
-   cards and the account sheets each title themselves with an h2 of their
+/* The landing's own headings, by section. Not `.landing h2`: the hero's
+   card and the account sheets each title themselves with an h2 of their
    own class, and `.landing h2` outranks a single class, so it set every
    card title in Playfair whatever its type, and the sheets' titles in bold.
    .lp-yours-head h2 sets its own face below. */
@@ -1525,16 +1528,26 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-composer .lp-cta { justify-self: start; margin-top: 4px; }
 .lp-composer-note { margin: 12px 0 0; font-size: 0.88rem; color: var(--ink-muted); }
 
-/* Hero fan: three real invitation cards, overlapped and rotated. */
-.lp-fan { display: flex; justify-content: center; align-items: flex-start; }
-.lp-fan-card { position: relative; filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.15)); }
-.lp-fan-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
-.lp-fan-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
-.lp-fan-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
-.lp-fan-card .inv-details { margin: 12px auto; }
-.lp-fan-0 { width: 245px; transform: rotate(-9deg); margin-top: 40px; margin-right: -66px; z-index: 1; }
-.lp-fan-1 { width: 265px; transform: rotate(2deg); z-index: 3; }
-.lp-fan-2 { width: 245px; transform: rotate(10deg); margin-top: 46px; margin-left: -66px; z-index: 2; }
+/* The hero's stage (adr-019 §6.1): the composer's invitation rising out of a
+   kraft envelope on the --table, as stationery is shown. The table carries
+   .grain, so it takes background-color. overflow:hidden keeps a rising card
+   from ever widening the page.
+
+   The envelope is three layers: its back (.lp-stage-env, the flap's
+   --kraft-deep), the card standing in it, and the front pocket (--kraft)
+   with a V cut into its top, where the seal sits. The card is bottom-
+   anchored, so its lower part stands behind the pocket and its title,
+   greeting and details line show above it. */
+.lp-stage { justify-self: center; width: min(440px, 100%); padding: 40px 20px 28px; background-color: var(--table); border-radius: var(--r-xl); overflow: hidden; }
+.lp-stage-env { position: relative; width: min(300px, 100%); height: 400px; margin: 0 auto; }
+.lp-stage-env::before { content: ""; position: absolute; inset: auto 0 0; height: 170px; background-color: var(--kraft-deep); border-radius: var(--r-sm); }
+.lp-stage-card { position: absolute; left: 50%; bottom: 20px; z-index: 1; width: 78%; margin-left: -39%; filter: drop-shadow(var(--e-2)); }
+.lp-stage-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
+.lp-stage-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
+.lp-stage-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
+.lp-stage-card .inv-details { margin: 12px auto; }
+.lp-stage-pocket { position: absolute; inset: auto 0 0; z-index: 2; height: 118px; background-color: var(--kraft); border-radius: 0 0 var(--r-sm) var(--r-sm); clip-path: polygon(0 0, 50% 34%, 100% 0, 100% 100%, 0 100%); box-shadow: var(--e-1); }
+.lp-stage-seal { position: absolute; top: 40px; left: 50%; width: 52px; margin: -26px 0 0 -26px; font-size: 0.95rem; }
 
 .lp-steps { padding: clamp(40px, 5vw, 64px); }
 .lp-steps h2 { margin: 0 0 40px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
@@ -1582,12 +1595,10 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* Sticky bottom CTA: mobile only. */
 .lp-sticky-cta { display: none; }
 
-/* Hero layout collapses at 1000px, not at the 800px chrome breakpoint below.
-   The fan is three fixed-width cards (623px together), and a grid item's
-   default min-width:auto lets that beat `1fr 1fr`: between 800 and ~1100 the
-   text column was being squeezed to as little as 153px, wrapping the headline
-   over four lines and the CTA over two. Layout and chrome want different
-   breakpoints, so they get separate blocks. */
+/* Hero layout collapses at 1000px, not at the 800px chrome breakpoint below:
+   below it the composer's one typed line and the stage's envelope no longer
+   both fit beside each other. Layout and chrome want different breakpoints,
+   so they get separate blocks. */
 @media (max-width: 1000px) {
   .lp-hero { grid-template-columns: 1fr; text-align: center; }
   .lp-hero-copy h1 { max-width: none; }
@@ -1595,17 +1606,11 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   /* Centred with the copy, but its own lines read from the left, as an
      input's do. */
   .lp-composer { margin-inline: auto; text-align: left; }
-  /* min-width:0 lets the track ignore the fan's intrinsic width, so the copy
-     column is the full viewport and its centred text is actually centred —
-     without it the 440px fan widened the track and pushed the headline 55px
-     off centre at 375px. overflow-x:clip then keeps the deliberate bleed from
-     scrolling the page; `clip` rather than `hidden` because hidden would make
-     this a scroll container and turn overflow-y into auto. */
+  /* overflow-x:clip keeps anything the stage lets slip from scrolling the
+     page sideways; `clip` rather than `hidden` because hidden would make this
+     a scroll container and turn overflow-y into auto. */
   .lp-hero { overflow-x: clip; }
-  .lp-fan { margin-top: 12px; min-width: 0; }
-  .lp-fan-0 { width: 175px; margin-right: -50px; }
-  .lp-fan-1 { width: 190px; }
-  .lp-fan-2 { width: 175px; margin-left: -50px; }
+  .lp-stage { margin-top: 8px; }
 }
 
 @media (max-width: 800px) {
@@ -1657,13 +1662,19 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    by max-width in steps; 46ch holds 44 characters of Golos with room, and
    i18n.test.ts holds the sentence to 44. The caret is the span's own right
    border, so it sits at the end of what is shown, blinks while it types,
-   and is transparent once the blinking stops. */
+   and is transparent once the blinking stops.
+
+   The rise. The card comes up out of the pocket once the typing is done:
+   2.7s is the typing's 0.4s delay and 2.2s, and a beat. Transform and
+   opacity only, so it never lays anything out. */
 @media (prefers-reduced-motion: no-preference) {
   .lp-composer-line { display: flex; justify-content: flex-end; overflow: hidden; }
   .lp-typing { flex: 0 0 auto; margin-right: auto; white-space: nowrap; overflow: hidden; border-right: 2px solid transparent; animation: lp-type 2.2s steps(40, end) 0.4s both, lp-caret 0.55s step-end 0.4s 5; }
+  .lp-stage-card { animation: lp-rise 900ms var(--ease-ios) 2.7s both; }
 }
 @keyframes lp-type { from { max-width: 0; } to { max-width: 46ch; } }
 @keyframes lp-caret { 50% { border-right-color: var(--ink); } }
+@keyframes lp-rise { from { transform: translateY(38%); opacity: 0; } }
 
 /* Host manage dashboard --------------------------------------------------- */
 /* From the "host-manage" screens in the E-invitation design project. Mobile is

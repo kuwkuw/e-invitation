@@ -88,3 +88,25 @@ describe("the hero composer (adr-019 §6.1)", () => {
     expect(screen.getByText(t.composerNote)).toBeTruthy();
   });
 });
+
+describe("the hero stage (adr-019 §6.1)", () => {
+  it("raises one invitation, the composer's, on the deckled mat on a grained table", () => {
+    const { container } = renderLanding();
+    const stage = container.querySelector(".lp-stage") as HTMLElement;
+    expect(stage.getAttribute("aria-hidden")).toBe("true");
+    expect(stage.className).toMatch(/\bgrain\b/);
+    const cards = stage.querySelectorAll(".lp-stage-card > .deckle > .inv");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].querySelector(".inv-title")?.textContent).toBe(t.sample.title);
+    // The fan's other two are gone; range lives in the gallery.
+    expect(container.querySelectorAll(".inv")).toHaveLength(1);
+  });
+
+  it("seals the envelope with the sample couple's monogram, in both languages", () => {
+    const { container, unmount } = renderLanding();
+    expect(container.querySelector(".lp-stage .seal")?.textContent).toBe("М&А");
+    unmount();
+    const en = renderLanding("/?lang=en");
+    expect(en.container.querySelector(".lp-stage .seal")?.textContent).toBe("M&A");
+  });
+});

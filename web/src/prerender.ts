@@ -59,12 +59,13 @@ function escapeHtml(text: string): string {
  * `LandingPage.tsx` renders, so what a visitor sees before React mounts is
  * what they see after.
  *
- * Deliberately a **subset**. Left out: the hero's three sample invitations
- * (decorative, `aria-hidden`, and a large amount of markup for no text), the
- * step glyphs (decoration with no reading), the mocked RSVP rows and the
- * returning-host list (that one is per-visitor and belongs to nobody until the
- * app boots). What is kept is every heading, every line of prose and the
- * occasion words — which is to say, everything a search result could quote.
+ * Deliberately a **subset**. Left out: the hero's stage, the sample invitation
+ * rising out of its envelope (decorative, `aria-hidden`, and a large amount of
+ * markup for no text), the step glyphs (decoration with no reading), the
+ * mocked RSVP rows and the returning-host list (that one is per-visitor and
+ * belongs to nobody until the app boots). What is kept is every heading, every
+ * line of prose and the occasion words — which is to say, everything a search
+ * result could quote.
  *
  * The calls to action are real `<a href="/create">` links rather than the
  * page's `<button>`s. A crawler cannot press a button, so today the editor is
@@ -86,7 +87,7 @@ export function landingBodyHtml(lang: Language): string {
   const chips = t.chips.map((chip) => `<span class="lp-chip">${escapeHtml(chip)}</span>`).join("");
 
   return (
-    `<div class="landing">` +
+    `<div class="landing grain">` +
     `<header class="lp-nav"><span class="lp-brand">` +
     `<span class="lp-brand-full">${escapeHtml(t.brand)}</span>` +
     `</span>` +
