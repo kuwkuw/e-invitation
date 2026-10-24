@@ -93,6 +93,22 @@ implementation.
   ([adr-010](decisions/adr-010-host-manage-link.md) §3) is a rule about count
   and survives unchanged; both buttons act on the public link and sit above
   the divider.
+- FR-3.7 **The editor on paper**
+  ([adr-019](decisions/adr-019-paper-direction.md) §7). The card sits on the
+  guest page's deckled mat at the guest's width: a 460 px mat on desktop, the
+  guest page's 20 px sides on a phone. The design controls are five underlined
+  tabs under the card — Палітра, Шрифт, Макет (composition and ornament),
+  Конверт, Фон — that stay pinned to the pane's bottom; «Конверт» shows the
+  envelope a guest opens first, with the hosts' seal, and asks nothing. The
+  header is a bar with the hosts' seal beside the title. **After a publish**
+  it links to `/manage/:id` with the replies so far, «16 буде · 3 ні · 2
+  можливо»: the headcount (FR-5.2's `guests`), then the declines and the
+  maybes, each only when someone gave it. The counts come from
+  `POST /api/invitations/counts` for the one invitation (FR-5.7's endpoint),
+  never `/rsvps`, so no guest's name or note reaches the editor; they refresh
+  after each publish and when the tab comes back, and a failure leaves the
+  link reading «Відповіді». On a phone the link takes a row of its own under
+  the bar.
 
 ## FR-4 Guest page & RSVP
 
@@ -457,7 +473,9 @@ them.
 - FR-12.7 The **choice** is made where it is caused: the share panel asks, at
   the moment the host publishes, whether replies should be emailed and to which
   address — not in a settings screen this app does not have, and not discovered
-  from the first email. **The control also has a durable home** in the landing
+  from the first email. It asks with FR-12.12's checkbox, which spends no fill,
+  so the public link keeps the panel's only filled accent
+  ([adr-010](decisions/adr-010-host-manage-link.md) §3.1). **The control also has a durable home** in the landing
   page's account footer and on the host dashboard (FR-12.11), because a moment
   is not an address; without them a host who declined at publish would have no
   way back to the choice at all. It is absent, never disabled, where the
@@ -498,8 +516,13 @@ them.
   not after. The checked box is ink, never the accent, which on host
   surfaces means the public link
   ([adr-010](decisions/adr-010-host-manage-link.md) §3). The host dashboard
-  carries the same checkbox (FR-12.11). The share panel keeps its sentence
-  and button until adr-019's editor step rebuilds it.
+  carries the same checkbox (FR-12.11), and so does the share panel
+  (FR-12.7), since adr-019's editor step. There, off, its state line is an
+  offer naming the address and "every invitation in your account"; on, it is
+  the dashboard's "not just this one", because the panel is about one event
+  too. The struck envelope left both surfaces that now carry a square, and
+  keeps its job where nothing is pressable: the email footer and the
+  unsubscribe page.
 
 ## FR-13 Public discoverability
 

@@ -26,9 +26,10 @@ tests drive it through a `MemoryRouter`.
   `Countdown`, which takes its strings from the page because the guest's
   follow the invitation's language and the host's the UI's). Hooks:
   `useInvitationEditor` (what the invitation is), `usePublishing` (where it's
-  published), `useHostManage`, `useHostInvitationCounts` and `useCopyLink`
-  (host access; the last is the dashboard's one copy action, quiet when the
-  clipboard refuses),
+  published), `useReplyCounts` (the editor header's replies so far, counts
+  only, from adr-012's endpoint), `useHostManage`, `useHostInvitationCounts`
+  and `useCopyLink` (host access; the last is the dashboard's one copy action,
+  quiet when the clipboard refuses),
   `usePublishedInvitation`, `useRsvpForm`, `useViewBeacon` and `useEnvelope`
   (guest side),
   `useReferralSource` and `useGallerySample` (editor entry).
@@ -95,8 +96,15 @@ Deliberately unequal, and both read one predicate, `isPastDate` in
   changes, a state line carrying the scope, ink and never the accent. On
   `/manage/:id` it is the same checkbox, whose on state names the address and
   "not just this one" and never the event (FR-12.11), rendered only when the
-  session has an address. The share panel keeps a sentence and a button until
-  adr-019's step 5 moves it onto it.
+  session has an address. The share panel carries it too: off, an offer
+  naming the address and every invitation in the account; on, the
+  dashboard's "not just this one". It spends no fill, so the public link
+  keeps the panel's only filled accent (adr-010 §3.1).
+- After a publish the editor's header (`EditorHeader`) links to
+  `/manage/:id` with the replies so far, from `useReplyCounts`. It reads the
+  counts endpoint, **never `/rsvps`**, so no guest name reaches the editor,
+  and it sends no `seen_at`. The share panel renders inside the header so it
+  hangs from the bar whatever the bar's height.
 - The sign-in gate is the **first frame of the share sheet** (`AuthGate.tsx`),
   opened on the Publish press, never on a 401. `draft.ts` parks the editor's
   invitation before the redirect. `declined` and `failed` are distinct states,
@@ -206,7 +214,10 @@ still have hex values and a `/* Title ---- */` banner each. Two converted
 sections keep hex on purpose and the test allowlists them: `Creation chat`'s
 `.cc-sk` shimmer (it needs a stop lighter than both ends) and the
 `Material system` banner, which defines the tokens. The account sheets are
-built on the sign-in gate's `.ag-*` shell, so they convert with it.
+built on the sign-in gate's `.ag-*` shell, and converted with it in adr-019's
+editor step; `Gallery` and `Crash screen` are what's left. The component hex
+test covers the editor too, and allows only the Google mark's four brand
+colours in `AuthGate.tsx`.
 
 - **The unit is a section, not a surface.** A section runs from its banner to
   the next one, so a rule added after the last banner silently joins it. A
@@ -240,7 +251,10 @@ built on the sign-in gate's `.ag-*` shell, so they convert with it.
   `.seal`) may sit on `.inv` or inside it**; wrapping the card is fine
   (tested).
 - The editor sets the card on `--table` with `.grain`, whatever its palette
-  (adr-019 §4.2). `.grain` sets only `background-image`, so whatever carries
+  (adr-019 §4.2), inside the guest page's deckled mat (`.cc-mat > .deckle`,
+  the twin of `.gr-mat`) at the guest's width, so nothing overrides `.inv`
+  there any more. Its design controls follow the card and stick to the
+  pane's bottom. `.grain` sets only `background-image`, so whatever carries
   it gives the colour with `background-color`, never the `background`
   shorthand, which would wipe the grain. `data-palette` stays on `.cc-shell`
   as an unused hook (an attribute, not the `palette-*` class, which would push

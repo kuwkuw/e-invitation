@@ -12,11 +12,16 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **140.5 kB gzipped** (489.6 kB raw, CSS + JS), measured 2026-10-24 with
-  `pnpm --filter inv-app-web build` — 13.77 kB CSS plus 126.68 kB JS, after
-  [adr-019](decisions/adr-019-paper-direction.md)'s «Ще не знаю» (step 7):
-  the third tile and thanks card, the summary's third segment and count, the
-  maybe's pill and tokens, and their copy added 0.5 kB. It was 140.0 kB
+  **142.0 kB gzipped** (494.2 kB raw, CSS + JS), measured 2026-10-24 with
+  `pnpm --filter inv-app-web build` — 14.03 kB CSS plus 128.01 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s editor (step 5): the
+  mat, the header bar with its seal and replies link and the hook behind it,
+  the five tabs and the envelope still, the share panel's checkbox, the sign-in
+  gate and the account sheets on tokens, and their copy in both languages
+  added 1.6 kB. It was 140.5 kB (489.6 kB raw) after step 7's «Ще не знаю»,
+  13.77 kB CSS plus 126.68 kB JS, where the third tile and thanks card, the
+  summary's third segment and count, the maybe's pill and tokens, and their
+  copy added 0.5 kB. It was 140.0 kB
   (487.6 kB raw) after step 6's manage dashboard, 13.67 kB CSS plus
   126.30 kB JS, where the seal and countdown in its header, the summary bar,
   «Нагадати гостям», the guests' wishes and their copy added 0.6 kB, against
@@ -297,11 +302,16 @@
   Asserted in `web/test/styles.test.ts`. `--ink-faint` clears only the 3:1
   large-text floor and is reserved for labels, icons, placeholders and
   disabled states, never body copy — but that reservation is a convention,
-  not a guarantee: the tests hold the 3:1 floor and, everywhere except the
-  manage dashboard, the guest page and the landing page, nothing about where
-  `--ink-faint` is used. On those three they hold the placement too: each text
-  selector is named with the ground it sits on and the floor its role owes
-  (4.5:1 for a sentence, 3:1 for a label, placeholder or timestamp). Below
+  not a guarantee: the tests hold the 3:1 floor and, outside the surfaces
+  named next, nothing about where `--ink-faint` is used. On the manage
+  dashboard, the guest page, the landing page, the share panel, the sign-in
+  gate and the account sheets, and for the editor's header, tabs, envelope
+  still and peek line, they hold the placement too: each text selector is
+  named with the ground it sits on and the floor its role owes (4.5:1 for a
+  sentence, 3:1 for a label, placeholder or timestamp). The share panel's
+  manage-token block is also held apart from the chrome it sits on, at a
+  CIE76 distance of at least 6 from `--surface` and `--wash`, because adr-010
+  makes it a different material on purpose. Below
   `--ink-faint`, the two sub-faint inks are readable by an explicit list of
   rules — the INVINTO wordmarks and four aria-hidden decorative icons —
   across the whole stylesheet, and nothing else may read them. They are held
@@ -317,8 +327,10 @@
   renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain sits
   on the editor's table, the guest page's ground, the landing page's ground
   and its hero's table, and the manage dashboard's ground, and it sets only
-  an image under 5% alpha, so it moves no contrast. The deckled mat wraps the card on the guest page and
-  in the landing's hero.
+  an image under 5% alpha, so it moves no contrast. The deckled mat wraps the
+  card on the guest page, in the landing's hero and in the editor, where it is
+  the guest page's mat at the guest's width, so the host edits the card the
+  guest opens.
 - **Reduced transparency and reduced motion are honoured**, not detected: the
   two media queries above, never a device or user-agent check. The guest
   page's envelope ([adr-019](decisions/adr-019-paper-direction.md) §5.1)

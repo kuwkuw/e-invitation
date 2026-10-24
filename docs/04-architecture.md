@@ -132,7 +132,10 @@ a future DB swap (NFR-7).
   `POST /api/invitations/counts` is the one request that carries more than one
   token — a batch of `{id, token}` for the returning-host list, each
   authorized on its own id, with a per-item status so one stale token never
-  fails the others ([adr-012](decisions/adr-012-batch-response-counts.md)). The
+  fails the others ([adr-012](decisions/adr-012-batch-response-counts.md)).
+  The editor's header sends it a batch of one after a publish
+  ([adr-019](decisions/adr-019-paper-direction.md) §7.2): it answers with
+  counts and never the RSVP list, so no guest's name reaches the editor. The
   server still learns nothing about which invitations share a host; the client
   supplies the ids from its browser-local index every time.
   `POST /api/invitations/:id/view` is the one write with **no credential at

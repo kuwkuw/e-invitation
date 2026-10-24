@@ -632,7 +632,9 @@ state line carrying the scope, the whole label a 44 px target, the checked box
 ink rather than the accent. The landing page's account footer carries it first
 (FR-12.12, [adr-019](adr-019-paper-direction.md) §10), and `/manage/:id`
 since adr-019's manage step, with the address and "not just this one" in its
-state line (FR-12.11); the share panel follows in the editor step.
+state line (FR-12.11). The share panel, where the host is first asked, carries
+it since adr-019's editor step: off, an offer naming the address and every
+invitation in the account; on, the dashboard's "not just this one" (FR-12.7).
 
 ## Revisit triggers
 
