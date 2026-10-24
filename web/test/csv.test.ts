@@ -14,6 +14,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: "Ірина",
+          answer: "yes",
           attending: true,
           guests_count: 2,
           note: null,
@@ -22,6 +23,7 @@ describe("buildRsvpCsv", () => {
         },
         {
           name: "Марко",
+          answer: "no",
           attending: false,
           guests_count: 1,
           note: null,
@@ -48,6 +50,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: "Тарас",
+          answer: "no",
           attending: false,
           guests_count: 1,
           note: null,
@@ -56,6 +59,7 @@ describe("buildRsvpCsv", () => {
         },
         {
           name: "Тарас",
+          answer: "yes",
           attending: true,
           guests_count: 2,
           note: null,
@@ -75,6 +79,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: 'Олена "Оля", молодша',
+          answer: "yes",
           attending: true,
           guests_count: 1,
           note: "Буду пізніше,\nдесь о 19:00",

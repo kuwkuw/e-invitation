@@ -7,7 +7,7 @@ describe("buildRsvpInput", () => {
   it("trims the name and turns a blank note into null", () => {
     expect(
       buildRsvpInput({ name: "  Оксана  ", attending: true, guestsCount: 2, note: "   " }),
-    ).toEqual({ name: "Оксана", attending: true, guests_count: 2, note: null });
+    ).toEqual({ name: "Оксана", answer: "yes", attending: true, guests_count: 2, note: null });
   });
 
   it("resets the party size when the answer is no", () => {
@@ -60,6 +60,7 @@ describe("useRsvpForm", () => {
 
     expect(submit).toHaveBeenCalledWith("abc123", {
       name: "Ігор",
+      answer: "yes",
       attending: true,
       guests_count: 1,
       note: "+1 dessert",

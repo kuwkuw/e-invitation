@@ -18,6 +18,7 @@ export function buildRsvpInput(fields: {
 }): RsvpInput {
   return {
     name: fields.name.trim(),
+    answer: fields.attending ? "yes" : "no",
     attending: fields.attending,
     guests_count: fields.attending ? fields.guestsCount : 1,
     note: fields.note.trim() ? fields.note.trim() : null,

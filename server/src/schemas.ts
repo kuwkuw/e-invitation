@@ -135,15 +135,45 @@ export const PublishRequest = z.object({
 });
 export type PublishRequest = z.infer<typeof PublishRequest>;
 
-export const RsvpRequest = z.object({
-  name: z.string().trim().min(1).max(100),
-  attending: z.boolean(),
-  guests_count: z.number().int().min(1).max(10).default(1),
-  note: z.string().trim().max(500).nullable().default(null),
-});
+// What a guest said (adr-019 §9.1). It is stored **beside** `attending`, not
+// in place of it, because the reader before it tests `attending` for
+// truthiness and "no" is truthy: an in-place enum would have made a revert
+// count every no and maybe written in between as a yes, headcount included.
+export const RsvpAnswer = z.enum(["yes", "no", "maybe"]);
+export type RsvpAnswer = z.infer<typeof RsvpAnswer>;
+
+// Accepts `answer`, or `attending` alone from a guest page loaded before the
+// maybe existed, and stores both. The guest page sends both too, so a page
+// still open across a revert submits to a server that reads `attending`.
+// When both arrive, `answer` wins.
+export const RsvpRequest = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    answer: RsvpAnswer.optional(),
+    attending: z.boolean().optional(),
+    guests_count: z.number().int().min(1).max(10).default(1),
+    note: z.string().trim().max(500).nullable().default(null),
+  })
+  .refine((body) => body.answer !== undefined || body.attending !== undefined, {
+    message: "answer is required",
+    path: ["answer"],
+  })
+  .transform(({ answer, attending, ...rest }) => {
+    const said = answer ?? (attending ? "yes" : "no");
+    return { ...rest, answer: said, attending: said === "yes" };
+  });
 export type RsvpRequest = z.infer<typeof RsvpRequest>;
 
-export const Rsvp = RsvpRequest.extend({
+// A stored RSVP. `attending` means "counts toward the headcount" and is true
+// for a yes only. `answer` is optional because a record written before the
+// maybe has none; `answerOf` in rsvpSummary.ts is the one place that reads
+// either era.
+export const Rsvp = z.object({
+  name: z.string(),
+  answer: RsvpAnswer.optional(),
+  attending: z.boolean(),
+  guests_count: z.number(),
+  note: z.string().nullable(),
   created_at: z.string(),
 });
 export type Rsvp = z.infer<typeof Rsvp>;
@@ -152,7 +182,9 @@ export type Rsvp = z.infer<typeof Rsvp>;
 // never stored: a guest who changes their mind submits again (FR-4.4), so a
 // later answer under the same name replaces this one. Superseded entries stay
 // in the list as history but are excluded from the counts (adr-010 §5).
+// `answer` is always present here, read from either era of record.
 export const RsvpSummaryEntry = Rsvp.extend({
+  answer: RsvpAnswer,
   superseded: z.boolean(),
 });
 export type RsvpSummaryEntry = z.infer<typeof RsvpSummaryEntry>;
@@ -160,8 +192,14 @@ export type RsvpSummaryEntry = z.infer<typeof RsvpSummaryEntry>;
 // Over the live (non-superseded) answers only — `guests` is the headcount the
 // host caters on, so double-counting a changed mind would be a real bug. Named
 // so the batch-counts endpoint reuses this exact shape (adr-012 consequences)
-// rather than defining a second one that could drift.
-export const RsvpCounts = z.object({ yes: z.number(), no: z.number(), guests: z.number() });
+// rather than defining a second one that could drift. A maybe is counted
+// beside yes and no and never added to `guests` (adr-019 §9.1).
+export const RsvpCounts = z.object({
+  yes: z.number(),
+  no: z.number(),
+  maybe: z.number(),
+  guests: z.number(),
+});
 export type RsvpCounts = z.infer<typeof RsvpCounts>;
 
 export const RsvpSummary = z.object({

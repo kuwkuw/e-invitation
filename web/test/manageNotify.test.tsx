@@ -89,7 +89,7 @@ describe("the manage page's notification control", () => {
         if (url.includes("/api/account/keyring")) return json({ invitations: [] });
         if (url.includes("/api/account/notifications")) return json({ enabled: true });
         if (url.includes("/rsvps")) {
-          return json({ rsvps: [], counts: { yes: 0, no: 0, guests: 0 } });
+          return json({ rsvps: [], counts: { yes: 0, no: 0, maybe: 0, guests: 0 } });
         }
         if (url.includes(`/api/invitations/${ID}`)) {
           return json({

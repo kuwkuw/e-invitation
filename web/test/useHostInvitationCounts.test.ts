@@ -8,7 +8,7 @@ import type { CountsResult } from "../src/types";
 const ok = (id: string, yes: number, newSince = 0): CountsResult => ({
   id,
   status: "ok",
-  counts: { yes, no: 0, guests: yes },
+  counts: { yes, no: 0, maybe: 0, guests: yes },
   new_since: newSince,
 });
 

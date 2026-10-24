@@ -76,7 +76,10 @@ describe("YourInvitations", () => {
 
   it("fills in a row's reply count and 'new' badge without changing the layout", () => {
     const counts = new Map<string, CountsResult>([
-      ["id0", { id: "id0", status: "ok", counts: { yes: 3, no: 1, guests: 5 }, new_since: 2 }],
+      [
+        "id0",
+        { id: "id0", status: "ok", counts: { yes: 3, no: 1, maybe: 0, guests: 5 }, new_since: 2 },
+      ],
     ]);
     const { container } = render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, {
       wrapper,
@@ -92,13 +95,30 @@ describe("YourInvitations", () => {
 
   it("shows the muted 0-state and hides the 'new' badge at zero", () => {
     const counts = new Map<string, CountsResult>([
-      ["id0", { id: "id0", status: "ok", counts: { yes: 0, no: 0, guests: 0 }, new_since: 0 }],
+      [
+        "id0",
+        { id: "id0", status: "ok", counts: { yes: 0, no: 0, maybe: 0, guests: 0 }, new_since: 0 },
+      ],
     ]);
     const { container } = render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, {
       wrapper,
     });
     expect(screen.getByText("без відповідей")).toBeTruthy();
     expect(container.querySelector(".lp-yours-new")).toBeNull();
+  });
+
+  // A maybe is a reply (adr-019 §9.1). The row adds its total up by hand, so
+  // a list of maybes would otherwise read as no replies at all.
+  it("counts a maybe as a reply", () => {
+    const counts = new Map<string, CountsResult>([
+      [
+        "id0",
+        { id: "id0", status: "ok", counts: { yes: 0, no: 0, maybe: 2, guests: 0 }, new_since: 0 },
+      ],
+    ]);
+    render(<YourInvitations invitations={make(1)} counts={counts} t={t} />, { wrapper });
+    expect(screen.getByText("2 відповіді")).toBeTruthy();
+    expect(screen.queryByText("без відповідей")).toBeNull();
   });
 
   it("leaves a row plain when its token was refused or is missing", () => {

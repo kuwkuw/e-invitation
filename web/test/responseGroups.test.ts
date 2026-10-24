@@ -4,6 +4,7 @@ import type { RsvpEntry } from "../src/types";
 
 function entry(partial: Partial<RsvpEntry> & { name: string; created_at: string }): RsvpEntry {
   return {
+    answer: "yes",
     attending: true,
     guests_count: 1,
     note: null,
@@ -18,6 +19,7 @@ describe("groupResponses", () => {
       entry({
         name: "Тарас Поліщук",
         created_at: "2026-08-01T10:00:00Z",
+        answer: "no",
         attending: false,
         superseded: true,
       }),

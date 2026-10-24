@@ -121,7 +121,7 @@ describe("publish + RSVP", () => {
     });
     expect(allowed.statusCode).toBe(200);
     const summary = allowed.json();
-    expect(summary.counts).toEqual({ yes: 2, no: 1, guests: 3 });
+    expect(summary.counts).toEqual({ yes: 2, no: 1, maybe: 0, guests: 3 });
     expect(summary.rsvps).toHaveLength(3);
     expect(summary.rsvps[1].note).toBe("Буду трохи пізніше");
     expect(summary.rsvps[2].guests_count).toBe(1);
@@ -154,7 +154,7 @@ describe("publish + RSVP", () => {
     ).json();
 
     // Оксана's "no" is history; her "yes" with 3 guests is the live answer.
-    expect(summary.counts).toEqual({ yes: 2, no: 0, guests: 4 });
+    expect(summary.counts).toEqual({ yes: 2, no: 0, maybe: 0, guests: 4 });
     // The full record is preserved — nothing is dropped from the list.
     expect(summary.rsvps).toHaveLength(3);
     expect(summary.rsvps[0]).toMatchObject({ name: "Оксана Литвин", superseded: true });
