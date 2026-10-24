@@ -1,7 +1,7 @@
 import type { ManageStrings } from "../../i18n";
 import { formatRelativeTime } from "../../relativeTime";
 import { groupResponses } from "../../responseGroups";
-import type { RsvpEntry, RsvpSummary } from "../../types";
+import type { RsvpAnswer, RsvpEntry, RsvpSummary } from "../../types";
 import { ChangedAnswerIcon } from "./icons";
 
 interface Props {
@@ -34,6 +34,12 @@ export function ResponseList({ summary, newerThan, t }: Props) {
   );
 }
 
+/** What a guest said, in the host's words. `answer`, never `attending`, which
+ *  is a yes only (adr-019 §9.1). */
+function answerLabel(answer: RsvpAnswer, t: ManageStrings): string {
+  return { yes: t.yes, no: t.no, maybe: t.maybe }[answer];
+}
+
 function ResponseRow({ rsvp, isNew, t }: { rsvp: RsvpEntry; isNew: boolean; t: ManageStrings }) {
   return (
     <div className="hm-row">
@@ -44,16 +50,14 @@ function ResponseRow({ rsvp, isNew, t }: { rsvp: RsvpEntry; isNew: boolean; t: M
         <p className="hm-name">
           {isNew && <span className="hm-new-dot" aria-hidden="true" />}
           {rsvp.name}
-          {rsvp.attending && rsvp.guests_count > 1 && (
+          {rsvp.answer === "yes" && rsvp.guests_count > 1 && (
             <span className="hm-plus">+{rsvp.guests_count - 1}</span>
           )}
         </p>
         {rsvp.note && <p className="hm-note">«{rsvp.note}»</p>}
         <p className="hm-when">{formatRelativeTime(rsvp.created_at, t.time)}</p>
       </div>
-      <span className={`hm-pill ${rsvp.attending ? "hm-pill-yes" : "hm-pill-no"}`}>
-        {rsvp.attending ? t.yes : t.no}
-      </span>
+      <span className={`hm-pill hm-pill-${rsvp.answer}`}>{answerLabel(rsvp.answer, t)}</span>
     </div>
   );
 }
@@ -66,7 +70,7 @@ function PreviousAnswer({ rsvp, t }: { rsvp: RsvpEntry; t: ManageStrings }) {
       <span className="hm-previous-icon">
         <ChangedAnswerIcon />
       </span>
-      <s>{rsvp.attending ? t.yes : t.no}</s> · {t.previousAnswer}
+      <s>{answerLabel(rsvp.answer, t)}</s> · {t.previousAnswer}
       <span className="hm-previous-when">{formatRelativeTime(rsvp.created_at, t.time)}</span>
     </p>
   );

@@ -45,6 +45,18 @@ function noReply(name: string, at = "2026-10-20T10:00:00Z"): RsvpEntry {
   };
 }
 
+function maybeReply(name: string, at = "2026-10-20T10:00:00Z"): RsvpEntry {
+  return {
+    name,
+    answer: "maybe",
+    attending: false,
+    guests_count: 1,
+    note: null,
+    created_at: at,
+    superseded: false,
+  };
+}
+
 function withNote(rsvp: RsvpEntry, note: string): RsvpEntry {
   return { ...rsvp, note };
 }
@@ -171,7 +183,11 @@ describe("the summary (adr-019 §8.2)", () => {
     expect(grow(".hm-bar-yes")).toBe("2");
     expect(grow(".hm-bar-no")).toBe("1");
     const counts = [...container.querySelectorAll(".hm-count")].map((c) => c.textContent);
-    expect(counts).toEqual([`2${MANAGE.uk.tileYes}`, `1${MANAGE.uk.tileNo}`]);
+    expect(counts).toEqual([
+      `2${MANAGE.uk.tileYes}`,
+      `1${MANAGE.uk.tileNo}`,
+      `0${MANAGE.uk.tileMaybe}`,
+    ]);
   });
 
   it("draws no segment for an answer nobody gave", async () => {
@@ -179,6 +195,7 @@ describe("the summary (adr-019 §8.2)", () => {
     const { container } = renderManage();
     await screen.findByText(MANAGE.uk.guestsComing);
     expect(container.querySelector(".hm-bar-no")).toBeNull();
+    expect(container.querySelector(".hm-bar-maybe")).toBeNull();
     expect(container.querySelector(".hm-bar-yes")).not.toBeNull();
   });
 
@@ -290,5 +307,47 @@ describe("wishes from guests (adr-019 §8.4)", () => {
     const { container } = renderManage();
     await screen.findByText(MANAGE.uk.guestsComing);
     expect(container.querySelector(".hm-wishes")).toBeNull();
+  });
+});
+
+describe("the maybe on the dashboard (adr-019 §9.1)", () => {
+  const replies = [yesReply("Оксана", 3), noReply("Влад"), maybeReply("Тарас")];
+
+  it("draws a third segment and a third count, and keeps it out of the headcount", async () => {
+    stubApi({ rsvps: replies, counts: { yes: 1, no: 1, maybe: 1, guests: 3 } });
+    const { container } = renderManage();
+    await screen.findByText(MANAGE.uk.guestsComing);
+    expect((container.querySelector(".hm-bar-maybe") as HTMLElement).style.flexGrow).toBe("1");
+    const counts = [...container.querySelectorAll(".hm-count")].map((c) => c.textContent);
+    expect(counts).toEqual([
+      `1${MANAGE.uk.tileYes}`,
+      `1${MANAGE.uk.tileNo}`,
+      `1${MANAGE.uk.tileMaybe}`,
+    ]);
+    expect(container.querySelector(".hm-bignum")?.textContent).toBe("3");
+  });
+
+  it("marks a maybe in the list, with no party size", async () => {
+    stubApi({
+      rsvps: [{ ...maybeReply("Тарас"), guests_count: 3 }],
+      counts: { yes: 0, no: 0, maybe: 1, guests: 0 },
+    });
+    const { container } = renderManage();
+    const pill = await screen.findByText(MANAGE.uk.maybe, { selector: ".hm-pill" });
+    expect(pill.classList.contains("hm-pill-maybe")).toBe(true);
+    expect(container.querySelector(".hm-plus")).toBeNull();
+  });
+
+  it("strikes a replaced maybe as history, by its own label", async () => {
+    stubApi({
+      rsvps: [
+        superseded(maybeReply("Тарас", "2026-10-20T10:00:00Z")),
+        yesReply("Тарас", 1, "2026-10-22T10:00:00Z"),
+      ],
+      counts: { yes: 1, no: 0, maybe: 0, guests: 1 },
+    });
+    const { container } = renderManage();
+    await screen.findByText(MANAGE.uk.guestsComing);
+    expect(container.querySelector(".hm-previous s")?.textContent).toBe(MANAGE.uk.maybe);
   });
 });

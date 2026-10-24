@@ -107,9 +107,12 @@ describe("material tokens", () => {
     expect(css).toMatch(/--app-bg:\s*var\(--ground\);/);
   });
 
-  it("keeps the RSVP status pair, which other surfaces still read", () => {
+  // The pair became a trio with «Ще не знаю» (adr-019 §9.1). The floors in
+  // "the manage page's text" are where each one's contrast is held.
+  it("keeps the RSVP status trio, which other surfaces still read", () => {
     expect(tokens.get("--rsvp-yes")).toBe("#3d6b47");
     expect(tokens.get("--rsvp-no")).toBe("#a83f3f");
+    expect(tokens.get("--rsvp-maybe")).toBe("#86621c");
   });
 });
 
@@ -430,6 +433,8 @@ describe("the manage page's text", () => {
     [".hm-when", "--surface", 3],
     [".hm-previous", "--surface", 3],
     [".hm-count-label", "--surface", 3],
+    [".hm-count-maybe .hm-count-num", "--surface", 4.5],
+    [".hm-pill-maybe", "--rsvp-maybe-bg", 4.5],
     [".hm-remind", "--surface", 4.5],
     [".hm-wish-quote", "--surface", 4.5],
     [".hm-wish-who", "--surface", 3],

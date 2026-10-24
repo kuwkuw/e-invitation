@@ -178,6 +178,12 @@
   --rsvp-no: #a83f3f;
   --rsvp-no-bg: #f6ebe9;
   --rsvp-no-edge: #e6cfc9;
+  /* «Ще не знаю» (adr-019 §9.1): an ochre between the two statuses, 5.24:1 on
+     --surface and 4.85:1 on its own -bg. The --caution-* family measures
+     close and does another job, the manage-link warning, so it isn't reused. */
+  --rsvp-maybe: #86621c;
+  --rsvp-maybe-bg: #f6efdf;
+  --rsvp-maybe-edge: #e6d7b5;
 }
 
 /* Glass surfaces (adr-018), opaque paper since adr-019 §4.1. Two, not one:
@@ -1797,15 +1803,17 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-breakdown { margin: 8px 0 0; font-size: 0.82rem; color: var(--ink-faint); }
 
 .hm-bar { display: flex; gap: 3px; height: 6px; margin-top: 18px; border-radius: var(--r-pill); overflow: hidden; background-color: var(--edge-soft); }
-.hm-bar-yes, .hm-bar-no { flex-basis: 0; }
+.hm-bar-yes, .hm-bar-no, .hm-bar-maybe { flex-basis: 0; }
 .hm-bar-yes { background-color: var(--rsvp-yes); }
 .hm-bar-no { background-color: var(--rsvp-no); }
+.hm-bar-maybe { background-color: var(--rsvp-maybe); }
 .hm-counts { display: flex; gap: 22px; margin-top: 10px; }
 .hm-count { margin: 0; }
 .hm-count-num { display: block; font-family: var(--ui-font-display); font-size: 1.3rem; font-weight: 500; line-height: 1.2; }
 .hm-count-label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--ink-faint); }
 .hm-count-yes .hm-count-num { color: var(--rsvp-yes); }
 .hm-count-no .hm-count-num { color: var(--rsvp-no); }
+.hm-count-maybe .hm-count-num { color: var(--rsvp-maybe); }
 
 /* «Нагадати гостям» (adr-019 §8.3): full width under the summary, bordered
    and never filled. It copies the public link, which the accent means, so
@@ -1869,6 +1877,7 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .hm-pill-yes { background: var(--rsvp-yes-bg); border-color: var(--rsvp-yes-edge); color: var(--rsvp-yes); }
 .hm-pill-no { background: var(--rsvp-no-bg); border-color: var(--rsvp-no-edge); color: var(--rsvp-no); }
+.hm-pill-maybe { background: var(--rsvp-maybe-bg); border-color: var(--rsvp-maybe-edge); color: var(--rsvp-maybe); }
 
 /* A replaced answer: present, legible, visibly not counted. Neutral grey on
    purpose — it must not compete with the live status, and it is not an error.
