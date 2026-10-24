@@ -5,6 +5,7 @@ import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
 import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { HeroComposer } from "./components/landing/HeroComposer";
 import { SignOutSheet } from "./components/SignOutSheet";
 import { YourInvitations } from "./components/YourInvitations";
 import { useAuthSession } from "./hooks/useAuthSession";
@@ -269,10 +270,10 @@ export function LandingPage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <h1>{t.heroTitle}</h1>
-          <p>{t.heroText}</p>
-          <button type="button" className="lp-cta" onClick={startEditing}>
-            {t.cta}
-          </button>
+          <p className="lp-hero-text">{t.heroText}</p>
+          <p className="lp-hero-promise">{t.heroPromise}</p>
+          {/* The composer carries the hero's call to action. */}
+          <HeroComposer t={t} onStart={startEditing} />
         </div>
         <div className="lp-fan" aria-hidden="true">
           {SAMPLE_ORDER.map((id, i) => (

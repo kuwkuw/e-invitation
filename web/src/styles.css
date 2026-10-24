@@ -1511,7 +1511,19 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   align-items: center;
 }
 .lp-hero-copy h1 { margin: 0 0 20px; font-size: clamp(2.15rem, 4vw, 3.2rem); line-height: 1.1; max-width: 11ch; }
-.lp-hero-copy p { margin: 0 0 28px; max-width: 38ch; color: var(--ink-muted); font-size: 1.15rem; line-height: 1.55; }
+.lp-hero-text { margin: 0 0 6px; max-width: 38ch; color: var(--ink-muted); font-size: 1.15rem; line-height: 1.55; }
+/* The sub-line's point (adr-019 §6.1), so it takes the ink and the weight. */
+.lp-hero-promise { margin: 0 0 24px; max-width: 38ch; color: var(--ink); font-size: 1.15rem; font-weight: 600; line-height: 1.55; }
+
+/* The hero's composer (adr-019 §6.1): an example of what a host types, on
+   card stock, with the call to action as its only control. Its line is a
+   plain wrapping sentence here; the typing, and the one-line layout it
+   needs, live in the no-preference block at the end of this section. */
+.lp-composer { display: grid; gap: 10px; max-width: 460px; padding: 14px 16px 16px; background-color: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-xl); box-shadow: var(--e-1); }
+.lp-composer-label { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+.lp-composer-line { margin: 0; font-size: 1.02rem; line-height: 1.45; color: var(--ink); }
+.lp-composer .lp-cta { justify-self: start; margin-top: 4px; }
+.lp-composer-note { margin: 12px 0 0; font-size: 0.88rem; color: var(--ink-muted); }
 
 /* Hero fan: three real invitation cards, overlapped and rotated. */
 .lp-fan { display: flex; justify-content: center; align-items: flex-start; }
@@ -1579,7 +1591,10 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 @media (max-width: 1000px) {
   .lp-hero { grid-template-columns: 1fr; text-align: center; }
   .lp-hero-copy h1 { max-width: none; }
-  .lp-hero-copy p { max-width: none; margin-left: auto; margin-right: auto; }
+  .lp-hero-text, .lp-hero-promise { max-width: none; margin-left: auto; margin-right: auto; }
+  /* Centred with the copy, but its own lines read from the left, as an
+     input's do. */
+  .lp-composer { margin-inline: auto; text-align: left; }
   /* min-width:0 lets the track ignore the fan's intrinsic width, so the copy
      column is the full viewport and its centred text is actually centred —
      without it the 440px fan widened the track and pushed the headline 55px
@@ -1629,6 +1644,26 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .lp-nav-counted .lp-brand-full { display: none; }
   .lp-nav-counted .lp-brand-mono { display: inline; }
 }
+
+/* The landing's motion (adr-019 §6.1), all of it, in one block: under
+   reduced motion none of this applies and the hero is simply finished — the
+   sentence whole and wrapping. Honoured, not detected (NFR-9).
+
+   The typing. A wrapped line cannot be typed in CSS alone, so here the
+   sentence goes onto one line: the line is flex-end and the sentence takes
+   margin-right: auto, so while it fits it sits left (the auto margin takes
+   the free space), and once it outgrows the box it overflows to the left,
+   keeping its newest words in view the way an input scrolls. It is revealed
+   by max-width in steps; 46ch holds 44 characters of Golos with room, and
+   i18n.test.ts holds the sentence to 44. The caret is the span's own right
+   border, so it sits at the end of what is shown, blinks while it types,
+   and is transparent once the blinking stops. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-composer-line { display: flex; justify-content: flex-end; overflow: hidden; }
+  .lp-typing { flex: 0 0 auto; margin-right: auto; white-space: nowrap; overflow: hidden; border-right: 2px solid transparent; animation: lp-type 2.2s steps(40, end) 0.4s both, lp-caret 0.55s step-end 0.4s 5; }
+}
+@keyframes lp-type { from { max-width: 0; } to { max-width: 46ch; } }
+@keyframes lp-caret { 50% { border-right-color: var(--ink); } }
 
 /* Host manage dashboard --------------------------------------------------- */
 /* From the "host-manage" screens in the E-invitation design project. Mobile is

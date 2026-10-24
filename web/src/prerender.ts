@@ -97,8 +97,18 @@ export function landingBodyHtml(lang: Language): string {
     `</header>` +
     `<section class="lp-hero"><div class="lp-hero-copy">` +
     `<h1>${escapeHtml(t.heroTitle)}</h1>` +
-    `<p>${escapeHtml(t.heroText)}</p>` +
+    `<p class="lp-hero-text">${escapeHtml(t.heroText)}</p>` +
+    `<p class="lp-hero-promise">${escapeHtml(t.heroPromise)}</p>` +
+    `<div class="lp-composer">` +
+    `<p class="lp-composer-label">${escapeHtml(t.composerLabel)}</p>` +
+    // The typing class is kept here too (adr-019 §6.1). On a fast connection
+    // React mounts inside the typing's delay and the swap is invisible; on a
+    // slow one the typing restarts at mount, which beats a whole sentence
+    // flashing up and then vanishing to be typed.
+    `<p class="lp-composer-line"><span class="lp-typing">${escapeHtml(t.heroSentence)}</span></p>` +
     cta +
+    `</div>` +
+    `<p class="lp-composer-note">${escapeHtml(t.composerNote)}</p>` +
     `</div></section>` +
     `<section class="lp-steps"><h2>${escapeHtml(t.howTitle)}</h2>` +
     `<div class="lp-steps-grid">${steps}</div></section>` +

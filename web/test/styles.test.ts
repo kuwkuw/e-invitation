@@ -499,7 +499,11 @@ describe("the landing page's text", () => {
     [".lp-cta", "--accent", 4.5],
     [".lp-nav-signin", "--surface", 4.5],
     [".lp-nav-gallery", "--surface", 3],
-    [".lp-hero-copy p", "--app-bg", 4.5],
+    [".lp-hero-text", "--app-bg", 4.5],
+    [".lp-hero-promise", "--app-bg", 4.5],
+    [".lp-composer-line", "--surface", 4.5],
+    [".lp-composer-label", "--surface", 3],
+    [".lp-composer-note", "--app-bg", 4.5],
     [".lp-step-text", "--app-bg", 4.5],
     [".lp-chip", "--surface", 3],
     [".lp-rsvp-copy p", "--surface", 4.5],
@@ -568,19 +572,74 @@ describe("the reply email checkbox", () => {
 /** The hex ratchet reads only styles.css, so a colour written into a
  *  component as a literal goes stale without a sound when the token moves:
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
- *  Guest components colour everything through currentColor, set by the CSS
- *  rule that places them, and carry no hex at all. */
-describe("the guest page's components", () => {
+ *  Guest and landing components colour everything through currentColor, set
+ *  by the CSS rule that places them, and carry no hex at all. */
+describe("the guest page's and the landing's components", () => {
   it("carry no hex literal at all", () => {
-    const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
-    const named = readdirSync(dir)
-      .filter((file) => file.endsWith(".tsx"))
-      .flatMap((file) =>
-        [...readFileSync(join(dir, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
-          (m) => `${file}: ${m[0]}`,
-        ),
-      );
+    const src = fileURLToPath(new URL("../src/", import.meta.url));
+    const inDir = (dir: string) =>
+      readdirSync(join(src, dir))
+        .filter((file) => file.endsWith(".tsx"))
+        .map((file) => join(dir, file));
+    const files = [
+      ...inDir("components/guest"),
+      ...inDir("components/landing"),
+      "components/NotifyCheckbox.tsx",
+      "components/AccountFooter.tsx",
+    ];
+    const named = files.flatMap((file) =>
+      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
+        (m) => `${file}: ${m[0]}`,
+      ),
+    );
     expect(named).toEqual([]);
+  });
+});
+
+describe("the landing's motion (adr-019 §6.1)", () => {
+  const landing = () => stripComments(sections(css).get("Landing page") ?? "");
+  const welcome = () => {
+    const span = atRuleSpan(landing(), /@media\s*\(prefers-reduced-motion:\s*no-preference\)/);
+    expect(span, "no no-preference block").not.toBeNull();
+    return span as { start: number; end: number };
+  };
+  const keyframeProps = (name: string) => {
+    const span = atRuleSpan(landing(), new RegExp(`@keyframes\\s+${name}\\b`));
+    expect(span, name).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    return new Set(
+      [
+        ...landing()
+          .slice(start, end)
+          .matchAll(/([\w-]+)\s*:/g),
+      ].map((m) => m[1]),
+    );
+  };
+
+  // Reduced motion is honoured by never starting, not by detection (NFR-9).
+  it("animates only inside its one no-preference block", () => {
+    const { start, end } = welcome();
+    const animated = ruleBlocks(landing()).filter((r) => /(?:^|[;\s])animation\s*:/.test(r.body));
+    expect(animated.flatMap((r) => r.selectors).sort()).toEqual([".lp-typing"]);
+    for (const r of animated) expect(r.at > start && r.at < end, r.selectors.join(", ")).toBe(true);
+  });
+
+  it("types by width and blinks by colour, and moves nothing else", () => {
+    expect(keyframeProps("lp-type")).toEqual(new Set(["max-width"]));
+    expect(keyframeProps("lp-caret")).toEqual(new Set(["border-right-color"]));
+  });
+
+  // The line is flex-end and the sentence takes margin-right: auto, so it sits
+  // left while it fits and scrolls left, like an input, once it doesn't.
+  it("keeps the typed line to one line that scrolls like an input, only where it types", () => {
+    const { start, end } = welcome();
+    const inside = ruleBlocks(landing().slice(start, end));
+    const line = inside.find((r) => r.selectors.includes(".lp-composer-line"))?.body ?? "";
+    const typing = inside.find((r) => r.selectors.includes(".lp-typing"))?.body ?? "";
+    expect(line).toMatch(/justify-content:\s*flex-end/);
+    expect(line).toMatch(/overflow:\s*hidden/);
+    expect(typing).toMatch(/white-space:\s*nowrap/);
+    expect(typing).toMatch(/margin-right:\s*auto/);
   });
 });
 
