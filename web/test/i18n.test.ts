@@ -136,3 +136,20 @@ describe("the landing page's claims", () => {
     expect(gated).toEqual([]);
   });
 });
+
+describe("the manage page's new copy (adr-019 §8)", () => {
+  it("says the reminder copies the link, and counts wishes", () => {
+    expect(MANAGE.uk.remindGuests).toBe("Нагадати гостям");
+    expect(MANAGE.uk.wishesAll).toContain("{n}");
+    expect(MANAGE.en.wishesAll).toContain("{n}");
+  });
+
+  // #66's rule: the scope is in the line a host reads, and the line names the
+  // boundary against this event without naming the event.
+  it("puts the address and the account-wide scope in the dashboard's on state", () => {
+    for (const lang of ["uk", "en"] as const) {
+      expect(AUTH[lang].notifyStateOnEvent).toContain("{email}");
+    }
+    expect(AUTH.en.notifyStateOnEvent).toContain("not just this one");
+  });
+});

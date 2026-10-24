@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { buildIcs, daysUntil, parseEventStart } from "./calendar";
-import { Countdown } from "./components/guest/Countdown";
+import { Countdown } from "./components/Countdown";
 import { Envelope } from "./components/guest/Envelope";
 import { GuestBar } from "./components/guest/GuestBar";
 import { GuestCta } from "./components/guest/GuestCta";
@@ -143,7 +143,11 @@ export function GuestPage({ id }: { id: string }) {
                 />
               </div>
             </div>
-            <Countdown days={eventStart ? daysUntil(eventStart) : null} t={t} />
+            <Countdown
+              days={eventStart ? daysUntil(eventStart) : null}
+              t={t}
+              className="gr-countdown"
+            />
             <QuietActions
               onAddToCalendar={eventStart ? handleAddToCalendar : null}
               place={place}

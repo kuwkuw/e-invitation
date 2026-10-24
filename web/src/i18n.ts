@@ -165,6 +165,11 @@ export interface AuthStrings {
    *  the address a line above, so these never name it. From PR #66. */
   notifyStateOnAccount: string;
   notifyStateOffNow: string;
+  /** The manage page's on state (adr-019 §10, from PR #66): the address, and
+   *  the boundary against this event without naming it — the one surface
+   *  about a single invitation carrying a switch that governs them all.
+   *  `{email}` is the signed-in address. */
+  notifyStateOnEvent: string;
   /** The scope, said out loud on the manage page — a page about one event
    *  carrying a switch that governs them all. Without it the control looks
    *  per-invitation, and a host who silences one event and finds they silenced
@@ -241,6 +246,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyTurnOff: "Turn off all emails",
     notifyStateOnAccount: "For all your invitations.",
     notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
+    notifyStateOnEvent: "To {email} — for all your invitations, not just this one.",
     signOut: "Sign out",
     signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
@@ -300,6 +306,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     notifyTurnOff: "Вимкнути всі листи",
     notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
     notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",
+    notifyStateOnEvent: "Пишемо на {email} — про всі ваші запрошення, не лише про це.",
     signOut: "Вийти",
     signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
@@ -1090,6 +1097,21 @@ export interface ManageStrings {
   openDashboard: string;
   refresh: string;
   retry: string;
+  /** "{n} {form}" under the header (adr-019 §8.1), paired with
+   *  `time.dayForms`. The host's UI language, where the guest page's follows
+   *  the invitation's. */
+  countdown: string;
+  countdownToday: string;
+  /** The bordered button under the summary (adr-019 §8.3). It copies the
+   *  public link; the host sends it on themselves. */
+  remindGuests: string;
+  /** The same button for two seconds after a copy. */
+  remindCopied: string;
+  /** The pull-quote's heading (adr-019 §8.4). */
+  wishesTitle: string;
+  /** The link down to the response list, where every note sits under its
+   *  guest's name. `{n}` counts the live answers that carry one. */
+  wishesAll: string;
 }
 
 export const MANAGE: Record<Language, ManageStrings> = {
@@ -1146,6 +1168,12 @@ export const MANAGE: Record<Language, ManageStrings> = {
     openDashboard: "Open dashboard",
     refresh: "Refresh",
     retry: "Try again",
+    countdown: "{n} {form} to go",
+    countdownToday: "It's today!",
+    remindGuests: "Remind guests",
+    remindCopied: "Link copied",
+    wishesTitle: "Wishes from your guests",
+    wishesAll: "All wishes · {n}",
   },
   uk: {
     kicker: "Панель господаря",
@@ -1200,6 +1228,12 @@ export const MANAGE: Record<Language, ManageStrings> = {
     openDashboard: "Відкрити панель",
     refresh: "Оновити",
     retry: "Спробувати ще раз",
+    countdown: "До свята {n} {form}",
+    countdownToday: "Свято сьогодні!",
+    remindGuests: "Нагадати гостям",
+    remindCopied: "Посилання скопійовано",
+    wishesTitle: "Побажання від гостей",
+    wishesAll: "Усі побажання · {n}",
   },
 };
 
