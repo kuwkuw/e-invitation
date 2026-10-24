@@ -21,10 +21,14 @@ tests drive it through a `MemoryRouter`.
   **New state goes in a hook** in `src/hooks/`, which is what tests drive;
   markup goes in `src/components/{editor,guest,manage,landing}/`
   (`LandingPage.tsx` is composition too; `AccountFooter` and `YourInvitations`
-  predate `landing/` and stay at the root, beside `NotifyCheckbox`, the
-  reply-email control three surfaces share). Hooks:
+  predate `landing/` and stay at the root, beside the two components more than
+  one page renders: `NotifyCheckbox`, the reply-email control, and
+  `Countdown`, which takes its strings from the page because the guest's
+  follow the invitation's language and the host's the UI's). Hooks:
   `useInvitationEditor` (what the invitation is), `usePublishing` (where it's
-  published), `useHostManage` and `useHostInvitationCounts` (host access),
+  published), `useHostManage`, `useHostInvitationCounts` and `useCopyLink`
+  (host access; the last is the dashboard's one copy action, quiet when the
+  clipboard refuses),
   `usePublishedInvitation`, `useRsvpForm`, `useViewBeacon` and `useEnvelope`
   (guest side),
   `useReferralSource` and `useGallerySample` (editor entry).
@@ -88,9 +92,11 @@ Deliberately unequal, and both read one predicate, `isPastDate` in
   and also lives on the landing footer and `/manage/:id`, where it must say in
   words that it governs the whole account. On the landing footer it is
   `NotifyCheckbox` (adr-019 §10, FR-12.12): a real input, a name that never
-  changes, a state line carrying the scope, ink and never the accent. The
-  share panel and `/manage/:id` keep a sentence and a button until adr-019's
-  steps 5 and 6 move them onto it.
+  changes, a state line carrying the scope, ink and never the accent. On
+  `/manage/:id` it is the same checkbox, whose on state names the address and
+  "not just this one" and never the event (FR-12.11), rendered only when the
+  session has an address. The share panel keeps a sentence and a button until
+  adr-019's step 5 moves it onto it.
 - The sign-in gate is the **first frame of the share sheet** (`AuthGate.tsx`),
   opened on the Publish press, never on a 401. `draft.ts` parks the editor's
   invitation before the redirect. `declined` and `failed` are distinct states,
@@ -230,7 +236,7 @@ built on the sign-in gate's `.ag-*` shell, so they convert with it.
   shorthand, which would wipe the grain. `data-palette` stays on `.cc-shell`
   as an unused hook (an attribute, not the `palette-*` class, which would push
   the card's ink into the chrome). The landing carries `.grain` on `.landing`
-  and on its hero's `.lp-stage` too.
+  and on its hero's `.lp-stage` too, and the dashboard on `.hm-page`.
 - **The landing's motion lives in one block**: every `animation` in the
   `Landing page` section sits inside its single
   `@media (prefers-reduced-motion: no-preference)`, so reduced motion gets the

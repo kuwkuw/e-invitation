@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCopyLink } from "../../hooks/useCopyLink";
 import type { ManageStrings } from "../../i18n";
 import { EnvelopeIcon } from "./icons";
 
@@ -6,13 +6,7 @@ import { EnvelopeIcon } from "./icons";
  *  the state reassures and offers the one useful action — share the link
  *  again — rather than reading as an error. */
 export function ManageEmpty({ shareUrl, t }: { shareUrl: string; t: ManageStrings }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
+  const { copied, copy } = useCopyLink(shareUrl);
 
   return (
     <section className="hm-card hm-empty">

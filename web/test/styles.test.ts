@@ -422,16 +422,39 @@ describe("the manage page's text", () => {
   textFloors("Host manage dashboard", [
     [".hm-state-hint", "--surface", 4.5],
     [".hm-empty-reassure", "--surface", 4.5],
-    [".hm-notify-scope", "--app-bg", 4.5],
     [".hm-new-line", "--app-bg", 4.5],
+    [".hm-countdown", "--app-bg", 4.5],
     [".hm-breakdown", "--surface", 3],
     [".hm-updated", "--app-bg", 3],
     [".hm-section-title", "--surface", 3],
     [".hm-when", "--surface", 3],
     [".hm-previous", "--surface", 3],
-    [".hm-tile-yes .hm-tile-label", "--rsvp-yes-bg", 3],
-    [".hm-tile-no .hm-tile-label", "--rsvp-no-bg", 3],
+    [".hm-count-label", "--surface", 3],
+    [".hm-remind", "--surface", 4.5],
+    [".hm-wish-quote", "--surface", 4.5],
+    [".hm-wish-who", "--surface", 3],
+    [".hm-wishes a", "--surface", 4.5],
+    [".hm-count-yes .hm-count-num", "--surface", 4.5],
+    [".hm-count-no .hm-count-num", "--surface", 4.5],
   ]);
+
+  const manageRule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Host manage dashboard") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("keeps the grain on the dashboard's ground (adr-019 §3)", () => {
+    expect(manageRule(".hm-page")).toMatch(/background-color:\s*var\(--app-bg\)/);
+    expect(manageRule(".hm-page")).not.toMatch(/(?:^|[;\s])background\s*:/);
+    const pages = [...source("ManagePage.tsx").matchAll(/className="([^"]*\bhm-page\b[^"]*)"/g)];
+    expect(pages.length).toBeGreaterThan(0);
+    for (const [, names] of pages) expect(names).toMatch(/\bgrain\b/);
+  });
+
+  it("sets its cards on paper's radius and elevation, as the guest reply card is", () => {
+    expect(manageRule(".hm-card")).toMatch(/border-radius:\s*var\(--r-xl\)/);
+    expect(manageRule(".hm-card")).toMatch(/box-shadow:\s*var\(--e-2\)/);
+  });
 });
 
 /** The one page every guest sees, usually inside a messenger's webview. The
@@ -536,8 +559,8 @@ describe("the landing page's text", () => {
   ]);
 });
 
-/** adr-019 §10. It sits on --app-bg in the landing footer, and on --surface in
- *  the share panel and the manage page once steps 5 and 6 bring it there. */
+/** adr-019 §10. It sits on --app-bg in the landing footer and on the manage
+ *  page, and on --surface in the share panel once step 5 brings it there. */
 describe("the reply email checkbox", () => {
   textFloors("Reply email checkbox", [
     [".notify-name", "--app-bg", 4.5],
@@ -582,7 +605,7 @@ describe("the reply email checkbox", () => {
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
  *  Guest and landing components colour everything through currentColor, set
  *  by the CSS rule that places them, and carry no hex at all. */
-describe("the guest page's and the landing's components", () => {
+describe("the guest page's, the landing's and the dashboard's components", () => {
   it("carry no hex literal at all", () => {
     const src = fileURLToPath(new URL("../src/", import.meta.url));
     const inDir = (dir: string) =>
@@ -592,6 +615,9 @@ describe("the guest page's and the landing's components", () => {
     const files = [
       ...inDir("components/guest"),
       ...inDir("components/landing"),
+      ...inDir("components/manage"),
+      "ManagePage.tsx",
+      "components/Countdown.tsx",
       "components/NotifyCheckbox.tsx",
       "components/AccountFooter.tsx",
     ];

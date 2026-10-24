@@ -17,7 +17,8 @@ export function ResponseList({ summary, newerThan, t }: Props) {
   const groups = groupResponses(summary.rsvps);
 
   return (
-    <section className="hm-card hm-responses">
+    // The anchor «Усі побажання» leads to (GuestWishes).
+    <section className="hm-card hm-responses" id="hm-responses">
       <h2 className="hm-section-title">{t.responsesTitle.replace("{n}", String(groups.length))}</h2>
       <ul className="hm-list">
         {groups.map(({ live, previous }) => (

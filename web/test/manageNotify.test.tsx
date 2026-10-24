@@ -23,37 +23,48 @@ const ID = "abc123xy";
 const TOKEN = "a".repeat(32);
 
 describe("NotifyControl", () => {
-  it("offers rather than reports when off", () => {
-    render(<NotifyControl enabled={false} onToggle={() => {}} t={auth} />);
-    expect(screen.getByText(auth.notifyOffer)).toBeTruthy();
-    expect(screen.getByText(auth.notifyOptIn)).toBeTruthy();
-  });
+  const renderControl = (enabled: boolean, onToggle = () => {}) =>
+    render(
+      <NotifyControl enabled={enabled} onToggle={onToggle} email="host@example.com" t={auth} />,
+    );
 
-  it("states where mail goes, and the way out, when on", () => {
-    render(<NotifyControl enabled onToggle={() => {}} t={auth} />);
-    expect(screen.getByText(auth.notifyOnAccount)).toBeTruthy();
-    expect(screen.getByText(auth.notifyTurnOff)).toBeTruthy();
-  });
-
-  // The rule this surface exists to not break. A host who silences their
-  // wedding here and finds they silenced their daughter's birthday too presses
-  // Spam next, which costs deliverability for everything the product sends —
-  // the exact outcome opt-in was adopted to avoid.
-  it("says the switch covers the whole account, in both states", () => {
-    const off = render(<NotifyControl enabled={false} onToggle={() => {}} t={auth} />);
-    expect(off.container.textContent).toContain(auth.notifyAllEvents);
+  it("names the setting identically in both states", () => {
+    const off = renderControl(false);
+    expect(off.container.querySelector(".notify-name")?.textContent).toBe(auth.notifyOptIn);
     cleanup();
-
-    const on = render(<NotifyControl enabled onToggle={() => {}} t={auth} />);
-    expect(on.container.textContent).toContain(auth.notifyAllEvents);
+    const on = renderControl(true);
+    expect(on.container.querySelector(".notify-name")?.textContent).toBe(auth.notifyOptIn);
   });
 
-  it("toggles through the callback", () => {
+  // The rule this surface exists to not break, inside the line a host reads.
+  // A host who silences their wedding here and finds they silenced their
+  // daughter's birthday too presses Spam next, which costs deliverability for
+  // everything the product sends — the exact outcome opt-in was adopted to
+  // avoid.
+  it("names the boundary against this event, in the state row", () => {
+    const on = renderControl(true);
+    expect(on.container.querySelector(".notify-state")?.textContent).toBe(
+      "To host@example.com — for all your invitations, not just this one.",
+    );
+    cleanup();
+    const off = renderControl(false);
+    expect(off.container.querySelector(".notify-state")?.textContent).toBe(auth.notifyStateOffNow);
+  });
+
+  // If the text reads correctly without knowing which event is open, the
+  // control has not annexed the surface.
+  it("says nothing about the event it sits on", () => {
+    const { container } = renderControl(true);
+    expect(container.textContent).not.toContain("Хрестини");
+    expect(container.textContent?.toLowerCase()).not.toContain("this invitation");
+  });
+
+  it("toggles through a real checkbox", () => {
     const onToggle = vi.fn();
-    render(<NotifyControl enabled={false} onToggle={onToggle} t={auth} />);
-
-    fireEvent.click(screen.getByText(auth.notifyOptIn));
-
+    const { container } = renderControl(false, onToggle);
+    fireEvent.click(
+      container.querySelector("label.notify-check input[type=checkbox]") as HTMLElement,
+    );
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 });
@@ -85,6 +96,19 @@ describe("the manage page's notification control", () => {
             id: ID,
             version: 1,
             invitation: {
+              // The real payload always carries one (Invitation.brief isn't
+              // optional); nothing here needs a date or a host.
+              brief: {
+                event_type: "christening",
+                hosts: [],
+                date: null,
+                time: null,
+                venue: null,
+                city: null,
+                tone: "warm",
+                language: "uk",
+                extra_details: null,
+              },
               copy: {
                 title: "Хрестини Даринки",
                 greeting: "",
@@ -134,7 +158,7 @@ describe("the manage page's notification control", () => {
     stubApi({ signed_in: true, notifications: true });
     renderManage();
 
-    expect(await screen.findByText(auth.notifyAllEvents)).toBeTruthy();
+    expect(await screen.findByText(auth.notifyOptIn)).toBeTruthy();
   });
 
   // A host who arrived on a pasted manage link has no session, so the
@@ -145,7 +169,7 @@ describe("the manage page's notification control", () => {
     renderManage();
 
     await screen.findByText("Хрестини Даринки");
-    expect(screen.queryByText(auth.notifyAllEvents)).toBeNull();
+    expect(screen.queryByText(auth.notifyOptIn)).toBeNull();
   });
 
   it("shows nothing where the deployment cannot send mail", async () => {
@@ -153,6 +177,6 @@ describe("the manage page's notification control", () => {
     renderManage();
 
     await screen.findByText("Хрестини Даринки");
-    expect(screen.queryByText(auth.notifyAllEvents)).toBeNull();
+    expect(screen.queryByText(auth.notifyOptIn)).toBeNull();
   });
 });

@@ -630,8 +630,9 @@ only thing between the feature and its non-existence, so it is a checkbox
 rather than a sentence with a text button — a name that never changes and a
 state line carrying the scope, the whole label a 44 px target, the checked box
 ink rather than the accent. The landing page's account footer carries it first
-(FR-12.12, [adr-019](adr-019-paper-direction.md) §10); the share panel and
-`/manage/:id` follow in adr-019's editor and manage steps.
+(FR-12.12, [adr-019](adr-019-paper-direction.md) §10), and `/manage/:id`
+since adr-019's manage step, with the address and "not just this one" in its
+state line (FR-12.11); the share panel follows in the editor step.
 
 ## Revisit triggers
 

@@ -213,6 +213,22 @@ implementation.
   and fills counts in after: no spinner, no layout shift, and a failed fetch
   is silent — rows show their reply count and a "new" marker where a token
   checked out, and stay plain title/time rows where it did not.
+- FR-5.8 **The dashboard on paper** ([adr-019](decisions/adr-019-paper-direction.md)
+  §8). A grained page whose header carries the hosts' seal (FR-4.9's
+  monogram) beside the title, then `details_line`, then a countdown in the
+  host's UI language («До свята N днів», «Свято сьогодні!»), hidden when the
+  date doesn't parse or has passed. The summary leads with the headcount
+  (FR-5.2's `guests`) over a thin bar of yes and no, each segment sized by its
+  count and absent at zero, with the counts beneath as text; the bar is a
+  proportion, never progress toward a total. Once someone has replied,
+  «Нагадати гостям» copies the public link `/i/:id`; before that, the empty
+  state's share row is the same action, so the two never show together, and
+  a clipboard that refuses fails quietly in both. «Побажання від гостей»
+  quotes the newest **live** answer that carries a note, with the guest's
+  name, so a replaced answer's note is never quoted (FR-5.5); «Усі побажання
+  · N» leads to the response list, and only when more than one live answer has
+  a note. The list, CSV, refresh, "N new since your last visit" and the
+  superseded history are FR-5.3–5.5 unchanged.
 
 ## FR-6 Bilingual UI
 
@@ -454,6 +470,10 @@ them.
   is absent, never disabled, for a host with no session on this device: the
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
+  *Amended 2026-10-24:* the control is FR-12.12's checkbox, and the scope is
+  in its state line: on, it names the address and says "for all your
+  invitations, not just this one"; off, it says no invitation is written
+  about. Neither line names the event on screen.
 - FR-12.12 On the landing page's account footer the control is **one
   checkbox** ([adr-019](decisions/adr-019-paper-direction.md) §10): a real
   input, reachable by keyboard, whose whole label is the target, at least
@@ -462,9 +482,9 @@ them.
   invitation in the account — so the scope is read before the host agrees,
   not after. The checked box is ink, never the accent, which on host
   surfaces means the public link
-  ([adr-010](decisions/adr-010-host-manage-link.md) §3). The share panel and
-  the host dashboard keep their sentence and button until adr-019's editor
-  and manage steps rebuild them.
+  ([adr-010](decisions/adr-010-host-manage-link.md) §3). The host dashboard
+  carries the same checkbox (FR-12.11). The share panel keeps its sentence
+  and button until adr-019's editor step rebuilds it.
 
 ## FR-13 Public discoverability
 
