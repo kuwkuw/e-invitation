@@ -159,8 +159,8 @@ export function SharePanel({
                 </>
               ) : (
                 // An offer, not a report. Under opt-in this is where every
-                // host starts, and `notifyOff` states a decision that a host
-                // who has just published has not made.
+                // host starts, and a report of mail declined would state a
+                // decision that a host who has just published has not made.
                 t.auth.notifyOffer
               )}
             </p>

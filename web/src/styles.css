@@ -19,8 +19,9 @@
   --surface: #fbf8f2;
   /* The darker field a card is set on, as stationery is shown (adr-019 §4.2). */
   --table: #eae3d6;
-  /* The guest's envelope (adr-019 §5.1), its only reader: kraft stock, a
-     darker flap, and the dark ground it arrives on. */
+  /* The envelope (adr-019 §5.1): kraft stock, a darker flap, and the dark
+     ground it arrives on. The guest page's is the living one; the landing
+     draws its hero's and the still of what guests see from the same three. */
   --kraft: #c8a97e;
   --kraft-deep: #b8966a;
   --night: #24201c;
@@ -1421,20 +1422,22 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Landing page --------------------------------------------------------- */
 /* adr-019's paper direction: oxblood accent, Literata display, Golos Text
-   UI. Composes the real InvitationPreview card in the hero fan. */
+   UI. Composes the real InvitationPreview card in the hero's stage. */
 
+/* background-color, not the shorthand: the page carries .grain (adr-019 §3),
+   whose image the shorthand would wipe. */
 .landing {
-  background: var(--app-bg);
+  background-color: var(--app-bg);
   color: var(--ink);
   font-family: var(--ui-font-body);
   min-height: 100vh;
 }
-/* The landing's own headings, by section. Not `.landing h2`: the hero fan's
-   cards and the account sheets each title themselves with an h2 of their
+/* The landing's own headings, by section. Not `.landing h2`: the hero's
+   card and the account sheets each title themselves with an h2 of their
    own class, and `.landing h2` outranks a single class, so it set every
    card title in Playfair whatever its type, and the sheets' titles in bold.
    .lp-yours-head h2 sets its own face below. */
-.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2 { font-family: var(--ui-font-display); font-weight: 500; }
+.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2, .lp-guests-title, .lp-faq-title { font-family: var(--ui-font-display); font-weight: 500; }
 
 .lp-cta {
   border: none;
@@ -1511,18 +1514,50 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   align-items: center;
 }
 .lp-hero-copy h1 { margin: 0 0 20px; font-size: clamp(2.15rem, 4vw, 3.2rem); line-height: 1.1; max-width: 11ch; }
-.lp-hero-copy p { margin: 0 0 28px; max-width: 38ch; color: var(--ink-muted); font-size: 1.15rem; line-height: 1.55; }
+.lp-hero-text { margin: 0 0 6px; max-width: 38ch; color: var(--ink-muted); font-size: 1.15rem; line-height: 1.55; }
+/* The sub-line's point (adr-019 §6.1), so it takes the ink and the weight. */
+.lp-hero-promise { margin: 0 0 24px; max-width: 38ch; color: var(--ink); font-size: 1.15rem; font-weight: 600; line-height: 1.55; }
 
-/* Hero fan: three real invitation cards, overlapped and rotated. */
-.lp-fan { display: flex; justify-content: center; align-items: flex-start; }
-.lp-fan-card { position: relative; filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.15)); }
-.lp-fan-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
-.lp-fan-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
-.lp-fan-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
-.lp-fan-card .inv-details { margin: 12px auto; }
-.lp-fan-0 { width: 245px; transform: rotate(-9deg); margin-top: 40px; margin-right: -66px; z-index: 1; }
-.lp-fan-1 { width: 265px; transform: rotate(2deg); z-index: 3; }
-.lp-fan-2 { width: 245px; transform: rotate(10deg); margin-top: 46px; margin-left: -66px; z-index: 2; }
+/* The hero's composer (adr-019 §6.1): an example of what a host types, on
+   card stock, with the call to action as its only control. Its line is a
+   plain wrapping sentence here; the typing, and the one-line layout it
+   needs, live in the no-preference block at the end of this section. */
+.lp-composer { display: grid; gap: 10px; max-width: 460px; padding: 14px 16px 16px; background-color: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-xl); box-shadow: var(--e-1); }
+.lp-composer-label { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+.lp-composer-line { margin: 0; font-size: 1.02rem; line-height: 1.45; color: var(--ink); }
+.lp-composer .lp-cta { justify-self: start; margin-top: 4px; }
+.lp-composer-note { margin: 12px 0 0; font-size: 0.88rem; color: var(--ink-muted); }
+
+/* The hero's stage (adr-019 §6.1): the composer's invitation rising out of a
+   kraft envelope on the --table, as stationery is shown. The table carries
+   .grain, so it takes background-color. overflow:hidden keeps a rising card
+   from ever widening the page.
+
+   The envelope is three layers: its back (the flap's --kraft-deep), the
+   card standing in it, and the front pocket (--kraft) with a shallow V cut
+   into its top and the seal on its face. The card is in flow, so the
+   envelope is as tall as the card whatever its copy wraps to, and stands
+   20px off the bottom: its lower part is behind the pocket, and its title,
+   greeting, body and details line show above it. isolation keeps the three
+   layers' z-index inside the envelope, or the card would paint over the
+   page's sticky call to action. */
+.lp-stage { justify-self: center; width: min(440px, 100%); padding: 28px 20px; background-color: var(--table); border-radius: var(--r-xl); overflow: hidden; }
+.lp-stage-env { position: relative; isolation: isolate; width: min(300px, 100%); margin: 0 auto; padding-bottom: 20px; }
+.lp-stage-env::before { content: ""; position: absolute; inset: auto 0 0; height: 190px; background-color: var(--kraft-deep); border-radius: var(--r-sm); }
+.lp-stage-card { position: relative; z-index: 1; width: 78%; margin: 0 auto; filter: drop-shadow(var(--e-2)); }
+.lp-stage-card .inv { min-height: 0; padding: 22px 18px; box-shadow: none; }
+.lp-stage-card .inv-title { font-size: 1.1rem; margin: 6px 0 10px; }
+.lp-stage-card .inv-body { font-size: 0.85rem; line-height: 1.4; }
+.lp-stage-card .inv-details { margin: 12px auto; }
+.lp-stage-pocket { position: absolute; inset: auto 0 0; z-index: 2; height: 150px; background-color: var(--kraft); border-radius: 0 0 var(--r-sm) var(--r-sm); clip-path: polygon(0 0, 50% 22%, 100% 0, 100% 100%, 0 100%); }
+.lp-stage-seal { position: absolute; top: 88px; left: 50%; width: 52px; margin: -26px 0 0 -26px; font-size: 0.95rem; }
+
+/* The stat strip (adr-019 §6.3): one cell until a count is real, laid out as
+   a strip so a count arrives as one more .lp-stat. */
+.lp-stats { display: flex; justify-content: center; gap: 48px; padding: 8px clamp(22px, 5vw, 64px) 0; }
+.lp-stat { text-align: center; }
+.lp-stat-value { margin: 0; font-family: var(--ui-font-display); font-weight: 500; font-size: clamp(1.8rem, 3.4vw, 2.4rem); line-height: 1.1; color: var(--ink); }
+.lp-stat-label { margin: 6px 0 0; font-size: 0.95rem; color: var(--ink-muted); }
 
 .lp-steps { padding: clamp(40px, 5vw, 64px); }
 .lp-steps h2 { margin: 0 0 40px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
@@ -1549,6 +1584,21 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-chips { padding: 0 clamp(22px, 5vw, 64px) clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .lp-chip { background: var(--surface); border: 1px solid var(--edge); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 1rem; font-weight: 600; }
 
+/* What guests see (adr-019 §6.2): the guest's first frame as a still beside
+   the copy. The envelope keeps the guest page's proportions (.gr-env-body):
+   4:3 kraft, a flap 58% deep, the seal on its point, the title at the foot. */
+.lp-guests { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; max-width: 1080px; margin: 0 auto; padding: clamp(32px, 4vw, 56px) clamp(22px, 5vw, 64px) clamp(48px, 6vw, 72px); }
+.lp-guests-still { display: flex; justify-content: center; padding: 44px 24px; background-color: var(--night); border-radius: var(--r-xl); }
+.lp-guests-env { position: relative; width: min(300px, 100%); aspect-ratio: 4 / 3; display: flex; align-items: flex-end; justify-content: center; padding: 0 22px 26px; background-color: var(--kraft); border-radius: var(--r-sm); box-shadow: var(--e-3); }
+.lp-guests-flap { position: absolute; inset: 0 0 auto; height: 58%; background-color: var(--kraft-deep); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.lp-guests-to { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; color: var(--ui-ink); }
+.lp-guests-seal { position: absolute; top: 58%; left: 50%; width: 60px; margin: -30px 0 0 -30px; font-size: 1.05rem; }
+.lp-guests-title { margin: 0 0 14px; font-size: clamp(1.5rem, 3vw, 2.1rem); }
+.lp-guests-text { margin: 0 0 18px; max-width: 40ch; font-size: 1.1rem; line-height: 1.6; color: var(--ink-muted); }
+.lp-guests-points { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.lp-guests-point { position: relative; padding-left: 22px; font-size: 1rem; line-height: 1.5; color: var(--ink-muted); }
+.lp-guests-point::before { content: ""; position: absolute; left: 2px; top: 0.6em; width: 7px; height: 7px; border-radius: 50%; background-color: var(--ui-accent); }
+
 .lp-rsvp { padding: clamp(44px, 6vw, 72px) clamp(22px, 5vw, 64px); background: var(--surface); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
 .lp-rsvp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; align-items: center; }
 .lp-rsvp-copy h2 { margin: 0 0 14px; font-size: clamp(1.5rem, 3vw, 2.1rem); }
@@ -1562,6 +1612,22 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-rsvp-no { color: var(--rsvp-no); }
 .lp-rsvp-wait { color: var(--ink-muted); }
 
+/* Four questions (adr-019 §6.3), ruled like a ledger. list-style hides the
+   standard marker and ::-webkit-details-marker Safari's own, which it draws
+   whatever list-style says; a plus, turned to a cross when open, stands in
+   for both. It
+   turns without a transition: the motion block is the landing's only
+   motion. */
+.lp-faq { max-width: 720px; margin: 0 auto; padding: clamp(40px, 5vw, 64px) clamp(22px, 5vw, 64px) 0; }
+.lp-faq-title { margin: 0 0 18px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
+.lp-faq-item { border-bottom: 1px solid var(--edge); }
+.lp-faq-item:first-of-type { border-top: 1px solid var(--edge); }
+.lp-faq-q { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 2px; list-style: none; font-size: 1.05rem; font-weight: 600; color: var(--ink); cursor: pointer; }
+.lp-faq-q::-webkit-details-marker { display: none; }
+.lp-faq-q::after { content: "+"; flex: 0 0 auto; font-size: 1.3rem; font-weight: 400; line-height: 1; color: var(--ink-muted); }
+.lp-faq-item[open] > .lp-faq-q::after { transform: rotate(45deg); }
+.lp-faq-a { margin: 0 2px 18px; max-width: 60ch; font-size: 1rem; line-height: 1.6; color: var(--ink-muted); }
+
 .lp-final { padding: clamp(56px, 7vw, 88px) clamp(22px, 5vw, 64px); text-align: center; }
 .lp-final h2 { margin: 0 0 26px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
 
@@ -1570,27 +1636,22 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* Sticky bottom CTA: mobile only. */
 .lp-sticky-cta { display: none; }
 
-/* Hero layout collapses at 1000px, not at the 800px chrome breakpoint below.
-   The fan is three fixed-width cards (623px together), and a grid item's
-   default min-width:auto lets that beat `1fr 1fr`: between 800 and ~1100 the
-   text column was being squeezed to as little as 153px, wrapping the headline
-   over four lines and the CTA over two. Layout and chrome want different
-   breakpoints, so they get separate blocks. */
+/* Hero layout collapses at 1000px, not at the 800px chrome breakpoint below:
+   below it the composer's one typed line and the stage's envelope no longer
+   both fit beside each other. Layout and chrome want different breakpoints,
+   so they get separate blocks. */
 @media (max-width: 1000px) {
   .lp-hero { grid-template-columns: 1fr; text-align: center; }
   .lp-hero-copy h1 { max-width: none; }
-  .lp-hero-copy p { max-width: none; margin-left: auto; margin-right: auto; }
-  /* min-width:0 lets the track ignore the fan's intrinsic width, so the copy
-     column is the full viewport and its centred text is actually centred —
-     without it the 440px fan widened the track and pushed the headline 55px
-     off centre at 375px. overflow-x:clip then keeps the deliberate bleed from
-     scrolling the page; `clip` rather than `hidden` because hidden would make
-     this a scroll container and turn overflow-y into auto. */
+  .lp-hero-text, .lp-hero-promise { max-width: none; margin-left: auto; margin-right: auto; }
+  /* Centred with the copy, but its own lines read from the left, as an
+     input's do. */
+  .lp-composer { margin-inline: auto; text-align: left; }
+  /* overflow-x:clip keeps anything the stage lets slip from scrolling the
+     page sideways; `clip` rather than `hidden` because hidden would make this
+     a scroll container and turn overflow-y into auto. */
   .lp-hero { overflow-x: clip; }
-  .lp-fan { margin-top: 12px; min-width: 0; }
-  .lp-fan-0 { width: 175px; margin-right: -50px; }
-  .lp-fan-1 { width: 190px; }
-  .lp-fan-2 { width: 175px; margin-left: -50px; }
+  .lp-stage { margin-top: 8px; }
 }
 
 @media (max-width: 800px) {
@@ -1607,6 +1668,9 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .lp-step-icon { margin: 0; flex: 0 0 auto; width: 44px; height: 44px; font-size: 1.2rem; }
   .lp-step-text { max-width: none; margin: 0; }
   .lp-rsvp-inner { grid-template-columns: 1fr; gap: 24px; }
+  /* On a phone the words come first and the picture follows them. */
+  .lp-guests { grid-template-columns: 1fr; gap: 28px; }
+  .lp-guests-copy { order: -1; }
   .lp-footer { padding-bottom: 96px; }
   .lp-sticky-cta {
     display: flex;
@@ -1620,6 +1684,15 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .lp-sticky-cta .lp-cta { width: 100%; max-width: 320px; padding: 13px 0; }
 }
 
+/* On a phone the composer's one typed line has to fit: at 1.02rem the
+   sentence is about 330px of Golos and a 360px phone leaves its line 282.
+   Measured at 360 and 390px in both languages, it fits at 0.88rem with
+   12px of side padding, the size of the note beneath it. */
+@media (max-width: 420px) {
+  .lp-composer { padding-inline: 12px; }
+  .lp-composer-line { font-size: 0.88rem; }
+}
+
 /* Below 370 the size concession is not enough — brand, count and the language
    switcher still overflow — so the wordmark gives up its letters and becomes
    its own first initial. Same reasoning, one step further: it is still the
@@ -1629,6 +1702,32 @@ a.lp-cta { display: inline-block; text-decoration: none; }
   .lp-nav-counted .lp-brand-full { display: none; }
   .lp-nav-counted .lp-brand-mono { display: inline; }
 }
+
+/* The landing's motion (adr-019 §6.1), all of it, in one block: under
+   reduced motion none of this applies and the hero is simply finished — the
+   sentence whole and wrapping. Honoured, not detected (NFR-9).
+
+   The typing. A wrapped line cannot be typed in CSS alone, so here the
+   sentence goes onto one line: the line is flex-end and the sentence takes
+   margin-right: auto, so while it fits it sits left (the auto margin takes
+   the free space), and once it outgrows the box it overflows to the left,
+   keeping its newest words in view the way an input scrolls. It is revealed
+   by max-width in steps; 46ch holds 44 characters of Golos with room, and
+   i18n.test.ts holds the sentence to 44. The caret is the span's own right
+   border, so it sits at the end of what is shown, blinks while it types,
+   and is transparent once the blinking stops.
+
+   The rise. The card comes up out of the pocket once the typing is done:
+   2.7s is the typing's 0.4s delay and 2.2s, and a beat. Transform and
+   opacity only, so it never lays anything out. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-composer-line { display: flex; justify-content: flex-end; overflow: hidden; }
+  .lp-typing { flex: 0 0 auto; margin-right: auto; white-space: nowrap; overflow: hidden; border-right: 2px solid transparent; animation: lp-type 2.2s steps(40, end) 0.4s both, lp-caret 0.55s step-end 0.4s 5; }
+  .lp-stage-card { animation: lp-rise 900ms var(--ease-ios) 2.7s both; }
+}
+@keyframes lp-type { from { max-width: 0; } to { max-width: 46ch; } }
+@keyframes lp-caret { 50% { border-right-color: var(--ink); } }
+@keyframes lp-rise { from { transform: translateY(38%); opacity: 0; } }
 
 /* Host manage dashboard --------------------------------------------------- */
 /* From the "host-manage" screens in the E-invitation design project. Mobile is
@@ -2059,34 +2158,57 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
 .sp-notify-toggle:hover { color: #7a5638; }
 
+/* Reply email checkbox -------------------------------------------------- */
+/* Reply email as one control (adr-019 §10, from PR #66's design pass):
+   components/NotifyCheckbox.tsx. The landing footer carries it first; the
+   share panel and the manage page take it in adr-019 steps 5 and 6, which
+   is why it has a section of its own rather than living in the footer's.
+
+   - The square is the affordance and spends no fill, so it costs nothing
+     from the accent budget: adr-010 §3's hierarchy counts fills, not
+     affordances. The checked box is ink, never the accent, which on host
+     surfaces means "the public link".
+   - The whole label is the target, 44px tall; the text button this replaced
+     was about 17px.
+   - The input sits off-screen rather than display:none, which would take it
+     out of the tab order too.
+   - The empty box's edge is --ink-faint: a control's boundary owes 3:1
+     (WCAG 1.4.11), on --app-bg here and on --surface in the share panel. */
+.notify-check { position: relative; display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 7px 6px 7px 0; margin-left: -3px; cursor: pointer; }
+.notify-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.notify-box { flex: 0 0 auto; display: inline-grid; place-items: center; width: 19px; height: 19px; margin-top: 1px; border: 1.5px solid var(--ink-faint); border-radius: var(--r-sm); background-color: var(--surface); color: var(--surface); }
+.notify-input:checked + .notify-box { border-color: var(--ink-muted); background-color: var(--ink-muted); }
+.notify-input:focus-visible + .notify-box { outline: 2px solid var(--ink); outline-offset: 2px; }
+.notify-check:hover .notify-box { border-color: var(--ink-muted); }
+.notify-copy { flex: 1; min-width: 0; }
+/* The setting's name, identical in both states. */
+.notify-name { display: block; font-size: 0.86rem; font-weight: 600; line-height: 1.4; color: var(--ink); }
+/* Everything that changes, the scope included. A sentence, so --ink-muted. */
+.notify-state { display: block; margin-top: 2px; font-size: 0.8rem; line-height: 1.45; color: var(--ink-muted); overflow-wrap: anywhere; }
+
 /* Landing: account footer ----------------------------------------------- */
 /* The signed-in host's footer to the invitations card, and the lines under
    it (adr-014 §9, design project "LandingSignedInStates"). The footer signs
    the invitations card because the account exists for that list and nothing
    else. */
 /* The footer is a block, not a row: the identity line keeps the old flex
-   layout and the notification line (adr-015 §7, design project LandingAccountNotify) sits
-   under it. Heights: 46px with no mail line, 111px with one line of text,
-   129px when Ukrainian "off" wraps to two at 375px — 11 + 24 + 5 + text + 40
-   + 12. The growth lands on the quietest block of the page, below the list. */
+   layout and the reply-email checkbox (adr-015 §7, adr-019 §10) sits under
+   it. Heights: 46px with no checkbox; with one, 11 + 24 + 2 + the label (44
+   at least, more where the state line wraps) + 12. The growth lands on the
+   quietest block of the page, below the list. */
 .lp-account { border-top: 1px solid var(--edge-soft); background: var(--app-bg); padding: 11px 14px 12px; }
 .lp-account-id { display: flex; align-items: center; gap: 10px; min-height: 24px; }
-/* The envelope is decoration beside the address it stands for. Its strike,
-   when mail is off, is cut out of the envelope by a knockout stroke in the
-   footer's own background — the same token as .lp-account's, so the gap can
-   never show as a ring of a different colour. */
+/* The envelope is decoration beside the address it stands for, and never
+   struck: the checkbox carries the state (adr-019 §10). */
 .lp-account-id svg { flex: 0 0 auto; color: var(--ink-placeholder); }
-.lp-account-knockout { stroke: var(--app-bg); }
 .lp-account-email { flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lp-account-out { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
 .lp-account-out:hover { color: var(--ink); }
 
-/* 26px = the 16px glyph + its 10px gap, so the sentence starts under the
-   address rather than under the envelope. */
-.lp-account-mail { margin-top: 5px; padding-left: 26px; }
-.lp-account-mail p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: var(--ink-muted); }
-.lp-notify-all { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; transition: color 0.14s; }
-.lp-notify-all:hover { color: var(--ink); }
+/* 26px = the 16px glyph + its 10px gap, so the checkbox starts under the
+   address rather than under the envelope; its own -3px keeps the square
+   optically flush with the address's first letter. */
+.lp-account-mail { margin-top: 2px; padding-left: 26px; }
 @media (min-width: 900px) { .lp-account { padding: 11px 20px 12px; } }
 /* One line, the smallest on the page: this is the payoff, not an
    announcement. Quiet by its size, not by being hard to read — it is a

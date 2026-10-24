@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { LANDING } from "../src/i18n";
 import { prerenderBlocks, prerenderMarkers } from "../src/prerender";
 
 describe("prerender blocks", () => {
@@ -69,5 +70,60 @@ describe("landing entry point", () => {
     // The gallery link is nav chrome, not a second hero action: the hero still
     // has exactly the two /create calls to action it shipped with.
     expect(block.match(/class="lp-cta"/g)).toHaveLength(2);
+  });
+});
+
+/** The landing block as a crawler, or a visitor before React mounts, reads it. */
+const landingBlock = (lang: "uk" | "en") => {
+  const html = prerenderBlocks();
+  const { open, close } = prerenderMarkers(`landing:${lang}`);
+  return html.slice(html.indexOf(open), html.indexOf(close));
+};
+
+describe("the landing hero before React mounts (adr-019 §6.1)", () => {
+  it.each(["uk", "en"] as const)(
+    "carries the composer's sentence in the class React types (%s)",
+    (lang) => {
+      const t = LANDING[lang];
+      const typed = /<span class="lp-typing">([^<]*)<\/span>/.exec(landingBlock(lang))?.[1];
+      expect(typed).toBe(t.heroSentence.replaceAll("&", "&amp;"));
+      expect(landingBlock(lang)).toContain(t.heroPromise);
+      expect(landingBlock(lang)).toContain(t.composerNote);
+    },
+  );
+
+  it.each(["uk", "en"] as const)(
+    "carries the stat and the guests' copy, but not their envelope (%s)",
+    (lang) => {
+      const t = LANDING[lang];
+      const block = landingBlock(lang);
+      for (const text of [
+        t.statValue,
+        t.statLabel,
+        t.guestsTitle,
+        t.guestsText,
+        ...t.guestsPoints,
+      ]) {
+        expect(block).toContain(text);
+      }
+      expect(block).not.toContain("lp-guests-still");
+    },
+  );
+
+  it.each(["uk", "en"] as const)(
+    "serves every question and its answer to a crawler (%s)",
+    (lang) => {
+      const block = landingBlock(lang);
+      expect(block.match(/<details class="lp-faq-item">/g)).toHaveLength(4);
+      for (const { q, a } of LANDING[lang].faq) {
+        expect(block).toContain(
+          `<summary class="lp-faq-q">${q}</summary><p class="lp-faq-a">${a}</p>`,
+        );
+      }
+    },
+  );
+
+  it("puts no Ukrainian in the English landing block", () => {
+    expect(landingBlock("en")).not.toMatch(/[Ѐ-ӿ]/);
   });
 });

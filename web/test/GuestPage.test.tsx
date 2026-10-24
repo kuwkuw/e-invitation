@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
@@ -50,7 +50,9 @@ describe("the envelope (adr-019 §5.1)", () => {
   it("takes focus, so a keyboard or a screen reader starts on the seal", async () => {
     renderPage();
     const seal = await screen.findByRole("button", { name: t.openInvitation });
-    expect(document.activeElement).toBe(seal);
+    // The focus is an effect, which can run a beat after the seal is in the
+    // DOM: findByRole alone failed this about once in four full runs.
+    await waitFor(() => expect(document.activeElement).toBe(seal));
   });
 
   for (const [how, act_] of [

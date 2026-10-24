@@ -12,9 +12,13 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **137.5 kB gzipped** (475.9 kB raw, CSS + JS), measured 2026-10-24 with
-  `pnpm --filter inv-app-web build` — 12.66 kB CSS plus 124.79 kB JS, after
-  [adr-019](decisions/adr-019-paper-direction.md)'s guest page (step 3): the
+  **139.3 kB gzipped** (484.9 kB raw, CSS + JS), measured 2026-10-24 with
+  `pnpm --filter inv-app-web build` — 13.54 kB CSS plus 125.80 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s landing (step 4): the
+  composer, the stage, "What guests see", the FAQ, the reply-email checkbox
+  and their copy in both languages added 1.8 kB, against the three-card fan
+  and two sample invitations it retired. It was 137.5 kB (475.9 kB raw)
+  after step 3's guest page, 12.66 kB CSS plus 124.79 kB JS, where the
   envelope, the pinned bar, the deckled mat and the seal added 1.3 kB, most
   of it CSS. It was 136.1 kB after step 2 (11.76 kB CSS plus 124.36 kB JS),
   136.3 kB (472.1 kB raw) on 2026-10-22 after the paper re-skin, and 136.2 kB
@@ -303,12 +307,19 @@
   a token swap: the two glass classes are now card stock at full opacity
   with no blur. Its paper materials (grain, the deckled mat, the seal) may
   wrap the card but never sit on `.inv` or inside it, which keeps the OG
-  renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain is
-  the first defined, on the editor's table, and it sets only an image under
-  5% alpha, so it moves no contrast.
+  renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain sits
+  on the editor's table, the guest page's ground, and the landing page's
+  ground and its hero's table, and it sets only an image under 5% alpha, so
+  it moves no contrast. The deckled mat wraps the card on the guest page and
+  in the landing's hero.
 - **Reduced transparency and reduced motion are honoured**, not detected: the
   two media queries above, never a device or user-agent check. The guest
   page's envelope ([adr-019](decisions/adr-019-paper-direction.md) §5.1)
   reads the same reduced-motion query through `matchMedia` once at mount,
   because "no envelope at all" means not mounting it, which CSS alone can't
-  do; a preference switched on later makes its opening instant.
+  do; a preference switched on later makes its opening instant. The landing
+  page's hero ([adr-019](decisions/adr-019-paper-direction.md) §6.1) keeps
+  its typing and its rise in one `prefers-reduced-motion: no-preference`
+  block, so under reduced motion it is simply finished: the sentence whole,
+  the card risen. A test holds every animation in its section to that
+  block.

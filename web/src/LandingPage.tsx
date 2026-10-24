@@ -3,8 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { googleSignInUrl } from "./api";
 import { AccountFooter } from "./components/AccountFooter";
 import { DeleteAccountSheet } from "./components/DeleteAccountSheet";
-import { InvitationPreview } from "./components/InvitationPreview";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { GuestsSection } from "./components/landing/GuestsSection";
+import { HeroComposer } from "./components/landing/HeroComposer";
+import { HeroStage } from "./components/landing/HeroStage";
+import { LandingFaq } from "./components/landing/LandingFaq";
 import { SignOutSheet } from "./components/SignOutSheet";
 import { YourInvitations } from "./components/YourInvitations";
 import { useAuthSession } from "./hooks/useAuthSession";
@@ -12,31 +15,30 @@ import { useHostInvitationCounts } from "./hooks/useHostInvitationCounts";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { manageUrl } from "./hooks/usePublishing";
 import { loadHostInvitations, mergeHostInvitations } from "./hostInvitations";
-import { AUTH, type DemoGuest, LANDING, loadUiLang, type SampleId, saveUiLang } from "./i18n";
+import { AUTH, type DemoGuest, LANDING, loadUiLang, saveUiLang } from "./i18n";
 import { allHeldManageTokens, readManageToken } from "./manageTokens";
+import { monogramFrom } from "./monogram";
 import { langFromSearch, routeMeta, useDocumentMeta } from "./seo";
 import type { DesignTokens, Language } from "./types";
 
-// Ported from the "Тепла класика" landing direction designed in Claude Design.
-// Chrome copy is bilingual (LANDING strings) — with the wordmark as the one
-// exception, because a name is not copy (adr-016 §9). The hero composes the
-// real InvitationPreview component with three sample events, and their words
-// are bilingual too: the samples are what an English visitor arriving on
-// `/?lang=en` is there to judge (see the note over `LANDING`).
+// The paper direction's landing (adr-019 §6). Chrome copy is bilingual
+// (LANDING strings) — with the wordmark as the one exception, because a name
+// is not copy (adr-016 §9). The hero shows the product working: the composer
+// types a sentence and the real InvitationPreview it describes rises out of an
+// envelope. Its words are bilingual too: the sample is what an English visitor
+// arriving on `/?lang=en` is there to judge (see the note over `LANDING`).
+// There is one sample since the paper step; range lives in the gallery.
 //
-// Split by kind rather than by sample: the words are in `LANDING.samples`,
-// the design tokens are here, and the id is the join. Tokens are presentation
-// — the same three directions in both languages — so translating them would
-// mean two ways to say "romantic script".
+// Split by kind: the words are in `LANDING.sample`, the design tokens are
+// here. Tokens are presentation — the same direction in both languages — so
+// translating them would mean two ways to say "romantic script".
 
-const SAMPLE_DESIGNS: Record<SampleId, DesignTokens> = {
-  wedding: { palette: "romantic", typography: "script", layout: "classic", ornament: "floral" },
-  kids: { palette: "playful", typography: "sans", layout: "banner", ornament: "sparkle" },
-  corporate: { palette: "festive", typography: "serif", layout: "classic", ornament: "sparkle" },
+const SAMPLE_DESIGN: DesignTokens = {
+  palette: "romantic",
+  typography: "script",
+  layout: "classic",
+  ornament: "floral",
 };
-
-/** Fan order, left to right — `lp-fan-{i}` positions each card. */
-const SAMPLE_ORDER: SampleId[] = ["wedding", "kids", "corporate"];
 
 const STEP_ICONS = ["❧", "✧", "◆"];
 
@@ -60,6 +62,10 @@ export function LandingPage() {
   const urlLang = langFromSearch(location.search);
   const [lang, setLang] = useState<Language>(() => urlLang ?? loadUiLang());
   const t = LANDING[lang];
+  // The seal on the hero's envelope, and on the guests' one below. The sample
+  // has no brief, and its closing is the hosts' names («Марія та Андрій»), so
+  // it is the same derivation the guest page makes from `brief.hosts`.
+  const monogram = monogramFrom([t.sample.closing]);
   // Arriving on an English link makes English this browser's preference too,
   // or the first click through to /create would silently switch back.
   useEffect(() => {
@@ -157,7 +163,9 @@ export function LandingPage() {
   }
 
   return (
-    <div className="landing">
+    // The page ground carries the grain (adr-019 §3); `.landing` gives it its
+    // colour with background-color, which the grain needs.
+    <div className="landing grain">
       {/* `lp-nav-counted` is what lets the narrow rules find the count without
           a `:has()`: with the number present the bar needs the wordmark's
           space, and below 370 the wordmark gives up its letters entirely. */}
@@ -269,17 +277,21 @@ export function LandingPage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <h1>{t.heroTitle}</h1>
-          <p>{t.heroText}</p>
-          <button type="button" className="lp-cta" onClick={startEditing}>
-            {t.cta}
-          </button>
+          <p className="lp-hero-text">{t.heroText}</p>
+          <p className="lp-hero-promise">{t.heroPromise}</p>
+          {/* The composer carries the hero's call to action. */}
+          <HeroComposer t={t} onStart={startEditing} />
         </div>
-        <div className="lp-fan" aria-hidden="true">
-          {SAMPLE_ORDER.map((id, i) => (
-            <div key={id} className={`lp-fan-card lp-fan-${i}`}>
-              <InvitationPreview copy={t.samples[id]} design={SAMPLE_DESIGNS[id]} />
-            </div>
-          ))}
+        <HeroStage copy={t.sample} design={SAMPLE_DESIGN} monogram={monogram} />
+      </section>
+
+      {/* The one number that is true today (adr-019 §6.3), as a strip of one
+          cell: a count joins it only once it comes from GET /api/metrics, and
+          no placeholder number ever ships. Nothing here fetches. */}
+      <section className="lp-stats">
+        <div className="lp-stat">
+          <p className="lp-stat-value">{t.statValue}</p>
+          <p className="lp-stat-label">{t.statLabel}</p>
         </div>
       </section>
 
@@ -304,6 +316,8 @@ export function LandingPage() {
         ))}
       </section>
 
+      <GuestsSection t={t} monogram={monogram} />
+
       <section className="lp-rsvp">
         <div className="lp-rsvp-inner">
           <div className="lp-rsvp-copy">
@@ -323,6 +337,8 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      <LandingFaq t={t} />
 
       <section className="lp-final">
         <h2>{t.finalTitle}</h2>

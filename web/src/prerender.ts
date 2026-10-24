@@ -59,12 +59,13 @@ function escapeHtml(text: string): string {
  * `LandingPage.tsx` renders, so what a visitor sees before React mounts is
  * what they see after.
  *
- * Deliberately a **subset**. Left out: the hero's three sample invitations
- * (decorative, `aria-hidden`, and a large amount of markup for no text), the
- * step glyphs (decoration with no reading), the mocked RSVP rows and the
- * returning-host list (that one is per-visitor and belongs to nobody until the
- * app boots). What is kept is every heading, every line of prose and the
- * occasion words — which is to say, everything a search result could quote.
+ * Deliberately a **subset**. Left out: the hero's stage, the sample invitation
+ * rising out of its envelope (decorative, `aria-hidden`, and a large amount of
+ * markup for no text), the step glyphs (decoration with no reading), the
+ * mocked RSVP rows and the returning-host list (that one is per-visitor and
+ * belongs to nobody until the app boots). What is kept is every heading, every
+ * line of prose and the occasion words — which is to say, everything a search
+ * result could quote.
  *
  * The calls to action are real `<a href="/create">` links rather than the
  * page's `<button>`s. A crawler cannot press a button, so today the editor is
@@ -84,9 +85,23 @@ export function landingBodyHtml(lang: Language): string {
     )
     .join("");
   const chips = t.chips.map((chip) => `<span class="lp-chip">${escapeHtml(chip)}</span>`).join("");
+  // Closed, as React renders them; a crawler reads a closed <details> all
+  // the same, which is why the answers are here at all (adr-019 §6.3).
+  const faq = t.faq
+    .map(
+      ({ q, a }) =>
+        `<details class="lp-faq-item">` +
+        `<summary class="lp-faq-q">${escapeHtml(q)}</summary>` +
+        `<p class="lp-faq-a">${escapeHtml(a)}</p>` +
+        `</details>`,
+    )
+    .join("");
+  const points = t.guestsPoints
+    .map((point) => `<li class="lp-guests-point">${escapeHtml(point)}</li>`)
+    .join("");
 
   return (
-    `<div class="landing">` +
+    `<div class="landing grain">` +
     `<header class="lp-nav"><span class="lp-brand">` +
     `<span class="lp-brand-full">${escapeHtml(t.brand)}</span>` +
     `</span>` +
@@ -97,16 +112,38 @@ export function landingBodyHtml(lang: Language): string {
     `</header>` +
     `<section class="lp-hero"><div class="lp-hero-copy">` +
     `<h1>${escapeHtml(t.heroTitle)}</h1>` +
-    `<p>${escapeHtml(t.heroText)}</p>` +
+    `<p class="lp-hero-text">${escapeHtml(t.heroText)}</p>` +
+    `<p class="lp-hero-promise">${escapeHtml(t.heroPromise)}</p>` +
+    `<div class="lp-composer">` +
+    `<p class="lp-composer-label">${escapeHtml(t.composerLabel)}</p>` +
+    // The typing class is kept here too (adr-019 §6.1). On a fast connection
+    // React mounts inside the typing's delay and the swap is invisible; on a
+    // slow one the typing restarts at mount, which beats a whole sentence
+    // flashing up and then vanishing to be typed.
+    `<p class="lp-composer-line"><span class="lp-typing">${escapeHtml(t.heroSentence)}</span></p>` +
     cta +
+    `</div>` +
+    `<p class="lp-composer-note">${escapeHtml(t.composerNote)}</p>` +
+    `</div></section>` +
+    `<section class="lp-stats"><div class="lp-stat">` +
+    `<p class="lp-stat-value">${escapeHtml(t.statValue)}</p>` +
+    `<p class="lp-stat-label">${escapeHtml(t.statLabel)}</p>` +
     `</div></section>` +
     `<section class="lp-steps"><h2>${escapeHtml(t.howTitle)}</h2>` +
     `<div class="lp-steps-grid">${steps}</div></section>` +
     `<section class="lp-chips">${chips}</section>` +
+    // The guests' copy, without the envelope still beside it: that is a
+    // picture, aria-hidden, with nothing to read.
+    `<section class="lp-guests"><div class="lp-guests-copy">` +
+    `<h2 class="lp-guests-title">${escapeHtml(t.guestsTitle)}</h2>` +
+    `<p class="lp-guests-text">${escapeHtml(t.guestsText)}</p>` +
+    `<ul class="lp-guests-points">${points}</ul>` +
+    `</div></section>` +
     `<section class="lp-rsvp"><div class="lp-rsvp-inner"><div class="lp-rsvp-copy">` +
     `<h2>${escapeHtml(t.rsvpTitle)}</h2>` +
     `<p>${escapeHtml(t.rsvpText)}</p>` +
     `</div></div></section>` +
+    `<section class="lp-faq"><h2 class="lp-faq-title">${escapeHtml(t.faqTitle)}</h2>${faq}</section>` +
     `<section class="lp-final"><h2>${escapeHtml(t.finalTitle)}</h2>${cta}</section>` +
     `<footer class="lp-footer">${escapeHtml(t.footer)}</footer>` +
     `</div>`

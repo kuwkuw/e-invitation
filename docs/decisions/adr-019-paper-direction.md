@@ -383,6 +383,39 @@ The returning-host block, the gallery link in the nav (FR-14.7) and the SEO
 strings other than the FAQ are unchanged. **The account footer is the
 exception:** its reply-email control becomes the checkbox of §10.
 
+**Amended 2026-10-24, step 4.** Building §6 settled what it left open, as the
+step's plan proposed (`docs/superpowers/plans/2026-10-24-landing-paper.md`):
+
+- **One sample, not three.** The hero's fan became the one invitation that
+  rises; the kids and corporate samples retired, and range lives in the
+  gallery, one link away in the nav (FR-6.4 amended).
+- **The composer** is labelled «Наприклад» / "For example", has no send
+  glyph, and carries the call to action as its only control: a box that
+  looks typeable but isn't would be a dead control. It types «Весілля Марії
+  та Андрія, 6 червня, Одеса» / "Mariya & Andriy's wedding, 6 June, Odesa",
+  the sample's own couple, day and city.
+- **The typing** is `max-width` in `steps()` on a `nowrap` span inside a
+  `flex-end` line, so the sentence sits left while it fits and overflows to
+  the left, as an input scrolls, once it doesn't. All of it is in one
+  no-preference block; under reduced motion the sentence is static and
+  wraps. On phones (≤ 420 px) the line is 0.88rem, which is what makes it
+  fit a 360 px screen in both languages. The prerendered span keeps the
+  typing class.
+- **The sub-line**: `heroText` dropped «за хвилину», and the differentiator
+  is a line of its own, so "a minute" isn't said twice.
+- **The stat strip** is one cell and fetches nothing; `/api/metrics` has
+  counts, but nobody has decided they are worth showing (FR-13.11).
+- **"What guests see"** is a still of the closed envelope on `--night`,
+  carrying the sample's title and its couple's seal, beside three points
+  FR-4.5, 4.8 and 4.9 make true.
+- **The FAQ** is four questions whose strings live in `LANDING` alone, read
+  by the prerender; there is no `FAQPage` structured data (FR-13.12).
+- **Grain** is on the page ground and the hero's table. **No seal in the
+  nav**: it fits a 360 px phone with nothing to spare.
+- **The hero's card is in flow** inside the envelope, so the envelope is as
+  tall as its copy; the envelope isolates its layers, or the card painted
+  over the sticky call to action.
+
 ### 7. Editor
 
 1. **Canvas**: the card on the deckled mat on a grained `--table`. adr-018 §3's
@@ -519,6 +552,15 @@ The requirement text — FR-12.12 for the checkbox, the FR-11.11 placement note,
 adr-010 §3.1 and the adr-015 note — is written in the PRs that build it,
 because the docs describe what is built. That is also why #108 recovered #66 as
 a roadmap note rather than porting its docs.
+
+**Built 2026-10-24, step 4: the landing.** The account footer's checkbox is
+`NotifyCheckbox` (FR-12.12), in a stylesheet section of its own so steps 5 and
+6 reuse it unmoved. The footer's envelope stayed as the label for the address
+and lost its strike, reading "the envelope leaves the account footer" as the
+state-carrying one. The sign-in link's order was already right and is now
+tested (FR-11.11); its colour stayed `--ink-muted`, because the switcher's idle
+`--ink-faint` would put a link a host must read under 4.5:1. The share panel
+and the manage page remain.
 
 ### 11. Not in this iteration
 

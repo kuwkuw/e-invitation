@@ -19,6 +19,10 @@ import {
 const css = readStyles();
 const tokens = rootTokens(css);
 
+/** A source file under web/src, for the rules a component's markup has to keep. */
+const source = (file: string) =>
+  readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
+
 describe("material tokens", () => {
   it("declares every token the editor is built from", () => {
     const required = [
@@ -321,6 +325,7 @@ const CONVERTED = [
   "Landing page",
   "Landing: account footer",
   "Landing: returning-host block",
+  "Reply email checkbox",
   "Share panel",
 ];
 
@@ -455,9 +460,6 @@ describe("the guest page's text", () => {
     [".gr-env-skip", "--night", 4.5],
   ]);
 
-  const source = (file: string) =>
-    readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
-
   it("keeps the grain on every guest page ground (adr-019 §3)", () => {
     const page = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
       r.selectors.includes(".gr-page"),
@@ -498,7 +500,18 @@ describe("the landing page's text", () => {
     [".lp-cta", "--accent", 4.5],
     [".lp-nav-signin", "--surface", 4.5],
     [".lp-nav-gallery", "--surface", 3],
-    [".lp-hero-copy p", "--app-bg", 4.5],
+    [".lp-hero-text", "--app-bg", 4.5],
+    [".lp-hero-promise", "--app-bg", 4.5],
+    [".lp-composer-line", "--surface", 4.5],
+    [".lp-composer-label", "--surface", 3],
+    [".lp-composer-note", "--app-bg", 4.5],
+    [".lp-stat-value", "--app-bg", 4.5],
+    [".lp-stat-label", "--app-bg", 4.5],
+    [".lp-guests-text", "--app-bg", 4.5],
+    [".lp-guests-point", "--app-bg", 4.5],
+    [".lp-guests-to", "--kraft", 4.5],
+    [".lp-faq-q", "--app-bg", 4.5],
+    [".lp-faq-a", "--app-bg", 4.5],
     [".lp-step-text", "--app-bg", 4.5],
     [".lp-chip", "--surface", 3],
     [".lp-rsvp-copy p", "--surface", 4.5],
@@ -515,32 +528,130 @@ describe("the landing page's text", () => {
     [".lp-yours-more", "--app-bg", 3],
   ]);
   textFloors("Landing: account footer", [
-    [".lp-account-mail p", "--app-bg", 4.5],
     [".lp-cross-device", "--app-bg", 4.5],
     [".lp-signed-in-empty", "--surface", 4.5],
     [".lp-account-email", "--app-bg", 3],
     [".lp-account-out", "--app-bg", 3],
-    [".lp-notify-all", "--app-bg", 3],
     [".lp-delete-link", "--app-bg", 3],
   ]);
+});
+
+/** adr-019 §10. It sits on --app-bg in the landing footer, and on --surface in
+ *  the share panel and the manage page once steps 5 and 6 bring it there. */
+describe("the reply email checkbox", () => {
+  textFloors("Reply email checkbox", [
+    [".notify-name", "--app-bg", 4.5],
+    [".notify-name", "--surface", 4.5],
+    [".notify-state", "--app-bg", 4.5],
+    [".notify-state", "--surface", 4.5],
+  ]);
+
+  const rules = () => ruleBlocks(stripComments(sections(css).get("Reply email checkbox") ?? ""));
+  const body = (selector: string) =>
+    rules().find((r) => r.selectors.includes(selector))?.body ?? "";
+
+  it("fills the checked box with ink, never the accent, which means the public link", () => {
+    expect(body(".notify-input:checked + .notify-box")).toMatch(
+      /background-color:\s*var\(--ink-muted\)/,
+    );
+    expect(
+      rules()
+        .map((r) => r.body)
+        .join("\n"),
+    ).not.toMatch(/accent/);
+  });
+
+  it("edges the empty box at 3:1 on both grounds it sits on (WCAG 1.4.11)", () => {
+    const edge = /border:\s*[\d.]+px solid var\((--[\w-]+)\)/.exec(body(".notify-box"))?.[1];
+    expect(edge).toBeDefined();
+    for (const ground of ["--app-bg", "--surface"]) {
+      const ratio = contrast(tokens.get(edge as string) as string, tokens.get(ground) as string);
+      expect(ratio, ground).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("makes the whole label a 44px target and keeps the input in the tab order", () => {
+    expect(body(".notify-check")).toMatch(/min-height:\s*44px/);
+    expect(body(".notify-input")).not.toMatch(/display:\s*none/);
+    expect(body(".notify-input:focus-visible + .notify-box")).toMatch(/outline:/);
+  });
 });
 
 /** The hex ratchet reads only styles.css, so a colour written into a
  *  component as a literal goes stale without a sound when the token moves:
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
- *  Guest components colour everything through currentColor, set by the CSS
- *  rule that places them, and carry no hex at all. */
-describe("the guest page's components", () => {
+ *  Guest and landing components colour everything through currentColor, set
+ *  by the CSS rule that places them, and carry no hex at all. */
+describe("the guest page's and the landing's components", () => {
   it("carry no hex literal at all", () => {
-    const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
-    const named = readdirSync(dir)
-      .filter((file) => file.endsWith(".tsx"))
-      .flatMap((file) =>
-        [...readFileSync(join(dir, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
-          (m) => `${file}: ${m[0]}`,
-        ),
-      );
+    const src = fileURLToPath(new URL("../src/", import.meta.url));
+    const inDir = (dir: string) =>
+      readdirSync(join(src, dir))
+        .filter((file) => file.endsWith(".tsx"))
+        .map((file) => join(dir, file));
+    const files = [
+      ...inDir("components/guest"),
+      ...inDir("components/landing"),
+      "components/NotifyCheckbox.tsx",
+      "components/AccountFooter.tsx",
+    ];
+    const named = files.flatMap((file) =>
+      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
+        (m) => `${file}: ${m[0]}`,
+      ),
+    );
     expect(named).toEqual([]);
+  });
+});
+
+describe("the landing's motion (adr-019 §6.1)", () => {
+  const landing = () => stripComments(sections(css).get("Landing page") ?? "");
+  const welcome = () => {
+    const span = atRuleSpan(landing(), /@media\s*\(prefers-reduced-motion:\s*no-preference\)/);
+    expect(span, "no no-preference block").not.toBeNull();
+    return span as { start: number; end: number };
+  };
+  const keyframeProps = (name: string) => {
+    const span = atRuleSpan(landing(), new RegExp(`@keyframes\\s+${name}\\b`));
+    expect(span, name).not.toBeNull();
+    const { start, end } = span as { start: number; end: number };
+    return new Set(
+      [
+        ...landing()
+          .slice(start, end)
+          .matchAll(/([\w-]+)\s*:/g),
+      ].map((m) => m[1]),
+    );
+  };
+
+  // Reduced motion is honoured by never starting, not by detection (NFR-9).
+  it("animates only inside its one no-preference block", () => {
+    const { start, end } = welcome();
+    const animated = ruleBlocks(landing()).filter((r) => /(?:^|[;\s])animation\s*:/.test(r.body));
+    expect(animated.flatMap((r) => r.selectors).sort()).toEqual([".lp-stage-card", ".lp-typing"]);
+    for (const r of animated) expect(r.at > start && r.at < end, r.selectors.join(", ")).toBe(true);
+  });
+
+  it("raises the card by transform and opacity alone", () => {
+    expect(keyframeProps("lp-rise")).toEqual(new Set(["transform", "opacity"]));
+  });
+
+  it("types by width and blinks by colour, and moves nothing else", () => {
+    expect(keyframeProps("lp-type")).toEqual(new Set(["max-width"]));
+    expect(keyframeProps("lp-caret")).toEqual(new Set(["border-right-color"]));
+  });
+
+  // The line is flex-end and the sentence takes margin-right: auto, so it sits
+  // left while it fits and scrolls left, like an input, once it doesn't.
+  it("keeps the typed line to one line that scrolls like an input, only where it types", () => {
+    const { start, end } = welcome();
+    const inside = ruleBlocks(landing().slice(start, end));
+    const line = inside.find((r) => r.selectors.includes(".lp-composer-line"))?.body ?? "";
+    const typing = inside.find((r) => r.selectors.includes(".lp-typing"))?.body ?? "";
+    expect(line).toMatch(/justify-content:\s*flex-end/);
+    expect(line).toMatch(/overflow:\s*hidden/);
+    expect(typing).toMatch(/white-space:\s*nowrap/);
+    expect(typing).toMatch(/margin-right:\s*auto/);
   });
 });
 
@@ -739,5 +850,34 @@ describe("headings that carry their own class", () => {
       ".lp-steps h2",
       ".lp-yours-head h2",
     ]);
+  });
+});
+
+describe("the landing on paper (adr-019 §3)", () => {
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Landing page") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("grains the page ground and the hero's table, each coloured without the shorthand", () => {
+    for (const [selector, ground] of [
+      [".landing", "--app-bg"],
+      [".lp-stage", "--table"],
+    ]) {
+      expect(rule(selector), selector).toMatch(
+        new RegExp(`background-color:\\s*var\\(${ground}\\)`),
+      );
+      expect(rule(selector), selector).not.toMatch(/(?:^|[;\s])background\s*:/);
+    }
+    expect(source("LandingPage.tsx")).toMatch(/className="landing grain"/);
+    expect(source("prerender.ts")).toMatch(/class="landing grain"/);
+    expect(source("components/landing/HeroStage.tsx")).toMatch(/className="lp-stage grain"/);
+  });
+
+  it("sets the hero's card on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("components/landing/HeroStage.tsx")).toMatch(
+      /<div className="lp-stage-card">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    expect(rule(".lp-stage-card")).toMatch(/filter:\s*drop-shadow\(/);
   });
 });

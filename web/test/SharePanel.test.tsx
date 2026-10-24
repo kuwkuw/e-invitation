@@ -249,13 +249,14 @@ describe("SharePanel reply notifications", () => {
 
   // adr-015 §7 as amended. Off is where every host now starts, so this is the
   // state the panel shows at the moment publishing succeeds — and it has to
-  // read as an offer. `notifyOff` states a decision ("we won't email you")
-  // that a host who just published has never made.
+  // read as an offer. The landing footer's `notifyStateOffNow` reports a
+  // decision ("not emailing you right now") that a host who just published
+  // has never made.
   it("offers rather than reports when off", () => {
     renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
     expect(screen.getByText(UI.en.auth.notifyOffer)).toBeTruthy();
     expect(screen.getByText(UI.en.auth.notifyOptIn)).toBeTruthy();
-    expect(screen.queryByText(UI.en.auth.notifyOff)).toBeNull();
+    expect(screen.queryByText(UI.en.auth.notifyStateOffNow)).toBeNull();
   });
 
   // The default carries the reversal: a panel handed no preference must not

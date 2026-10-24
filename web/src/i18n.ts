@@ -144,19 +144,27 @@ export interface AuthStrings {
    *  the off switch beside it — rather than discovered from the first email.
    *  `{email}` is the signed-in address the replies will go to. */
   notifyOn: string;
-  /** The same fact on the landing footer, where the address is already on the
-   *  line above — repeating it would say one thing twice in one block. */
+  /** The same fact on the manage page, without the address. */
   notifyOnAccount: string;
-  notifyOff: string;
   /** The share panel's off state, which under opt-in is where every host
    *  starts. It has to read as an offer at the moment replies become possible,
-   *  not as `notifyOff`'s statement about mail already declined — a host who
-   *  has just published has not turned anything off. */
+   *  not as a statement about mail already declined — a host who has just
+   *  published has not turned anything off. */
   notifyOffer: string;
   /** Accepting that offer, and the only "on" label there is. It replaced a
    *  "turn emails back on" that opt-in made false: a host who never asked is
-   *  not returning to anything, and no surface can tell them from one who is. */
+   *  not returning to anything, and no surface can tell them from one who is.
+   *  On the landing footer it is also the checkbox's **name** (adr-019 §10),
+   *  identical in both states: that invariance is what makes unchecking as
+   *  easy as checking. */
   notifyOptIn: string;
+  /** The checkbox's **state** row on the landing footer: what is true right
+   *  now, with the scope inside it, so the host reads "every invitation"
+   *  before agreeing rather than after. One string per surface and state —
+   *  an offer and a report are different sentences, and the footer carries
+   *  the address a line above, so these never name it. From PR #66. */
+  notifyStateOnAccount: string;
+  notifyStateOffNow: string;
   /** The scope, said out loud on the manage page — a page about one event
    *  carrying a switch that governs them all. Without it the control looks
    *  per-invitation, and a host who silences one event and finds they silenced
@@ -227,11 +235,12 @@ export const AUTH: Record<Language, AuthStrings> = {
     hideManage: "Hide",
     notifyOn: "We'll email {email} when replies come in.",
     notifyOnAccount: "We'll email you when replies come in.",
-    notifyOff: "We won't email you about replies to any of your invitations.",
     notifyOffer: "Want an email when replies come in?",
     notifyOptIn: "Email me about replies",
     notifyAllEvents: "Covers every invitation in your account, not just this one.",
     notifyTurnOff: "Turn off all emails",
+    notifyStateOnAccount: "For all your invitations.",
+    notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
     signOut: "Sign out",
     signInLink: "My invitations",
     crossDevice: "This list opens on any device you sign in on.",
@@ -285,11 +294,12 @@ export const AUTH: Record<Language, AuthStrings> = {
     hideManage: "Сховати",
     notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
     notifyOnAccount: "Ми напишемо вам, коли надійдуть відповіді.",
-    notifyOff: "Ми не надсилатимемо листів про відповіді на жодне ваше запрошення.",
     notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
     notifyOptIn: "Повідомляти про відповіді",
     notifyAllEvents: "Стосується всіх запрошень у вашому акаунті, не лише цього.",
     notifyTurnOff: "Вимкнути всі листи",
+    notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
+    notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",
     signOut: "Вийти",
     signInLink: "Мої запрошення",
     crossDevice: "Цей список відкриється на будь-якому пристрої, де ви увійдете.",
@@ -596,10 +606,11 @@ export function saveUiLang(lang: Language): void {
   }
 }
 
-// Landing-page copy, including the page's demo content — the three sample
-// invitations in the hero and the mocked reply rows under the RSVP pitch.
+// Landing-page copy, including the page's demo content — the sample invitation
+// in the hero (three until adr-019's paper step; range lives in the gallery
+// now) and the mocked reply rows under the RSVP pitch.
 //
-// Those samples were Ukrainian-only for a while, on the argument that they are
+// The samples were Ukrainian-only for a while, on the argument that they are
 // showcased content rather than chrome. That argument does not survive
 // `?lang=en` being the English home page's indexed address (adr-016 §5): the
 // one thing an English visitor is there to judge is what an invitation looks
@@ -617,7 +628,11 @@ export function saveUiLang(lang: Language): void {
 // than becoming a constant because `LandingStrings` is what the page reads,
 // and a name that lives half in i18n and half beside it is how the two-name
 // problem started.
-export type SampleId = "wedding" | "kids" | "corporate";
+//
+// Every claim the page makes is true today (FR-13.11): the one number is the
+// minute NFR-1 makes true, there are no testimonials until real ones exist,
+// and the price is free. The FAQ's cost answer changes only when
+// 07-monetization §5.2 ships, and nothing may say publishing costs money.
 export type DemoGuest = "friend" | "colleague" | "couple" | "family";
 
 export interface LandingStrings {
@@ -627,6 +642,29 @@ export interface LandingStrings {
   galleryLink: string;
   heroTitle: string;
   heroText: string;
+  /** The sub-line's differentiator (adr-019 §6.1), on a line of its own. */
+  heroPromise: string;
+  /** What the hero's composer types; names the sample the stage raises. At
+   *  most 44 characters, so it types on one line (`lp-type`'s 46ch). */
+  heroSentence: string;
+  /** The composer's label: it is an example, not an input. */
+  composerLabel: string;
+  /** Under the composer (adr-019 §6.4): free, never "pay at publish". */
+  composerNote: string;
+  /** The stat strip's one true cell (adr-019 §6.3). A count joins it only
+   *  once it comes from `GET /api/metrics`; no placeholder number ships. */
+  statValue: string;
+  statLabel: string;
+  /** "What guests see" (adr-019 §6.2). The shape test holds the points'
+   *  count across the two languages. */
+  guestsTitle: string;
+  guestsText: string;
+  guestsPoints: string[];
+  /** Four questions, prerendered like the rest of the copy. The cost answer
+   *  gains its sentence about the one-time unlock only when 07-monetization
+   *  §5.2 ships. The shape test holds the count across the two languages. */
+  faqTitle: string;
+  faq: { q: string; a: string }[];
   howTitle: string;
   steps: { title: string; text: string }[];
   chips: string[];
@@ -634,9 +672,10 @@ export interface LandingStrings {
   rsvpText: string;
   rsvpSummary: string;
   responseLabels: { yes: string; no: string; wait: string };
-  /** The hero's three sample invitations. Copy only — their design tokens are
-   *  presentation and stay in `LandingPage.tsx`, keyed by the same ids. */
-  samples: Record<SampleId, InvitationCopy>;
+  /** The hero's sample invitation, the one the composer's sentence describes.
+   *  Copy only — its design tokens are presentation and stay in
+   *  `LandingPage.tsx` as `SAMPLE_DESIGN`. */
+  sample: InvitationCopy;
   /** The names on the mocked reply rows. The statuses beside them live in the
    *  component for the same reason: a status is a colour, not a sentence. */
   rsvpNames: Record<DemoGuest, string>;
@@ -665,7 +704,37 @@ export const LANDING: Record<Language, LandingStrings> = {
     cta: "Create an invitation",
     galleryLink: "Browse templates",
     heroTitle: "An invitation from one sentence",
-    heroText: "Describe your event in words — get a beautiful invitation in a minute.",
+    heroText: "Describe your event in words — get a beautiful invitation.",
+    heroPromise: "In a minute, not four working days.",
+    heroSentence: "Mariya & Andriy's wedding, 6 June, Odesa",
+    composerLabel: "For example",
+    composerNote: "Free · no sign-up for guests",
+    statValue: "1 minute",
+    statLabel: "from a sentence to a finished invitation",
+    guestsTitle: "What your guests see",
+    guestsText:
+      "The invitation arrives as an envelope sealed with your initials. Guests open it with one tap and reply right there.",
+    guestsPoints: [
+      "Opens in Viber, Telegram or WhatsApp — no sign-up, no app",
+      "A countdown to the day, directions, and add to calendar",
+      "A yes or no reply — and you see it straight away",
+    ],
+    faqTitle: "Common questions",
+    faq: [
+      { q: "How much does it cost?", a: "It's free." },
+      {
+        q: "Do guests need to sign up?",
+        a: "No. Guests open the link in any messenger and reply without signing up or installing anything.",
+      },
+      {
+        q: "How do I see who's coming?",
+        a: "Every reply lands on your replies page: who's coming, how many guests they're bringing, and their notes. You can download the list as a CSV.",
+      },
+      {
+        q: "What language will the invitation be in?",
+        a: "The one you describe the event in: Ukrainian or English. Guests can switch the page's language, but your invitation's words stay as you wrote them.",
+      },
+    ],
     howTitle: "How it works",
     steps: [
       { title: "Describe the event", text: "In your own words — what, when and where." },
@@ -677,31 +746,13 @@ export const LANDING: Record<Language, LandingStrings> = {
     rsvpText: "Guests confirm by the link — you see the replies right away, no calls or reminders.",
     rsvpSummary: "18 coming · 3 can't make it · 5 haven't replied",
     responseLabels: { yes: "Yes", no: "No", wait: "Waiting" },
-    samples: {
-      wedding: {
-        title: "We're getting married!",
-        greeting: "Dear family and friends,",
-        body: "Come and share the happiest day of our lives with us.",
-        details_line: "6 June, 3:00 pm — Oranzhereya Garden, Odesa",
-        rsvp_prompt: "Please let us know by 20 May.",
-        closing: "Mariya & Andriy",
-      },
-      kids: {
-        title: "Sofia is turning 5!",
-        greeting: "Hello, little ones and parents!",
-        body: "A fairy-tale afternoon of unicorns, cake and balloons awaits.",
-        details_line: "18 May, 1:00 pm — Kazka Park, Lviv",
-        rsvp_prompt: "Tell us whether your little one is coming.",
-        closing: "The Kovalchuk family",
-      },
-      corporate: {
-        title: "New Year party",
-        greeting: "Dear colleagues,",
-        body: "Let's close the year together — dinner, music and a few surprises.",
-        details_line: "27 December, 7:00 pm — Premier Hotel, Kyiv",
-        rsvp_prompt: "Please confirm by 20 December.",
-        closing: "The TechnoLine team",
-      },
+    sample: {
+      title: "We're getting married!",
+      greeting: "Dear family and friends,",
+      body: "Come and share the happiest day of our lives with us.",
+      details_line: "6 June, 3:00 pm — Oranzhereya Garden, Odesa",
+      rsvp_prompt: "Please let us know by 20 May.",
+      closing: "Mariya & Andriy",
     },
     rsvpNames: {
       friend: "Oksana Melnyk",
@@ -733,7 +784,37 @@ export const LANDING: Record<Language, LandingStrings> = {
     cta: "Створити запрошення",
     galleryLink: "Подивитися зразки",
     heroTitle: "Запрошення за одне речення",
-    heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
+    heroText: "Опишіть подію словами — отримайте гарне запрошення.",
+    heroPromise: "За хвилину, а не за чотири робочі дні.",
+    heroSentence: "Весілля Марії та Андрія, 6 червня, Одеса",
+    composerLabel: "Наприклад",
+    composerNote: "Безкоштовно · без реєстрації для гостей",
+    statValue: "1 хвилина",
+    statLabel: "від речення до готового запрошення",
+    guestsTitle: "Що побачать гості",
+    guestsText:
+      "Запрошення приходить конвертом із печаткою — вашими ініціалами. Гість відкриває його одним дотиком і відповідає там само.",
+    guestsPoints: [
+      "Відкривається у Viber, Telegram чи WhatsApp — без реєстрації й застосунків",
+      "Зворотний відлік до свята, маршрут і додавання в календар",
+      "Відповідь «так» чи «ні» — і ви одразу її бачите",
+    ],
+    faqTitle: "Часті запитання",
+    faq: [
+      { q: "Скільки це коштує?", a: "Безкоштовно." },
+      {
+        q: "Чи треба гостям реєструватися?",
+        a: "Ні. Гості відкривають посилання в будь-якому месенджері й відповідають без реєстрації та без застосунку.",
+      },
+      {
+        q: "Як я побачу, хто прийде?",
+        a: "Усі відповіді збираються на вашій сторінці відповідей: хто прийде, скільки з ними гостей і їхні побажання. Список можна завантажити у CSV.",
+      },
+      {
+        q: "Якою мовою буде запрошення?",
+        a: "Тією, якою ви опишете подію: українською або англійською. Гості можуть перемкнути мову сторінки, але слова запрошення залишаться вашими.",
+      },
+    ],
     howTitle: "Як це працює",
     steps: [
       { title: "Опишіть подію", text: "Своїми словами — що святкуєте, коли і де." },
@@ -746,31 +827,13 @@ export const LANDING: Record<Language, LandingStrings> = {
       "Гості підтверджують участь за посиланням — ви бачите відповіді одразу, без дзвінків і нагадувань.",
     rsvpSummary: "18 прийдуть · 3 не прийдуть · 5 ще не відповіли",
     responseLabels: { yes: "Так", no: "Ні", wait: "Очікує" },
-    samples: {
-      wedding: {
-        title: "Ми одружуємось!",
-        greeting: "Любі рідні та друзі,",
-        body: "Запрошуємо вас розділити з нами найщасливіший день нашого життя.",
-        details_line: "6 червня, 15:00 — Сад «Оранжерея», Одеса",
-        rsvp_prompt: "Підтвердіть присутність до 20 травня.",
-        closing: "Марія та Андрій",
-      },
-      kids: {
-        title: "Софійці — 5 років!",
-        greeting: "Привіт, малята й батьки!",
-        body: "Чекаємо на казкове свято з єдинорогами, тортом і кульками.",
-        details_line: "18 травня, 13:00 — Парк «Казка», Львів",
-        rsvp_prompt: "Підтвердіть, чи прийде ваша дитина.",
-        closing: "Родина Ковальчук",
-      },
-      corporate: {
-        title: "Новорічний корпоратив",
-        greeting: "Шановні колеги!",
-        body: "Завершуємо рік разом — вечеря, музика й приємні сюрпризи.",
-        details_line: "27 грудня, 19:00 — Готель «Прем'єр», Київ",
-        rsvp_prompt: "Підтвердіть участь до 20 грудня.",
-        closing: "Команда «ТехноЛайн»",
-      },
+    sample: {
+      title: "Ми одружуємось!",
+      greeting: "Любі рідні та друзі,",
+      body: "Запрошуємо вас розділити з нами найщасливіший день нашого життя.",
+      details_line: "6 червня, 15:00 — Сад «Оранжерея», Одеса",
+      rsvp_prompt: "Підтвердіть присутність до 20 травня.",
+      closing: "Марія та Андрій",
     },
     rsvpNames: {
       friend: "Оксана Мельник",

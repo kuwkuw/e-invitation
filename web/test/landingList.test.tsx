@@ -58,7 +58,7 @@ const keyringEntry = {
 };
 
 /** Scoped to the list's own title element on purpose: the landing page also
- *  renders three sample invitations in its hero, so a bare text query can match
+ *  renders a sample invitation in its hero, so a bare text query can match
  *  showcase copy and pass — or collide — for reasons that have nothing to do
  *  with what a host published. */
 const inList = { selector: ".lp-yours-title" } as const;
@@ -195,6 +195,18 @@ describe("the landing sign-in link", () => {
 
     await screen.findByText(LANDING.uk.heroTitle);
     expect(document.querySelector(".lp-nav-counted")).toBeNull();
+  });
+
+  // adr-019 §10: beside the accent the link reads as Create's caption ("create…
+  // or sign in?"), so it stands on the switcher's far side, with the chrome.
+  it("sits with the language switcher, never beside Create", async () => {
+    stubApi({ signedIn: false });
+    const { container } = renderLanding();
+    await screen.findByText(label);
+    const order = [...(container.querySelector(".lp-nav-right")?.children ?? [])].map(
+      (el) => el.className.split(" ")[0],
+    );
+    expect(order).toEqual(["lp-nav-signin", "ls-track", "lp-cta"]);
   });
 
   it("does not offer sign-in to a host already signed in", async () => {
