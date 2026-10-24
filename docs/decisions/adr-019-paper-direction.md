@@ -514,7 +514,7 @@ and a maybe is information a host wants. The rules that come with it:
   summary, CSV, email and UI.
 
 **Amended 2026-10-24, step 7.** Building 9.1 settled what it left open, as
-the step's plan proposed (`docs/superpowers/plans/2026-10-24-maybe-reply.md`).
+the step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-maybe-reply.md`).
 The first decision reads the table's "`attending` … becomes a three-value
 enum" through this ADR's own Consequences, and is the one to know:
 
