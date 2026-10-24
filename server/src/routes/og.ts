@@ -5,7 +5,7 @@ import { recallOgPng, rememberOgPng } from "../og/cache.js";
 import { OG_HEIGHT, OG_WIDTH, renderOgPng } from "../og/render.js";
 import { absoluteBase } from "../publicUrl.js";
 import { type Invitation, InvitationId } from "../schemas.js";
-import { escapeHtml, type HeadMeta, headTags, renderShell } from "../seo.js";
+import { escapeHtml, type HeadMeta, headTags, renderShell, shellMeta } from "../seo.js";
 import { getRecord, type PublishedRecord } from "../store.js";
 
 // versions is non-empty by construction (createRecord seeds version 1).
@@ -74,10 +74,25 @@ export function registerOgRoutes(app: FastifyInstance): void {
   // SPA shell with tags injected; in dev (no web/dist) a minimal page links
   // through to the Vite guest page.
   app.get("/i/:id", async (request, reply) => {
-    const record = lookup(request.params);
-    if (!record) return reply.code(404).send({ error: "Invitation not found." });
-    const meta = invitationMeta(record, absoluteBase(request));
     const spaShell = join(process.cwd(), "..", "web", "dist", "index.html");
+    const record = lookup(request.params);
+    if (!record) {
+      // A link that resolves to nothing — deleted, truncated in a chat,
+      // mistyped — still gets the app, which renders the dead-link state
+      // (FR-4.6). A JSON body here was what a guest saw on a direct load. The
+      // status stays 404 so a crawler or link checker reads it as gone, and the
+      // head is shellMeta's for a dead /i/ path: noindex, nofollow, no
+      // canonical, no prerendered marketing copy under the guest's link.
+      if (!existsSync(spaShell)) return reply.code(404).send({ error: "Invitation not found." });
+      const [path = request.url, search = ""] = request.url.split("?");
+      const meta = shellMeta(path, search, absoluteBase(request));
+      return reply
+        .code(404)
+        .header("Content-Type", "text/html; charset=utf-8")
+        .header("X-Robots-Tag", meta.robots)
+        .send(renderShell(readFileSync(spaShell, "utf8"), meta));
+    }
+    const meta = invitationMeta(record, absoluteBase(request));
     let html: string;
     if (existsSync(spaShell)) {
       // **Replaced, not appended.** The shell ships with the landing page's

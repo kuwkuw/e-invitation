@@ -120,7 +120,11 @@ implementation.
   a chat app, or otherwise malformed — renders the dead-link state, never the
   marketing page. An id that cannot be one the server minted is answered
   without a request, since there is nothing to ask about
-  ([adr-011](decisions/adr-011-client-router.md) §3).
+  ([adr-011](decisions/adr-011-client-router.md) §3). On a direct load the
+  server answers a dead `/i/:id` with the app shell and a 404 status
+  (`noindex, nofollow`, no canonical, no prerendered copy), so the app can say
+  so in words. *Fixed 2026-10-24: it used to answer with a JSON body, which is
+  what a guest saw.*
 - FR-4.7 The guest page carries exactly one link back to the product
   ([GuestCta.tsx](../web/src/components/guest/GuestCta.tsx),
   [adr-013](decisions/adr-013-share-loop-instrumentation.md) §7): the INVINTO
