@@ -1057,7 +1057,6 @@ export interface ManageStrings {
   comingBreakdown: string;
   tileYes: string;
   tileNo: string;
-  tileReplied: string;
   newSinceVisit: string;
   responsesTitle: string;
   previousAnswer: string;
@@ -1113,7 +1112,6 @@ export const MANAGE: Record<Language, ManageStrings> = {
     comingBreakdown: "{yes} said yes · +{extra} with companions",
     tileYes: "Yes",
     tileNo: "No",
-    tileReplied: "Replied",
     newSinceVisit: "{n} new since your last visit",
     responsesTitle: "Responses · {n}",
     previousAnswer: "previous answer",
@@ -1173,7 +1171,6 @@ export const MANAGE: Record<Language, ManageStrings> = {
     comingBreakdown: "{yes} відповіли «так» · +{extra} із супутниками",
     tileYes: "Так",
     tileNo: "Ні",
-    tileReplied: "Відповіли",
     newSinceVisit: "{n} нових від вашого останнього візиту",
     responsesTitle: "Відповіді · {n}",
     previousAnswer: "попередня відповідь",

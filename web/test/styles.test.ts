@@ -429,8 +429,9 @@ describe("the manage page's text", () => {
     [".hm-section-title", "--surface", 3],
     [".hm-when", "--surface", 3],
     [".hm-previous", "--surface", 3],
-    [".hm-tile-yes .hm-tile-label", "--rsvp-yes-bg", 3],
-    [".hm-tile-no .hm-tile-label", "--rsvp-no-bg", 3],
+    [".hm-count-label", "--surface", 3],
+    [".hm-count-yes .hm-count-num", "--surface", 4.5],
+    [".hm-count-no .hm-count-num", "--surface", 4.5],
   ]);
 
   const manageRule = (selector: string) =>

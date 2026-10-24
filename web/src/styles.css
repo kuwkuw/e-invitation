@@ -178,10 +178,6 @@
   --rsvp-no: #a83f3f;
   --rsvp-no-bg: #f6ebe9;
   --rsvp-no-edge: #e6cfc9;
-  /* The quieter ink a status tile's label takes under its number, on that
-     status's own -bg. */
-  --rsvp-yes-label: #5f7a63;
-  --rsvp-no-label: #8a5a54;
 }
 
 /* Glass surfaces (adr-018), opaque paper since adr-019 §4.1. Two, not one:
@@ -1788,25 +1784,25 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 .hm-body { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 
-/* Headcount — the number the host came for. */
-.hm-headcount-top { display: flex; align-items: baseline; gap: 12px; }
+/* The summary (adr-019 §8.2): the number the host came for, over a thin bar
+   of answers with the counts beneath. The bar is a proportion with no track
+   to fill, so it never reads as progress toward a total; its ground shows
+   only in the gaps between segments. */
+.hm-summary-top { display: flex; align-items: baseline; gap: 12px; }
 .hm-bignum { font-family: var(--ui-font-display); font-size: 3.1rem; font-weight: 500; line-height: 0.9; color: var(--rsvp-yes); }
 .hm-bigunit { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
 .hm-breakdown { margin: 8px 0 0; font-size: 0.82rem; color: var(--ink-faint); }
 
-.hm-tiles { display: flex; gap: 10px; margin-top: 18px; }
-.hm-tile { flex: 1; border-radius: 14px; padding: 12px 14px; border: 1px solid; }
-.hm-tile-num { display: block; font-size: 1.4rem; font-weight: 800; }
-.hm-tile-label { display: block; margin-top: 2px; font-size: 0.76rem; font-weight: 600; }
-.hm-tile-yes { background: var(--rsvp-yes-bg); border-color: var(--rsvp-yes-edge); }
-.hm-tile-yes .hm-tile-num { color: var(--rsvp-yes); }
-.hm-tile-yes .hm-tile-label { color: var(--rsvp-yes-label); }
-.hm-tile-no { background: var(--rsvp-no-bg); border-color: var(--rsvp-no-edge); }
-.hm-tile-no .hm-tile-num { color: var(--rsvp-no); }
-.hm-tile-no .hm-tile-label { color: var(--rsvp-no-label); }
-.hm-tile-replied { background: var(--app-bg); border-color: var(--edge); }
-.hm-tile-replied .hm-tile-num { color: var(--ink); }
-.hm-tile-replied .hm-tile-label { color: var(--ink-faint); }
+.hm-bar { display: flex; gap: 3px; height: 6px; margin-top: 18px; border-radius: var(--r-pill); overflow: hidden; background-color: var(--edge-soft); }
+.hm-bar-yes, .hm-bar-no { flex-basis: 0; }
+.hm-bar-yes { background-color: var(--rsvp-yes); }
+.hm-bar-no { background-color: var(--rsvp-no); }
+.hm-counts { display: flex; gap: 22px; margin-top: 10px; }
+.hm-count { margin: 0; }
+.hm-count-num { display: block; font-family: var(--ui-font-display); font-size: 1.3rem; font-weight: 500; line-height: 1.2; }
+.hm-count-label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--ink-faint); }
+.hm-count-yes .hm-count-num { color: var(--rsvp-yes); }
+.hm-count-no .hm-count-num { color: var(--rsvp-no); }
 
 /* "N new since your last visit" — one dot language shared with the list. */
 .hm-new-line { display: flex; align-items: center; gap: 9px; margin: 14px 4px 0; font-size: 0.85rem; color: var(--accent-ink); }
@@ -1917,7 +1913,8 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .hm-sk-title { width: 70%; height: 26px; }
 .hm-sk-sub { width: 55%; height: 13px; }
 .hm-sk-bignum { width: 90px; height: 44px; }
-.hm-sk-tile { flex: 1; height: 58px; border-radius: 14px; }
+.hm-sk-bar { height: 6px; margin-top: 18px; border-radius: var(--r-pill); }
+.hm-sk-count { width: 44px; height: 38px; }
 .hm-sk-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
 .hm-sk-avatar { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; }
 .hm-sk-line { flex: 1; height: 12px; }

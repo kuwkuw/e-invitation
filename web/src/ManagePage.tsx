@@ -2,7 +2,6 @@ import { useState } from "react";
 import { daysUntil, parseEventStart } from "./calendar";
 import { Countdown } from "./components/Countdown";
 import { LangSwitcher } from "./components/LangSwitcher";
-import { HeadcountCard } from "./components/manage/HeadcountCard";
 import { AlertIcon, DownloadIcon, KeyIcon, RefreshIcon } from "./components/manage/icons";
 import { ManageEmpty } from "./components/manage/ManageEmpty";
 import { ManageLinkPrompt } from "./components/manage/ManageLinkPrompt";
@@ -10,6 +9,7 @@ import { ManageMessage } from "./components/manage/ManageMessage";
 import { ManageSkeleton } from "./components/manage/ManageSkeleton";
 import { NotifyControl } from "./components/manage/NotifyControl";
 import { ResponseList } from "./components/manage/ResponseList";
+import { SummaryCard } from "./components/manage/SummaryCard";
 import { buildRsvpCsv } from "./csv";
 import { downloadFile } from "./download";
 import { useAuthSession } from "./hooks/useAuthSession";
@@ -187,7 +187,7 @@ function ReadyDashboard({
       {hasResponses ? (
         <div className="hm-body">
           <div className="hm-summary-col">
-            <HeadcountCard summary={summary} t={t} />
+            <SummaryCard summary={summary} t={t} />
             {newSinceLastVisit > 0 && (
               <p className="hm-new-line">
                 <span className="hm-new-dot" aria-hidden="true" />
