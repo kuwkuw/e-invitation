@@ -1032,7 +1032,7 @@ Follow `.github/pull_request_template.md`. Include the decisions table, the copy
 
 - **Design sync.** `styles.css` changed, so the design project's landing board renders against the old stylesheet until the owner runs `/design-sync` (the CSS-only path in `.design-sync/NOTES.md`) and refreshes the binding.
 - **Step 5 (editor)** reuses `NotifyCheckbox` in the share panel and writes adr-010 §3.1. It needs the desktop and share-panel boards first (adr-019 §7.5).
-- When this ships, move this plan and the step-3 plan to `docs/superpowers/archive/plans/`.
+- When this ships, move this plan to `docs/superpowers/archive/plans/`, as steps 1–3's were.
 
 ### Not in this plan
 

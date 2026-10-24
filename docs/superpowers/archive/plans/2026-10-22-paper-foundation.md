@@ -8,7 +8,7 @@
 
 **Tech Stack:** CSS custom properties, Google Fonts CSS2 API, Vitest (node environment for the stylesheet tests), Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md), whose long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md). adr-019 wins where they differ, and this plan amends adr-019 where measuring the code disproved it (listed below).
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md), whose long form is the [paper-direction spec](../../specs/2026-10-21-paper-direction-design.md). adr-019 wins where they differ, and this plan amends adr-019 where measuring the code disproved it (listed below).
 
 ## Global Constraints
 
