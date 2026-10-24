@@ -110,10 +110,12 @@ implementation.
   removed — a guest changes their mind by submitting again. Collapsing those
   re-submissions is a read-time concern of the host view (FR-5.5), so the
   stored record stays a full history.
-- FR-4.5 After an attending RSVP the guest can download an `.ics` calendar
-  event built client-side from the brief ([calendar.ts](../web/src/calendar.ts)):
-  best-effort bilingual parsing of the free-text date/time (all-day without a
-  time, 2 hours with one); the action is hidden when no date parses.
+- FR-4.5 The guest can download an `.ics` calendar event built client-side
+  from the brief ([calendar.ts](../web/src/calendar.ts)), before or after
+  replying: best-effort bilingual parsing of the free-text date/time (all-day
+  without a time, 2 hours with one); the action is hidden when no date
+  parses. *Amended 2026-10-24 ([adr-019](decisions/adr-019-paper-direction.md)
+  §5.2): it was offered only after an attending RSVP.*
 - FR-4.6 A share link that cannot resolve — unpublished, deleted, truncated in
   a chat app, or otherwise malformed — renders the dead-link state, never the
   marketing page. An id that cannot be one the server minted is answered
@@ -129,7 +131,23 @@ implementation.
   is what makes the link worth having ([07-monetization.md](07-monetization.md)
   §5.2). One placement, not two: measuring one yields a number, measuring two
   yields neither.
-
+- FR-4.8 A guest's first open in a browser starts on an envelope
+  ([Envelope.tsx](../web/src/components/guest/Envelope.tsx),
+  [adr-019](decisions/adr-019-paper-direction.md) §5.1): the invitation's
+  title and a seal carrying the hosts' monogram. The seal, «Пропустити» or
+  Escape opens it in ≤ 1.2 s, and the page is loaded beneath it from the start
+  (inert while it is up). "First open" is `inv-viewed:<id>` read once at mount,
+  before the view beacon writes it. A returning guest, or one who asks for
+  reduced motion, never sees it; blocked storage shows it every time. The view
+  is still counted on load, not on open (adr-013).
+- FR-4.9 Around the card: a pinned bar with the seal, `details_line` (its first
+  line, then the rest joined), and a «Відповісти» link to the reply card; a
+  countdown, «До свята N днів» or «Свято сьогодні!», hidden when the date
+  doesn't parse or has passed; and «Маршрут», a maps search for the venue and
+  city, hidden when both are null (adr-019 §5.2, §9.4). The monogram is the
+  first two hosts' initials from `brief.hosts` («М&А»), one letter for one
+  host, and INVINTO's letter for none, so nothing new is stored (§9.2). After a
+  yes, sharing the link is offered in the thanks card.
 ## FR-5 Host views responses
 
 **Status: built** — `GET /api/invitations/:id/rsvps`,

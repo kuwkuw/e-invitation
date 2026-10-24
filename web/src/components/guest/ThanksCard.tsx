@@ -1,44 +1,26 @@
 import type { GuestStrings } from "../../i18n";
 import { pluralForm } from "../../plural";
-import { CheckIcon, HeartIcon, Twinkle } from "./icons";
+import { CheckIcon, LinkIcon } from "./icons";
 
 interface Props {
   attending: boolean;
   guestsCount: number;
   onChangeAnswer: () => void;
+  /** Passing the link on, offered after a yes only. */
+  onShare: () => void;
+  copied: boolean;
   t: GuestStrings;
 }
 
-/** Confirmation shown in place of the form once an answer is recorded. The
- *  celebratory badge is reserved for a yes; a decline gets a quiet one. */
-export function ThanksCard({ attending, guestsCount, onChangeAnswer, t }: Props) {
+/** Shown in place of the form once an answer is recorded (adr-019 §5.3): the
+ *  seal turns into a ✓, in the accent for a yes and muted for a no, with copy
+ *  matched to the answer. «Змінити відповідь» keeps FR-4.4's re-submit model. */
+export function ThanksCard({ attending, guestsCount, onChangeAnswer, onShare, copied, t }: Props) {
   return (
     <section className="gr-card gr-thanks">
-      {attending ? (
-        <div className="gr-badge-wrap gr-accent" aria-hidden="true">
-          <div className="gr-badge-halo" />
-          <div className="gr-badge">
-            <CheckIcon size={34} color="#ffffff" width={2.6} />
-          </div>
-          <Twinkle className="gr-tw" style={{ top: -4, right: 2, color: "#d98a4f" }} size={16} />
-          <Twinkle
-            className="gr-tw"
-            style={{ bottom: 2, left: -6, color: "#c98a3e", animationDelay: "0.6s" }}
-            size={12}
-          />
-          <Twinkle
-            className="gr-tw"
-            style={{ top: 14, left: -10, color: "var(--ui-accent)", animationDelay: "1.1s" }}
-            size={9}
-          />
-        </div>
-      ) : (
-        <div className="gr-badge-wrap" aria-hidden="true">
-          <div className="gr-badge gr-badge-muted">
-            <HeartIcon />
-          </div>
-        </div>
-      )}
+      <div className={`seal gr-thanks-seal${attending ? "" : " muted"}`} aria-hidden="true">
+        <CheckIcon size={30} width={2.4} />
+      </div>
       <h2 className="gr-thanks-title">{attending ? t.thanksTitle : t.declinedTitle}</h2>
       <p className="gr-thanks-body">
         {t.thanksSent}
@@ -51,6 +33,12 @@ export function ThanksCard({ attending, guestsCount, onChangeAnswer, t }: Props)
           ? `${t.attendingPill} · ${guestsCount} ${pluralForm(guestsCount, t.guestForms)}`
           : t.declinedPill}
       </div>
+      {attending && (
+        <button type="button" className="gr-quiet-action gr-thanks-share" onClick={onShare}>
+          <LinkIcon />
+          {copied ? t.linkCopied : t.share}
+        </button>
+      )}
       <button type="button" className="gr-change" onClick={onChangeAnswer}>
         {t.changeAnswer}
       </button>

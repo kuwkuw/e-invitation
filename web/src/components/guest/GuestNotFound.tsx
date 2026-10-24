@@ -5,7 +5,7 @@ import { EmptyEnvelopeIcon } from "./icons";
  *  from "the request failed" — the guest can act on the second one. */
 export function GuestNotFound({ body, t }: { body: string; t: GuestStrings }) {
   return (
-    <div className="gr-page gr-notfound">
+    <div className="gr-page grain gr-notfound">
       <div className="gr-notfound-icon" aria-hidden="true">
         <EmptyEnvelopeIcon />
       </div>

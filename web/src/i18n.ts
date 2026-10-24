@@ -865,10 +865,10 @@ export interface GuestStrings {
   notFoundBody: string;
   notFoundHint: string;
   error: string;
-  replyKicker: string;
   yourName: string;
   namePlaceholder: string;
-  attendingQuestion: string;
+  /** The reply card's heading, which also names the yes/no choice. */
+  replyTitle: string;
   yes: string;
   no: string;
   guestsCount: string;
@@ -887,13 +887,23 @@ export interface GuestStrings {
   guestForms: [string, string, string];
   changeAnswer: string;
   addToCalendar: string;
-  directions: string;
+  /** A maps search for the venue and city (adr-019 §9.4). */
+  route: string;
+  /** The pinned bar's anchor to the reply card. */
+  reply: string;
+  /** "{n} {form}": days to the event; `dayForms` as in relativeTime. */
+  countdown: string;
+  countdownToday: string;
+  dayForms: [string, string, string];
   share: string;
-  shareHint: string;
   linkCopied: string;
   /** The guest page's only link back to the product (adr-013 §7). Chrome, so
    *  the language switcher moves it (FR-6.3) — never host content. */
   ctaLine: string;
+  /** The envelope's seal (adr-019 §5.1): its accessible name, since what it
+   *  shows is the hosts' monogram. */
+  openInvitation: string;
+  skip: string;
 }
 
 export const GUEST: Record<Language, GuestStrings> = {
@@ -903,11 +913,10 @@ export const GUEST: Record<Language, GuestStrings> = {
     notFoundBody: "The link may be outdated, or the invitation hasn't been published yet.",
     notFoundHint: "Ask the host to send you a fresh link.",
     error: "Something went wrong. Please try again.",
-    replyKicker: "Your reply",
     yourName: "Your name",
     namePlaceholder: "Type your name",
-    attendingQuestion: "Will you come?",
-    yes: "I'll be there",
+    replyTitle: "Will you join us?",
+    yes: "I'll be there!",
     no: "Can't make it",
     guestsCount: "How many of you?",
     noteLabel: "A note for the hosts",
@@ -925,11 +934,16 @@ export const GUEST: Record<Language, GuestStrings> = {
     guestForms: ["guest", "guests", "guests"],
     changeAnswer: "Change your reply",
     addToCalendar: "Add to calendar",
-    directions: "How to get there",
+    route: "Directions",
+    reply: "Reply",
+    countdown: "{n} {form} to go",
+    countdownToday: "It's today!",
+    dayForms: ["day", "days", "days"],
     share: "Share the invitation",
-    shareHint: "Viber · Telegram · link",
     linkCopied: "Link copied!",
     ctaLine: "Create your own invitation",
+    openInvitation: "Open the invitation",
+    skip: "Skip",
   },
   uk: {
     loading: "Завантаження…",
@@ -937,11 +951,10 @@ export const GUEST: Record<Language, GuestStrings> = {
     notFoundBody: "Можливо, посилання застаріло або запрошення ще не опубліковане.",
     notFoundHint: "Попросіть господаря надіслати актуальне посилання.",
     error: "Щось пішло не так. Спробуйте ще раз.",
-    replyKicker: "Ваша відповідь",
     yourName: "Ваше ім'я",
     namePlaceholder: "Напишіть ім'я",
-    attendingQuestion: "Чи прийдете?",
-    yes: "Я буду",
+    replyTitle: "Ви з нами?",
+    yes: "Буду!",
     no: "Не зможу",
     guestsCount: "Скільки вас буде?",
     noteLabel: "Побажання господарям",
@@ -958,12 +971,17 @@ export const GUEST: Record<Language, GuestStrings> = {
     declinedPill: "Ви не зможете прийти",
     guestForms: ["гість", "гості", "гостей"],
     changeAnswer: "Змінити відповідь",
-    addToCalendar: "Додати в календар",
-    directions: "Як дістатися",
+    addToCalendar: "У календар",
+    route: "Маршрут",
+    reply: "Відповісти",
+    countdown: "До свята {n} {form}",
+    countdownToday: "Свято сьогодні!",
+    dayForms: ["день", "дні", "днів"],
     share: "Поділитися запрошенням",
-    shareHint: "Viber · Telegram · посилання",
     linkCopied: "Посилання скопійовано!",
     ctaLine: "Створіть власне запрошення",
+    openInvitation: "Відкрити запрошення",
+    skip: "Пропустити",
   },
 };
 

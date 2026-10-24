@@ -310,6 +310,32 @@ below the reply card, in both states.
 Not mocked. `GuestNotFound` and the status line take the paper ground and
 Literata and need no new layout; they are designed in the PR, not on the canvas.
 
+**Amended 2026-10-24, step 3.** Building §5 settled what it left open, as the
+step's plan proposed (`docs/superpowers/plans/2026-10-24-guest-page-paper.md`):
+
+- **Monogram:** the first two hosts' initials; a third and beyond go unnamed.
+  One host string naming two people («Марія та Андрій», "Mary & John") splits on
+  та / і / й / and / & first.
+- **The share action:** kept, as a quiet action in the thanks card after a
+  yes. Calendar and directions moved under the card, where §5.2 put them, and
+  the post-yes rows went.
+- **The countdown on the day:** «Свято сьогодні!» rather than «0 днів».
+- **The pinned bar:** `details_line`'s first line, then any further lines
+  joined with « · », each truncated.
+- **Reduced motion:** read through `matchMedia` once at mount, so the envelope
+  is never mounted. A preference switched on afterwards makes its opening
+  instant rather than hiding it, which would leave the page inert beneath an
+  invisible overlay.
+- **Envelope colours:** `--kraft` `#c8a97e`, `--kraft-deep` `#b8966a` and
+  `--night` `#24201c`, each pinned by a contrast test.
+- **The mat's shadow:** on its own `.gr-mat` wrapper. `clip-path` cuts off a
+  box-shadow on the mat, and a `drop-shadow` on the column would shadow the
+  countdown's text too.
+- **The reply card took stationery corners** (`--r-*`) and elevation
+  (`--e-*`) in place of its glass-era 16–24 px radii and literal shadows.
+
+The real-device check (§5.1) is recorded in the PR that merges this step.
+
 ### 6. Landing page
 
 #### 6.1 The hero shows the product working

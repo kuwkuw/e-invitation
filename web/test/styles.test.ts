@@ -139,6 +139,14 @@ describe("token contrast (WCAG 2.1)", () => {
     expect(contrast(tokens.get("--ink-muted") as string, table)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(tokens.get("--ink-faint") as string, table)).toBeGreaterThanOrEqual(3);
   });
+
+  it("keeps the seal's monogram, the envelope's title and its skip link legible", () => {
+    const on = (ink: string, ground: string) =>
+      contrast(tokens.get(ink) as string, tokens.get(ground) as string);
+    expect(on("--surface", "--ui-accent")).toBeGreaterThanOrEqual(4.5);
+    expect(on("--ui-ink", "--kraft")).toBeGreaterThanOrEqual(4.5);
+    expect(on("--surface", "--night")).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 describe("glass", () => {
@@ -256,6 +264,29 @@ describe("paper materials (adr-019 §3)", () => {
     );
     expect(preview).toMatch(/className/);
     expect(preview).not.toMatch(/\b(?:grain|deckle|seal)\b/);
+  });
+
+  const material = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Material system") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("defines the deckled mat as a --surface wrapper with an 11–14px pad and a polygon edge", () => {
+    const deckle = material(".deckle");
+    expect(deckle).toMatch(/background-color:\s*var\(--surface\)/);
+    expect(deckle).toMatch(/clip-path:\s*polygon\(/);
+    const pad = Number(/padding:\s*(\d+)px/.exec(deckle)?.[1]);
+    expect(pad).toBeGreaterThanOrEqual(11);
+    expect(pad).toBeLessThanOrEqual(14);
+  });
+
+  it("sets the seal's monogram in Literata italic 400, the one italic requested", () => {
+    const seal = material(".seal");
+    expect(seal).toMatch(/var\(--ui-accent\)/);
+    expect(seal).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+    expect(seal).toMatch(/font-style:\s*italic/);
+    expect(seal).toMatch(/font-weight:\s*400/);
+    expect(seal).toMatch(/color:\s*var\(--surface\)/);
   });
 
   it("defines grain as two dot layers at 3px and 7px, under 5% alpha", () => {
@@ -413,9 +444,42 @@ describe("the guest page's text", () => {
     [".gr-input::placeholder", "--app-bg", 3],
     [".gr-submit:disabled", "--edge-soft", 3],
     [".gr-change", "--surface", 3],
-    [".gr-row-sub", "--surface", 3],
     [".gr-cta-line", "--app-bg", 3],
+    [".gr-reply-title", "--surface", 4.5],
+    [".gr-bar-when", "--surface", 4.5],
+    [".gr-bar-where", "--surface", 4.5],
+    [".gr-bar-reply", "--surface", 4.5],
+    [".gr-countdown", "--app-bg", 4.5],
+    [".gr-quiet-action", "--app-bg", 4.5],
+    [".gr-env-to", "--kraft", 4.5],
+    [".gr-env-skip", "--night", 4.5],
   ]);
+
+  const source = (file: string) =>
+    readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
+
+  it("keeps the grain on every guest page ground (adr-019 §3)", () => {
+    const page = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-page"),
+    );
+    expect(page?.body).toMatch(/background-color:\s*var\(--app-bg\)/);
+    expect(page?.body).not.toMatch(/(?:^|[;\s])background\s*:/);
+    for (const file of ["GuestPage.tsx", "components/guest/GuestNotFound.tsx"]) {
+      const pages = [...source(file).matchAll(/className="([^"]*\bgr-page\b[^"]*)"/g)];
+      expect(pages.length, file).toBeGreaterThan(0);
+      for (const [, names] of pages) expect(names, file).toMatch(/\bgrain\b/);
+    }
+  });
+
+  it("sets the card on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("GuestPage.tsx")).toMatch(
+      /<div className="gr-mat">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    const mat = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-mat"),
+    );
+    expect(mat?.body).toMatch(/filter:\s*drop-shadow\(/);
+  });
 
   it("fills the disabled submit with --edge-soft, not the ruled line", () => {
     const rule = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
@@ -461,20 +525,21 @@ describe("the landing page's text", () => {
   ]);
 });
 
-/** The hex ratchet reads only styles.css, so an accent written into a
+/** The hex ratchet reads only styles.css, so a colour written into a
  *  component as a literal goes stale without a sound when the token moves:
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
- *  Guest components colour the accent through currentColor instead. */
+ *  Guest components colour everything through currentColor, set by the CSS
+ *  rule that places them, and carry no hex at all. */
 describe("the guest page's components", () => {
-  it("never name the accent as a literal, past or present", () => {
+  it("carry no hex literal at all", () => {
     const dir = fileURLToPath(new URL("../src/components/guest/", import.meta.url));
-    const accents = ["#b3592e", tokens.get("--ui-accent") as string];
     const named = readdirSync(dir)
       .filter((file) => file.endsWith(".tsx"))
-      .flatMap((file) => {
-        const source = readFileSync(join(dir, file), "utf8").toLowerCase();
-        return accents.filter((a) => source.includes(a)).map((a) => `${file}: ${a}`);
-      });
+      .flatMap((file) =>
+        [...readFileSync(join(dir, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
+          (m) => `${file}: ${m[0]}`,
+        ),
+      );
     expect(named).toEqual([]);
   });
 });

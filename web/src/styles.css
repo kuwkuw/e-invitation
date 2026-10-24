@@ -19,6 +19,11 @@
   --surface: #fbf8f2;
   /* The darker field a card is set on, as stationery is shown (adr-019 §4.2). */
   --table: #eae3d6;
+  /* The guest's envelope (adr-019 §5.1), its only reader: kraft stock, a
+     darker flap, and the dark ground it arrives on. */
+  --kraft: #c8a97e;
+  --kraft-deep: #b8966a;
+  --night: #24201c;
 
   /* body's own background. Under glass it was held apart from --ground so the
      gallery, which paints none of its own, would not turn beige; under paper
@@ -225,6 +230,43 @@
     radial-gradient(rgba(28, 26, 23, 0.05) 0.5px, transparent 0.5px),
     radial-gradient(rgba(28, 26, 23, 0.035) 0.5px, transparent 0.5px);
   background-size: 3px 3px, 7px 7px;
+}
+
+/* The deckled mat: card stock around the card, torn rather than cut. Every
+   point sits within 1% of the box, so the pad absorbs the edge and the card
+   is never clipped. Without clip-path the mat is a plain rectangle, which is
+   the whole fallback. clip-path also clips box-shadow, so whatever places the
+   mat casts its shadow with filter: drop-shadow(). */
+.deckle {
+  background-color: var(--surface);
+  padding: 12px;
+  clip-path: polygon(
+    0.0% 0.4%, 8.3% 0.4%, 16.7% 0.1%, 25.0% 0.2%, 33.3% 0.4%, 41.7% 0.4%,
+    50.0% 0.1%, 58.3% 0.7%, 66.7% 0.5%, 75.0% 0.3%, 83.3% 0.2%, 91.7% 0.6%,
+    99.5% 0.0%, 99.9% 8.3%, 99.6% 16.7%, 99.8% 25.0%, 99.5% 33.3%, 99.9% 41.7%,
+    99.6% 50.0%, 99.6% 58.3%, 99.9% 66.7%, 100.0% 75.0%, 99.2% 83.3%, 99.2% 91.7%,
+    100.0% 99.9%, 91.7% 99.6%, 83.3% 99.2%, 75.0% 99.8%, 66.7% 99.7%, 58.3% 99.6%,
+    50.0% 99.5%, 41.7% 99.8%, 33.3% 99.9%, 25.0% 99.2%, 16.7% 99.6%, 8.3% 99.8%,
+    0.4% 100.0%, 0.3% 91.7%, 0.1% 83.3%, 0.6% 75.0%, 0.3% 66.7%, 0.3% 58.3%,
+    0.1% 50.0%, 0.7% 41.7%, 0.2% 33.3%, 0.7% 25.0%, 0.4% 16.7%, 0.2% 8.3%
+  );
+}
+
+/* The seal: a wax disc in the accent, lit from the upper left, carrying the
+   hosts' monogram (adr-019 §9.2) in Literata italic, the one italic the
+   @import requests (at 400). Its size comes from the rule that places it. */
+.seal {
+  display: inline-grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.22), transparent 60%), var(--ui-accent);
+  box-shadow: inset 0 0 0 2px rgba(var(--ui-accent-rgb), 0.6), inset 0 -2px 4px rgba(28, 26, 23, 0.25);
+  color: var(--surface);
+  font-family: var(--ui-font-display);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1;
 }
 
 /* App chrome ---------------------------------------------------------- */
@@ -835,29 +877,84 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    takes --ink-muted (AA), a label or placeholder --ink-faint (3:1), and
    test/styles.test.ts holds each to the ground it sits on. */
 
-.gr-page { min-height: 100dvh; background: var(--app-bg); padding: 22px 20px 18px; }
-.gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; }
+/* background-color, not the shorthand: the page carries .grain, whose image
+   the shorthand would wipe. */
+.gr-page { min-height: 100dvh; background-color: var(--app-bg); padding: 22px 20px 18px; }
+.gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; }
 
 .gr-layout { max-width: 430px; margin: 0 auto; }
 .gr-inv { margin-bottom: 20px; }
+/* The deckled mat's shadow lives here because the mat's clip-path cuts off a
+   box-shadow on the mat itself. */
+.gr-mat { filter: drop-shadow(var(--e-2)); }
 .gr-lang { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+
+/* The pinned bar (adr-019 §5.2): seal, when, where and «Відповісти», on card
+   stock across the top of the page however far the guest scrolls. It cancels
+   the page's padding so it runs edge to edge, and sits under the envelope. */
+.gr-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -22px -20px 18px;
+  padding: 10px 16px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--edge);
+}
+.gr-bar-seal { width: 34px; flex: 0 0 auto; font-size: 0.7rem; }
+.gr-bar-lines { flex: 1; min-width: 0; }
+.gr-bar-when,
+.gr-bar-where { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-bar-when { font-size: 0.86rem; font-weight: 600; color: var(--ink); }
+.gr-bar-where { margin-top: 1px; font-size: 0.78rem; color: var(--ink-muted); }
+.gr-bar-reply { flex: 0 0 auto; padding: 8px 4px; font-size: 0.86rem; font-weight: 600; color: var(--ui-accent); text-decoration: none; }
+.gr-bar-reply:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Where «Відповісти» lands: below the bar, not under it. */
+#rsvp { scroll-margin-top: 72px; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Under the card: the countdown (§9.4) and the two quiet actions (§5.2). */
+.gr-countdown { margin: 18px 0 0; text-align: center; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; color: var(--ink-muted); }
+.gr-quiet { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; margin-top: 10px; }
+.gr-quiet-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.gr-quiet-action svg { width: 18px; height: 18px; }
+.gr-quiet-action:hover { color: var(--ink); }
 
 .gr-card {
   background: var(--surface);
   border: 1px solid var(--edge-soft);
-  border-radius: 22px;
-  box-shadow: 0 6px 20px rgba(20, 18, 14, 0.06);
+  border-radius: var(--r-xl);
+  box-shadow: var(--e-2);
   padding: 20px 18px 22px;
 }
 
-.gr-kicker {
+/* «Ви з нами?» (adr-019 §5.3): the card's heading, and the name of the
+   yes/no choice under it. */
+.gr-reply-title {
+  margin: 0 0 18px;
   text-align: center;
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ui-accent);
-  font-weight: 700;
-  margin-bottom: 16px;
+  font-family: var(--ui-font-display);
+  font-size: 1.45rem;
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .gr-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); margin: 18px 0 7px; }
@@ -869,7 +966,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   width: 100%;
   background: var(--app-bg);
   border: 1px solid var(--edge);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   padding: 14px 15px;
   font: inherit;
   font-size: 0.95rem;
@@ -879,13 +976,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-input:focus { outline: none; background: var(--surface); border: 1.5px solid var(--ui-accent); padding: 13.5px 14.5px; }
 .gr-note { min-height: 64px; line-height: 1.5; resize: vertical; }
 
-.gr-question { font-size: 1rem; font-weight: 700; color: var(--ink); margin: 18px 0 10px; text-align: center; }
-
-.gr-tiles { display: flex; gap: 10px; }
+.gr-tiles { display: flex; gap: 10px; margin-top: 18px; }
 .gr-tile {
   flex: 1;
   height: 62px;
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   border: 1.5px solid var(--edge);
   background: var(--surface);
   color: var(--ink);
@@ -897,17 +992,26 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition:
+    border-color var(--dur-fast) var(--ease-ios),
+    background var(--dur-fast) var(--ease-ios),
+    box-shadow var(--dur-fast) var(--ease-ios),
+    transform var(--dur-fast) var(--ease-ios);
 }
 .gr-tile.decline { color: var(--ink-muted); }
-/* The Yes mark is the accent until it is chosen, then takes the tile's ink. */
+/* The Yes mark is the accent until it is chosen, then takes the tile's ink;
+   the No mark is quieter than its label until chosen. */
 .gr-tile:not(.decline):not(.active) > svg { color: var(--ui-accent); }
+.gr-tile.decline:not(.active) > svg { color: var(--ink-faint); }
 .gr-tile:hover { border-color: var(--ui-accent); }
+/* Tactile (adr-019 §5.3): a press sinks, a choice lifts. */
+.gr-tile:active { transform: translateY(1px); }
 .gr-tile.active {
   border-color: var(--ui-accent);
   background: var(--ui-accent);
   color: var(--surface);
-  box-shadow: 0 8px 20px rgba(var(--ui-accent-rgb), 0.28);
+  box-shadow: var(--e-2);
+  transform: translateY(-1px);
 }
 
 .gr-guests { margin-top: 18px; }
@@ -944,7 +1048,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   width: 100%;
   height: 56px;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   background: var(--ui-accent);
   color: var(--surface);
   font: inherit;
@@ -974,38 +1078,14 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   60% { transform: scale(1.08); }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes gr-tw {
-  0%, 100% { opacity: 0.35; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
-}
 
 .gr-thanks { padding: 30px 22px 26px; text-align: center; }
-.gr-badge-wrap { position: relative; width: 92px; height: 92px; margin: 0 auto 20px; }
-.gr-badge-wrap.gr-accent::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(var(--ui-accent-rgb), 0.12);
-}
-.gr-badge {
-  position: absolute;
-  inset: 11px;
-  border-radius: 50%;
-  background: var(--ui-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 14px 30px rgba(var(--ui-accent-rgb), 0.38);
-  animation: gr-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
-}
-.gr-badge-muted {
-  inset: 5px;
-  background: var(--wash);
-  border: 1px solid var(--edge);
-  box-shadow: none;
-}
-.gr-tw { position: absolute; animation: gr-tw 1.8s ease-in-out infinite; }
+/* The seal turns into a ✓ (adr-019 §5.3): the accent for a yes, a quiet
+   paper disc for a no. */
+.gr-thanks-seal { width: 72px; margin: 0 auto 18px; animation: gr-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+.gr-thanks-seal.muted { background: var(--wash); box-shadow: inset 0 0 0 1px var(--edge); color: var(--ink-muted); }
+.gr-thanks-share { display: flex; width: fit-content; margin: 14px auto 0; }
+@media (prefers-reduced-motion: reduce) { .gr-thanks-seal { animation: none; } }
 
 .gr-thanks-title {
   font-family: var(--ui-font-display);
@@ -1043,38 +1123,6 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   cursor: pointer;
 }
 
-.gr-rows { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-.gr-row {
-  background: var(--surface);
-  border: 1px solid var(--edge-soft);
-  border-radius: 18px;
-  box-shadow: 0 6px 20px rgba(20, 18, 14, 0.05);
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font: inherit;
-  text-align: left;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.gr-row:hover { border-color: var(--ui-accent); }
-.gr-row-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--accent-wash);
-  color: var(--ui-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-}
-.gr-row-text { flex: 1; }
-.gr-row-title { font-size: 0.94rem; font-weight: 700; color: var(--ink); }
-.gr-row-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 2px; }
 
 .gr-brand {
   text-align: center;
@@ -1110,6 +1158,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   height: 96px;
   border-radius: 50%;
   background: var(--wash);
+  color: var(--accent-ink-faint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1126,6 +1175,101 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-notfound-hint { font-size: 0.9rem; color: var(--ink-muted); line-height: 1.5; margin: 16px 0 0; max-width: 320px; }
 .gr-notfound .gr-brand { position: absolute; bottom: 18px; left: 0; right: 0; }
 
+/* The envelope (adr-019 §5.1): first open only, kraft on a dark ground,
+   sealed with the hosts' monogram. Opening runs inside 1.2 s, transform and
+   opacity only: the flap turns back (0–400 ms), the envelope drops away
+   (300–900 ms), and the ground lifts while the page rises into place
+   (600–1200 ms). useEnvelope unmounts it on a timer of the same length.
+   touch-action stops a swipe on it from scrolling the page underneath. */
+.gr-env {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px;
+  background-color: var(--night);
+  touch-action: none;
+}
+.gr-env-body {
+  position: relative;
+  width: min(320px, 100%);
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 22px 26px;
+  background-color: var(--kraft);
+  border-radius: var(--r-sm);
+  box-shadow: var(--e-3);
+  perspective: 900px;
+}
+.gr-env-flap {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 58%;
+  background-color: var(--kraft-deep);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.gr-env-to {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ui-font-display);
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: var(--ui-ink);
+}
+.gr-env-seal {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  width: 64px;
+  margin: -32px 0 0 -32px;
+  border: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+.gr-env-seal:focus-visible { outline: 2px solid var(--surface); outline-offset: 3px; }
+.gr-env-skip {
+  border: none;
+  background: none;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--surface);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.gr-env[data-phase="opening"] { animation: gr-env-fade 600ms var(--ease-ios) 600ms both; }
+.gr-env[data-phase="opening"] .gr-env-flap { animation: gr-env-flap 400ms var(--ease-ios) both; }
+.gr-env[data-phase="opening"] .gr-env-seal,
+.gr-env[data-phase="opening"] .gr-env-skip { animation: gr-env-fade 200ms var(--ease-ios) both; }
+.gr-env[data-phase="opening"] .gr-env-body { animation: gr-env-drop 600ms var(--ease-ios) 300ms both; }
+.gr-page[data-rising] { animation: gr-rise 600ms var(--ease-ios) 600ms both; }
+@keyframes gr-env-flap { to { transform: rotateX(180deg); } }
+@keyframes gr-env-drop { to { transform: translateY(110%); opacity: 0; } }
+@keyframes gr-env-fade { to { opacity: 0; } }
+@keyframes gr-rise { from { transform: translateY(16px); opacity: 0; } }
+/* useEnvelope never mounts the envelope under reduced motion. This covers a
+   preference switched on after the page loaded: the envelope still has to be
+   tapped away, but nothing moves. */
+@media (prefers-reduced-motion: reduce) {
+  .gr-env[data-phase="opening"],
+  .gr-env[data-phase="opening"] *,
+  .gr-page[data-rising] { animation-duration: 1ms; animation-delay: 0ms; }
+}
+
 /* Desktop: invitation left (hero), reply card right, both centered */
 @media (min-width: 960px) {
   .gr-page { display: flex; flex-direction: column; }
@@ -1140,7 +1284,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   }
   .gr-inv { width: 460px; flex: 0 0 auto; margin-bottom: 0; }
   .gr-side { width: 432px; flex: 0 0 auto; }
-  .gr-card { border-radius: 24px; box-shadow: 0 18px 50px rgba(20, 18, 14, 0.1); padding: 30px 30px 32px; }
+  .gr-card { box-shadow: var(--e-3); padding: 30px 30px 32px; }
   .gr-thanks { padding: 44px 40px 36px; }
 }
 

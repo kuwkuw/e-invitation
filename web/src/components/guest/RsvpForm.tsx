@@ -7,14 +7,18 @@ interface Props {
   t: GuestStrings;
 }
 
-/** The reply card: name, yes/no, party size, optional note. The whole form is
- *  visually locked while sending so a double submit can't race. */
+/** The reply card (adr-019 §5.3): «Ви з нами?», name, yes/no on tactile
+ *  tiles, a party size only after a yes, and the note as a wish to the hosts.
+ *  The whole form is visually locked while sending so a double submit can't
+ *  race. */
 export function RsvpForm({ form, t }: Props) {
   return (
     <section className="gr-card">
       <form onSubmit={form.submit}>
         <div className={form.sending ? "gr-lock" : undefined}>
-          <div className="gr-kicker">{t.replyKicker}</div>
+          <h2 id="rsvp-title" className="gr-reply-title">
+            {t.replyTitle}
+          </h2>
 
           <label className="gr-label" htmlFor="rsvp-name">
             {t.yourName}
@@ -29,8 +33,7 @@ export function RsvpForm({ form, t }: Props) {
             required
           />
 
-          <div className="gr-question">{t.attendingQuestion}</div>
-          <div className="gr-tiles" role="radiogroup" aria-label={t.attendingQuestion}>
+          <div className="gr-tiles" role="radiogroup" aria-labelledby="rsvp-title">
             <button
               type="button"
               className={`gr-tile${form.attending === true ? " active" : ""}`}
@@ -38,11 +41,7 @@ export function RsvpForm({ form, t }: Props) {
               aria-checked={form.attending === true}
               onClick={() => form.setAttending(true)}
             >
-              <CheckIcon
-                size={18}
-                color="currentColor"
-                width={form.attending === true ? 2.4 : 2.2}
-              />
+              <CheckIcon size={18} width={form.attending === true ? 2.4 : 2.2} />
               {t.yes}
             </button>
             <button
@@ -52,7 +51,7 @@ export function RsvpForm({ form, t }: Props) {
               aria-checked={form.attending === false}
               onClick={() => form.setAttending(false)}
             >
-              <CrossIcon size={16} color={form.attending === false ? "#ffffff" : "#8d8577"} />
+              <CrossIcon size={16} />
               {t.no}
             </button>
           </div>

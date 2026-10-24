@@ -142,6 +142,18 @@ export function isPastEventStart(start: EventStart, now: Date = new Date()): boo
   return day.getTime() < today.getTime();
 }
 
+/** Whole calendar days from today to the event's day, in the guest's local
+ *  time, for the guest page's countdown (adr-019 §9.4); null once the day has
+ *  passed, exactly when `isPastEventStart` says so. Both ends are local
+ *  midnights, and rounding absorbs the 23- or 25-hour day a daylight-saving
+ *  change puts between them. */
+export function daysUntil(start: EventStart, now: Date = new Date()): number | null {
+  const day = new Date(start.year, start.month - 1, start.day);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((day.getTime() - today.getTime()) / 86_400_000);
+  return days < 0 ? null : days;
+}
+
 /** The rule the publish gate runs on (FR-1.8), stated once so the editor's
  *  disabled button and the refusal inside `usePublishing` cannot disagree.
  *  A date nothing can parse is *not* past — an event with no day yet is a

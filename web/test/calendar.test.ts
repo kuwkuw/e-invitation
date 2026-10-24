@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildIcs, isPastDate, isPastEventStart, parseEventStart } from "../src/calendar";
+import {
+  buildIcs,
+  daysUntil,
+  isPastDate,
+  isPastEventStart,
+  parseEventStart,
+} from "../src/calendar";
 
 // The host wrote the invitation in July 2026.
 const now = new Date(2026, 6, 22);
@@ -150,5 +156,35 @@ describe("buildIcs", () => {
       start: { year: 2026, month: 8, day: 12, hour: 23, minute: 0 },
     });
     expect(ics).toContain("DTEND:20260813T010000");
+  });
+});
+
+describe("daysUntil", () => {
+  const at = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h);
+  const start = (y: number, m: number, d: number) => ({
+    year: y,
+    month: m,
+    day: d,
+    hour: null,
+    minute: 0,
+  });
+
+  it("counts calendar days in local time", () => {
+    expect(daysUntil(start(2027, 8, 12), at(2027, 8, 12, 23))).toBe(0);
+    expect(daysUntil(start(2027, 8, 12), at(2027, 8, 11, 23))).toBe(1);
+    expect(daysUntil(start(2027, 8, 12), at(2027, 7, 31, 0))).toBe(12);
+  });
+
+  // Crosses Kyiv's 2027-03-28 change, where the five days are 4.96 × 24 h.
+  // CI runs in UTC, where this passes trivially, so run the file once with
+  // TZ=Europe/Kyiv after touching daysUntil.
+  it("is not thrown by a daylight-saving change in between", () => {
+    expect(daysUntil(start(2027, 4, 1), at(2027, 3, 27))).toBe(5);
+  });
+
+  it("is null once the day has passed, exactly when isPastEventStart is true", () => {
+    const after = at(2027, 8, 13, 0);
+    expect(daysUntil(start(2027, 8, 12), after)).toBeNull();
+    expect(isPastEventStart(start(2027, 8, 12), after)).toBe(true);
   });
 });
