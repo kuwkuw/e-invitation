@@ -414,6 +414,25 @@ describe("the editor canvas", () => {
   });
 });
 
+describe("the editor's header (adr-019 §7.2)", () => {
+  it("is a bar on card stock with a ruled edge, not glass's floating pill", () => {
+    const header = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? "")).find(
+      (r) => r.selectors.includes(".cc-header") && /display:\s*grid/.test(r.body),
+    );
+    expect(header?.body).toMatch(/background-color:\s*var\(--surface\)/);
+    expect(header?.body).toMatch(/border-bottom:\s*1px solid var\(--edge\)/);
+    expect(header?.body).not.toMatch(/border-radius/);
+    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bglass\b/);
+  });
+
+  it("hangs the share and key panels from the bar, whatever its height", () => {
+    const panel = ruleBlocks(stripComments(css)).find(
+      (r) => r.selectors.includes(".cc-share-panel") && /position:\s*absolute/.test(r.body),
+    );
+    expect(panel?.body).toMatch(/top:\s*calc\(100% \+ 8px\)/);
+  });
+});
+
 describe("the design tabs (adr-019 §7.3)", () => {
   const rules = () => ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
 
@@ -545,6 +564,9 @@ describe("the sign-in gate's and the account sheets' text", () => {
 /** Where a host makes the invitation. */
 describe("the editor's text", () => {
   textFloors("Creation chat", [
+    [".cc-title", "--surface", 4.5],
+    [".cc-replies", "--surface", 4.5],
+    [".cc-share", "--edge-soft", 4.5],
     [".cc-tab", "--surface", 4.5],
     [".cc-design-row-title", "--surface", 3],
     [".cc-env-to", "--kraft", 4.5],
