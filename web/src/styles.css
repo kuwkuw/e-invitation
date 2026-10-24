@@ -391,6 +391,9 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   z-index: 6;
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr) auto;
+  /* The replies row is as tall as the link, and nothing before a publish, so
+     the title centres in the bar until it has a line beneath it. */
+  grid-template-rows: 1fr auto;
   align-items: center;
   align-content: center;
   column-gap: 10px;
@@ -771,10 +774,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 /* Underlined tabs on card stock (adr-019 §7.3), in place of the segmented
    glass bar. The open one is the product's ink over an accent rule; --ui-*
    because the swatches above carry palette-*, which shadows --ink and
-   --accent. A rule spends no fill (adr-010 §3.1). The five share the width,
-   so they fit a 360px phone in both languages. */
+   --accent. A rule spends no fill (adr-010 §3.1). The five share the
+   width from their labels' own, so "Background" gets the room "Font"
+   doesn't need: equal fifths overflowed a 360px phone in English. */
 .cc-tabs { display: flex; background-color: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); box-shadow: var(--e-1); overflow: hidden; }
-.cc-tab { flex: 1; min-width: 0; padding: 12px 4px 10px; border: none; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); white-space: nowrap; cursor: pointer; transition: color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios); }
+.cc-tab { flex: 1 1 auto; min-width: 0; padding: 12px 4px 10px; border: none; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); white-space: nowrap; cursor: pointer; transition: color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios); }
 .cc-tab:hover { color: var(--ui-ink); }
 .cc-tab.on { color: var(--ui-ink); border-bottom-color: var(--ui-accent); }
 
