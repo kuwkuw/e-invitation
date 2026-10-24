@@ -496,13 +496,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-key-label .share-row { margin-top: 4px; }
 .cc-key-actions { display: flex; gap: 8px; }
 .cc-key-save {
-  border: none; border-radius: var(--r-pill); padding: 8px 16px;
+  border: none; border-radius: var(--r-md); padding: 8px 16px;
   font-size: 0.85rem; font-weight: 700; background: var(--accent); color: var(--surface); cursor: pointer;
 }
 .cc-key-save:disabled { background: var(--accent-wash); color: var(--ink-faint); cursor: default; }
 .cc-key-save:not(:disabled):hover { background: var(--accent-hi); }
 .cc-key-clear {
-  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-pill);
+  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-md);
   padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: var(--ink-muted);
 }
 
@@ -530,7 +530,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: var(--surface);
   border: 1px solid var(--edge);
   color: var(--ink);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   padding: 9px 15px;
   font-size: 0.86rem;
   font-weight: 600;
@@ -566,7 +566,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   flex: 1;
   background: var(--ground);
   border: 1px solid var(--edge);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   padding: 13px 18px;
   font: inherit;
   font-size: 0.95rem;
@@ -602,7 +602,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   margin: auto;
   border: 1.5px dashed var(--edge);
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.5);
+  background-color: var(--surface);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
   color: var(--ink-faint);
   font-size: 0.98rem;
@@ -622,7 +622,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   margin: auto;
   background: var(--surface);
   border-radius: var(--r-lg);
-  box-shadow: 0 22px 50px rgba(20, 18, 14, 0.15);
+  box-shadow: var(--e-2);
   padding: 44px 40px;
   display: flex; flex-direction: column; align-items: center; gap: 15px;
 }
@@ -731,13 +731,19 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   .cc-chat .cc-messages { display: none; }
   .cc-chat.open .cc-messages { display: flex; max-height: 46vh; }
   .cc-messages { padding: 16px 16px 4px; }
+  /* The assistant's voice (adr-019 §7.4): Literata italic, the one italic
+     the @import requests, and a size a serif italic stays readable at in a
+     messenger's webview. */
   .cc-peek {
     display: block;
     width: 100%;
     border: none;
     background: none;
     font: inherit;
-    font-size: 0.8rem;
+    font-family: var(--ui-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.9rem;
     color: var(--ink-muted);
     text-align: left;
     padding: 11px 16px 3px;

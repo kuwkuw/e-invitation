@@ -433,6 +433,34 @@ describe("the editor's header (adr-019 §7.2)", () => {
   });
 });
 
+describe("the chat on paper (adr-019 §7.4)", () => {
+  it("sets the peek line in the assistant's voice: Literata italic", () => {
+    const body = ruleBlocks(stripComments(css))
+      .filter((r) => r.selectors.includes(".cc-peek"))
+      .map((r) => r.body)
+      .join(";");
+    expect(body).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+    expect(body).toMatch(/font-style:\s*italic/);
+    expect(body).toMatch(/font-weight:\s*400/);
+  });
+
+  // adr-019 §1: stationery corners; the pill stays for the language switch.
+  it("keeps the pill for the grab handle alone", () => {
+    const readers = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""))
+      .filter((r) => /var\(--r-pill\)/.test(r.body))
+      .flatMap((r) => r.selectors);
+    expect(readers).toEqual([".cc-sheet-grab"]);
+  });
+
+  it("draws its waiting states on tokens", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+    const skeleton = rules.find((r) => r.selectors.includes(".cc-skeleton"));
+    expect(skeleton?.body).toMatch(/box-shadow:\s*var\(--e-2\)/);
+    const placeholder = rules.find((r) => r.selectors.includes(".cc-placeholder"));
+    expect(placeholder?.body).toMatch(/background-color:\s*var\(--surface\)/);
+  });
+});
+
 describe("the design tabs (adr-019 §7.3)", () => {
   const rules = () => ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
 
@@ -567,6 +595,7 @@ describe("the editor's text", () => {
     [".cc-title", "--surface", 4.5],
     [".cc-replies", "--surface", 4.5],
     [".cc-share", "--edge-soft", 4.5],
+    [".cc-peek", "--surface", 4.5],
     [".cc-tab", "--surface", 4.5],
     [".cc-design-row-title", "--surface", 3],
     [".cc-env-to", "--kraft", 4.5],
