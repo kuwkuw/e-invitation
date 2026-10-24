@@ -1437,7 +1437,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    own class, and `.landing h2` outranks a single class, so it set every
    card title in Playfair whatever its type, and the sheets' titles in bold.
    .lp-yours-head h2 sets its own face below. */
-.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2, .lp-guests-title { font-family: var(--ui-font-display); font-weight: 500; }
+.landing h1, .lp-steps h2, .lp-rsvp-copy h2, .lp-final h2, .lp-guests-title, .lp-faq-title { font-family: var(--ui-font-display); font-weight: 500; }
 
 .lp-cta {
   border: none;
@@ -1608,6 +1608,22 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 .lp-rsvp-yes { color: var(--rsvp-yes); }
 .lp-rsvp-no { color: var(--rsvp-no); }
 .lp-rsvp-wait { color: var(--ink-muted); }
+
+/* Four questions (adr-019 §6.3), ruled like a ledger. list-style hides the
+   standard marker and ::-webkit-details-marker Safari's own, which it draws
+   whatever list-style says; a plus, turned to a cross when open, stands in
+   for both. It
+   turns without a transition: the motion block is the landing's only
+   motion. */
+.lp-faq { max-width: 720px; margin: 0 auto; padding: clamp(40px, 5vw, 64px) clamp(22px, 5vw, 64px) 0; }
+.lp-faq-title { margin: 0 0 18px; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); }
+.lp-faq-item { border-bottom: 1px solid var(--edge); }
+.lp-faq-item:first-of-type { border-top: 1px solid var(--edge); }
+.lp-faq-q { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 2px; list-style: none; font-size: 1.05rem; font-weight: 600; color: var(--ink); cursor: pointer; }
+.lp-faq-q::-webkit-details-marker { display: none; }
+.lp-faq-q::after { content: "+"; flex: 0 0 auto; font-size: 1.3rem; font-weight: 400; line-height: 1; color: var(--ink-muted); }
+.lp-faq-item[open] > .lp-faq-q::after { transform: rotate(45deg); }
+.lp-faq-a { margin: 0 2px 18px; max-width: 60ch; font-size: 1rem; line-height: 1.6; color: var(--ink-muted); }
 
 .lp-final { padding: clamp(56px, 7vw, 88px) clamp(22px, 5vw, 64px); text-align: center; }
 .lp-final h2 { margin: 0 0 26px; font-size: clamp(1.6rem, 3vw, 2.2rem); }

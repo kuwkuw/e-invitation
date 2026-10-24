@@ -85,6 +85,17 @@ export function landingBodyHtml(lang: Language): string {
     )
     .join("");
   const chips = t.chips.map((chip) => `<span class="lp-chip">${escapeHtml(chip)}</span>`).join("");
+  // Closed, as React renders them; a crawler reads a closed <details> all
+  // the same, which is why the answers are here at all (adr-019 §6.3).
+  const faq = t.faq
+    .map(
+      ({ q, a }) =>
+        `<details class="lp-faq-item">` +
+        `<summary class="lp-faq-q">${escapeHtml(q)}</summary>` +
+        `<p class="lp-faq-a">${escapeHtml(a)}</p>` +
+        `</details>`,
+    )
+    .join("");
   const points = t.guestsPoints
     .map((point) => `<li class="lp-guests-point">${escapeHtml(point)}</li>`)
     .join("");
@@ -132,6 +143,7 @@ export function landingBodyHtml(lang: Language): string {
     `<h2>${escapeHtml(t.rsvpTitle)}</h2>` +
     `<p>${escapeHtml(t.rsvpText)}</p>` +
     `</div></div></section>` +
+    `<section class="lp-faq"><h2 class="lp-faq-title">${escapeHtml(t.faqTitle)}</h2>${faq}</section>` +
     `<section class="lp-final"><h2>${escapeHtml(t.finalTitle)}</h2>${cta}</section>` +
     `<footer class="lp-footer">${escapeHtml(t.footer)}</footer>` +
     `</div>`

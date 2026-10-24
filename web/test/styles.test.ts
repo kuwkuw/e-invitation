@@ -510,6 +510,8 @@ describe("the landing page's text", () => {
     [".lp-guests-text", "--app-bg", 4.5],
     [".lp-guests-point", "--app-bg", 4.5],
     [".lp-guests-to", "--kraft", 4.5],
+    [".lp-faq-q", "--app-bg", 4.5],
+    [".lp-faq-a", "--app-bg", 4.5],
     [".lp-step-text", "--app-bg", 4.5],
     [".lp-chip", "--surface", 3],
     [".lp-rsvp-copy p", "--surface", 4.5],

@@ -137,3 +137,18 @@ describe("what guests see (adr-019 §6.2)", () => {
     expect(points).toEqual(t.guestsPoints);
   });
 });
+
+describe("the FAQ (adr-019 §6.3)", () => {
+  it("asks four questions, each closed until opened", () => {
+    const { container } = renderLanding();
+    const items = [...container.querySelectorAll(".lp-faq details")] as HTMLDetailsElement[];
+    expect(items.map((d) => d.querySelector("summary")?.textContent)).toEqual(
+      t.faq.map((f) => f.q),
+    );
+    expect(items.map((d) => d.querySelector(".lp-faq-a")?.textContent)).toEqual(
+      t.faq.map((f) => f.a),
+    );
+    expect(items.every((d) => !d.open)).toBe(true);
+    expect(screen.getByRole("heading", { level: 2, name: t.faqTitle })).toBeTruthy();
+  });
+});

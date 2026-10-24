@@ -7,6 +7,7 @@ import { LangSwitcher } from "./components/LangSwitcher";
 import { GuestsSection } from "./components/landing/GuestsSection";
 import { HeroComposer } from "./components/landing/HeroComposer";
 import { HeroStage } from "./components/landing/HeroStage";
+import { LandingFaq } from "./components/landing/LandingFaq";
 import { SignOutSheet } from "./components/SignOutSheet";
 import { YourInvitations } from "./components/YourInvitations";
 import { useAuthSession } from "./hooks/useAuthSession";
@@ -336,6 +337,8 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      <LandingFaq t={t} />
 
       <section className="lp-final">
         <h2>{t.finalTitle}</h2>

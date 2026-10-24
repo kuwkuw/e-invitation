@@ -110,6 +110,19 @@ describe("the landing hero before React mounts (adr-019 §6.1)", () => {
     },
   );
 
+  it.each(["uk", "en"] as const)(
+    "serves every question and its answer to a crawler (%s)",
+    (lang) => {
+      const block = landingBlock(lang);
+      expect(block.match(/<details class="lp-faq-item">/g)).toHaveLength(4);
+      for (const { q, a } of LANDING[lang].faq) {
+        expect(block).toContain(
+          `<summary class="lp-faq-q">${q}</summary><p class="lp-faq-a">${a}</p>`,
+        );
+      }
+    },
+  );
+
   it("puts no Ukrainian in the English landing block", () => {
     expect(landingBlock("en")).not.toMatch(/[Ѐ-ӿ]/);
   });
