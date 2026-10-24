@@ -311,7 +311,7 @@ Not mocked. `GuestNotFound` and the status line take the paper ground and
 Literata and need no new layout; they are designed in the PR, not on the canvas.
 
 **Amended 2026-10-24, step 3.** Building §5 settled what it left open, as the
-step's plan proposed (`docs/superpowers/plans/2026-10-24-guest-page-paper.md`):
+step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-guest-page-paper.md`):
 
 - **Monogram:** the first two hosts' initials; a third and beyond go unnamed.
   One host string naming two people («Марія та Андрій», "Mary & John") splits on

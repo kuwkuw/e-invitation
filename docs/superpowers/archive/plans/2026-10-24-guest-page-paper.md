@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, CSS custom properties and keyframes (transform and opacity only), Vitest with jsdom and `@testing-library/react`, Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md) §3, §5, §9.2 and §9.4. Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md). The canvas rows `A2 · Guest — envelope` and `A2 · Guest — RSVP` on *Invinto Redesign — Directions* are the visual reference. That canvas wasn't reachable when this plan was written (it isn't in the E-invitation DS or the design project), so the plan works from adr-019's text alone. **Open the canvas before Task 9's visual check** if it can be found, and record any disagreement in the PR. adr-019 wins over the canvas.
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md) §3, §5, §9.2 and §9.4. Its long form is the [paper-direction spec](../../specs/2026-10-21-paper-direction-design.md). The canvas rows `A2 · Guest — envelope` and `A2 · Guest — RSVP` on *Invinto Redesign — Directions* are the visual reference. That canvas wasn't reachable when this plan was written (it isn't in the E-invitation DS or the design project), so the plan works from adr-019's text alone. **Open the canvas before Task 9's visual check** if it can be found, and record any disagreement in the PR. adr-019 wins over the canvas.
 
 ## Global Constraints
 
