@@ -144,8 +144,6 @@ export interface AuthStrings {
    *  the off switch beside it — rather than discovered from the first email.
    *  `{email}` is the signed-in address the replies will go to. */
   notifyOn: string;
-  /** The same fact on the manage page, without the address. */
-  notifyOnAccount: string;
   /** The share panel's off state, which under opt-in is where every host
    *  starts. It has to read as an offer at the moment replies become possible,
    *  not as a statement about mail already declined — a host who has just
@@ -154,15 +152,16 @@ export interface AuthStrings {
   /** Accepting that offer, and the only "on" label there is. It replaced a
    *  "turn emails back on" that opt-in made false: a host who never asked is
    *  not returning to anything, and no surface can tell them from one who is.
-   *  On the landing footer it is also the checkbox's **name** (adr-019 §10),
-   *  identical in both states: that invariance is what makes unchecking as
-   *  easy as checking. */
+   *  On the landing footer and the manage page it is also the checkbox's
+   *  **name** (adr-019 §10), identical in both states: that invariance is
+   *  what makes unchecking as easy as checking. */
   notifyOptIn: string;
   /** The checkbox's **state** row on the landing footer: what is true right
    *  now, with the scope inside it, so the host reads "every invitation"
    *  before agreeing rather than after. One string per surface and state —
    *  an offer and a report are different sentences, and the footer carries
-   *  the address a line above, so these never name it. From PR #66. */
+   *  the address a line above, so these never name it. The off state serves
+   *  the manage page too. From PR #66. */
   notifyStateOnAccount: string;
   notifyStateOffNow: string;
   /** The manage page's on state (adr-019 §10, from PR #66): the address, and
@@ -170,11 +169,6 @@ export interface AuthStrings {
    *  about a single invitation carrying a switch that governs them all.
    *  `{email}` is the signed-in address. */
   notifyStateOnEvent: string;
-  /** The scope, said out loud on the manage page — a page about one event
-   *  carrying a switch that governs them all. Without it the control looks
-   *  per-invitation, and a host who silences one event and finds they silenced
-   *  three presses Spam, which is the outcome opt-in exists to avoid. */
-  notifyAllEvents: string;
   notifyTurnOff: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
@@ -239,10 +233,8 @@ export const AUTH: Record<Language, AuthStrings> = {
     showManage: "Show",
     hideManage: "Hide",
     notifyOn: "We'll email {email} when replies come in.",
-    notifyOnAccount: "We'll email you when replies come in.",
     notifyOffer: "Want an email when replies come in?",
     notifyOptIn: "Email me about replies",
-    notifyAllEvents: "Covers every invitation in your account, not just this one.",
     notifyTurnOff: "Turn off all emails",
     notifyStateOnAccount: "For all your invitations.",
     notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
@@ -299,10 +291,8 @@ export const AUTH: Record<Language, AuthStrings> = {
     showManage: "Показати",
     hideManage: "Сховати",
     notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
-    notifyOnAccount: "Ми напишемо вам, коли надійдуть відповіді.",
     notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
     notifyOptIn: "Повідомляти про відповіді",
-    notifyAllEvents: "Стосується всіх запрошень у вашому акаунті, не лише цього.",
     notifyTurnOff: "Вимкнути всі листи",
     notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
     notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",

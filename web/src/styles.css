@@ -1891,17 +1891,13 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .hm-primary:hover { background: var(--accent-hi); }
 
-/* Reply email, below the responses it is about (adr-015 §7). Quiet enough that
-   it never competes with the headcount, and the scope line is quieter still —
-   it is a qualifier on the sentence above it, not a second message. Quieter by
-   size only: that line is the mitigation for putting an account-wide switch on
-   an event's page, so it has to be read, and at 2.4:1 it was not. */
-.hm-notify { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin: 26px 4px 0; padding-top: 18px; border-top: 1px solid var(--edge-soft); }
-.hm-notify-copy { flex: 1 1 240px; }
-.hm-notify-text { margin: 0; font-size: 0.85rem; color: var(--ink-muted); }
-.hm-notify-scope { margin: 3px 0 0; font-size: 0.76rem; color: var(--ink-muted); }
-.hm-notify-toggle { flex: 0 0 auto; border: none; background: none; font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 2px 4px; }
-.hm-notify-toggle:hover { color: var(--ink); }
+/* Reply email, below the responses it is about (adr-015 §7): the shared
+   checkbox (adr-019 §10, "Reply email checkbox" below), on the page ground
+   under a rule. Its state line carries the scope, so nothing here adds one.
+   On a wide screen the line stays a readable measure rather than running the
+   width of both columns. */
+.hm-notify { margin: 26px 4px 0; padding-top: 6px; border-top: 1px solid var(--edge-soft); }
+@media (min-width: 900px) { .hm-notify .notify-check { max-width: 640px; } }
 .hm-brand { margin: 22px 0 0; text-align: center; font-family: var(--ui-font-display); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.32em; color: var(--ink-whisper); }
 
 /* Loading: hold the shape rather than spin. */
@@ -2160,9 +2156,9 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Reply email checkbox -------------------------------------------------- */
 /* Reply email as one control (adr-019 §10, from PR #66's design pass):
-   components/NotifyCheckbox.tsx. The landing footer carries it first; the
-   share panel and the manage page take it in adr-019 steps 5 and 6, which
-   is why it has a section of its own rather than living in the footer's.
+   components/NotifyCheckbox.tsx. The landing footer and the manage page
+   carry it, and the share panel takes it in adr-019 step 5, which is why it
+   has a section of its own rather than living in the footer's.
 
    - The square is the affordance and spends no fill, so it costs nothing
      from the accent budget: adr-010 §3's hierarchy counts fills, not

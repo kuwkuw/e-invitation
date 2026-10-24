@@ -422,7 +422,6 @@ describe("the manage page's text", () => {
   textFloors("Host manage dashboard", [
     [".hm-state-hint", "--surface", 4.5],
     [".hm-empty-reassure", "--surface", 4.5],
-    [".hm-notify-scope", "--app-bg", 4.5],
     [".hm-new-line", "--app-bg", 4.5],
     [".hm-breakdown", "--surface", 3],
     [".hm-updated", "--app-bg", 3],
@@ -536,8 +535,8 @@ describe("the landing page's text", () => {
   ]);
 });
 
-/** adr-019 §10. It sits on --app-bg in the landing footer, and on --surface in
- *  the share panel and the manage page once steps 5 and 6 bring it there. */
+/** adr-019 §10. It sits on --app-bg in the landing footer and on the manage
+ *  page, and on --surface in the share panel once step 5 brings it there. */
 describe("the reply email checkbox", () => {
   textFloors("Reply email checkbox", [
     [".notify-name", "--app-bg", 4.5],
