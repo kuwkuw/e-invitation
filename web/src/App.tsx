@@ -104,12 +104,12 @@ export default function App() {
   }
 
   return (
-    // The ground is tinted by the invitation being edited (adr-018 §1). An
-    // attribute rather than the palette-* class: that class would also push
-    // the card's --ink and --accent into the chrome, where the product's own
-    // accent belongs. Undefined before the first generate, which falls back to
-    // the bare :root --ground.
-    <div className="cc-shell" data-palette={editor.invitation?.design.palette}>
+    // The card sits on the grained table whatever its palette (adr-019 §4.2).
+    // data-palette no longer tints anything; it stays as an unused hook in
+    // case a per-palette ground returns. An attribute rather than the
+    // palette-* class, which would push the card's --ink and --accent into
+    // the chrome.
+    <div className="cc-shell grain" data-palette={editor.invitation?.design.palette}>
       <header className="cc-header glass">
         <button
           type="button"

@@ -212,9 +212,12 @@ built on the sign-in gate's `.ag-*` shell, so they convert with it.
   names until its rename step. **No paper material (`.grain`, `.deckle`,
   `.seal`) may sit on `.inv` or inside it**; wrapping the card is fine
   (tested).
-- The editor's ground is tinted with `data-palette` on `.cc-shell`, an
-  attribute, not the `palette-*` class, which would push the card's ink into
-  the chrome.
+- The editor sets the card on `--table` with `.grain`, whatever its palette
+  (adr-019 §4.2). `.grain` sets only `background-image`, so whatever carries
+  it gives the colour with `background-color`, never the `background`
+  shorthand, which would wipe the grain. `data-palette` stays on `.cc-shell`
+  as an unused hook (an attribute, not the `palette-*` class, which would push
+  the card's ink into the chrome).
 
 ## Design projects
 
