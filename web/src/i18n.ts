@@ -159,21 +159,11 @@ export interface AuthStrings {
   savedToAccount: string;
   showManage: string;
   hideManage: string;
-  /** adr-015 §7: the disclosure is made where it is caused — at publish, with
-   *  the off switch beside it — rather than discovered from the first email.
-   *  `{email}` is the signed-in address the replies will go to. */
-  notifyOn: string;
-  /** The share panel's off state, which under opt-in is where every host
-   *  starts. It has to read as an offer at the moment replies become possible,
-   *  not as a statement about mail already declined — a host who has just
-   *  published has not turned anything off. */
-  notifyOffer: string;
-  /** Accepting that offer, and the only "on" label there is. It replaced a
-   *  "turn emails back on" that opt-in made false: a host who never asked is
-   *  not returning to anything, and no surface can tell them from one who is.
-   *  On the landing footer and the manage page it is also the checkbox's
-   *  **name** (adr-019 §10), identical in both states: that invariance is
-   *  what makes unchecking as easy as checking. */
+  /** The reply-email checkbox's **name** on every surface (adr-019 §10),
+   *  identical in both states: that invariance is what makes unchecking as
+   *  easy as checking. It replaced a "turn emails back on" that opt-in made
+   *  false: a host who never asked is not returning to anything, and no
+   *  surface can tell them from one who is. */
   notifyOptIn: string;
   /** The checkbox's **state** row on the landing footer: what is true right
    *  now, with the scope inside it, so the host reads "every invitation"
@@ -192,7 +182,6 @@ export interface AuthStrings {
    *  the address and the account-wide scope in it, read before the host
    *  agrees. `{email}` is the signed-in address. */
   notifyStateOffer: string;
-  notifyTurnOff: string;
   signOut: string;
   /** The landing page's only sign-in affordance, and the only one outside the
    *  publish gate. Names the payoff rather than the act — a host does not know
@@ -255,10 +244,7 @@ export const AUTH: Record<Language, AuthStrings> = {
     savedToAccount: "Saved to your account — it'll be there on any device you sign in on.",
     showManage: "Show",
     hideManage: "Hide",
-    notifyOn: "We'll email {email} when replies come in.",
-    notifyOffer: "Want an email when replies come in?",
     notifyOptIn: "Email me about replies",
-    notifyTurnOff: "Turn off all emails",
     notifyStateOnAccount: "For all your invitations.",
     notifyStateOffNow: "Not emailing you right now — about any of your invitations.",
     notifyStateOnEvent: "To {email} — for all your invitations, not just this one.",
@@ -314,10 +300,7 @@ export const AUTH: Record<Language, AuthStrings> = {
       "Збережено у вашому акаунті — відкриється на будь-якому пристрої, де ви увійдете.",
     showManage: "Показати",
     hideManage: "Сховати",
-    notifyOn: "Ми напишемо на {email}, коли надійдуть відповіді.",
-    notifyOffer: "Надіслати лист, коли надійдуть відповіді?",
     notifyOptIn: "Повідомляти про відповіді",
-    notifyTurnOff: "Вимкнути всі листи",
     notifyStateOnAccount: "Пишемо про всі ваші запрошення.",
     notifyStateOffNow: "Зараз не пишемо — про жодне з ваших запрошень.",
     notifyStateOnEvent: "Пишемо на {email} — про всі ваші запрошення, не лише про це.",

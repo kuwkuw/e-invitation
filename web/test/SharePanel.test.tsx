@@ -195,123 +195,90 @@ describe("signed in", () => {
   });
 });
 
-// adr-015 §7: the disclosure is made where it is caused — at publish, beside
-// the switch — rather than discovered from the first email.
-describe("SharePanel reply notifications", () => {
+// adr-015 §7: the choice is made where it is caused, at publish. adr-019 §10
+// makes it one checkbox, redone on paper from PR #66's design pass.
+describe("SharePanel reply email (adr-019 §10)", () => {
   function renderNotify(overrides: Partial<Parameters<typeof SharePanel>[0]> = {}) {
-    return renderPanel({ signedIn: true, manageShown: true, t: UI.en, ...overrides });
+    return renderPanel({
+      signedIn: true,
+      manageShown: true,
+      notifyEmail: "host@example.com",
+      t: UI.en,
+      ...overrides,
+    });
   }
 
-  it("says which address replies go to", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    // Split across elements so the address carries its own weight, so the
-    // sentence is read off the block rather than matched as one node.
-    expect(container.querySelector(".sp-notify-text")?.textContent).toBe(
-      "We'll email host@example.com when replies come in.",
-    );
-    expect(screen.getByText(UI.en.auth.notifyTurnOff)).toBeTruthy();
-  });
-
-  // The address is a fact about where mail goes, not something to click.
-  it("sets the address apart without making it a link", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    const email = container.querySelector(".sp-notify-email");
-    expect(email?.textContent).toBe("host@example.com");
-    expect(container.querySelector(".sp-notify-text a")).toBeNull();
-  });
-
-  // The off state is read from the glyph, so both lines can stay at exactly
-  // the same size, weight and colour (design project NotifyLine §3).
-  it("carries the state in the icon, not in the type", () => {
-    const on = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    const onText = on.container.querySelector(".sp-notify-text") as HTMLElement;
-    const onStrokes = on.container.querySelectorAll(".sp-notify-icon path").length;
+  it("names the setting identically in both states", () => {
+    const off = renderNotify({ notifyEnabled: false });
+    expect(off.container.querySelector(".notify-name")?.textContent).toBe(UI.en.auth.notifyOptIn);
     cleanup();
-
-    const off = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
-    const offText = off.container.querySelector(".sp-notify-text") as HTMLElement;
-    const offStrokes = off.container.querySelectorAll(".sp-notify-icon path").length;
-
-    expect(offText.className).toBe(onText.className);
-    // The struck envelope adds the knockout plus the strike itself.
-    expect(offStrokes).toBeGreaterThan(onStrokes);
+    const on = renderNotify({ notifyEnabled: true });
+    expect(on.container.querySelector(".notify-name")?.textContent).toBe(UI.en.auth.notifyOptIn);
   });
 
-  // A Ukrainian address does not break between letters; beside the text the
-  // action ended up hanging next to a three-line sentence.
-  it("puts the action on its own line, not beside the sentence", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    const action = container.querySelector(".sp-notify-action");
-    expect(action).toBeTruthy();
-    expect(action?.contains(screen.getByText(UI.en.auth.notifyTurnOff))).toBe(true);
-    expect(container.querySelector(".sp-notify-row")?.contains(action as Node)).toBe(false);
+  // The scope rides the offer, so the host agrees knowing it; and it stays in
+  // the on state, so it doesn't vanish the moment they do.
+  it("says where mail goes and what it covers, before and after agreeing", () => {
+    const off = renderNotify({ notifyEnabled: false });
+    expect(off.container.querySelector(".notify-state")?.textContent).toBe(
+      "To host@example.com — for every invitation in your account.",
+    );
+    cleanup();
+    const on = renderNotify({ notifyEnabled: true });
+    expect(on.container.querySelector(".notify-state")?.textContent).toBe(
+      "To host@example.com — for all your invitations, not just this one.",
+    );
   });
 
-  // adr-015 §7 as amended. Off is where every host now starts, so this is the
-  // state the panel shows at the moment publishing succeeds — and it has to
-  // read as an offer. The landing footer's `notifyStateOffNow` reports a
-  // decision ("not emailing you right now") that a host who just published
-  // has never made.
-  it("offers rather than reports when off", () => {
-    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: false });
-    expect(screen.getByText(UI.en.auth.notifyOffer)).toBeTruthy();
-    expect(screen.getByText(UI.en.auth.notifyOptIn)).toBeTruthy();
-    expect(screen.queryByText(UI.en.auth.notifyStateOffNow)).toBeNull();
+  // Opt-in (adr-015 §7, amended): a panel handed no preference must not imply
+  // mail is already coming.
+  it("defaults to unchecked, an offer rather than a promise", () => {
+    const { container } = renderNotify();
+    expect((container.querySelector(".notify-input") as HTMLInputElement).checked).toBe(false);
   });
 
-  // The default carries the reversal: a panel handed no preference must not
-  // imply mail is already coming.
-  it("defaults to the offer, not to a promise", () => {
-    renderNotify({ notifyEmail: "host@example.com" });
-    expect(screen.getByText(UI.en.auth.notifyOptIn)).toBeTruthy();
-    expect(screen.queryByText(UI.en.auth.notifyTurnOff)).toBeNull();
-  });
-
-  it("toggles through the callback", () => {
+  it("toggles through a real checkbox", () => {
     const onToggleNotify = vi.fn();
-    renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true, onToggleNotify });
-
-    fireEvent.click(screen.getByText(UI.en.auth.notifyTurnOff));
-
+    const { container } = renderNotify({ onToggleNotify });
+    fireEvent.click(
+      container.querySelector("label.notify-check input[type=checkbox]") as HTMLElement,
+    );
     expect(onToggleNotify).toHaveBeenCalledTimes(1);
   });
 
-  // §8: a deployment with no mail credentials must promise nothing. The line
-  // is absent, not disabled — an offer that cannot be honoured is worse than
-  // no offer.
-  it("renders nothing when the deployment cannot send mail", () => {
-    const { container } = renderNotify({ notifyEmail: null });
-    expect(container.querySelector(".sp-notify")).toBeNull();
-    expect(screen.queryByText(UI.en.auth.notifyTurnOff)).toBeNull();
+  // A square carries the state now. The envelope keeps its job only where
+  // nothing is pressable: the email footer and the unsubscribe page.
+  it("carries no envelope icon", () => {
+    for (const notifyEnabled of [false, true]) {
+      const { container } = renderNotify({ notifyEnabled });
+      const glyphs = [...container.querySelectorAll(".sp-notify svg")];
+      expect(glyphs.every((svg) => svg.closest(".notify-box"))).toBe(true);
+      cleanup();
+    }
   });
 
-  it("renders nothing for a signed-out host", () => {
-    const { container } = renderPanel({
-      signedIn: false,
-      notifyEmail: "host@example.com",
-      t: UI.en,
-    });
-    expect(container.querySelector(".sp-notify")).toBeNull();
-  });
-
-  // The panel's hierarchy is the safeguard (adr-010 §3): the notification line
-  // must not become a third thing competing with the two links.
-  it("stays quiet — no accent button, and the public link keeps the only one", () => {
-    const { container } = renderNotify({ notifyEmail: "host@example.com", notifyEnabled: true });
-    const toggle = screen.getByText(UI.en.auth.notifyTurnOff);
-    expect(toggle.className).not.toContain("sp-primary");
+  // adr-010 §3.1: the hierarchy counts fills, and the checkbox spends none.
+  it("leaves the public link the only filled accent", () => {
+    const { container } = renderNotify({ notifyEnabled: true });
     expect(container.querySelectorAll(".sp-primary")).toHaveLength(1);
     expect(screen.getByText(UI.en.copyLink).className).toContain("sp-primary");
   });
 
+  // §8: a deployment with no mail credentials must promise nothing. The
+  // control is absent, not disabled.
+  it("renders nothing when the deployment cannot send mail, or for a signed-out host", () => {
+    const noMail = renderNotify({ notifyEmail: null });
+    expect(noMail.container.querySelector(".sp-notify")).toBeNull();
+    cleanup();
+    const signedOut = renderNotify({ signedIn: false });
+    expect(signedOut.container.querySelector(".sp-notify")).toBeNull();
+  });
+
   it("carries the copy in Ukrainian too", () => {
-    const { container } = renderNotify({
-      notifyEmail: "host@example.com",
-      notifyEnabled: true,
-      t: UI.uk,
-    });
-    expect(container.querySelector(".sp-notify-text")?.textContent).toBe(
-      "Ми напишемо на host@example.com, коли надійдуть відповіді.",
+    const { container } = renderNotify({ notifyEnabled: false, t: UI.uk });
+    expect(container.querySelector(".notify-name")?.textContent).toBe("Повідомляти про відповіді");
+    expect(container.querySelector(".notify-state")?.textContent).toBe(
+      "На host@example.com — про всі ваші запрошення.",
     );
   });
 });
