@@ -1,4 +1,5 @@
 import type { UiStrings } from "../../i18n";
+import { monogramFrom } from "../../monogram";
 import type { CopyField, DesignTokens, Invitation } from "../../types";
 import { InvitationPreview } from "../InvitationPreview";
 import { DesignToolbar } from "./DesignToolbar";
@@ -84,6 +85,13 @@ export function PreviewPanel({
           backgroundBusy={backgroundBusy}
           onBackgroundAdd={onBackgroundAdd}
           onBackgroundRemove={onBackgroundRemove}
+          envelope={{
+            title: invitation.copy.title,
+            monogram: monogramFrom(invitation.brief.hosts),
+            // A host with a letter in it, which is what gives the seal an
+            // initial; otherwise it carries the brand's letter (monogram.ts).
+            hasHosts: invitation.brief.hosts.some((host) => /\p{L}/u.test(host)),
+          }}
         />
       </div>
     </section>

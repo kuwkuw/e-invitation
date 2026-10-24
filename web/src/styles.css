@@ -722,14 +722,35 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    held back while blur made a layer parked over a moving card cost GPU fill
    rate (adr-018 §7); paper has no blur (adr-019 §4.1). */
 .cc-design { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 10px; }
-.cc-seg { display: flex; gap: 5px; padding: 5px; border-radius: var(--r-xl); }
-.cc-seg-item { flex: 1; border: none; background: none; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); padding: 9px 4px; border-radius: var(--r-lg); cursor: pointer; transition: background var(--dur-fast) var(--ease-ios); }
-.cc-seg-item.on { background: var(--surface); color: var(--accent); box-shadow: var(--e-1); }
+/* Underlined tabs on card stock (adr-019 §7.3), in place of the segmented
+   glass bar. The open one is the product's ink over an accent rule; --ui-*
+   because the swatches above carry palette-*, which shadows --ink and
+   --accent. A rule spends no fill (adr-010 §3.1). The five share the width,
+   so they fit a 360px phone in both languages. */
+.cc-tabs { display: flex; background-color: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); box-shadow: var(--e-1); overflow: hidden; }
+.cc-tab { flex: 1; min-width: 0; padding: 12px 4px 10px; border: none; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); white-space: nowrap; cursor: pointer; transition: color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios); }
+.cc-tab:hover { color: var(--ui-ink); }
+.cc-tab.on { color: var(--ui-ink); border-bottom-color: var(--ui-accent); }
 
 .cc-design-sheet { border-radius: var(--r-xl); padding: 10px 16px 16px; }
 .cc-sheet-grab { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--edge); margin: 0 auto 12px; }
 .cc-design-sheet-title { font-size: 0.82rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .cc-design-sheet-body { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* «Макет»'s two rows, composition and ornament, each a full line. */
+.cc-design-row { flex: 1 0 100%; }
+.cc-design-row + .cc-design-row { margin-top: 6px; }
+.cc-design-row-title { margin-bottom: 6px; font-size: 0.74rem; font-weight: 600; color: var(--ink-faint); }
+
+/* «Конверт»: a still of the envelope a guest opens first, in the guest
+   page's proportions (.gr-env-body): 4:3 kraft, a flap 58% deep, the seal on
+   its point, the title at the foot. The landing draws its own; this one is
+   smaller and sits in a sheet rather than on --night. */
+.cc-env-still { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 2px 0; }
+.cc-env { position: relative; width: min(220px, 100%); aspect-ratio: 4 / 3; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px 18px; background-color: var(--kraft); border-radius: var(--r-sm); box-shadow: var(--e-2); }
+.cc-env-flap { position: absolute; inset: 0 0 auto; height: 58%; background-color: var(--kraft-deep); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.cc-env-to { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ui-font-display); font-weight: 400; font-size: 0.95rem; color: var(--ui-ink); }
+.cc-env-seal { position: absolute; top: 58%; left: 50%; width: 44px; margin: -22px 0 0 -22px; font-size: 0.8rem; }
+.cc-env-note { margin: 0; max-width: 36ch; text-align: center; font-size: 0.82rem; line-height: 1.45; color: var(--ink-muted); }
 
 /* Design controls -------------------------------------------------------- */
 /* The options inside the design toolbar's sheets. The four labelled rows that
@@ -743,7 +764,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .design-option {
   border: 1px solid var(--edge-strong);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 3px 9px;
   font-size: 0.8rem;
   cursor: pointer;

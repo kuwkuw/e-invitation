@@ -414,6 +414,25 @@ describe("the editor canvas", () => {
   });
 });
 
+describe("the design tabs (adr-019 §7.3)", () => {
+  const rules = () => ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+
+  it("marks the open tab in the product's ink over an accent rule", () => {
+    const on = rules().find((r) => r.selectors.includes(".cc-tab.on"));
+    expect(on?.body).toMatch(/(?:^|[;\s])color:\s*var\(--ui-ink\)/);
+    expect(on?.body).toMatch(/border-bottom-color:\s*var\(--ui-accent\)/);
+    // The swatches carry palette-*, which shadows these two names.
+    expect(on?.body).not.toMatch(/var\(--(?:ink|accent)\)/);
+  });
+
+  it("sets the options on stationery corners", () => {
+    const option = ruleBlocks(stripComments(sections(css).get("Design controls") ?? "")).find((r) =>
+      r.selectors.includes(".design-option"),
+    );
+    expect(option?.body).toMatch(/border-radius:\s*var\(--r-md\)/);
+  });
+});
+
 /** Quiet text has to be quiet by size and weight rather than by being hard to
  *  see. Each row names the ground the text actually sits on — a card
  *  (--surface), the page around it (--app-bg), or its own control — and the
@@ -521,6 +540,16 @@ describe("the sign-in gate's and the account sheets' text", () => {
     const spin = ruleBlocks(body).find((r) => r.selectors.includes(".ag-spin"));
     expect(spin?.body).toMatch(/color:\s*var\(--ui-accent\)/);
   });
+});
+
+/** Where a host makes the invitation. */
+describe("the editor's text", () => {
+  textFloors("Creation chat", [
+    [".cc-tab", "--surface", 4.5],
+    [".cc-design-row-title", "--surface", 3],
+    [".cc-env-to", "--kraft", 4.5],
+    [".cc-env-note", "--surface", 4.5],
+  ]);
 });
 
 /** Where a host reads their replies. */
