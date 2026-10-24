@@ -81,6 +81,12 @@ The invitation carries only an opaque `background.id`
 
 - `src/schemas.ts` (zod v4) is the source of truth for the data model.
   Design tokens are **closed enums**; never widen them to free text.
+- **An RSVP's `answer` is what the guest said; read it, never `attending`**,
+  which is true for a yes only and stays beside it so code from before the
+  maybe counts right after a revert (adr-019 §9.1). Records written before
+  the maybe have `attending` alone and are never rewritten: `answerOf` in
+  `rsvpSummary.ts` is the one place that reads both. A total of replies is
+  yes + no + maybe.
 - Invitations are one JSON file per id in the file store (`store.ts`).
   Accounts live in SQLite **beside** it: `db.ts` opens `DATA_DIR/app.db` with
   `node:sqlite` through `createRequire`, because a plain import fails under

@@ -104,6 +104,15 @@ Deliberately unequal, and both read one predicate, `isPastDate` in
   declined sign-in returns to where it started. Sign-out goes through
   `SignOutSheet`.
 
+## RSVP answers (adr-019 §9.1)
+
+A reply is yes, no or «Ще не знаю». **Read `answer`, never `attending`**: the
+server sends `attending` true for a yes only, beside `answer`, so code from
+before the maybe counts right after a revert, and the guest form sends both
+for the same reason (`buildRsvpInput`). A maybe carries no party size and
+never adds to `guests`. A total of replies is `yes + no + maybe`
+(`YourInvitations`' row label).
+
 ## Browser storage
 
 Every key is `inv-*` (`inv-manage:<id>`, `inv-manage-seen:<id>`,

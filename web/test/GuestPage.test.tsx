@@ -1,11 +1,11 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../src/api";
 import { GuestPage } from "../src/GuestPage";
 import { ENVELOPE_MS } from "../src/hooks/useEnvelope";
 import { GUEST } from "../src/i18n";
-import type { PublishedInvitation } from "../src/types";
+import type { PublishedInvitation, RsvpAnswer } from "../src/types";
 import { asReturningGuest, guestFixture } from "./guestFixture";
 
 // vite.config.ts sets globals: false, so RTL never auto-cleans.
@@ -203,11 +203,13 @@ describe("the reply card (adr-019 §5.3)", () => {
     vi.spyOn(api, "submitRsvp").mockResolvedValue({ ok: true });
   });
 
-  async function answer(attending: boolean) {
+  async function answer(choice: RsvpAnswer) {
     fireEvent.change(await screen.findByPlaceholderText(t.namePlaceholder), {
       target: { value: "Іван" },
     });
-    fireEvent.click(screen.getByRole("radio", { name: attending ? t.yes : t.no }));
+    fireEvent.click(
+      screen.getByRole("radio", { name: { yes: t.yes, no: t.no, maybe: t.maybe }[choice] }),
+    );
     fireEvent.click(screen.getByRole("button", { name: t.send }));
   }
 
@@ -219,7 +221,7 @@ describe("the reply card (adr-019 §5.3)", () => {
 
   it("seals a yes with a ✓, the party size, and a way to pass the link on", async () => {
     renderPage();
-    await answer(true);
+    await answer("yes");
 
     expect(await screen.findByText(t.thanksTitle)).toBeDefined();
     const seal = document.querySelector(".gr-thanks-seal");
@@ -231,7 +233,7 @@ describe("the reply card (adr-019 §5.3)", () => {
 
   it("seals a no quietly, with no share", async () => {
     renderPage();
-    await answer(false);
+    await answer("no");
 
     expect(await screen.findByText(t.declinedTitle)).toBeDefined();
     expect(document.querySelector(".gr-thanks-seal.muted")).not.toBeNull();
@@ -240,10 +242,44 @@ describe("the reply card (adr-019 §5.3)", () => {
 
   it("reopens the form with the answer intact (FR-4.4)", async () => {
     renderPage();
-    await answer(true);
+    await answer("yes");
     fireEvent.click(await screen.findByRole("button", { name: t.changeAnswer }));
 
     expect((screen.getByPlaceholderText(t.namePlaceholder) as HTMLInputElement).value).toBe("Іван");
     expect(screen.getByRole("radio", { name: t.yes }).getAttribute("aria-checked")).toBe("true");
+  });
+
+  // «Ще не знаю» (adr-019 §9.1): a third answer, below yes and no rather than
+  // beside them, with no party size and a reply still to come.
+  it("offers a third answer in the same radio group", async () => {
+    renderPage();
+    const group = await screen.findByRole("radiogroup", { name: t.replyTitle });
+    expect(
+      within(group)
+        .getAllByRole("radio")
+        .map((r) => r.textContent),
+    ).toEqual([t.yes, t.no, t.maybe]);
+  });
+
+  it("asks no party size for a maybe, and sends both fields", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("radio", { name: t.maybe }));
+    expect(screen.queryByText(t.guestsCount)).toBeNull();
+    await answer("maybe");
+    expect(api.submitRsvp).toHaveBeenCalledWith(
+      "abc123",
+      expect.objectContaining({ answer: "maybe", attending: false, guests_count: 1 }),
+    );
+  });
+
+  it("thanks a maybe quietly, and points at changing the reply", async () => {
+    renderPage();
+    await answer("maybe");
+    expect(await screen.findByText(t.maybeTitle)).toBeDefined();
+    expect(document.querySelector(".gr-thanks-seal")?.classList.contains("muted")).toBe(true);
+    expect(screen.getByText(t.maybePill)).toBeDefined();
+    expect(screen.getByText(t.maybeLater, { exact: false })).toBeDefined();
+    expect(screen.queryByRole("button", { name: t.share })).toBeNull();
+    expect(screen.getByRole("button", { name: t.changeAnswer })).toBeDefined();
   });
 });

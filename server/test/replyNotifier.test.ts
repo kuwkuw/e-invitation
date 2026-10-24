@@ -8,7 +8,7 @@ import { buildApp } from "../src/app.js";
 import { closeDb } from "../src/db.js";
 import { notifyNewReplies } from "../src/email/replyNotifier.js";
 import { getPref, lastNotifiedAt, setNotificationsEnabled } from "../src/notifications.js";
-import type { Invitation } from "../src/schemas.js";
+import type { Invitation, RsvpAnswer } from "../src/schemas.js";
 import { addRsvp, getRecord, type PublishedRecord } from "../src/store.js";
 
 const BASE = "https://invinto.app";
@@ -107,10 +107,16 @@ async function publish(
  *
  *  Returns the updated record: `addRsvp` is immutable, so the reply exists
  *  only in what it hands back. Threading it is what the route has to do too. */
-function reply(record: PublishedRecord, name: string, createdAt: string): PublishedRecord {
+function reply(
+  record: PublishedRecord,
+  name: string,
+  createdAt: string,
+  answer: RsvpAnswer = "yes",
+): PublishedRecord {
   return addRsvp(record, {
     name,
-    attending: true,
+    answer,
+    attending: answer === "yes",
     guests_count: 1,
     note: null,
     created_at: createdAt,
@@ -199,6 +205,23 @@ describe("reply notifications", () => {
       // for the dashboard and wrong for a first email.
       expect(sentBodies(spy)[0].subject).toBe("2 нові відповіді — Мій день");
       expect(lastNotifiedAt(user.id, record.id)).not.toBeNull();
+    });
+
+    // A maybe is a reply (adr-019 §9.1). The first send adds the counts up by
+    // hand, and before the maybe it added yes and no only: a guest list of
+    // maybes would have emailed nobody.
+    it("counts a maybe in the first send", async () => {
+      configureMail();
+      const spy = stubSend();
+      const { cookies } = signInWantingMail();
+      let record = await publish(invitation("Мій день"), cookies);
+      record = reply(record, "Іван", "2026-07-31T10:00:00.000Z", "maybe");
+      record = reply(record, "Олег", "2026-07-31T10:01:00.000Z", "maybe");
+
+      await notifyNewReplies(record, BASE);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(sentBodies(spy)[0].subject).toBe("2 нові відповіді — Мій день");
     });
 
     it("stays silent for a reply inside the window", async () => {

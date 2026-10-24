@@ -110,6 +110,14 @@ describe("the landing page's claims", () => {
     expect(LANDING.en.statValue).toBe("1 minute");
   });
 
+  // FR-13.11: the day the maybe ships, «так» чи «ні» stops being the whole
+  // truth about what a guest can answer (adr-019 §9.1).
+  it("names all three answers a guest can give", () => {
+    const uk = LANDING.uk.guestsPoints[2] ?? "";
+    for (const answer of ["«так»", "«ні»", "«ще не знаю»"]) expect(uk).toContain(answer);
+    expect(LANDING.en.guestsPoints[2]).toContain("not sure yet");
+  });
+
   it("answers four questions and makes three points about the guest's page", () => {
     for (const lang of ["uk", "en"] as const) {
       expect(LANDING[lang].faq).toHaveLength(4);

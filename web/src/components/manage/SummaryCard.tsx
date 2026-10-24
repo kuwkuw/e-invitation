@@ -11,10 +11,10 @@ import type { RsvpSummary } from "../../types";
  *  has no track to fill and no total to reach. Each segment grows by its
  *  count, so a zero needs no arithmetic and simply isn't drawn. It is
  *  `aria-hidden` because the counts beneath it are the same facts as text.
- *  «Ще не знаю» joins in adr-019 step 7 as a third segment and a third count;
- *  a maybe never adds to the headcount (§9.1). */
+ *  «Ще не знаю» is the third segment and count, reported beside yes and no
+ *  and never added to the headcount (§9.1). */
 export function SummaryCard({ summary, t }: { summary: RsvpSummary; t: ManageStrings }) {
-  const { yes, no, guests } = summary.counts;
+  const { yes, no, maybe, guests } = summary.counts;
   // Everyone beyond the attendees themselves — the "+4 with companions" line.
   const extra = guests - yes;
 
@@ -32,6 +32,7 @@ export function SummaryCard({ summary, t }: { summary: RsvpSummary; t: ManageStr
       <div className="hm-bar" aria-hidden="true">
         {yes > 0 && <span className="hm-bar-yes" style={{ flexGrow: yes }} />}
         {no > 0 && <span className="hm-bar-no" style={{ flexGrow: no }} />}
+        {maybe > 0 && <span className="hm-bar-maybe" style={{ flexGrow: maybe }} />}
       </div>
       <div className="hm-counts">
         <p className="hm-count hm-count-yes">
@@ -41,6 +42,10 @@ export function SummaryCard({ summary, t }: { summary: RsvpSummary; t: ManageStr
         <p className="hm-count hm-count-no">
           <span className="hm-count-num">{no}</span>
           <span className="hm-count-label">{t.tileNo}</span>
+        </p>
+        <p className="hm-count hm-count-maybe">
+          <span className="hm-count-num">{maybe}</span>
+          <span className="hm-count-label">{t.tileMaybe}</span>
         </p>
       </div>
     </section>

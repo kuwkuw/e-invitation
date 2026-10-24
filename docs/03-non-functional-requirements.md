@@ -12,10 +12,13 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **140.0 kB gzipped** (487.6 kB raw, CSS + JS), measured 2026-10-24 with
-  `pnpm --filter inv-app-web build` — 13.67 kB CSS plus 126.30 kB JS, after
-  [adr-019](decisions/adr-019-paper-direction.md)'s manage dashboard
-  (step 6): the seal and countdown in its header, the summary bar,
+  **140.5 kB gzipped** (489.6 kB raw, CSS + JS), measured 2026-10-24 with
+  `pnpm --filter inv-app-web build` — 13.77 kB CSS plus 126.68 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s «Ще не знаю» (step 7):
+  the third tile and thanks card, the summary's third segment and count, the
+  maybe's pill and tokens, and their copy added 0.5 kB. It was 140.0 kB
+  (487.6 kB raw) after step 6's manage dashboard, 13.67 kB CSS plus
+  126.30 kB JS, where the seal and countdown in its header, the summary bar,
   «Нагадати гостям», the guests' wishes and their copy added 0.6 kB, against
   the three tiles they retired. It was 139.3 kB (484.9 kB raw) after step 4's
   landing, 13.54 kB CSS plus 125.80 kB JS, where the composer, the stage,

@@ -109,9 +109,17 @@ PublishedRecord
 ├── id            8 random bytes, base64url (the share slug)
 ├── manage_token  16 random bytes hex — the host capability
 ├── versions[]    append-only Invitation snapshots; guests see the last
-├── rsvps[]       append-only {name, attending, guests_count, note, created_at}
+├── rsvps[]       append-only {name, answer, attending, guests_count, note, created_at}
 └── created_at / updated_at
 ```
+
+`answer` is yes, no or maybe; `attending` is true for a yes only. The two
+sit side by side rather than one replacing the other so that code from before
+the maybe, which reads `attending` alone, still counts right after a revert
+([adr-019](decisions/adr-019-paper-direction.md) §9.1). Records written
+before the maybe have `attending` only, and `answerOf` in
+[rsvpSummary.ts](../server/src/rsvpSummary.ts) reads both; nothing rewrites
+them.
 
 One JSON file per record under `DATA_DIR` (default `./data`), written
 atomically (write-then-rename). The store's function interface is the seam for

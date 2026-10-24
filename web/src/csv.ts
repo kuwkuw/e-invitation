@@ -8,6 +8,8 @@ export interface RsvpCsvStrings {
   headers: readonly [string, string, string, string, string, string];
   yes: string;
   no: string;
+  /** «Ще не знаю» (adr-019 §9.1). */
+  maybe: string;
   /** Marks an answer a later one replaced (adr-010 §5). Every row is
    *  exported, superseded ones included, so the file stays a full record. */
   superseded: string;
@@ -21,10 +23,10 @@ export function buildRsvpCsv(rsvps: RsvpEntry[], strings: RsvpCsvStrings): strin
   const rows = rsvps.map((r) =>
     [
       r.name,
-      r.attending ? strings.yes : strings.no,
-      // guests_count only means anything for attendees (the server counts it
-      // that way too); leave it blank on declines.
-      r.attending ? String(r.guests_count) : "",
+      { yes: strings.yes, no: strings.no, maybe: strings.maybe }[r.answer],
+      // guests_count only means anything for a yes (the server counts it
+      // that way too); leave it blank on a no or a maybe.
+      r.answer === "yes" ? String(r.guests_count) : "",
       r.note ?? "",
       r.created_at.slice(0, 16).replace("T", " "),
       // Blank for live answers — a status column that shouts on every row

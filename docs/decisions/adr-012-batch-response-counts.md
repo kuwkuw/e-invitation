@@ -240,7 +240,10 @@ the last three iterations used.
   a bare `0`. The ADR left the exact figure to the mockup; replies-received
   reads as "how much has come back" without leaning on the headcount the
   dashboard leads with. Ukrainian pluralizes it through the existing
-  `pluralForm` helper.
+  `pluralForm` helper. *Amended 2026-10-24
+  ([adr-019](adr-019-paper-direction.md) §9.1): the counts gained `maybe`,
+  which this endpoint returns unchanged because it shares the shape, and the
+  row counts `yes + no + maybe`: a maybe is a reply received.*
 - **The "new" badge is a `role="img"` span with an `aria-label`** carrying the
   full "N new since your last visit" phrase — a bare `+N` beside an accent dot
   is clear by sight but says nothing to a screen reader, and `aria-label` on a

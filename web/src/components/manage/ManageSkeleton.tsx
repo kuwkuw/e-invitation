@@ -9,11 +9,12 @@ export function ManageSkeleton({ label }: { label: string }) {
       <div className="hm-sk hm-sk-title" />
       <div className="hm-sk hm-sk-sub" />
 
-      {/* The summary's shape: the total, the thin bar, two counts. */}
+      {/* The summary's shape: the total, the thin bar, three counts. */}
       <div className="hm-card">
         <div className="hm-sk hm-sk-bignum" />
         <div className="hm-sk hm-sk-bar" />
         <div className="hm-counts">
+          <div className="hm-sk hm-sk-count" />
           <div className="hm-sk hm-sk-count" />
           <div className="hm-sk hm-sk-count" />
         </div>

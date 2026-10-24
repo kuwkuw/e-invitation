@@ -107,9 +107,12 @@ describe("material tokens", () => {
     expect(css).toMatch(/--app-bg:\s*var\(--ground\);/);
   });
 
-  it("keeps the RSVP status pair, which other surfaces still read", () => {
+  // The pair became a trio with «Ще не знаю» (adr-019 §9.1). The floors in
+  // "the manage page's text" are where each one's contrast is held.
+  it("keeps the RSVP status trio, which other surfaces still read", () => {
     expect(tokens.get("--rsvp-yes")).toBe("#3d6b47");
     expect(tokens.get("--rsvp-no")).toBe("#a83f3f");
+    expect(tokens.get("--rsvp-maybe")).toBe("#86621c");
   });
 });
 
@@ -430,6 +433,8 @@ describe("the manage page's text", () => {
     [".hm-when", "--surface", 3],
     [".hm-previous", "--surface", 3],
     [".hm-count-label", "--surface", 3],
+    [".hm-count-maybe .hm-count-num", "--surface", 4.5],
+    [".hm-pill-maybe", "--rsvp-maybe-bg", 4.5],
     [".hm-remind", "--surface", 4.5],
     [".hm-wish-quote", "--surface", 4.5],
     [".hm-wish-who", "--surface", 3],
@@ -478,6 +483,7 @@ describe("the guest page's text", () => {
     [".gr-bar-where", "--surface", 4.5],
     [".gr-bar-reply", "--surface", 4.5],
     [".gr-countdown", "--app-bg", 4.5],
+    [".gr-tile.maybe", "--surface", 4.5],
     [".gr-quiet-action", "--app-bg", 4.5],
     [".gr-env-to", "--kraft", 4.5],
     [".gr-env-skip", "--night", 4.5],
@@ -504,6 +510,16 @@ describe("the guest page's text", () => {
       r.selectors.includes(".gr-mat"),
     );
     expect(mat?.body).toMatch(/filter:\s*drop-shadow\(/);
+  });
+
+  // adr-019 §9.1: yes and no keep their row; «Ще не знаю» wraps beneath them
+  // across the card, because three don't fit a 360 px phone side by side.
+  it("sets the maybe tile on a row of its own under yes and no", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Guest page") ?? ""));
+    const body = (selector: string) =>
+      rules.find((r) => r.selectors.includes(selector))?.body ?? "";
+    expect(body(".gr-tiles")).toMatch(/flex-wrap:\s*wrap/);
+    expect(body(".gr-tile.maybe")).toMatch(/flex-basis:\s*100%/);
   });
 
   it("fills the disabled submit with --edge-soft, not the ruled line", () => {

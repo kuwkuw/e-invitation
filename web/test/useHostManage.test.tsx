@@ -12,7 +12,7 @@ const ID = "abc123";
 const TOKEN = "a".repeat(32);
 
 const published = { id: ID, version: 1 } as PublishedInvitation;
-const summary: RsvpSummary = { rsvps: [], counts: { yes: 0, no: 0, guests: 0 } };
+const summary: RsvpSummary = { rsvps: [], counts: { yes: 0, no: 0, maybe: 0, guests: 0 } };
 
 function apiError(status: number): ApiError {
   const error = new ApiError("nope");
