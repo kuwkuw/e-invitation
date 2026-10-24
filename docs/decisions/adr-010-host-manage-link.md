@@ -74,6 +74,25 @@ republish rights. Mitigated by labelling only. Rejected alternatives: a
 short-lived signed link (needs server state and a mail channel we don't
 have), and requiring accounts (rejected wholesale by adr-005).
 
+### 3.1 The hierarchy counts fills, not affordances
+
+*Added 2026-10-24, from [adr-019](adr-019-paper-direction.md) §10, with the
+share panel's reply-email checkbox.* The public link owns the panel's only
+filled accent so that a host reaching for "the link" reaches for the safe
+one. Read as "everything else must be quieter", that rule made every later
+addition default to a quieter sentence, which was right until the panel had
+to carry something a host must act on: under opt-in the reply-email control
+is the only thing between the feature and its non-existence. So:
+
+> A new control in the share panel may take any affordance that spends no
+> fill. It may not take colour, weight or button geometry that rhymes with
+> the primary.
+
+A checkbox is recognised as pressable at a glance and spends no fill, and its
+checked box is ink, never the accent, so it competes with the prose around it
+rather than with the public link. The count of filled accents stays one in
+every state of the panel, and the tests that hold it are unchanged.
+
 ### 4. A local "your invitations" index
 
 `localStorage` already accumulates `inv-manage:<id>` keys, but an id is not

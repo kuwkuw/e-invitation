@@ -1,7 +1,7 @@
 /**
  * Reply email, as one control (adr-019 §10, redone on paper from PR #66's
- * design pass; adr-015 §7). The landing footer and the manage page carry it;
- * the share panel takes it in adr-019 step 5.
+ * design pass; adr-015 §7). The landing footer, the manage page and the share
+ * panel carry it.
  *
  * **Why a checkbox and not a quieter sentence.** Opt-in changed what this
  * element is for. Under default-on the line was a disclosure, and could be as

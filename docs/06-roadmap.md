@@ -898,6 +898,15 @@ the same day — unlike three of the iterations above, nothing here was owed.
   attributes in components; the landing's icons now stroke `currentColor`,
   but the guest page's, the editor's and the gate's still carry hex.
 
+  *Updated 2026-10-24, adr-019 step 5:* the gate's pass happened. `Sign-in
+  gate`, `Account sheets` and `Share panel: signed in` are on tokens and in
+  `CONVERTED`, and `Reply notifications` is gone with the sentence it drew,
+  `.sp-notify-toggle` included. The editor's and the gate's icons stroke
+  `currentColor`, and the component hex test covers the editor, allowing the
+  Google mark's four brand colours by name. `Gallery` 22 and `Crash screen` 12
+  remain; the crash screen's button glow also still spells glass's
+  terracotta as an `rgba()` the ratchet can't see.
+
   Found in passing, and not a colour: **the gallery's headings had never
   rendered in Playfair** (fixed 2026-10-17). `.gl h1`, `.gl h2` and
   `.gl-tile-name` read `var(--lp-display)`, which was declared only on
@@ -959,7 +968,16 @@ the same day — unlike three of the iterations above, nothing here was owed.
   a locked-out host where their manage link is, at 2.59:1. The guest page's
   version is the same size of job; it waits only on someone deciding the guest
   page may move.
-- **The toolbar fix is coupled to adr-018 §7's hardware gate.** The gate ran
+- ~~**The toolbar fix is coupled to adr-018 §7's hardware gate.**~~ — **fixed
+  2026-10-24, in adr-019's editor step**, and the coupling is gone with the
+  blur: paper is opaque, so a layer parked over the moving card costs no fill
+  rate and there is nothing for the device check to re-measure (adr-019
+  §4.1). The design controls follow the card now and stick to the pane's
+  bottom, and the pane centres with `margin: auto` so a tall card scrolls to
+  its top; `styles.test.ts` holds both. The rule below would test a blur that
+  no longer exists, so it was not written. Original entry:
+
+  The gate ran
   and passed on 2026-09-19 (see the shipped section above), but only on the
   layout as it stands, which this entry explains. A 2026-09-19 probe measured the editor's blur budget at
   190px of a 592px screen at rest and 286px (45% of the viewport) with a
@@ -1093,5 +1111,7 @@ The landing's half shipped with adr-019 step 4 (2026-10-24): the account
 footer's checkbox (FR-12.12) and the sign-in pair, whose order is now tested
 (FR-11.11). The manage page's shipped with step 6 (2026-10-24), the checkbox
 on the dashboard with "not just this one" in its state line (FR-12.11). The
-share panel is the last. The code and docs stay on the branch
-`feat/ds-notify-checkbox` as the reference until the editor step lands.
+share panel's, the last, shipped with step 5 (2026-10-24): the checkbox at
+publish (FR-12.7), and the rule behind it written down as adr-010 §3.1. The
+whole pass is now ported, so `feat/ds-notify-checkbox`, kept as the
+reference until the editor step landed, is deleted once that step merges.

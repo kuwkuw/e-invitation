@@ -7,6 +7,7 @@ import {
   bannerTitles,
   blend,
   contrast,
+  deltaE76,
   readStyles,
   rootTokens,
   ruleBlocks,
@@ -320,6 +321,7 @@ describe("paper materials (adr-019 §3)", () => {
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
 const CONVERTED = [
+  "Account sheets",
   "App chrome",
   "Creation chat",
   "Design controls",
@@ -330,6 +332,8 @@ const CONVERTED = [
   "Landing: returning-host block",
   "Reply email checkbox",
   "Share panel",
+  "Share panel: signed in",
+  "Sign-in gate",
 ];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
@@ -384,12 +388,95 @@ describe("the editor canvas", () => {
     expect(app).toMatch(/data-palette=\{/); // kept as an unused hook (adr-019 §4.2)
   });
 
-  it("near-bleeds the card without touching InvitationPreview's own rules", () => {
-    // The whole effect is a scoped override. .inv itself must keep its radius,
-    // because the guest page and the gallery render the same component.
-    expect(css).toMatch(/\.cc-canvas\s+\.inv\s*\{/);
+  // adr-019 §7.1: the near-bleed inset became the mat's pad. The card is on
+  // the guest page's mat, so nothing overrides the card itself any more.
+  it("sets the card on the mat without touching InvitationPreview's own rules", () => {
+    expect(css).not.toMatch(/\.cc-canvas\s+\.inv\s*\{/);
     const base = /^\.inv\s*\{([^}]*)\}/m.exec(css);
     expect((base as RegExpExecArray)[1]).toMatch(/border-radius:\s*14px/);
+    const mat = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? "")).find((r) =>
+      r.selectors.includes(".cc-mat"),
+    );
+    expect(mat?.body).toMatch(/filter:\s*drop-shadow\(var\(--e-2\)\)/);
+  });
+
+  // The roadmap's sticky bug, fixed: the controls follow the card and stick to
+  // the pane's bottom, and the pane centres without clipping a tall card's top.
+  it("pins the design controls to the pane's bottom, and centres safely", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+    const design = rules.find((r) => r.selectors.includes(".cc-design"));
+    expect(design?.body).toMatch(/position:\s*sticky/);
+    expect(design?.body).toMatch(/bottom:\s*0/);
+    const preview = rules.filter((r) => r.selectors.includes(".cc-preview"));
+    expect(preview.map((r) => r.body).join(";")).not.toMatch(/align-items:\s*center/);
+    const inner = rules.find((r) => r.selectors.includes(".cc-preview-inner"));
+    expect(inner?.body).toMatch(/margin:\s*auto/);
+  });
+});
+
+describe("the editor's header (adr-019 §7.2)", () => {
+  it("is a bar on card stock with a ruled edge, not glass's floating pill", () => {
+    const header = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? "")).find(
+      (r) => r.selectors.includes(".cc-header") && /display:\s*grid/.test(r.body),
+    );
+    expect(header?.body).toMatch(/background-color:\s*var\(--surface\)/);
+    expect(header?.body).toMatch(/border-bottom:\s*1px solid var\(--edge\)/);
+    expect(header?.body).not.toMatch(/border-radius/);
+    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bglass\b/);
+  });
+
+  it("hangs the share and key panels from the bar, whatever its height", () => {
+    const panel = ruleBlocks(stripComments(css)).find(
+      (r) => r.selectors.includes(".cc-share-panel") && /position:\s*absolute/.test(r.body),
+    );
+    expect(panel?.body).toMatch(/top:\s*calc\(100% \+ 8px\)/);
+  });
+});
+
+describe("the chat on paper (adr-019 §7.4)", () => {
+  it("sets the peek line in the assistant's voice: Literata italic", () => {
+    const body = ruleBlocks(stripComments(css))
+      .filter((r) => r.selectors.includes(".cc-peek"))
+      .map((r) => r.body)
+      .join(";");
+    expect(body).toMatch(/font-family:\s*var\(--ui-font-display\)/);
+    expect(body).toMatch(/font-style:\s*italic/);
+    expect(body).toMatch(/font-weight:\s*400/);
+  });
+
+  // adr-019 §1: stationery corners; the pill stays for the language switch.
+  it("keeps the pill for the grab handle alone", () => {
+    const readers = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""))
+      .filter((r) => /var\(--r-pill\)/.test(r.body))
+      .flatMap((r) => r.selectors);
+    expect(readers).toEqual([".cc-sheet-grab"]);
+  });
+
+  it("draws its waiting states on tokens", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+    const skeleton = rules.find((r) => r.selectors.includes(".cc-skeleton"));
+    expect(skeleton?.body).toMatch(/box-shadow:\s*var\(--e-2\)/);
+    const placeholder = rules.find((r) => r.selectors.includes(".cc-placeholder"));
+    expect(placeholder?.body).toMatch(/background-color:\s*var\(--surface\)/);
+  });
+});
+
+describe("the design tabs (adr-019 §7.3)", () => {
+  const rules = () => ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+
+  it("marks the open tab in the product's ink over an accent rule", () => {
+    const on = rules().find((r) => r.selectors.includes(".cc-tab.on"));
+    expect(on?.body).toMatch(/(?:^|[;\s])color:\s*var\(--ui-ink\)/);
+    expect(on?.body).toMatch(/border-bottom-color:\s*var\(--ui-accent\)/);
+    // The swatches carry palette-*, which shadows these two names.
+    expect(on?.body).not.toMatch(/var\(--(?:ink|accent)\)/);
+  });
+
+  it("sets the options on stationery corners", () => {
+    const option = ruleBlocks(stripComments(sections(css).get("Design controls") ?? "")).find((r) =>
+      r.selectors.includes(".design-option"),
+    );
+    expect(option?.body).toMatch(/border-radius:\s*var\(--r-md\)/);
   });
 });
 
@@ -419,6 +506,102 @@ function textFloors(section: string, rows: [selector: string, ground: string, fl
     });
   }
 }
+
+/** The panel a host publishes into (adr-010 §3, adr-019 §10). */
+describe("the share panel's text", () => {
+  textFloors("Share panel", [
+    [".sp-subtitle", "--surface", 4.5],
+    [".sp-label", "--surface", 4.5],
+    [".sp-hint", "--surface", 3],
+    [".sp-version", "--ground", 3],
+    [".sp-manage-label", "--caution-wash", 4.5],
+    [".sp-manage-warning", "--caution-wash", 4.5],
+    [".sp-manage-value", "--caution-surface", 3],
+    [".sp-reveal", "--caution-wash", 3],
+    [".sp-responses-link", "--surface", 4.5],
+  ]);
+  textFloors("Share panel: signed in", [
+    [".sp-account-note", "--surface", 4.5],
+    [".sp-manage-collapsed-label", "--caution-wash", 4.5],
+    [".sp-manage-collapsed-action", "--caution-wash", 4.5],
+    [".sp-manage-hide", "--caution-wash", 3],
+  ]);
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Share panel") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+  });
+
+  it("sets its corners on the radius tokens", () => {
+    for (const name of ["Share panel", "Share panel: signed in"]) {
+      const body = stripComments(sections(css).get(name) ?? "");
+      expect(
+        [...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1]),
+        name,
+      ).toEqual([]);
+    }
+  });
+});
+
+// adr-010 §3: the manage-token block exists to not be the clean chrome. Under
+// paper its wash sat 2.4 from the card stock it's set on, inside the 2.5 at
+// which this stylesheet collapses two values into one (adr-019 §1, step 5).
+describe("the manage-token block", () => {
+  it("stays a different material from the chrome around it", () => {
+    const t = (name: string) => tokens.get(name) as string;
+    expect(deltaE76(t("--caution-wash"), t("--surface"))).toBeGreaterThanOrEqual(6);
+    expect(deltaE76(t("--caution-wash"), t("--wash"))).toBeGreaterThanOrEqual(6);
+    expect(deltaE76(t("--caution-surface"), t("--surface"))).toBeGreaterThanOrEqual(2.5);
+  });
+
+  it("measures distance as the :root comment quotes it", () => {
+    // `--caution-wash` vs `--wash` read 2.2 under glass (#f8f2ea, #f1efe9).
+    expect(deltaE76("#f8f2ea", "#f1efe9")).toBeCloseTo(2.18, 1);
+  });
+});
+
+/** The share sheet's first frame (adr-014 §2), and the two sheets built on it. */
+describe("the sign-in gate's and the account sheets' text", () => {
+  textFloors("Sign-in gate", [
+    [".ag-title", "--surface", 4.5],
+    [".ag-why", "--surface", 4.5],
+    [".ag-note", "--surface", 4.5],
+    [".ag-textbtn", "--surface", 3],
+    [".ag-code", "--surface", 3],
+    [".ag-draft", "--wash", 4.5],
+    [".ag-waiting", "--app-bg", 3],
+  ]);
+  textFloors("Account sheets", [
+    [".da-keep-head", "--rsvp-yes-bg", 4.5],
+    [".da-keep-list", "--rsvp-yes-bg", 4.5],
+    [".da-goes", "--surface", 4.5],
+    [".da-keys-title", "--caution-wash", 4.5],
+    [".da-keys-body", "--caution-wash", 4.5],
+    [".da-confirm", "--surface", 4.5],
+    [".so-confirm", "--surface", 4.5],
+  ]);
+
+  it("spins, fills and retries in the paper accent", () => {
+    const body = stripComments(sections(css).get("Sign-in gate") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    const spin = ruleBlocks(body).find((r) => r.selectors.includes(".ag-spin"));
+    expect(spin?.body).toMatch(/color:\s*var\(--ui-accent\)/);
+  });
+});
+
+/** Where a host makes the invitation. */
+describe("the editor's text", () => {
+  textFloors("Creation chat", [
+    [".cc-title", "--surface", 4.5],
+    [".cc-replies", "--surface", 4.5],
+    [".cc-share", "--edge-soft", 4.5],
+    [".cc-peek", "--surface", 4.5],
+    [".cc-tab", "--surface", 4.5],
+    [".cc-design-row-title", "--surface", 3],
+    [".cc-env-to", "--kraft", 4.5],
+    [".cc-env-note", "--surface", 4.5],
+  ]);
+});
 
 /** Where a host reads their replies. */
 describe("the manage page's text", () => {
@@ -621,8 +804,11 @@ describe("the reply email checkbox", () => {
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
  *  Guest and landing components colour everything through currentColor, set
  *  by the CSS rule that places them, and carry no hex at all. */
-describe("the guest page's, the landing's and the dashboard's components", () => {
-  it("carry no hex literal at all", () => {
+// Google's sign-in mark must be drawn in Google's own colours.
+const GOOGLE_MARK = ["#4285F4", "#34A853", "#FBBC05", "#EA4335"];
+
+describe("the guest page's, the landing's, the dashboard's and the editor's components", () => {
+  it("carry no hex literal at all, beyond the Google mark", () => {
     const src = fileURLToPath(new URL("../src/", import.meta.url));
     const inDir = (dir: string) =>
       readdirSync(join(src, dir))
@@ -632,17 +818,25 @@ describe("the guest page's, the landing's and the dashboard's components", () =>
       ...inDir("components/guest"),
       ...inDir("components/landing"),
       ...inDir("components/manage"),
+      ...inDir("components/editor"),
       "ManagePage.tsx",
+      "App.tsx",
+      "components/ByokSettings.tsx",
+      "components/SignOutSheet.tsx",
+      "components/DeleteAccountSheet.tsx",
       "components/Countdown.tsx",
       "components/NotifyCheckbox.tsx",
       "components/AccountFooter.tsx",
     ];
     const named = files.flatMap((file) =>
-      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
-        (m) => `${file}: ${m[0]}`,
-      ),
+      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)]
+        .filter((m) => !(file.endsWith("AuthGate.tsx") && GOOGLE_MARK.includes(m[0])))
+        .map((m) => `${file}: ${m[0]}`),
     );
     expect(named).toEqual([]);
+    // The allowance is the mark, not a licence: each colour appears once.
+    const gate = source("components/editor/AuthGate.tsx");
+    expect(GOOGLE_MARK.map((hex) => gate.split(hex).length - 1)).toEqual([1, 1, 1, 1]);
   });
 });
 

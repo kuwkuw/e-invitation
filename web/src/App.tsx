@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ByokSettings } from "./components/ByokSettings";
 import { AuthGate } from "./components/editor/AuthGate";
 import { ChatPanel } from "./components/editor/ChatPanel";
+import { EditorHeader } from "./components/editor/EditorHeader";
 import { FieldSheet } from "./components/editor/FieldSheet";
-import { BackIcon, ShareIcon } from "./components/editor/icons";
+import { ShareIcon } from "./components/editor/icons";
 import { PastDateBanner } from "./components/editor/PastDateBanner";
 import { PreviewPanel } from "./components/editor/PreviewPanel";
 import { SharePanel } from "./components/editor/SharePanel";
@@ -18,7 +19,9 @@ import { useInvitationEditor } from "./hooks/useInvitationEditor";
 import { useNotificationPref } from "./hooks/useNotificationPref";
 import { usePublishing } from "./hooks/usePublishing";
 import { useReferralSource } from "./hooks/useReferralSource";
+import { useReplyCounts } from "./hooks/useReplyCounts";
 import { loadUiLang, saveUiLang, UI } from "./i18n";
+import { monogramFrom } from "./monogram";
 import { routeMeta, useDocumentMeta } from "./seo";
 import type { CopyField, Language } from "./types";
 
@@ -81,6 +84,9 @@ export default function App() {
   // Account-level, so it needs no invitation — only a signed-in host on a
   // deployment that can actually send mail (adr-015 §7, §8).
   const notify = useNotificationPref(account.status === "signed_in" && account.notifications);
+  // The header's replies so far, once this session has published (adr-019
+  // §7.2). Counts only, from adr-012's endpoint: no guest's name reaches here.
+  const replies = useReplyCounts(publishing.published);
 
   // Finish what the gate interrupted. Guarded by a ref rather than by the
   // gate state, because the publish flips that state itself and StrictMode
@@ -110,40 +116,56 @@ export default function App() {
     // palette-* class, which would push the card's --ink and --accent into
     // the chrome.
     <div className="cc-shell grain" data-palette={editor.invitation?.design.palette}>
-      <header className="cc-header glass">
+      <EditorHeader
+        title={editor.invitation?.copy.title ?? t.chat.newInvitation}
+        monogram={monogramFrom(editor.invitation?.brief.hosts ?? [])}
+        published={publishing.published}
+        counts={replies}
+        onBack={() => navigate("/")}
+        t={t.chat}
+      >
+        <ByokSettings labels={t.byok} />
+        <LangSwitcher
+          value={uiLang}
+          onChange={(lang) => {
+            setUiLang(lang);
+            saveUiLang(lang);
+          }}
+        />
         <button
           type="button"
-          className="cc-back"
-          aria-label={t.chat.back}
-          onClick={() => navigate("/")}
+          className={`cc-share${canPublish ? " ready" : ""}`}
+          disabled={!canPublish || publishing.publishing}
+          onClick={() => editor.invitation && publishing.share(editor.invitation)}
+          // The label is hidden on narrow screens to leave the title room to
+          // be readable, so the button carries its name here regardless.
+          aria-label={t.chat.share}
+          title={editor.dateBlocked ? t.chat.pastDateBlock : undefined}
         >
-          <BackIcon />
+          <ShareIcon />
+          <span className="cc-share-label">{publishing.publishing ? "…" : t.chat.share}</span>
         </button>
-        <div className="cc-title">{editor.invitation?.copy.title ?? t.chat.newInvitation}</div>
-        <div className="cc-header-right">
-          <ByokSettings labels={t.byok} />
-          <LangSwitcher
-            value={uiLang}
-            onChange={(lang) => {
-              setUiLang(lang);
-              saveUiLang(lang);
-            }}
+        {/* Inside the header, so it hangs from the bar's foot whatever the bar's
+            height: on a phone the bar grows a replies row after a publish. */}
+        {publishing.shareOpen && publishing.published && (
+          <SharePanel
+            published={publishing.published}
+            onCopyLink={publishing.copyLink}
+            copied={publishing.copied}
+            canShare={publishing.canShare}
+            onShare={publishing.shareLink}
+            onCopyManageLink={publishing.copyManageLink}
+            manageCopied={publishing.manageCopied}
+            signedIn={account.status === "signed_in"}
+            manageShown={publishing.manageShown}
+            onToggleManage={publishing.toggleManageShown}
+            notifyEmail={account.notifications ? account.email : null}
+            notifyEnabled={notify.enabled}
+            onToggleNotify={notify.toggle}
+            t={t}
           />
-          <button
-            type="button"
-            className={`cc-share${canPublish ? " ready" : ""}`}
-            disabled={!canPublish || publishing.publishing}
-            onClick={() => editor.invitation && publishing.share(editor.invitation)}
-            // The label is hidden on narrow screens to leave the title room to
-            // be readable, so the button carries its name here regardless.
-            aria-label={t.chat.share}
-            title={editor.dateBlocked ? t.chat.pastDateBlock : undefined}
-          >
-            <ShareIcon />
-            <span className="cc-share-label">{publishing.publishing ? "…" : t.chat.share}</span>
-          </button>
-        </div>
-      </header>
+        )}
+      </EditorHeader>
 
       {publishing.gate && (
         <AuthGate
@@ -153,25 +175,6 @@ export default function App() {
           onSignIn={() => editor.invitation && publishing.signInAndPublish(editor.invitation)}
           onDismiss={publishing.dismissGate}
           t={t.auth}
-        />
-      )}
-
-      {publishing.shareOpen && publishing.published && (
-        <SharePanel
-          published={publishing.published}
-          onCopyLink={publishing.copyLink}
-          copied={publishing.copied}
-          canShare={publishing.canShare}
-          onShare={publishing.shareLink}
-          onCopyManageLink={publishing.copyManageLink}
-          manageCopied={publishing.manageCopied}
-          signedIn={account.status === "signed_in"}
-          manageShown={publishing.manageShown}
-          onToggleManage={publishing.toggleManageShown}
-          notifyEmail={account.notifications ? account.email : null}
-          notifyEnabled={notify.enabled}
-          onToggleNotify={notify.toggle}
-          t={t}
         />
       )}
 

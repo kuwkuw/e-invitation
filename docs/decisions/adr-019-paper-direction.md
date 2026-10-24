@@ -125,7 +125,10 @@ running the tests moved four things this section had stated:
   unchanged" was wrong: the dE distances live only in a stylesheet comment.
   The group stays at its glass values in step 1; its kraft re-tune, and a
   test that pins its distance, belong to the share-panel step (5), where its
-  board is.
+  board is. *Done in step 5 (§7, amended), without the board:* the wash is
+  `#f2e7d5`, 8.9 (CIE76) from `--surface` and 7.4 from `--wash`, where under
+  paper it had sat 2.4 from the card stock it is set on; a test holds both at
+  6 or more, and `--caution-surface` at 2.5 from `--surface`.
 - **Elevation got numbers:** `--e-1` `0 1px 2px rgba(28, 26, 23, 0.06)`,
   `--e-2` `0 4px 12px rgba(28, 26, 23, 0.1)`, `--e-3`
   `0 12px 32px rgba(28, 26, 23, 0.16)`. `--glass-shadow` reads `--e-2`.
@@ -438,6 +441,52 @@ step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-landing-paper.m
    each get a board in the design project first. `FieldSheet`, `AuthGate` and
    the BYOK panel restyle by tokens and need none.
 
+**Amended 2026-10-24, step 5.** **The two boards in 5 were waived by the
+owner**, who chose to build without them. The step's plan settled what they
+would have (`docs/superpowers/plans/2026-10-24-editor-paper.md`), against the
+canvas row `A2 · Editor` and the design project's `ShareSignedIn`, `NotifyLine`
+and `AuthGate` boards, and building it settled the rest:
+
+- **The counts come from adr-012's endpoint, not `/rsvps`**, which amends 2.
+  `POST /api/invitations/counts` with the one `{ id, token }` answers with
+  FR-5.2's counts and never the list, so no guest's name or note reaches the
+  editor to draw two numbers. No `seen_at`: the header is not a visit. It
+  asks after each publish or republish and on `visibilitychange → visible`,
+  adr-010 §6's rule, with no timer, and a failure leaves the link reading
+  «Відповіді» (adr-012 §6).
+- **The line** is «{guests} буде · {no} ні · {maybe} можливо»: the headcount,
+  then §8.2's order, each part only when someone gave it, and «Ще без
+  відповідей» before anyone has. A maybe never joins the headcount (§9.1).
+  It is a same-tab link, as the share panel's own is: a new tab in a
+  messenger's webview opens without the manage token this browser holds.
+- **The header is a bar on card stock** with an `--edge` rule, not the
+  floating pill, and its title is set in the display face beside the seal. On
+  a phone (≤ 480 px) the seal hides, as the Publish label already did, and the
+  link takes a row of its own under the bar: the title column there is about
+  90 px, narrower than «16 буде · 3 ні». The share panel renders inside the
+  header, so it hangs from the bar's foot whatever its height.
+- **WYSIWYG, measured:** the card sits in the guest page's mat at the guest's
+  width, 296 / 326 / 436 px at 360 / 390 / 1280, the same on both pages. The
+  near-bleed override on `.inv` is gone.
+- **The toolbar bug is fixed** (§4.1): the controls follow the card and stick
+  to the pane's bottom, and the pane centres with `margin: auto`, so a card
+  taller than it scrolls to its top.
+- **Five tabs, with ornament inside «Макет».** Six don't fit a 360 px phone
+  in English, and even five overflowed it until each tab took the width of its
+  own label. They are disclosures with `aria-expanded`, not ARIA tabs, because
+  none is open at rest. The open one is `--ui-ink` over a `--ui-accent` rule.
+  «Конверт» is a still of the closed envelope, title and seal, with one line
+  saying when guests see it, and asks nothing while the override is deferred
+  (§9.2).
+- **The peek line** is Literata italic at 0.9 rem; the desktop bubbles are
+  unchanged. Every pill in the editor but the grab handle took `--r-md`, and
+  Publish before it can publish took the guest's disabled submit, `--edge-soft`
+  under `--ink-muted`, where `--accent-wash` had vanished into the card stock.
+- **The share panel, the gate and the account sheets went onto tokens**
+  (§11). The primary's glow, the gate's retry, spinner and progress bar were
+  all still glass's terracotta; they read the oxblood now. The manage-token
+  block is re-tuned toward kraft (§1, amended).
+
 ### 8. Manage dashboard
 
 1. A header with the seal, title, and date with a countdown.
@@ -647,6 +696,15 @@ share panel remains, and **`feat/ds-notify-checkbox` stays until step 5
 lands**, not until this step as written above: the share panel is the last
 surface it is the reference for, and it hasn't been built.
 
+**Built 2026-10-24, step 5: the share panel, the last of the three.** The
+panel asks with `NotifyCheckbox` too (FR-12.7, FR-12.12). Off, its state line
+is #66's offer, "To {email} — for every invitation in your account"; on, it is
+the dashboard's "not just this one", because the panel is about one event as
+the dashboard is, and #66's on state dropped the scope the moment a host
+agreed. The struck envelope and the three strings the sentence used went with
+it, and the rule above is now adr-010 §3.1. `feat/ds-notify-checkbox` is
+deleted once this merges.
+
 ### 11. Not in this iteration
 
 - **The gallery.** It isn't in A2. It converts by taking its section (22 hex)
@@ -656,7 +714,10 @@ surface it is the reference for, and it hasn't been built.
   notifications.** They inherit the new values wherever they already read
   tokens and stay on the allowlist otherwise. The sign-in gate is the share
   sheet's first frame ([adr-014](adr-014-host-accounts.md) §2), so it converts
-  with the share panel's board.
+  with the share panel's board. *Step 5 converted the gate, the account
+  sheets built on it and the panel's signed-in rows, and the reply
+  notifications section went with the sentence it drew (§7, amended); the
+  crash screen remains.*
 - **A photo cover, or a monogram printed on the card.** Either would change the
   card and its OG mirror, and would need its own ADR.
 - **Music, gift lists, love stories.** Competitor features, not design.
@@ -681,7 +742,8 @@ implementation (#82) and #66 among them.
 4. **Landing** (§6), with the corrected pricing copy, the `LANDING` / `SEO`
    mirror, and the account footer's checkbox (§10).
 5. **Editor** (§7), with the share panel's checkbox (§10). Needs the desktop
-   and share-panel boards first.
+   and share-panel boards first. *Built 2026-10-24, with the boards waived by
+   the owner (§7, amended).*
 6. **Manage** (§8), with its checkbox (§10). *Built 2026-10-24, before step
    5 (§8, amended).* `feat/ds-notify-checkbox` is deleted after step 5
    instead, the last surface it is the reference for (§10).

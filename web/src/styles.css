@@ -58,7 +58,7 @@
      most accent buttons set their label in is 7.75:1: that is what makes
      Publish legible.
      --ui-accent is a non-shadowed alias: .palette-* redefines --accent on
-     card descendants (e.g. .inv-hit-active inside the near-bleed canvas), so
+     card descendants (e.g. .inv-hit-active inside the editor's canvas), so
      anything meaning the *product's* accent there must read --ui-accent
      instead — the two are tied together so they cannot drift. */
   --ui-accent: #8c2f2b;
@@ -139,28 +139,32 @@
   --glass-shadow: var(--e-2);
 
   /* Caution. The warm material the share panel's manage-token block is built
-     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
-     not decoration: adr-010 makes the manage link a subordinate, visually
-     distinct action beside the public one, and that hierarchy is the only
-     thing standing between a host and pasting the wrong link into a chat.
+     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal, and the
+     collapsed row a signed-in host sees. Its warmth is not decoration:
+     adr-010 makes the manage link a subordinate, visually distinct action
+     beside the public one, and that hierarchy is the only thing standing
+     between a host and pasting the wrong link into a chat.
 
-     Two of these sit inside the dE 2.5 threshold that collapsed values
-     elsewhere in this block — --caution-wash is 2.2 from --wash and
-     --caution-surface is 1.8 from --surface — and are kept separate anyway.
-     The rule is that values collapse when they do the same *job*, not when
-     they merely measure alike; these two exist to not be the clean chrome.
+     Re-tuned toward kraft for paper (adr-019 §1, step 5). Under glass the
+     wash sat 2.2 (CIE76) from --wash, and under paper 2.4 from the --surface
+     it is set on: inside the 2.5 at which this block collapses values that
+     do the same job. These exist to not be the clean chrome, so the wash is
+     now 8.9 from --surface and 7.4 from --wash, and --caution-surface, the
+     field the masked link sits in, 3.9 from --surface. test/styles.test.ts
+     pins all three.
 
      The three edges are a deliberate depth ramp (block, inner field, ghost
-     button) measuring 2.9–6.0 apart, and the two faints 7.3 apart, so none
-     of them is drift. --caution-ink-masked carries the masked token itself. */
-  --caution-wash: #f8f2ea;
-  --caution-surface: #fffdfa;
-  --caution-edge: #ecdcc9;
-  --caution-edge-hi: #e4d4c0;
-  --caution-edge-strong: #dcccb6;
+     button). --caution-ink-faint labels the reveal and hide buttons, so it
+     clears 3:1 on the wash (3.38; it was 2.63), and --caution-ink-masked
+     carries the masked token itself at 3.21 on its field. */
+  --caution-wash: #f2e7d5;
+  --caution-surface: #f9f2e6;
+  --caution-edge: #e3d3b9;
+  --caution-edge-hi: #dccab0;
+  --caution-edge-strong: #d2bfa2;
   --caution-ink: #7a5638;
-  --caution-ink-faint: #a89478;
-  --caution-ink-masked: #9a8f7d;
+  --caution-ink-faint: #937859;
+  --caution-ink-masked: #928672;
 
   /* Status colours preserved at their existing values, deliberately. Their only
      consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
@@ -375,65 +379,108 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background-color: var(--table);
 }
 
-/* Header: a floating pill, not a bar with a border-bottom. */
+/* Header (adr-019 §7.2): a bar on card stock with a ruled edge, as paper
+   lies flat, in place of glass's floating pill. Back, the hosts' seal, the
+   title, then the controls. After a publish the title gains the replies
+   link beneath it; one element, which the grid moves to a row of its own on
+   a phone. Placed by line, not by named areas, which Biome's
+   noInvalidGridAreas misreads when the rows' names differ in length. */
 .cc-header {
   position: relative;
   flex: 0 0 auto;
-  height: 48px;
-  margin: 12px 14px 0;
-  border-radius: var(--r-pill);
-  display: flex;
-  align-items: center;
-  padding: 0 6px 0 12px;
-  gap: 10px;
   z-index: 6;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  /* The replies row is as tall as the link, and nothing before a publish, so
+     the title centres in the bar until it has a line beneath it. */
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  align-content: center;
+  column-gap: 10px;
+  min-height: 56px;
+  padding: 6px 8px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--edge);
 }
 .cc-back {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   width: 38px; height: 38px;
   border: none; background: transparent; border-radius: 50%;
   color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .cc-back:hover { background: var(--accent-wash); }
+.cc-seal { grid-column: 2; grid-row: 1 / span 2; width: 30px; font-size: 0.62rem; }
+/* The invitation's own name once there is one, so it is set as a title. */
 .cc-title {
-  flex: 1;
-  text-align: center;
-  font-weight: 700;
-  font-size: 1rem;
+  grid-column: 3;
+  grid-row: 1;
+  min-width: 0;
+  font-family: var(--ui-font-display);
+  font-weight: 500;
+  font-size: 1.05rem;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cc-header-right { display: flex; align-items: center; gap: 10px; }
+.cc-replies {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: start;
+  max-width: 100%;
+  margin-top: 1px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-replies:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.cc-header-right { grid-column: 4; grid-row: 1 / span 2; display: flex; align-items: center; gap: 10px; }
 .cc-share {
   display: flex; align-items: center; gap: 6px;
-  border: none; border-radius: var(--r-pill);
+  border: none; border-radius: var(--r-md);
   padding: 9px 18px;
   font-size: 0.88rem; font-weight: 700;
-  background: var(--accent-wash); color: var(--ink-faint);
+  /* Not yet publishable: the guest's disabled submit, which clears AA on its
+     fill, where the accent wash vanished into the card stock. */
+  background-color: var(--edge-soft); color: var(--ink-muted);
   cursor: default;
 }
-.cc-share.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
-.cc-share.ready:hover { background: var(--accent-hi); }
-/* Under ~480px the header wants 457px of content: back + title + AI key +
-   language + Share. The title loses that fight first and collapsed to a single
-   letter ("Н…") — and it is not decorative, it carries the invitation's own
-   name once one exists. Dropping the Share *label* (the button keeps its icon
-   and its aria-label) buys the title back ~55px, enough to read. */
+.cc-share.ready { background-color: var(--accent); color: var(--surface); cursor: pointer; }
+.cc-share.ready:hover { background-color: var(--accent-hi); }
+/* Under ~480px the header wants more than the phone has: back + title + AI key
+   + language + Share. The title loses that fight first and collapsed to a
+   single letter ("Н…") — and it is not decorative, it carries the
+   invitation's own name once one exists. Dropping the Share *label* (the
+   button keeps its icon and its aria-label) buys the title back ~55px, and
+   the seal goes for the same reason. The replies link, which needs more than
+   the title column has left, takes a row of its own across the bar's foot. */
 @media (max-width: 480px) {
+  .cc-header { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 8px; }
+  .cc-seal { display: none; }
+  .cc-back, .cc-header-right { grid-row: 1; }
+  .cc-title { grid-column: 2; }
+  .cc-header-right { grid-column: 3; }
   .cc-share { padding: 0; width: 38px; height: 38px; justify-content: center; }
   .cc-share-label { display: none; }
+  .cc-replies { grid-column: 1 / -1; justify-self: stretch; margin: 6px -8px -6px; padding: 7px 14px 8px; border-top: 1px solid var(--edge-soft); }
 }
 
+/* Hangs from the header's foot: both panels render inside it. */
 .cc-share-panel {
   position: absolute;
-  top: 62px; right: 14px;
+  top: calc(100% + 8px); right: 14px;
   z-index: 30;
   width: min(400px, calc(100vw - 28px));
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--r-xl);
-  box-shadow: 0 26px 60px rgba(20, 18, 14, 0.24);
+  box-shadow: var(--e-3);
   padding: 22px;
 }
 
@@ -452,13 +499,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .cc-key-label .share-row { margin-top: 4px; }
 .cc-key-actions { display: flex; gap: 8px; }
 .cc-key-save {
-  border: none; border-radius: var(--r-pill); padding: 8px 16px;
+  border: none; border-radius: var(--r-md); padding: 8px 16px;
   font-size: 0.85rem; font-weight: 700; background: var(--accent); color: var(--surface); cursor: pointer;
 }
 .cc-key-save:disabled { background: var(--accent-wash); color: var(--ink-faint); cursor: default; }
 .cc-key-save:not(:disabled):hover { background: var(--accent-hi); }
 .cc-key-clear {
-  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-pill);
+  border: 1px solid var(--edge); background: var(--surface); border-radius: var(--r-md);
   padding: 8px 14px; font-size: 0.85rem; cursor: pointer; color: var(--ink-muted);
 }
 
@@ -486,7 +533,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: var(--surface);
   border: 1px solid var(--edge);
   color: var(--ink);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   padding: 9px 15px;
   font-size: 0.86rem;
   font-weight: 600;
@@ -522,7 +569,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   flex: 1;
   background: var(--ground);
   border: 1px solid var(--edge);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   padding: 13px 18px;
   font: inherit;
   font-size: 0.95rem;
@@ -540,15 +587,25 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 }
 .cc-send.ready { background: var(--accent); color: var(--surface); cursor: pointer; }
 
-.cc-preview { flex: 1; background: none; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 28px; }
-.cc-preview-inner { width: min(460px, 100%); }
-.cc-preview-inner .design-controls { margin-bottom: 14px; }
+/* The card's pane. It centres with margin: auto on its child rather than
+   align-items: center, which on a scroller clips the top of a card taller
+   than the pane. */
+.cc-preview { flex: 1; background: none; overflow-y: auto; display: flex; padding: 28px; }
+.cc-preview-inner { width: min(460px, 100%); margin: auto; display: flex; flex-direction: column; gap: 14px; }
+/* The card on the deckled mat, as the guest page sets it (adr-019 §7.1). The
+   mat is 460px on desktop, the guest's .gr-inv, and its 12px pad is what the
+   near-bleed inset used to be; on a phone the pane takes the guest page's
+   20px sides below, so the card is the guest's width there too. The shadow
+   lives here because the mat's clip-path cuts off one cast by the mat, as
+   .gr-mat's does. */
+.cc-mat { filter: drop-shadow(var(--e-2)); }
 
 .cc-placeholder {
-  width: 340px; height: 430px;
+  width: min(340px, 100%); height: 430px;
+  margin: auto;
   border: 1.5px dashed var(--edge);
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.5);
+  background-color: var(--surface);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
   color: var(--ink-faint);
   font-size: 0.98rem;
@@ -564,10 +621,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   border-radius: var(--r-sm);
 }
 .cc-skeleton {
-  width: 340px;
+  width: min(340px, 100%);
+  margin: auto;
   background: var(--surface);
   border-radius: var(--r-lg);
-  box-shadow: 0 22px 50px rgba(20, 18, 14, 0.15);
+  box-shadow: var(--e-2);
   padding: 44px 40px;
   display: flex; flex-direction: column; align-items: center; gap: 15px;
 }
@@ -654,18 +712,6 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   border-left: 3px solid var(--accent);
 }
 
-/* Near-bleed (adr-018 §3): a scoped override, so InvitationPreview.tsx is not
-   touched. It is DS-synced and rendered in four places — editor, gallery
-   cards, landing hero fan, guest page — and its props are hand-mirrored in
-   .design-sync/config.json and conventions.md, both of which have gone stale
-   before.
-
-   12px of inset rather than true full-bleed, for three reasons in the code:
-   the guest receives a card (.gr-card at both breakpoints), layout-banner's
-   title bar hangs on a negative margin with a radius tied to the card's own
-   (square corners show two wedges of background), and layout-split's 38%
-   image panel becomes a strip on a phone. */
-
 /* Mobile: preview is the hero, and the transcript collapses behind a peek
    line above the composer — the card owns the phone screen. Desktop shows
    the transcript outright, so the peek line is redundant there and hidden
@@ -674,8 +720,10 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 @media (max-width: 800px) {
   .cc-main { flex-direction: column; }
-  .cc-preview { order: 1; padding: 12px; align-items: flex-start; }
-  .cc-canvas .inv { box-shadow: var(--e-1); }
+  /* The guest page's 20px sides, so the card is its width (adr-019 §7.1),
+     and the card starts at the top: on a phone it owns the screen. */
+  .cc-preview { order: 1; padding: 12px 20px; }
+  .cc-preview-inner, .cc-placeholder, .cc-skeleton { margin: 0 auto; }
   .cc-chat {
     order: 2;
     width: auto;
@@ -686,13 +734,19 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   .cc-chat .cc-messages { display: none; }
   .cc-chat.open .cc-messages { display: flex; max-height: 46vh; }
   .cc-messages { padding: 16px 16px 4px; }
+  /* The assistant's voice (adr-019 §7.4): Literata italic, the one italic
+     the @import requests, and a size a serif italic stays readable at in a
+     messenger's webview. */
   .cc-peek {
     display: block;
     width: 100%;
     border: none;
     background: none;
     font: inherit;
-    font-size: 0.8rem;
+    font-family: var(--ui-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.9rem;
     color: var(--ink-muted);
     text-align: left;
     padding: 11px 16px 3px;
@@ -706,18 +760,47 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   .cc-share-panel { right: 8px; }
 }
 
-/* Design toolbar (adr-018 §4). One segmented bar in place of four labelled
-   rows; the sheet it raises dims nothing, so the card stays visible behind it
-   and the host watches the token land. */
-.cc-design { position: sticky; bottom: 0; display: flex; flex-direction: column; gap: 10px; }
-.cc-seg { display: flex; gap: 5px; padding: 5px; border-radius: var(--r-xl); }
-.cc-seg-item { flex: 1; border: none; background: none; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); padding: 9px 4px; border-radius: var(--r-lg); cursor: pointer; transition: background var(--dur-fast) var(--ease-ios); }
-.cc-seg-item.on { background: var(--surface); color: var(--accent); box-shadow: var(--e-1); }
+/* Design toolbar (adr-018 §4). One bar in place of four labelled rows; the
+   sheet it raises dims nothing, so the card stays visible behind it and the
+   host watches the token land.
+
+   It follows the card and sticks to the pane's bottom, so at rest it sits
+   over the card's lower edge and an open sheet rises above it. Until
+   adr-019's editor step it was the pane's *first* child, where sticky
+   bottom never pins, and it scrolled out of view with the card. The fix was
+   held back while blur made a layer parked over a moving card cost GPU fill
+   rate (adr-018 §7); paper has no blur (adr-019 §4.1). */
+.cc-design { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 10px; }
+/* Underlined tabs on card stock (adr-019 §7.3), in place of the segmented
+   glass bar. The open one is the product's ink over an accent rule; --ui-*
+   because the swatches above carry palette-*, which shadows --ink and
+   --accent. A rule spends no fill (adr-010 §3.1). The five share the
+   width from their labels' own, so "Background" gets the room "Font"
+   doesn't need: equal fifths overflowed a 360px phone in English. */
+.cc-tabs { display: flex; background-color: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); box-shadow: var(--e-1); overflow: hidden; }
+.cc-tab { flex: 1 1 auto; min-width: 0; padding: 12px 4px 10px; border: none; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); white-space: nowrap; cursor: pointer; transition: color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios); }
+.cc-tab:hover { color: var(--ui-ink); }
+.cc-tab.on { color: var(--ui-ink); border-bottom-color: var(--ui-accent); }
 
 .cc-design-sheet { border-radius: var(--r-xl); padding: 10px 16px 16px; }
 .cc-sheet-grab { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--edge); margin: 0 auto 12px; }
 .cc-design-sheet-title { font-size: 0.82rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .cc-design-sheet-body { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* «Макет»'s two rows, composition and ornament, each a full line. */
+.cc-design-row { flex: 1 0 100%; }
+.cc-design-row + .cc-design-row { margin-top: 6px; }
+.cc-design-row-title { margin-bottom: 6px; font-size: 0.74rem; font-weight: 600; color: var(--ink-faint); }
+
+/* «Конверт»: a still of the envelope a guest opens first, in the guest
+   page's proportions (.gr-env-body): 4:3 kraft, a flap 58% deep, the seal on
+   its point, the title at the foot. The landing draws its own; this one is
+   smaller and sits in a sheet rather than on --night. */
+.cc-env-still { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 2px 0; }
+.cc-env { position: relative; width: min(220px, 100%); aspect-ratio: 4 / 3; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px 18px; background-color: var(--kraft); border-radius: var(--r-sm); box-shadow: var(--e-2); }
+.cc-env-flap { position: absolute; inset: 0 0 auto; height: 58%; background-color: var(--kraft-deep); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.cc-env-to { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ui-font-display); font-weight: 400; font-size: 0.95rem; color: var(--ui-ink); }
+.cc-env-seal { position: absolute; top: 58%; left: 50%; width: 44px; margin: -22px 0 0 -22px; font-size: 0.8rem; }
+.cc-env-note { margin: 0; max-width: 36ch; text-align: center; font-size: 0.82rem; line-height: 1.45; color: var(--ink-muted); }
 
 /* Design controls -------------------------------------------------------- */
 /* The options inside the design toolbar's sheets. The four labelled rows that
@@ -731,7 +814,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .design-option {
   border: 1px solid var(--edge-strong);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 3px 9px;
   font-size: 0.8rem;
   cursor: pointer;
@@ -766,7 +849,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row input {
   flex: 1;
   border: 1px solid var(--edge-strong);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 6px 10px;
   font: inherit;
   font-size: 0.9rem;
@@ -775,7 +858,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row button {
   border: 1px solid var(--edge-strong);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 4px 10px;
   font-size: 0.85rem;
   cursor: pointer;
@@ -791,15 +874,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
 .sp-title { flex: 1; margin: 0; font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 500; color: var(--ink); }
-.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
+/* A counter, not a control, so it keeps the pill. */
+.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: var(--r-pill); padding: 4px 10px; }
 .sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
 .sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: var(--ink); }
-.sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: 6px; padding: 2px 7px; }
+.sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: var(--r-sm); padding: 2px 7px; }
 .sp-link {
   display: flex; align-items: center; gap: 10px;
   height: 48px; padding: 0 14px; margin-bottom: 12px;
-  border: 1px solid var(--edge); border-radius: 14px; background: var(--app-bg);
+  border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--app-bg);
   color: var(--ink-placeholder);
 }
 .sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: var(--ink); }
@@ -811,13 +895,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .sp-primary {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; height: 52px;
-  border: none; border-radius: 16px;
+  border: none; border-radius: var(--r-lg);
   background: var(--ui-accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
-  box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
+  box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3);
   transition: background 0.15s, box-shadow 0.15s;
 }
-.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
+.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(var(--ui-accent-rgb), 0.34); }
 
 /* Copy, once the share sheet has taken the primary. Still a button rather than
    a text link: pasting the link somewhere that is not a chat is ordinary, and
@@ -825,7 +909,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    share natively. Neutral chrome keeps it clear of the warm manage block. */
 .sp-secondary {
   width: 100%; height: 46px; margin-top: 8px;
-  border: 1px solid var(--edge); border-radius: 14px; background: var(--surface);
+  border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface);
   color: var(--ink-strong); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
@@ -836,21 +920,21 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Sensitive block: warm tint distinct from the clean chrome, so the eye reads
    "different kind of thing" before it reads any words. */
-.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: 14px; padding: 14px 15px 15px; }
+.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-lg); padding: 14px 15px 15px; }
 .sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
 .sp-manage-warning { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.45; color: var(--rsvp-no); }
 .sp-manage-row { display: flex; align-items: center; gap: 8px; }
 .sp-manage-value {
   flex: 1; min-width: 0;
   height: 46px; display: flex; align-items: center; padding: 0 12px;
-  border: 1px solid var(--caution-edge-hi); border-radius: 12px; background: var(--caution-surface);
+  border: 1px solid var(--caution-edge-hi); border-radius: var(--r-md); background: var(--caution-surface);
   font-size: 0.88rem; color: var(--caution-ink-masked);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Outline only — never filled, so it can't be mistaken for the primary. */
 .sp-ghost {
   flex: 0 0 auto; height: 46px; padding: 0 14px;
-  border: 1px solid var(--caution-edge-strong); border-radius: 12px; background: transparent;
+  border: 1px solid var(--caution-edge-strong); border-radius: var(--r-md); background: transparent;
   color: var(--caution-ink); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
@@ -2117,47 +2201,56 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    container, same rounded top edge, and the invitation stays visible behind a
    scrim because that is what makes interrupting a committed host tolerable.
    No filled accent lives here until a public link exists — the one exception
-   is the retry in `failed`, where repeating really is the useful action. */
-.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(35, 33, 29, 0.30); display: flex; align-items: flex-end; justify-content: center; }
-.ag-sheet { width: 100%; max-width: 460px; background: #fff; border-radius: 26px 26px 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(20, 18, 14, 0.16); }
-.ag-grab { width: 40px; height: 5px; border-radius: 999px; background: #e4ddd0; margin: 0 auto 18px; }
-.ag-title { font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
+   is the retry in `failed`, where repeating really is the useful action.
+
+   On paper since adr-019's editor step, which converted it with the share
+   panel because it is that panel's first frame (§11). Its retry, spinner and
+   progress had kept glass's terracotta until then. As elsewhere, a sentence
+   takes --ink-muted and a label --ink-faint, and test/styles.test.ts holds
+   each to the ground it sits on. */
+.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(28, 26, 23, 0.3); display: flex; align-items: flex-end; justify-content: center; }
+.ag-sheet { width: 100%; max-width: 460px; background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(28, 26, 23, 0.16); }
+.ag-grab { width: 40px; height: 5px; border-radius: var(--r-pill); background: var(--edge); margin: 0 auto 18px; }
+.ag-title { font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 400; color: var(--ink); margin: 0 0 6px; }
 .ag-title-inline { margin: 0; }
 .ag-returning-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.ag-why { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
-.ag-google { width: 100%; height: 56px; border: 1px solid #ddd6c8; border-radius: 16px; background: #fff; color: #23211d; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: 0 4px 12px rgba(20, 18, 14, 0.06); cursor: pointer; }
-.ag-google:hover { border-color: #c9bfab; }
-.ag-waiting { width: 100%; height: 56px; border: 1px solid #ece7dd; border-radius: 16px; background: #faf8f4; display: flex; align-items: center; justify-content: center; gap: 11px; color: #8d8577; font-weight: 700; font-size: 1rem; }
-.ag-retry { width: 100%; height: 56px; border: none; border-radius: 16px; background: #b3592e; color: #fff; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3); cursor: pointer; }
-.ag-retry:hover { background: #9f4d26; }
-.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0eadf; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
-.ag-note svg { flex: 0 0 auto; margin-top: 2px; }
+.ag-why { font-size: 0.88rem; color: var(--ink-muted); line-height: 1.5; margin: 0 0 20px; }
+.ag-google { width: 100%; height: 56px; border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: var(--e-1); cursor: pointer; }
+.ag-google:hover { border-color: var(--edge-strong); }
+.ag-waiting { width: 100%; height: 56px; border: 1px solid var(--edge-soft); border-radius: var(--r-lg); background: var(--app-bg); display: flex; align-items: center; justify-content: center; gap: 11px; color: var(--ink-faint); font-weight: 700; font-size: 1rem; }
+.ag-retry { width: 100%; height: 56px; border: none; border-radius: var(--r-lg); background: var(--ui-accent); color: var(--surface); font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3); cursor: pointer; }
+.ag-retry:hover { background: var(--accent-hi); }
+.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--edge-soft); font-size: 0.8rem; color: var(--ink-muted); line-height: 1.45; }
+.ag-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--ink-faint); }
 .ag-back { text-align: center; margin-top: 14px; }
-.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: #8d8577; cursor: pointer; padding: 4px 8px; }
-.ag-textbtn:hover { color: #23211d; }
-.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: #23211d; }
-.ag-textbtn-off { color: #c3bbac; cursor: default; }
+.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink-faint); cursor: pointer; padding: 4px 8px; }
+.ag-textbtn:hover { color: var(--ink); }
+.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+/* Disabled while the browser is leaving for Google: faded, never re-coloured
+   below the label floor. */
+.ag-textbtn-off { opacity: 0.6; cursor: default; }
 /* Red lives only in this 28px icon — never a border, banner, or body text. */
-.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: #fbf0ef; border: 1px solid #eed3d1; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
-.ag-draft { display: flex; align-items: center; gap: 9px; background: #f7f5f1; border: 1px solid #eee8dd; border-radius: 12px; padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: #6b6659; }
-.ag-draft svg { flex: 0 0 auto; }
-.ag-code { font-size: 0.74rem; color: #c3bbac; text-align: center; margin: 12px 0 0; }
-.ag-progress { height: 3px; border-radius: 999px; background: #f0eadf; margin-bottom: 20px; overflow: hidden; }
-.ag-progress-fill { width: 72%; height: 100%; background: #b3592e; border-radius: 999px; }
+.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--rsvp-no-bg); border: 1px solid var(--rsvp-no-edge); color: var(--rsvp-no); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.ag-draft { display: flex; align-items: center; gap: 9px; background: var(--wash); border: 1px solid var(--edge-soft); border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: var(--ink-muted); }
+.ag-draft svg { flex: 0 0 auto; color: var(--rsvp-yes); }
+/* A code a host may read out to support, so it holds the label floor. */
+.ag-code { font-size: 0.74rem; color: var(--ink-faint); text-align: center; margin: 12px 0 0; }
+.ag-progress { height: 3px; border-radius: var(--r-pill); background: var(--edge-soft); margin-bottom: 20px; overflow: hidden; }
+.ag-progress-fill { width: 72%; height: 100%; background: var(--ui-accent); border-radius: var(--r-pill); }
 /* The share panel's own blocks in their final positions, greyed. The host is
    watching the panel being born, not reading about authentication. */
-.ag-skeleton-label { width: 42%; height: 11px; border-radius: 6px; background: #f0eadf; margin-bottom: 12px; }
-.ag-skeleton-link { height: 50px; border: 1px solid #f0eadf; border-radius: 14px; background: #faf8f4; margin-bottom: 12px; }
-.ag-skeleton-primary { height: 54px; border-radius: 16px; background: #f2e7de; margin-bottom: 12px; }
-.ag-skeleton-divider { height: 1px; background: #f4efe6; margin: 16px 0; }
-.ag-skeleton-manage { height: 70px; border-radius: 14px; background: #faf6f0; border: 1px solid #f4ece1; }
-.ag-spin { animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
+.ag-skeleton-label { width: 42%; height: 11px; border-radius: var(--r-sm); background: var(--edge-soft); margin-bottom: 12px; }
+.ag-skeleton-link { height: 50px; border: 1px solid var(--edge-soft); border-radius: var(--r-lg); background: var(--app-bg); margin-bottom: 12px; }
+.ag-skeleton-primary { height: 54px; border-radius: var(--r-lg); background: var(--accent-wash); margin-bottom: 12px; }
+.ag-skeleton-divider { height: 1px; background: var(--ground); margin: 16px 0; }
+.ag-skeleton-manage { height: 70px; border-radius: var(--r-lg); background: var(--caution-wash); border: 1px solid var(--edge-soft); }
+.ag-spin { color: var(--ui-accent); animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
 @keyframes agSpin { to { transform: rotate(360deg); } }
 @media (min-width: 800px) {
   /* Desktop: the same sheet becomes a popover under the Publish button, which
      is where the share panel already appears. */
-  .ag-scrim { align-items: flex-start; justify-content: flex-end; padding: 64px 16px 0; }
-  .ag-sheet { max-width: 380px; border-radius: 18px; box-shadow: 0 18px 40px rgba(20, 18, 14, 0.18); }
+  .ag-scrim { align-items: flex-start; justify-content: flex-end; padding: 70px 16px 0; }
+  .ag-sheet { max-width: 380px; border-radius: var(--r-xl); box-shadow: var(--e-3); }
   .ag-grab { display: none; }
 }
 
@@ -2167,44 +2260,30 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    filled accent. What changes is that the manage block collapses to one row —
    and with it collapses the copy button, so the warning it guards is never
    absent while the button is present. */
-/* 10px, not 14: this and .sp-notify below it are one stack of quiet account
-   facts, and the tighter gap groups them instead of reading as three
+/* 10px, not 14: this and .sp-notify below it are one stack of account facts,
+   and the tighter gap groups them instead of reading as three
    equally-spaced rows (design project "NotifyLine" §4). */
-.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
-.sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: #8aa98f; }
-.sp-manage-collapsed { width: 100%; background: #faf6f0; border: 1px solid #f0e5d6; border-radius: 12px; display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
-.sp-manage-collapsed:hover { border-color: #e4d4c0; }
-.sp-manage-collapsed svg { flex: 0 0 auto; color: #b99a78; }
-.sp-manage-collapsed-label { flex: 1; font-size: 0.82rem; font-weight: 600; color: #8d7a63; }
-.sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
-.sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
-.sp-manage-hide:hover { color: #7a5638; }
-
-/* Reply notifications --------------------------------------------------- */
-/* Reply notifications (adr-015 §7, design project "rsvp-notifications/NotifyLine").
-   Same values as .sp-account-note above — the two are one stack of quiet facts
-   about the account, which is why that note's bottom margin is 10px not 14.
-
-   The action sits on its own line rather than beside the text: a Ukrainian
-   address does not break between letters, so a baseline-aligned button ends up
-   hanging beside a three-line sentence and reads as a caption to its first
-   line. Indented to the text column (15px icon + 8px gap) so the two still
-   read as one block. The 40px height is a finger target; the negative margin
-   keeps the label optically flush despite it. */
+/* A sentence, so --ink-muted; its check is the yes-green, a fact settled. */
+.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: var(--ink-muted); line-height: 1.45; }
+.sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--rsvp-yes); }
+/* Reply email (adr-015 §7): the checkbox the landing footer and the
+   dashboard carry, in the Reply email checkbox section below (adr-019 §10). */
 .sp-notify { margin: 0 0 12px; }
-.sp-notify-row { display: flex; align-items: flex-start; gap: 8px; }
-.sp-notify-icon { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 3px; color: #b7ae9e; }
-.sp-notify-text { margin: 0; font-size: 0.8rem; color: #8d8577; line-height: 1.45; overflow-wrap: anywhere; }
-.sp-notify-email { color: #6b6659; font-weight: 600; }
-.sp-notify-action { padding-left: 23px; }
-.sp-notify-toggle { height: 40px; margin-left: -3px; padding: 0 3px; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; transition: color 0.14s; }
-.sp-notify-toggle:hover { color: #7a5638; }
+/* The manage block's own material, collapsed: the same kraft, so the row
+   still reads as the sensitive thing before a word of it is read. */
+.sp-manage-collapsed { width: 100%; background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-md); display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
+.sp-manage-collapsed:hover { border-color: var(--caution-edge-hi); }
+.sp-manage-collapsed svg { flex: 0 0 auto; color: var(--caution-ink-faint); }
+.sp-manage-collapsed-label { flex: 1; font-size: 0.82rem; font-weight: 600; color: var(--caution-ink); }
+.sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
+.sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--caution-ink-faint); cursor: pointer; padding: 0 2px; }
+.sp-manage-hide:hover { color: var(--caution-ink); }
 
 /* Reply email checkbox -------------------------------------------------- */
 /* Reply email as one control (adr-019 §10, from PR #66's design pass):
-   components/NotifyCheckbox.tsx. The landing footer and the manage page
-   carry it, and the share panel takes it in adr-019 step 5, which is why it
-   has a section of its own rather than living in the footer's.
+   components/NotifyCheckbox.tsx. The landing footer, the manage page and the
+   share panel carry it, which is why it has a section of its own rather than
+   living in any one of theirs.
 
    - The square is the affordance and spends no fill, so it costs nothing
      from the accent budget: adr-010 §3's hierarchy counts fills, not
@@ -2265,29 +2344,32 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Account sheets -------------------------------------------------------- */
 /* Sign-out and account deletion (adr-014 §9). Both open from the landing
-   page but are built on the sign-in gate's sheet (.ag-*), so they convert
-   with it rather than with the landing. */
+   page but are built on the sign-in gate's sheet (.ag-*), so they converted
+   with it, in adr-019's editor step. */
 .da-title { margin-bottom: 16px; }
-.da-keep { background: #f4f7f4; border: 1px solid #d9e5da; border-radius: 16px; padding: 17px 16px 15px; margin-bottom: 16px; }
-.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; font-weight: 500; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
-.da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: #3f4f42; line-height: 1.45; }
+.da-keep { background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: var(--r-lg); padding: 17px 16px 15px; margin-bottom: 16px; }
+.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; font-weight: 500; color: var(--rsvp-yes); line-height: 1.35; margin: 0 0 13px; }
+.da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: var(--ink); line-height: 1.45; }
 .da-keep-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
-.da-keep-list svg { margin-top: 2px; }
-.da-goes { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 16px; }
-.da-keys { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px; margin-bottom: 20px; }
-.da-keys-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
-.da-keys-body { font-size: 0.8rem; color: #7a5638; line-height: 1.45; margin: 0 0 12px; }
+.da-keep-list svg { margin-top: 2px; color: var(--rsvp-yes); }
+.da-goes { font-size: 0.88rem; color: var(--ink-muted); line-height: 1.5; margin: 0 0 16px; }
+/* The keys are the manage links, so they sit in the manage block's material. */
+.da-keys { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-lg); padding: 14px 15px; margin-bottom: 20px; }
+.da-keys-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
+.da-keys-title svg { color: var(--caution-ink-faint); }
+.da-keys-body { font-size: 0.8rem; color: var(--caution-ink); line-height: 1.45; margin: 0 0 12px; }
 .da-keys-btn { width: 100%; height: 46px; }
 .da-cancel { height: 54px; font-size: 1rem; }
 /* Red as a text colour only — a filled red button would shout "irreversible
-   catastrophe" at a host whose invitations are all about to survive. */
-.da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #a83f3f; cursor: pointer; padding: 4px 8px; }
-.da-confirm:hover { color: #8f3535; }
+   catastrophe" at a host whose invitations are all about to survive. Its
+   hover underlines rather than darkening, so no token is minted for it. */
+.da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: var(--rsvp-no); cursor: pointer; padding: 4px 8px; text-underline-offset: 3px; }
+.da-confirm:hover { text-decoration: underline; }
 /* Sign-out's confirm: the delete sheet's shape, never its colour. Red belongs
    to account deletion alone or it stops meaning anything, so this stays the
-   same quiet #6b6659 the control in the card footer already is. */
-.so-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 4px 8px; }
-.so-confirm:hover { color: #23211d; }
+   same quiet --ink-muted the control in the card footer already is. */
+.so-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 4px 8px; }
+.so-confirm:hover { color: var(--ink); }
 
 /* Gallery --------------------------------------------------------------- */
 /* The sample-invitation pages (adr-017): /gallery and /gallery/:occasion.

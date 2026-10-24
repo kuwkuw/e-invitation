@@ -198,8 +198,9 @@ function Spinner() {
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="9" stroke="#e0d9cb" strokeWidth="2.6" />
-      <path d="M21 12a9 9 0 00-9-9" stroke="#b3592e" strokeWidth="2.6" strokeLinecap="round" />
+      {/* One colour, set by .ag-spin; the track is the same stroke, faded. */}
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2.6" />
+      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -232,8 +233,13 @@ function GoogleMark() {
 function MailIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="6" width="16" height="12" rx="2" stroke="#b0a99a" strokeWidth="1.7" />
-      <path d="M4.5 8l7.5 5.5L19.5 8" stroke="#b0a99a" strokeWidth="1.7" strokeLinecap="round" />
+      <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M4.5 8l7.5 5.5L19.5 8"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -241,8 +247,8 @@ function MailIcon() {
 function InfoIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 8v5M12 16.2v.1" stroke="#b0a99a" strokeWidth="1.9" strokeLinecap="round" />
-      <circle cx="12" cy="12" r="8.6" stroke="#b0a99a" strokeWidth="1.6" />
+      <path d="M12 8v5M12 16.2v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="8.6" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   );
 }
@@ -252,7 +258,7 @@ function CheckIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M5 13l4 4L19 7"
-        stroke="#3d6b47"
+        stroke="currentColor"
         strokeWidth="2.3"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -264,7 +270,12 @@ function CheckIcon() {
 function AlertIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 7.5v6M12 16.8v.1" stroke="#a83f3f" strokeWidth="2.2" strokeLinecap="round" />
+      <path
+        d="M12 7.5v6M12 16.8v.1"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -274,13 +285,13 @@ function RetryIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M4 12a8 8 0 0113.7-5.6M20 12a8 8 0 01-13.7 5.6"
-        stroke="#fff"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M18 3v4h-4M6 21v-4h4"
-        stroke="#fff"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
