@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, CSS custom properties and keyframes, Vitest with jsdom and `@testing-library/react`, Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md) §3, §6 and §10. Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md) §6. The canvas row `A2 · Landing` on *Invinto Redesign — Directions* is the visual reference. Like step 3's, this plan was written without the canvas, from adr-019's text alone. **Open the canvas before Task 8's look** if it can be found, and record any disagreement in the PR. adr-019 wins over the canvas. The reply-email checkbox and the sign-in pair are redone from PR #66's design pass. Its code is on `feat/ds-notify-checkbox` (commits `58a504e` and `9e08178`) and is the reference, not something to merge.
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md) §3, §6 and §10. Its long form is the [paper-direction spec](../../specs/2026-10-21-paper-direction-design.md) §6. The canvas row `A2 · Landing` on *Invinto Redesign — Directions* is the visual reference. Like step 3's, this plan was written without the canvas, from adr-019's text alone. **Open the canvas before Task 8's look** if it can be found, and record any disagreement in the PR. adr-019 wins over the canvas. The reply-email checkbox and the sign-in pair are redone from PR #66's design pass. Its code is on `feat/ds-notify-checkbox` (commits `58a504e` and `9e08178`) and is the reference, not something to merge.
 
 ## Global Constraints
 

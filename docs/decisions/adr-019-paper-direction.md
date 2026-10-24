@@ -384,7 +384,7 @@ strings other than the FAQ are unchanged. **The account footer is the
 exception:** its reply-email control becomes the checkbox of §10.
 
 **Amended 2026-10-24, step 4.** Building §6 settled what it left open, as the
-step's plan proposed (`docs/superpowers/plans/2026-10-24-landing-paper.md`):
+step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-landing-paper.md`):
 
 - **One sample, not three.** The hero's fan became the one invitation that
   rises; the kids and corporate samples retired, and range lives in the
