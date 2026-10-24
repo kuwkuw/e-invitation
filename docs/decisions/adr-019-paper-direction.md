@@ -452,6 +452,42 @@ step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-landing-paper.m
    behaviour and becomes §10's checkbox.
 6. The «Відкрили N раз» line is omitted: §9.3 is deferred.
 
+**Amended 2026-10-24, step 6.** Built before step 5, at the owner's choice:
+the editor waits on the two boards §7.5 names, this step needs none, and no
+code here depends on step 5's, so the order still avoids a stacked PR (§12).
+Building §8 settled what it left open, as the step's plan proposed
+(`docs/superpowers/plans/2026-10-24-manage-paper.md`):
+
+- **The header**: the seal, the guest page's monogram unchanged, beside the
+  kicker and title, then `details_line`, then the countdown. The kicker stays
+  above the title: it tells a host arriving from an email which page they're
+  on.
+- **The countdown** is the guest page's component, moved to `components/`
+  and handed its strings: `MANAGE`'s, in the host's UI language, where the
+  guest's follow the invitation's.
+- **The total** is `counts.guests`, what a host caters for, with its "+N with
+  companions" line kept.
+- **The bar** has two segments until the maybe exists: yes and no, each
+  growing by its count, so a zero draws nothing and no width is computed. It
+  is `aria-hidden`, because the counts beneath are the same facts as text.
+  Step 7 adds the third segment and count. The "Replied" tile retired with
+  the tiles: it was yes + no, and the list's heading already counts replies.
+- **«Нагадати гостям»** is a bordered button under the summary, shown once
+  someone has replied. It copies `/i/:id` and says «Посилання скопійовано»;
+  with no replies the empty state's share row already is the action, so the
+  two never show together. Both copy through one hook, `useCopyLink`, which
+  stays quiet where the clipboard refuses instead of throwing. The native
+  share sheet stays the editor's (FR-3.6).
+- **The pull-quote** is the newest *live* answer with a note, with the
+  guest's name. A replaced answer is history (FR-5.5), so its note is never
+  quoted. «Усі побажання · N» links to the response list, and only when more
+  than one live answer has a note: a link to "all of them" when there is one
+  would be a link to this.
+- **Reply email** is §10's checkbox; see its status line.
+- **Paper**: the page carries `.grain`, its cards stock's `--r-xl` and
+  `--e-2` in place of glass's 20 px tile, and its buttons and fields
+  `--r-md`. The 46 px targets stay. The skeleton holds the new shape.
+
 ### 9. The product decisions this direction raised
 
 The visual re-skin (§1–§4) depends on none of these. Each is settled
@@ -562,6 +598,16 @@ tested (FR-11.11); its colour stayed `--ink-muted`, because the switcher's idle
 `--ink-faint` would put a link a host must read under 4.5:1. The share panel
 and the manage page remain.
 
+**Built 2026-10-24, step 6: the manage page.** `NotifyControl` renders
+`NotifyCheckbox`, named «Повідомляти про відповіді» in both states (FR-12.11).
+Its on state is #66's "To {email} — for all your invitations, not just this
+one", and its off state is the landing footer's. It renders only when the
+session has an address to name, and stays absent, never disabled, without a
+session or without mail. The old sentence's two strings retired with it. The
+share panel remains, and **`feat/ds-notify-checkbox` stays until step 5
+lands**, not until this step as written above: the share panel is the last
+surface it is the reference for, and it hasn't been built.
+
 ### 11. Not in this iteration
 
 - **The gallery.** It isn't in A2. It converts by taking its section (22 hex)
@@ -597,8 +643,9 @@ implementation (#82) and #66 among them.
    mirror, and the account footer's checkbox (§10).
 5. **Editor** (§7), with the share panel's checkbox (§10). Needs the desktop
    and share-panel boards first.
-6. **Manage** (§8), with its checkbox (§10). Delete `feat/ds-notify-checkbox`
-   after this lands.
+6. **Manage** (§8), with its checkbox (§10). *Built 2026-10-24, before step
+   5 (§8, amended).* `feat/ds-notify-checkbox` is deleted after step 5
+   instead, the last surface it is the reference for (§10).
 7. **«Ще не знаю»** (§9.1), schema-first.
 8. **Gallery** onto the ratchet (§11).
 9. **Rename** `.glass*` → `.sheet*`, and drop the reduced-transparency branch

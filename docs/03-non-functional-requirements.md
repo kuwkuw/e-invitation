@@ -12,12 +12,16 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **139.3 kB gzipped** (484.9 kB raw, CSS + JS), measured 2026-10-24 with
-  `pnpm --filter inv-app-web build` — 13.54 kB CSS plus 125.80 kB JS, after
-  [adr-019](decisions/adr-019-paper-direction.md)'s landing (step 4): the
-  composer, the stage, "What guests see", the FAQ, the reply-email checkbox
-  and their copy in both languages added 1.8 kB, against the three-card fan
-  and two sample invitations it retired. It was 137.5 kB (475.9 kB raw)
+  **140.0 kB gzipped** (487.6 kB raw, CSS + JS), measured 2026-10-24 with
+  `pnpm --filter inv-app-web build` — 13.67 kB CSS plus 126.30 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s manage dashboard
+  (step 6): the seal and countdown in its header, the summary bar,
+  «Нагадати гостям», the guests' wishes and their copy added 0.6 kB, against
+  the three tiles they retired. It was 139.3 kB (484.9 kB raw) after step 4's
+  landing, 13.54 kB CSS plus 125.80 kB JS, where the composer, the stage,
+  "What guests see", the FAQ, the reply-email checkbox and their copy in
+  both languages added 1.8 kB, against the three-card fan and two sample
+  invitations it retired. It was 137.5 kB (475.9 kB raw)
   after step 3's guest page, 12.66 kB CSS plus 124.79 kB JS, where the
   envelope, the pinned bar, the deckled mat and the seal added 1.3 kB, most
   of it CSS. It was 136.1 kB after step 2 (11.76 kB CSS plus 124.36 kB JS),
@@ -308,9 +312,9 @@
   with no blur. Its paper materials (grain, the deckled mat, the seal) may
   wrap the card but never sit on `.inv` or inside it, which keeps the OG
   renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain sits
-  on the editor's table, the guest page's ground, and the landing page's
-  ground and its hero's table, and it sets only an image under 5% alpha, so
-  it moves no contrast. The deckled mat wraps the card on the guest page and
+  on the editor's table, the guest page's ground, the landing page's ground
+  and its hero's table, and the manage dashboard's ground, and it sets only
+  an image under 5% alpha, so it moves no contrast. The deckled mat wraps the card on the guest page and
   in the landing's hero.
 - **Reduced transparency and reduced motion are honoured**, not detected: the
   two media queries above, never a device or user-agent check. The guest
