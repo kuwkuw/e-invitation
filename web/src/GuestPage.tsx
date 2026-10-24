@@ -23,8 +23,9 @@ import type { Language } from "./types";
 
 // Public page behind the share link: the invitation plus an RSVP form.
 // Guests never register; everything is keyed by the invitation id.
-// Visuals follow `GuestRsvp` in the E-invitation design project:
-// invitation is the hero, the reply is a quiet white card below/beside it.
+// Visuals follow adr-019 §5 (the paper direction's A2 guest boards): an
+// envelope on first open, a pinned bar, the card on a deckled mat on a grained
+// ground, and the reply as a card of its own below or beside it.
 export function GuestPage({ id }: { id: string }) {
   const { published, status } = usePublishedInvitation(id);
   // Share-loop instrumentation (adr-013): counted here, in the client, because
@@ -67,7 +68,7 @@ export function GuestPage({ id }: { id: string }) {
 
   if (status === "loading") {
     return (
-      <div className="gr-page">
+      <div className="gr-page grain">
         <p className="gr-status">{t.loading}</p>
       </div>
     );
@@ -120,7 +121,7 @@ export function GuestPage({ id }: { id: string }) {
   return (
     <>
       <div
-        className="gr-page"
+        className="gr-page grain"
         inert={envelopeUp}
         data-rising={envelope.phase === "opening" ? "" : undefined}
       >
@@ -130,11 +131,18 @@ export function GuestPage({ id }: { id: string }) {
             <div className="gr-lang">
               <LangSwitcher globe value={chromeLang} onChange={handleLang} />
             </div>
-            <InvitationPreview
-              copy={copy}
-              design={design}
-              background={published.invitation.background}
-            />
+            {/* The card on the deckled mat (adr-019 §5.2). The mat wraps the
+                card and never sits on it (§3); .gr-mat casts its shadow, which
+                the mat's own clip-path would cut off. */}
+            <div className="gr-mat">
+              <div className="deckle">
+                <InvitationPreview
+                  copy={copy}
+                  design={design}
+                  background={published.invitation.background}
+                />
+              </div>
+            </div>
             <Countdown days={eventStart ? daysUntil(eventStart) : null} t={t} />
             <QuietActions
               onAddToCalendar={eventStart ? handleAddToCalendar : null}

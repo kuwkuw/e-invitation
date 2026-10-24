@@ -877,11 +877,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    takes --ink-muted (AA), a label or placeholder --ink-faint (3:1), and
    test/styles.test.ts holds each to the ground it sits on. */
 
-.gr-page { min-height: 100dvh; background: var(--app-bg); padding: 22px 20px 18px; }
-.gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; }
+/* background-color, not the shorthand: the page carries .grain, whose image
+   the shorthand would wipe. */
+.gr-page { min-height: 100dvh; background-color: var(--app-bg); padding: 22px 20px 18px; }
+.gr-status { text-align: center; color: var(--ink-muted); margin-top: 48px; font-family: var(--ui-font-display); font-weight: 400; font-size: 1.05rem; }
 
 .gr-layout { max-width: 430px; margin: 0 auto; }
 .gr-inv { margin-bottom: 20px; }
+/* The deckled mat's shadow lives here because the mat's clip-path cuts off a
+   box-shadow on the mat itself. */
+.gr-mat { filter: drop-shadow(var(--e-2)); }
 .gr-lang { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 
 /* The pinned bar (adr-019 §5.2): seal, when, where and «Відповісти», on card

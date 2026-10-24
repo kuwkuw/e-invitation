@@ -445,7 +445,41 @@ describe("the guest page's text", () => {
     [".gr-submit:disabled", "--edge-soft", 3],
     [".gr-change", "--surface", 3],
     [".gr-cta-line", "--app-bg", 3],
+    [".gr-reply-title", "--surface", 4.5],
+    [".gr-bar-when", "--surface", 4.5],
+    [".gr-bar-where", "--surface", 4.5],
+    [".gr-bar-reply", "--surface", 4.5],
+    [".gr-countdown", "--app-bg", 4.5],
+    [".gr-quiet-action", "--app-bg", 4.5],
+    [".gr-env-to", "--kraft", 4.5],
+    [".gr-env-skip", "--night", 4.5],
   ]);
+
+  const source = (file: string) =>
+    readFileSync(fileURLToPath(new URL(`../src/${file}`, import.meta.url)), "utf8");
+
+  it("keeps the grain on every guest page ground (adr-019 §3)", () => {
+    const page = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-page"),
+    );
+    expect(page?.body).toMatch(/background-color:\s*var\(--app-bg\)/);
+    expect(page?.body).not.toMatch(/(?:^|[;\s])background\s*:/);
+    for (const file of ["GuestPage.tsx", "components/guest/GuestNotFound.tsx"]) {
+      const pages = [...source(file).matchAll(/className="([^"]*\bgr-page\b[^"]*)"/g)];
+      expect(pages.length, file).toBeGreaterThan(0);
+      for (const [, names] of pages) expect(names, file).toMatch(/\bgrain\b/);
+    }
+  });
+
+  it("sets the card on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("GuestPage.tsx")).toMatch(
+      /<div className="gr-mat">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    const mat = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
+      r.selectors.includes(".gr-mat"),
+    );
+    expect(mat?.body).toMatch(/filter:\s*drop-shadow\(/);
+  });
 
   it("fills the disabled submit with --edge-soft, not the ruled line", () => {
     const rule = ruleBlocks(stripComments(sections(css).get("Guest page") ?? "")).find((r) =>
