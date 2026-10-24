@@ -623,6 +623,16 @@ default off, and a host asks at publish.
   did not become more attractive; the scope line is a disclosure, not a
   substitute.
 
+### Amended 2026-10-24 — one checkbox, on the landing footer first
+
+The control's form follows the opt-in above to its end: under opt-in it is the
+only thing between the feature and its non-existence, so it is a checkbox
+rather than a sentence with a text button — a name that never changes and a
+state line carrying the scope, the whole label a 44 px target, the checked box
+ink rather than the accent. The landing page's account footer carries it first
+(FR-12.12, [adr-019](adr-019-paper-direction.md) §10); the share panel and
+`/manage/:id` follow in adr-019's editor and manage steps.
+
 ## Revisit triggers
 
 - **Before PR 1: is this the right iteration at all?** adr-013 shipped the

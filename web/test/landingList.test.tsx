@@ -58,7 +58,7 @@ const keyringEntry = {
 };
 
 /** Scoped to the list's own title element on purpose: the landing page also
- *  renders three sample invitations in its hero, so a bare text query can match
+ *  renders a sample invitation in its hero, so a bare text query can match
  *  showcase copy and pass — or collide — for reasons that have nothing to do
  *  with what a host published. */
 const inList = { selector: ".lp-yours-title" } as const;

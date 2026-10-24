@@ -226,13 +226,17 @@ implementation.
 - FR-6.3 On the guest page the toggle switches chrome only and defaults to
   the invitation's language; invitation text is host content and is never
   translated by the switcher.
-- FR-6.4 The landing page's demo content — the three sample invitations in the
-  hero and the mocked reply rows under the RSVP pitch — follows the toggle like
-  the rest of the page. It is not host content: FR-6.3 protects someone's real
-  invitation from being rewritten, and a mock-up of one is the single thing an
-  English visitor arriving on `/?lang=en` (FR-13.6) is there to judge. Both
-  languages stay in the same setting — the names are transliterated, not
-  replaced — so the samples show one product rather than two.
+- FR-6.4 The landing page's demo content — the sample invitation in the hero
+  and the mocked reply rows under the RSVP pitch — follows the toggle like
+  the rest of the page. Since [adr-019](decisions/adr-019-paper-direction.md)
+  §6.1 the hero shows **one** sample, rising out of an envelope after the
+  sentence that would make it types itself into a composer; it was three
+  side by side, and range now lives in the gallery (FR-14). It is not host
+  content: FR-6.3 protects someone's real invitation from being rewritten,
+  and a mock-up of one is the single thing an English visitor arriving on
+  `/?lang=en` (FR-13.6) is there to judge. Both languages stay in the same
+  setting — the names are transliterated, not replaced — so the sample shows
+  one product rather than two.
 
 ## FR-7 Operational metrics
 
@@ -372,7 +376,10 @@ are reading back the tokens it holds and authorizing a first publish.
   on this device, so reaching their events never requires publishing something
   first. It is not a gate: nothing is refused and FR-11.5 is unchanged. It
   renders only where sign-in is configured (FR-11.6), and only while signed
-  out. Declining at Google returns the host to where they started it.
+  out. Declining at Google returns the host to where they started it. It
+  stands on the far side of the language switcher from Create, as a quiet
+  pair with it: beside the accent it would read as that button's caption
+  ([adr-019](decisions/adr-019-paper-direction.md) §10, tested).
 
 ## FR-12 Reply notifications
 
@@ -447,6 +454,17 @@ them.
   is absent, never disabled, for a host with no session on this device: the
   preference is session-authorized while `/manage/:id` is authorized by a
   manage token, so a host who arrived on a pasted link cannot reach it.
+- FR-12.12 On the landing page's account footer the control is **one
+  checkbox** ([adr-019](decisions/adr-019-paper-direction.md) §10): a real
+  input, reachable by keyboard, whose whole label is the target, at least
+  44 px tall. Its first row is the setting's name and reads the same in both
+  states; its second says what is true now and carries the scope — every
+  invitation in the account — so the scope is read before the host agrees,
+  not after. The checked box is ink, never the accent, which on host
+  surfaces means the public link
+  ([adr-010](decisions/adr-010-host-manage-link.md) §3). The share panel and
+  the host dashboard keep their sentence and button until adr-019's editor
+  and manage steps rebuild them.
 
 ## FR-13 Public discoverability
 
@@ -519,6 +537,22 @@ result.
   it beside the URL, so a wordmark that disagrees with the address bar reads as
   someone else's site ([adr-016](decisions/adr-016-public-discoverability.md)
   §9). This is the one string on the landing page that is not translated.
+- FR-13.11 Every claim on the landing page is true today
+  ([adr-019](decisions/adr-019-paper-direction.md) §6.3–6.4). The one number
+  it states, «1 хвилина» from a sentence to an invitation, holds by NFR-1. A
+  count of hosts or guests appears only once it comes from
+  `GET /api/metrics` — none does yet, and the page fetches nothing for it —
+  and no placeholder number ships. There are no testimonials until there are
+  real ones, given with consent. The price is stated as free, and nothing
+  says publishing costs money: publishing stays free under
+  [07-monetization.md](07-monetization.md) §5.2, whose one-time unlock
+  removes the badge, and the FAQ's cost answer gains that sentence only when
+  §5.2 ships.
+- FR-13.12 The landing page answers four common questions in `<details>`,
+  closed until opened and prerendered with the rest of its copy (FR-13.10),
+  so a crawler reads the answers. There is no `FAQPage` structured data:
+  Google retired it as a rich result
+  ([adr-016](decisions/adr-016-public-discoverability.md) §7).
 
 | Path | Page | Audience |
 | --- | --- | --- |

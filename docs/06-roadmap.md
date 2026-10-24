@@ -1088,6 +1088,9 @@ the language switcher (never beside the Create button), and recorded what the
 pass overturned in FR-11/FR-12, adr-010, adr-015 and this doc. It predates the
 material system, so it would need reworking rather than merging. **Taken into
 the paper direction** ([adr-019](decisions/adr-019-paper-direction.md) §10):
-redone on paper tokens in the landing, editor and manage steps, not merged. The
-code and docs stay on the branch `feat/ds-notify-checkbox` as the reference
-until the manage step lands.
+redone on paper tokens in the landing, editor and manage steps, not merged.
+The landing's half shipped with adr-019 step 4 (2026-10-24): the account
+footer's checkbox (FR-12.12) and the sign-in pair, whose order is now tested
+(FR-11.11). The share panel and the manage page remain. The code and docs stay
+on the branch `feat/ds-notify-checkbox` as the reference until the manage step
+lands.

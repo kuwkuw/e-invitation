@@ -19,7 +19,10 @@ tests drive it through a `MemoryRouter`.
   call `history.replaceState` behind the router**.
 - Screens (`App.tsx`, `GuestPage.tsx`, `ManagePage.tsx`) are composition only.
   **New state goes in a hook** in `src/hooks/`, which is what tests drive;
-  markup goes in `src/components/{editor,guest,manage}/`. Hooks:
+  markup goes in `src/components/{editor,guest,manage,landing}/`
+  (`LandingPage.tsx` is composition too; `AccountFooter` and `YourInvitations`
+  predate `landing/` and stay at the root, beside `NotifyCheckbox`, the
+  reply-email control three surfaces share). Hooks:
   `useInvitationEditor` (what the invitation is), `usePublishing` (where it's
   published), `useHostManage` and `useHostInvitationCounts` (host access),
   `usePublishedInvitation`, `useRsvpForm`, `useViewBeacon` and `useEnvelope`
@@ -83,7 +86,11 @@ Deliberately unequal, and both read one predicate, `isPastDate` in
   palette}` index (no secrets) for the returning-host list.
 - The reply-email switch (adr-015) is **asked at publish** in the share panel,
   and also lives on the landing footer and `/manage/:id`, where it must say in
-  words that it governs the whole account.
+  words that it governs the whole account. On the landing footer it is
+  `NotifyCheckbox` (adr-019 §10, FR-12.12): a real input, a name that never
+  changes, a state line carrying the scope, ink and never the accent. The
+  share panel and `/manage/:id` keep a sentence and a button until adr-019's
+  steps 5 and 6 move them onto it.
 - The sign-in gate is the **first frame of the share sheet** (`AuthGate.tsx`),
   opened on the Publish press, never on a 401. `draft.ts` parks the editor's
   invitation before the redirect. `declined` and `failed` are distinct states,
@@ -152,9 +159,10 @@ exists for.
 ## i18n
 
 Every user-visible string is in an `src/i18n.ts` table, **including demo
-content** (`LANDING.samples` keyed by `SampleId`, `LANDING.rsvpNames` keyed
-by `DemoGuest`; the samples' design tokens stay in `SAMPLE_DESIGNS` in
-`LandingPage.tsx`). FR-6.3's "never
+content** (`LANDING.sample`, the hero's one invitation, and
+`LANDING.rsvpNames` keyed by `DemoGuest`; the sample's design tokens stay in
+`SAMPLE_DESIGN` in `LandingPage.tsx`). The hero's `heroSentence` is held to
+44 characters, the `46ch` its typing animates to. FR-6.3's "never
 translated" is about a host's invitation on the guest page, not mockups.
 `test/i18n.test.ts` fails on Cyrillic under `.en` and on any shape difference
 between the languages. There's no reverse check: Viber, Telegram, Google, RSVP,
@@ -221,7 +229,13 @@ built on the sign-in gate's `.ag-*` shell, so they convert with it.
   it gives the colour with `background-color`, never the `background`
   shorthand, which would wipe the grain. `data-palette` stays on `.cc-shell`
   as an unused hook (an attribute, not the `palette-*` class, which would push
-  the card's ink into the chrome).
+  the card's ink into the chrome). The landing carries `.grain` on `.landing`
+  and on its hero's `.lp-stage` too.
+- **The landing's motion lives in one block**: every `animation` in the
+  `Landing page` section sits inside its single
+  `@media (prefers-reduced-motion: no-preference)`, so reduced motion gets the
+  finished hero without detection (tested). The rise moves only `transform`
+  and `opacity`, the typing only `max-width`.
 
 ## Design projects
 
