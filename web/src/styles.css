@@ -1215,6 +1215,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background-color: var(--kraft-deep);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: top;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 .gr-env-to {
