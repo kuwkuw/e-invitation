@@ -6,14 +6,22 @@ import { buildRsvpInput, MAX_GUESTS, useRsvpForm } from "../src/hooks/useRsvpFor
 describe("buildRsvpInput", () => {
   it("trims the name and turns a blank note into null", () => {
     expect(
-      buildRsvpInput({ name: "  Оксана  ", attending: true, guestsCount: 2, note: "   " }),
+      buildRsvpInput({ name: "  Оксана  ", answer: "yes", guestsCount: 2, note: "   " }),
     ).toEqual({ name: "Оксана", answer: "yes", attending: true, guests_count: 2, note: null });
   });
 
   it("resets the party size when the answer is no", () => {
     // A decline must never carry a guest count into the host's totals.
-    const input = buildRsvpInput({ name: "Ігор", attending: false, guestsCount: 4, note: "" });
-    expect(input.guests_count).toBe(1);
+    const input = buildRsvpInput({ name: "Ігор", answer: "no", guestsCount: 4, note: "" });
+    expect(input).toMatchObject({ answer: "no", attending: false, guests_count: 1 });
+  });
+
+  // adr-019 §9.1: a maybe never counts toward the headcount, so it carries no
+  // party size whatever the stepper held. `attending` rides beside `answer`
+  // for a server that predates the maybe, which must read it as a no.
+  it("sends a maybe with no party size, and as a no to an older reader", () => {
+    const input = buildRsvpInput({ name: "Тарас", answer: "maybe", guestsCount: 4, note: "" });
+    expect(input).toMatchObject({ answer: "maybe", attending: false, guests_count: 1 });
   });
 });
 
@@ -29,7 +37,7 @@ describe("useRsvpForm", () => {
     act(() => result.current.setName("Оксана"));
     expect(result.current.canSubmit).toBe(false); // still no yes/no
 
-    act(() => result.current.setAttending(true));
+    act(() => result.current.setAnswer("maybe"));
     expect(result.current.canSubmit).toBe(true);
 
     act(() => result.current.setName("   "));
@@ -51,7 +59,7 @@ describe("useRsvpForm", () => {
 
     act(() => {
       result.current.setName(" Ігор ");
-      result.current.setAttending(true);
+      result.current.setAnswer("yes");
       result.current.setNote(" +1 dessert ");
     });
     await act(async () => {
@@ -75,7 +83,7 @@ describe("useRsvpForm", () => {
 
     act(() => {
       result.current.setName("Оксана");
-      result.current.setAttending(false);
+      result.current.setAnswer("no");
     });
     await act(async () => {
       await result.current.submit({ preventDefault: () => {} } as React.FormEvent);
@@ -93,7 +101,7 @@ describe("useRsvpForm", () => {
 
     act(() => {
       result.current.setName("Ігор");
-      result.current.setAttending(true);
+      result.current.setAnswer("yes");
       result.current.increment();
     });
     await act(async () => {

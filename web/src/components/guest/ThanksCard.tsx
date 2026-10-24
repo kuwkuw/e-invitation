@@ -1,9 +1,10 @@
 import type { GuestStrings } from "../../i18n";
 import { pluralForm } from "../../plural";
+import type { RsvpAnswer } from "../../types";
 import { CheckIcon, LinkIcon } from "./icons";
 
 interface Props {
-  attending: boolean;
+  answer: RsvpAnswer;
   guestsCount: number;
   onChangeAnswer: () => void;
   /** Passing the link on, offered after a yes only. */
@@ -13,25 +14,35 @@ interface Props {
 }
 
 /** Shown in place of the form once an answer is recorded (adr-019 §5.3): the
- *  seal turns into a ✓, in the accent for a yes and muted for a no, with copy
- *  matched to the answer. «Змінити відповідь» keeps FR-4.4's re-submit model. */
-export function ThanksCard({ attending, guestsCount, onChangeAnswer, onShare, copied, t }: Props) {
+ *  seal turns into a ✓, in the accent for a yes and muted otherwise, with copy
+ *  matched to the answer. «Змінити відповідь» keeps FR-4.4's re-submit model.
+ *  A maybe (§9.1) is a reply that expects a second one, so its line points at
+ *  that button rather than saying sorry. */
+export function ThanksCard({ answer, guestsCount, onChangeAnswer, onShare, copied, t }: Props) {
+  const attending = answer === "yes";
+  const copy = {
+    yes: { title: t.thanksTitle, line: t.thanksGlad },
+    no: { title: t.declinedTitle, line: t.declinedSorry },
+    maybe: { title: t.maybeTitle, line: t.maybeLater },
+  }[answer];
   return (
     <section className="gr-card gr-thanks">
       <div className={`seal gr-thanks-seal${attending ? "" : " muted"}`} aria-hidden="true">
         <CheckIcon size={30} width={2.4} />
       </div>
-      <h2 className="gr-thanks-title">{attending ? t.thanksTitle : t.declinedTitle}</h2>
+      <h2 className="gr-thanks-title">{copy.title}</h2>
       <p className="gr-thanks-body">
         {t.thanksSent}
         <br />
-        {attending ? t.thanksGlad : t.declinedSorry}
+        {copy.line}
       </p>
       <div className={`gr-pill${attending ? "" : " muted"}`}>
         {attending && <CheckIcon size={16} width={2.4} />}
         {attending
           ? `${t.attendingPill} · ${guestsCount} ${pluralForm(guestsCount, t.guestForms)}`
-          : t.declinedPill}
+          : answer === "maybe"
+            ? t.maybePill
+            : t.declinedPill}
       </div>
       {attending && (
         <button type="button" className="gr-quiet-action gr-thanks-share" onClick={onShare}>

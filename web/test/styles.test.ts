@@ -478,6 +478,7 @@ describe("the guest page's text", () => {
     [".gr-bar-where", "--surface", 4.5],
     [".gr-bar-reply", "--surface", 4.5],
     [".gr-countdown", "--app-bg", 4.5],
+    [".gr-tile.maybe", "--surface", 4.5],
     [".gr-quiet-action", "--app-bg", 4.5],
     [".gr-env-to", "--kraft", 4.5],
     [".gr-env-skip", "--night", 4.5],
@@ -504,6 +505,16 @@ describe("the guest page's text", () => {
       r.selectors.includes(".gr-mat"),
     );
     expect(mat?.body).toMatch(/filter:\s*drop-shadow\(/);
+  });
+
+  // adr-019 §9.1: yes and no keep their row; «Ще не знаю» wraps beneath them
+  // across the card, because three don't fit a 360 px phone side by side.
+  it("sets the maybe tile on a row of its own under yes and no", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Guest page") ?? ""));
+    const body = (selector: string) =>
+      rules.find((r) => r.selectors.includes(selector))?.body ?? "";
+    expect(body(".gr-tiles")).toMatch(/flex-wrap:\s*wrap/);
+    expect(body(".gr-tile.maybe")).toMatch(/flex-basis:\s*100%/);
   });
 
   it("fills the disabled submit with --edge-soft, not the ruled line", () => {

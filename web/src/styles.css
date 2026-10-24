@@ -973,7 +973,9 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .gr-input:focus { outline: none; background: var(--surface); border: 1.5px solid var(--ui-accent); padding: 13.5px 14.5px; }
 .gr-note { min-height: 64px; line-height: 1.5; resize: vertical; }
 
-.gr-tiles { display: flex; gap: 10px; margin-top: 18px; }
+/* Yes and no side by side; «Ще не знаю» wraps to a row of its own beneath
+   them (adr-019 §9.1), shorter and in the decline's quieter ink. */
+.gr-tiles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .gr-tile {
   flex: 1;
   height: 62px;
@@ -996,10 +998,11 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
     transform var(--dur-fast) var(--ease-ios);
 }
 .gr-tile.decline { color: var(--ink-muted); }
+.gr-tile.maybe { flex-basis: 100%; height: 48px; font-size: 0.95rem; color: var(--ink-muted); }
 /* The Yes mark is the accent until it is chosen, then takes the tile's ink;
-   the No mark is quieter than its label until chosen. */
-.gr-tile:not(.decline):not(.active) > svg { color: var(--ui-accent); }
-.gr-tile.decline:not(.active) > svg { color: var(--ink-faint); }
+   the No and Maybe marks are quieter than their labels until chosen. */
+.gr-tile:not(.decline):not(.maybe):not(.active) > svg { color: var(--ui-accent); }
+.gr-tile.decline:not(.active) > svg, .gr-tile.maybe:not(.active) > svg { color: var(--ink-faint); }
 .gr-tile:hover { border-color: var(--ui-accent); }
 /* Tactile (adr-019 §5.3): a press sinks, a choice lifts. */
 .gr-tile:active { transform: translateY(1px); }
