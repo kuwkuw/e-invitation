@@ -58,7 +58,24 @@ export function PreviewPanel({
 
   return (
     <section className="cc-preview">
-      <div className="cc-preview-inner cc-canvas">
+      <div className="cc-preview-inner">
+        {/* The card on the deckled mat, as the guest page sets it (.gr-mat,
+            adr-019 §7.1), so what the host edits is what the guest opens. The
+            mat wraps the card and never sits on it (§3); .cc-mat casts its
+            shadow, which the mat's own clip-path would cut off. */}
+        <div className="cc-mat">
+          <div className="deckle">
+            <InvitationPreview
+              copy={invitation.copy}
+              design={invitation.design}
+              background={invitation.background}
+              activeField={activeField}
+              onFieldClick={onFieldClick}
+            />
+          </div>
+        </div>
+        {/* After the card, so it can stick to the pane's bottom: as the first
+            child it never pinned and scrolled away with the card. */}
         <DesignToolbar
           design={invitation.design}
           labels={t.design}
@@ -67,13 +84,6 @@ export function PreviewPanel({
           backgroundBusy={backgroundBusy}
           onBackgroundAdd={onBackgroundAdd}
           onBackgroundRemove={onBackgroundRemove}
-        />
-        <InvitationPreview
-          copy={invitation.copy}
-          design={invitation.design}
-          background={invitation.background}
-          activeField={activeField}
-          onFieldClick={onFieldClick}
         />
       </div>
     </section>

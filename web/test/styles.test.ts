@@ -388,12 +388,29 @@ describe("the editor canvas", () => {
     expect(app).toMatch(/data-palette=\{/); // kept as an unused hook (adr-019 §4.2)
   });
 
-  it("near-bleeds the card without touching InvitationPreview's own rules", () => {
-    // The whole effect is a scoped override. .inv itself must keep its radius,
-    // because the guest page and the gallery render the same component.
-    expect(css).toMatch(/\.cc-canvas\s+\.inv\s*\{/);
+  // adr-019 §7.1: the near-bleed inset became the mat's pad. The card is on
+  // the guest page's mat, so nothing overrides the card itself any more.
+  it("sets the card on the mat without touching InvitationPreview's own rules", () => {
+    expect(css).not.toMatch(/\.cc-canvas\s+\.inv\s*\{/);
     const base = /^\.inv\s*\{([^}]*)\}/m.exec(css);
     expect((base as RegExpExecArray)[1]).toMatch(/border-radius:\s*14px/);
+    const mat = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? "")).find((r) =>
+      r.selectors.includes(".cc-mat"),
+    );
+    expect(mat?.body).toMatch(/filter:\s*drop-shadow\(var\(--e-2\)\)/);
+  });
+
+  // The roadmap's sticky bug, fixed: the controls follow the card and stick to
+  // the pane's bottom, and the pane centres without clipping a tall card's top.
+  it("pins the design controls to the pane's bottom, and centres safely", () => {
+    const rules = ruleBlocks(stripComments(sections(css).get("Creation chat") ?? ""));
+    const design = rules.find((r) => r.selectors.includes(".cc-design"));
+    expect(design?.body).toMatch(/position:\s*sticky/);
+    expect(design?.body).toMatch(/bottom:\s*0/);
+    const preview = rules.filter((r) => r.selectors.includes(".cc-preview"));
+    expect(preview.map((r) => r.body).join(";")).not.toMatch(/align-items:\s*center/);
+    const inner = rules.find((r) => r.selectors.includes(".cc-preview-inner"));
+    expect(inner?.body).toMatch(/margin:\s*auto/);
   });
 });
 
