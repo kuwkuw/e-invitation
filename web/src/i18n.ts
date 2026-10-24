@@ -617,6 +617,11 @@ export function saveUiLang(lang: Language): void {
 // than becoming a constant because `LandingStrings` is what the page reads,
 // and a name that lives half in i18n and half beside it is how the two-name
 // problem started.
+//
+// Every claim the page makes is true today (FR-13.11): the one number is the
+// minute NFR-1 makes true, there are no testimonials until real ones exist,
+// and the price is free. The FAQ's cost answer changes only when
+// 07-monetization §5.2 ships, and nothing may say publishing costs money.
 export type SampleId = "wedding" | "kids" | "corporate";
 export type DemoGuest = "friend" | "colleague" | "couple" | "family";
 
@@ -627,6 +632,29 @@ export interface LandingStrings {
   galleryLink: string;
   heroTitle: string;
   heroText: string;
+  /** The sub-line's differentiator (adr-019 §6.1), on a line of its own. */
+  heroPromise: string;
+  /** What the hero's composer types; names the sample the stage raises. At
+   *  most 44 characters, so it types on one line (`lp-type`'s 46ch). */
+  heroSentence: string;
+  /** The composer's label: it is an example, not an input. */
+  composerLabel: string;
+  /** Under the composer (adr-019 §6.4): free, never "pay at publish". */
+  composerNote: string;
+  /** The stat strip's one true cell (adr-019 §6.3). A count joins it only
+   *  once it comes from `GET /api/metrics`; no placeholder number ships. */
+  statValue: string;
+  statLabel: string;
+  /** "What guests see" (adr-019 §6.2). The shape test holds the points'
+   *  count across the two languages. */
+  guestsTitle: string;
+  guestsText: string;
+  guestsPoints: string[];
+  /** Four questions, prerendered like the rest of the copy. The cost answer
+   *  gains its sentence about the one-time unlock only when 07-monetization
+   *  §5.2 ships. The shape test holds the count across the two languages. */
+  faqTitle: string;
+  faq: { q: string; a: string }[];
   howTitle: string;
   steps: { title: string; text: string }[];
   chips: string[];
@@ -665,7 +693,37 @@ export const LANDING: Record<Language, LandingStrings> = {
     cta: "Create an invitation",
     galleryLink: "Browse templates",
     heroTitle: "An invitation from one sentence",
-    heroText: "Describe your event in words — get a beautiful invitation in a minute.",
+    heroText: "Describe your event in words — get a beautiful invitation.",
+    heroPromise: "In a minute, not four working days.",
+    heroSentence: "Mariya and Andriy's wedding, 6 June, Odesa",
+    composerLabel: "For example",
+    composerNote: "Free · no sign-up for guests",
+    statValue: "1 minute",
+    statLabel: "from a sentence to a finished invitation",
+    guestsTitle: "What your guests see",
+    guestsText:
+      "The invitation arrives as an envelope sealed with your initials. Guests open it with one tap and reply right there.",
+    guestsPoints: [
+      "Opens in Viber, Telegram or WhatsApp — no sign-up, no app",
+      "A countdown to the day, directions, and add to calendar",
+      "A yes or no reply — and you see it straight away",
+    ],
+    faqTitle: "Common questions",
+    faq: [
+      { q: "How much does it cost?", a: "It's free." },
+      {
+        q: "Do guests need to sign up?",
+        a: "No. Guests open the link in any messenger and reply without signing up or installing anything.",
+      },
+      {
+        q: "How do I see who's coming?",
+        a: "Every reply lands on your replies page: who's coming, how many guests they're bringing, and their notes. You can download the list as a CSV.",
+      },
+      {
+        q: "What language will the invitation be in?",
+        a: "The one you describe the event in: Ukrainian or English. Guests can switch the page's language, but your invitation's words stay as you wrote them.",
+      },
+    ],
     howTitle: "How it works",
     steps: [
       { title: "Describe the event", text: "In your own words — what, when and where." },
@@ -733,7 +791,37 @@ export const LANDING: Record<Language, LandingStrings> = {
     cta: "Створити запрошення",
     galleryLink: "Подивитися зразки",
     heroTitle: "Запрошення за одне речення",
-    heroText: "Опишіть подію словами — отримайте гарне запрошення за хвилину.",
+    heroText: "Опишіть подію словами — отримайте гарне запрошення.",
+    heroPromise: "За хвилину, а не за чотири робочі дні.",
+    heroSentence: "Весілля Марії та Андрія, 6 червня, Одеса",
+    composerLabel: "Наприклад",
+    composerNote: "Безкоштовно · без реєстрації для гостей",
+    statValue: "1 хвилина",
+    statLabel: "від речення до готового запрошення",
+    guestsTitle: "Що побачать гості",
+    guestsText:
+      "Запрошення приходить конвертом із печаткою — вашими ініціалами. Гість відкриває його одним дотиком і відповідає там само.",
+    guestsPoints: [
+      "Відкривається у Viber, Telegram чи WhatsApp — без реєстрації й застосунків",
+      "Зворотний відлік до свята, маршрут і додавання в календар",
+      "Відповідь «так» чи «ні» — і ви одразу її бачите",
+    ],
+    faqTitle: "Часті запитання",
+    faq: [
+      { q: "Скільки це коштує?", a: "Безкоштовно." },
+      {
+        q: "Чи треба гостям реєструватися?",
+        a: "Ні. Гості відкривають посилання в будь-якому месенджері й відповідають без реєстрації та без застосунку.",
+      },
+      {
+        q: "Як я побачу, хто прийде?",
+        a: "Усі відповіді збираються на вашій сторінці відповідей: хто прийде, скільки з ними гостей і їхні побажання. Список можна завантажити у CSV.",
+      },
+      {
+        q: "Якою мовою буде запрошення?",
+        a: "Тією, якою ви опишете подію: українською або англійською. Гості можуть перемкнути мову сторінки, але слова запрошення залишаться вашими.",
+      },
+    ],
     howTitle: "Як це працює",
     steps: [
       { title: "Опишіть подію", text: "Своїми словами — що святкуєте, коли і де." },

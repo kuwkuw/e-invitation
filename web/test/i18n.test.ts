@@ -82,3 +82,59 @@ describe("the landing page's demo content", () => {
     expect(LANDING.en.rsvpNames.friend).not.toBe(LANDING.uk.rsvpNames.friend);
   });
 });
+
+/** adr-019 §6.3–6.4: the landing page states only what is true today. */
+describe("the landing page's claims", () => {
+  it.each(["uk", "en"] as const)(
+    "types a sentence about the sample the hero raises (%s)",
+    (lang) => {
+      const t = LANDING[lang];
+      const details = t.samples.wedding.details_line;
+      const city = details.split(",").at(-1)?.trim() ?? "";
+      const day = /^\d+/.exec(details)?.[0] ?? "";
+      expect(city).not.toBe("");
+      expect(t.heroSentence).toContain(city);
+      expect(t.heroSentence).toContain(day);
+    },
+  );
+
+  // `lp-type` animates max-width to 46ch, which holds 44 characters of Golos
+  // with room. A longer sentence needs that number raised, not this one.
+  it.each(["uk", "en"] as const)(
+    "keeps the %s sentence short enough to type on one line",
+    (lang) => {
+      expect([...LANDING[lang].heroSentence].length).toBeLessThanOrEqual(44);
+    },
+  );
+
+  it("states one number, the one NFR-1 makes true", () => {
+    expect(LANDING.uk.statValue).toBe("1 хвилина");
+    expect(LANDING.en.statValue).toBe("1 minute");
+  });
+
+  it("answers four questions and makes three points about the guest's page", () => {
+    for (const lang of ["uk", "en"] as const) {
+      expect(LANDING[lang].faq).toHaveLength(4);
+      expect(LANDING[lang].guestsPoints).toHaveLength(3);
+    }
+  });
+
+  // 07-monetization §5.2: publishing stays free, and the paid step is a
+  // one-time unlock that removes the badge. A2's «платите лише при
+  // публікації» said the opposite.
+  it("says it's free, and never that publishing costs", () => {
+    expect(LANDING.uk.faq[0]).toEqual({ q: "Скільки це коштує?", a: "Безкоштовно." });
+    expect(LANDING.en.faq[0]).toEqual({ q: "How much does it cost?", a: "It's free." });
+    expect(LANDING.uk.composerNote).toBe("Безкоштовно · без реєстрації для гостей");
+    const PAY = /плат|pay/i;
+    const PUBLISH = /публік|publish/i;
+    const gated = Object.entries(tables)
+      .flatMap(([name, table]) => [
+        ...leaves(table.uk, `${name}.uk`),
+        ...leaves(table.en, `${name}.en`),
+      ])
+      .filter(([, text]) => PAY.test(text) && PUBLISH.test(text))
+      .map(([path]) => path);
+    expect(gated).toEqual([]);
+  });
+});
