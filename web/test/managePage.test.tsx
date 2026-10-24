@@ -36,6 +36,15 @@ function noReply(name: string, at = "2026-10-20T10:00:00Z"): RsvpEntry {
   return { name, attending: false, guests_count: 1, note: null, created_at: at, superseded: false };
 }
 
+function withNote(rsvp: RsvpEntry, note: string): RsvpEntry {
+  return { ...rsvp, note };
+}
+
+/** What the server sends for an answer the same guest later replaced. */
+function superseded(rsvp: RsvpEntry): RsvpEntry {
+  return { ...rsvp, superseded: true };
+}
+
 function stubApi({
   rsvps,
   counts = { yes: 0, no: 0, guests: 0 },
@@ -200,5 +209,77 @@ describe("remind guests (adr-019 §8.3)", () => {
     fireEvent.click(await screen.findByRole("button", { name: MANAGE.uk.copyLink }));
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/i/${ID}`);
     expect(await screen.findByText(MANAGE.uk.copied)).toBeTruthy();
+  });
+});
+
+describe("wishes from guests (adr-019 §8.4)", () => {
+  const quoteIn = (container: HTMLElement) => ({
+    text: container.querySelector(".hm-wishes .hm-wish-quote")?.textContent,
+    who: container.querySelector(".hm-wishes .hm-wish-who")?.textContent,
+  });
+
+  it("quotes the newest live note, with its guest's name", async () => {
+    stubApi({
+      rsvps: [
+        withNote(yesReply("Оксана", 1, "2026-10-20T10:00:00Z"), "Будемо!"),
+        withNote(yesReply("Ігор", 1, "2026-10-21T10:00:00Z"), "Вітаємо від усієї родини"),
+      ],
+      counts: { yes: 2, no: 0, guests: 2 },
+    });
+    const { container } = renderManage();
+    await screen.findByRole("heading", { level: 2, name: MANAGE.uk.wishesTitle });
+    expect(quoteIn(container)).toEqual({ text: "«Вітаємо від усієї родини»", who: "Ігор" });
+    const all = container.querySelector(".hm-wishes a") as HTMLAnchorElement;
+    expect(all.getAttribute("href")).toBe("#hm-responses");
+    expect(all.textContent).toBe(MANAGE.uk.wishesAll.replace("{n}", "2"));
+    // Where it leads: the list, where every note sits under its guest's name.
+    expect(container.querySelector("#hm-responses")?.classList.contains("hm-responses")).toBe(true);
+  });
+
+  // A replaced answer is history (FR-5.5), so its note isn't quoted either.
+  it("never quotes an answer the guest has since replaced", async () => {
+    stubApi({
+      rsvps: [
+        superseded(withNote(yesReply("Оксана", 1, "2026-10-20T10:00:00Z"), "Старе")),
+        noReply("Оксана", "2026-10-22T10:00:00Z"),
+      ],
+      counts: { yes: 0, no: 1, guests: 0 },
+    });
+    const { container } = renderManage();
+    await screen.findByText(MANAGE.uk.guestsComing);
+    expect(container.querySelector(".hm-wishes")).toBeNull();
+  });
+
+  it("quotes a live note even when a newer reply carries none", async () => {
+    stubApi({
+      rsvps: [
+        withNote(yesReply("Оксана", 1, "2026-10-20T10:00:00Z"), "Будемо!"),
+        noReply("Влад", "2026-10-22T10:00:00Z"),
+      ],
+      counts: { yes: 1, no: 1, guests: 1 },
+    });
+    const { container } = renderManage();
+    await screen.findByRole("heading", { level: 2, name: MANAGE.uk.wishesTitle });
+    expect(quoteIn(container)).toEqual({ text: "«Будемо!»", who: "Оксана" });
+  });
+
+  it("offers no link to all of them when there is one", async () => {
+    stubApi({
+      rsvps: [withNote(yesReply("Оксана", 1), "Будемо!")],
+      counts: { yes: 1, no: 0, guests: 1 },
+    });
+    const { container } = renderManage();
+    await screen.findByRole("heading", { level: 2, name: MANAGE.uk.wishesTitle });
+    expect(container.querySelector(".hm-wishes a")).toBeNull();
+  });
+
+  it("treats a note of only spaces as no note", async () => {
+    stubApi({
+      rsvps: [withNote(yesReply("Оксана", 1), "   ")],
+      counts: { yes: 1, no: 0, guests: 1 },
+    });
+    const { container } = renderManage();
+    await screen.findByText(MANAGE.uk.guestsComing);
+    expect(container.querySelector(".hm-wishes")).toBeNull();
   });
 });

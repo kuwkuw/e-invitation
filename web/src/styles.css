@@ -1818,11 +1818,23 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 }
 .hm-remind:hover { border-color: var(--accent); }
 
+/* «Побажання від гостей» (adr-019 §8.4): the newest live note as a
+   pull-quote, in the display face's one italic. The link down to the list is
+   text in the accent, never a fill. */
+.hm-wishes { margin-top: 14px; }
+.hm-wishes .hm-section-title { padding-top: 0; }
+.hm-wish { margin: 0; }
+.hm-wish blockquote { margin: 0; }
+.hm-wish-quote { margin: 6px 0 0; font-family: var(--ui-font-display); font-style: italic; font-weight: 400; font-size: 1.1rem; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+.hm-wish-who { margin: 8px 0 0; font-size: 0.8rem; font-weight: 600; color: var(--ink-faint); }
+.hm-wishes a { display: inline-block; margin-top: 12px; font-size: 0.85rem; font-weight: 600; color: var(--ui-accent); text-decoration: none; }
+.hm-wishes a:hover { text-decoration: underline; }
+
 /* "N new since your last visit" — one dot language shared with the list. */
 .hm-new-line { display: flex; align-items: center; gap: 9px; margin: 14px 4px 0; font-size: 0.85rem; color: var(--accent-ink); }
 .hm-new-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 
-.hm-responses { padding: 6px 16px 8px; }
+.hm-responses { padding: 6px 16px 8px; scroll-margin-top: 16px; }
 .hm-section-title {
   margin: 0; padding: 12px 0 4px;
   font-size: 0.72rem; font-weight: 700;

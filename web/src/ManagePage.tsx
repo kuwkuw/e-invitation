@@ -2,6 +2,7 @@ import { useState } from "react";
 import { daysUntil, parseEventStart } from "./calendar";
 import { Countdown } from "./components/Countdown";
 import { LangSwitcher } from "./components/LangSwitcher";
+import { GuestWishes } from "./components/manage/GuestWishes";
 import { AlertIcon, DownloadIcon, KeyIcon, RefreshIcon } from "./components/manage/icons";
 import { ManageEmpty } from "./components/manage/ManageEmpty";
 import { ManageLinkPrompt } from "./components/manage/ManageLinkPrompt";
@@ -196,6 +197,7 @@ function ReadyDashboard({
                 {t.newSinceVisit.replace("{n}", String(newSinceLastVisit))}
               </p>
             )}
+            <GuestWishes summary={summary} t={t} />
           </div>
           <div className="hm-list-col">
             <ResponseList summary={summary} newerThan={seenAt} t={t} />

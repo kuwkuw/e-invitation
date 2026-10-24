@@ -431,6 +431,9 @@ describe("the manage page's text", () => {
     [".hm-previous", "--surface", 3],
     [".hm-count-label", "--surface", 3],
     [".hm-remind", "--surface", 4.5],
+    [".hm-wish-quote", "--surface", 4.5],
+    [".hm-wish-who", "--surface", 3],
+    [".hm-wishes a", "--surface", 4.5],
     [".hm-count-yes .hm-count-num", "--surface", 4.5],
     [".hm-count-no .hm-count-num", "--surface", 4.5],
   ]);
