@@ -196,7 +196,8 @@ function RowStat({ result, t }: { result: CountsResult | undefined; t: LandingSt
 }
 
 function repliesLabel(counts: RsvpCounts, t: LandingStrings): string {
-  const replies = counts.yes + counts.no;
+  // A maybe is a reply (adr-019 §9.1).
+  const replies = counts.yes + counts.no + counts.maybe;
   if (replies === 0) return t.yoursNoReplies;
   return t.yoursReplies
     .replace("{n}", String(replies))

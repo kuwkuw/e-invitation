@@ -100,6 +100,8 @@ of the screen, so it has to be right.
   whitespace, case-fold); within a group the latest `created_at` wins and the
   earlier ones are flagged `superseded: true`.
 - `counts` (yes / no / guests) are computed over the **non-superseded** set.
+  *Amended 2026-10-24 ([adr-019](adr-019-paper-direction.md) §9.1): the live
+  answer may be a maybe, counted beside yes and no and never in `guests`.*
 - The full list, superseded entries included, stays in the response — the UI
   de-emphasizes them, and CSV export keeps every row so the audit trail
   survives the export.

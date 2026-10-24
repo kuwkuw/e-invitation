@@ -11,7 +11,7 @@
 // (adr-012 §3). adr-010's implementation notes already flag `groupKey` as
 // duplicated between server and client — one copy on this side is the limit.
 
-import type { Rsvp, RsvpSummary, RsvpSummaryEntry } from "./schemas.js";
+import type { Rsvp, RsvpAnswer, RsvpSummary, RsvpSummaryEntry } from "./schemas.js";
 
 export function summarizeRsvps(rsvps: Rsvp[]): RsvpSummary {
   const liveByName = new Map<string, { index: number; created_at: string }>();
@@ -26,20 +26,33 @@ export function summarizeRsvps(rsvps: Rsvp[]): RsvpSummary {
   });
 
   const liveIndexes = new Set([...liveByName.values()].map((live) => live.index));
-  const entries = rsvps.map((rsvp, index) => ({
+  const entries: RsvpSummaryEntry[] = rsvps.map((rsvp, index) => ({
     ...rsvp,
+    answer: answerOf(rsvp),
     superseded: !liveIndexes.has(index),
   }));
-  const attending = entries.filter((e) => !e.superseded && e.attending);
+  const live = entries.filter((e) => !e.superseded);
+  const said = (answer: RsvpAnswer) => live.filter((e) => e.answer === answer);
+  const attending = said("yes");
 
   return {
     rsvps: entries,
     counts: {
       yes: attending.length,
-      no: entries.filter((e) => !e.superseded && !e.attending).length,
+      no: said("no").length,
+      // Reported beside yes and no, never added to `guests` (adr-019 §9.1).
+      maybe: said("maybe").length,
       guests: attending.reduce((sum, e) => sum + e.guests_count, 0),
     },
   };
+}
+
+/** What a guest said, from either era of record. One written before the
+ *  maybe existed has only `attending`, which then meant yes or no; one written
+ *  since carries `answer` as well. Nothing rewrites the older ones (there is no
+ *  migration step), so this is the one place that reads both. */
+export function answerOf(rsvp: Rsvp): RsvpAnswer {
+  return rsvp.answer ?? (rsvp.attending ? "yes" : "no");
 }
 
 // Replies newer than the host's last visit, for the "N new" marker (adr-012

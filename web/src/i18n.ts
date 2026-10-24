@@ -714,7 +714,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     guestsPoints: [
       "Opens in Viber, Telegram or WhatsApp — no sign-up, no app",
       "A countdown to the day, directions, and add to calendar",
-      "A yes or no reply — and you see it straight away",
+      "Yes, no or not sure yet — and you see the reply straight away",
     ],
     faqTitle: "Common questions",
     faq: [
@@ -794,7 +794,7 @@ export const LANDING: Record<Language, LandingStrings> = {
     guestsPoints: [
       "Відкривається у Viber, Telegram чи WhatsApp — без реєстрації й застосунків",
       "Зворотний відлік до свята, маршрут і додавання в календар",
-      "Відповідь «так» чи «ні» — і ви одразу її бачите",
+      "Відповідь «так», «ні» чи «ще не знаю» — і ви одразу її бачите",
     ],
     faqTitle: "Часті запитання",
     faq: [
@@ -955,6 +955,14 @@ export interface GuestStrings {
   countdown: string;
   countdownToday: string;
   dayForms: [string, string, string];
+  /** The third answer (adr-019 §9.1), on a quieter tile beneath yes and no. */
+  maybe: string;
+  /** The thanks card after a maybe: a reply that expects a second one. */
+  maybeTitle: string;
+  /** Points at «Змінити відповідь», already on the card, rather than saying
+   *  sorry the way a no's line does. */
+  maybeLater: string;
+  maybePill: string;
   share: string;
   linkCopied: string;
   /** The guest page's only link back to the product (adr-013 §7). Chrome, so
@@ -999,6 +1007,10 @@ export const GUEST: Record<Language, GuestStrings> = {
     countdown: "{n} {form} to go",
     countdownToday: "It's today!",
     dayForms: ["day", "days", "days"],
+    maybe: "Not sure yet",
+    maybeTitle: "Thanks for replying",
+    maybeLater: "Once you know, change your reply here.",
+    maybePill: "You're still deciding",
     share: "Share the invitation",
     linkCopied: "Link copied!",
     ctaLine: "Create your own invitation",
@@ -1037,6 +1049,10 @@ export const GUEST: Record<Language, GuestStrings> = {
     countdown: "До свята {n} {form}",
     countdownToday: "Свято сьогодні!",
     dayForms: ["день", "дні", "днів"],
+    maybe: "Ще не знаю",
+    maybeTitle: "Дякуємо, що відповіли",
+    maybeLater: "Коли знатимете напевно — змініть відповідь тут.",
+    maybePill: "Ви ще вирішуєте",
     share: "Поділитися запрошенням",
     linkCopied: "Посилання скопійовано!",
     ctaLine: "Створіть власне запрошення",
@@ -1057,6 +1073,9 @@ export interface ManageStrings {
   comingBreakdown: string;
   tileYes: string;
   tileNo: string;
+  /** The summary's third count, beside yes and no and never in the
+   *  headcount (adr-019 §9.1). */
+  tileMaybe: string;
   newSinceVisit: string;
   responsesTitle: string;
   previousAnswer: string;
@@ -1069,6 +1088,9 @@ export interface ManageStrings {
   exportCsv: string;
   yes: string;
   no: string;
+  /** The list's pill for «Ще не знаю» (adr-019 §9.1), short and neutral
+   *  like `yes` and `no`. */
+  maybe: string;
   time: RelativeTimeStrings;
   csv: RsvpCsvStrings;
   noTokenTitle: string;
@@ -1112,6 +1134,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
     comingBreakdown: "{yes} said yes · +{extra} with companions",
     tileYes: "Yes",
     tileNo: "No",
+    tileMaybe: "Maybe",
     newSinceVisit: "{n} new since your last visit",
     responsesTitle: "Responses · {n}",
     previousAnswer: "previous answer",
@@ -1125,6 +1148,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
     exportCsv: "Export CSV",
     yes: "Yes",
     no: "No",
+    maybe: "Maybe",
     time: {
       justNow: "just now",
       minutesAgo: "{n} min ago",
@@ -1137,6 +1161,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
       headers: ["Name", "Answer", "Guests", "Note", "Replied at", "Status"],
       yes: "Yes",
       no: "No",
+      maybe: "Maybe",
       superseded: "superseded",
     },
     noTokenTitle: "Your link is needed",
@@ -1171,6 +1196,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
     comingBreakdown: "{yes} відповіли «так» · +{extra} із супутниками",
     tileYes: "Так",
     tileNo: "Ні",
+    tileMaybe: "Можливо",
     newSinceVisit: "{n} нових від вашого останнього візиту",
     responsesTitle: "Відповіді · {n}",
     previousAnswer: "попередня відповідь",
@@ -1183,6 +1209,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
     exportCsv: "Експорт CSV",
     yes: "Так",
     no: "Ні",
+    maybe: "Можливо",
     time: {
       justNow: "щойно",
       minutesAgo: "{n} хв тому",
@@ -1195,6 +1222,7 @@ export const MANAGE: Record<Language, ManageStrings> = {
       headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
       yes: "Так",
       no: "Ні",
+      maybe: "Можливо",
       superseded: "замінена",
     },
     noTokenTitle: "Потрібне ваше посилання",

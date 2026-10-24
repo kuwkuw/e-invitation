@@ -156,9 +156,10 @@ export function GuestPage({ id }: { id: string }) {
           </div>
 
           <div className="gr-side" id="rsvp">
-            {form.sent ? (
+            {/* A sent form always holds an answer; the check is for the type. */}
+            {form.sent && form.answer ? (
               <ThanksCard
-                attending={form.attending === true}
+                answer={form.answer}
                 guestsCount={form.guestsCount}
                 onChangeAnswer={form.reopen}
                 onShare={handleShare}

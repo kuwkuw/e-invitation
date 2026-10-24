@@ -68,7 +68,7 @@ describe("POST /api/invitations/counts", () => {
     expect(response.statusCode).toBe(200);
     expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.json()).toEqual({
-      results: [{ id, status: "ok", counts: { yes: 1, no: 1, guests: 2 }, new_since: 0 }],
+      results: [{ id, status: "ok", counts: { yes: 1, no: 1, maybe: 0, guests: 2 }, new_since: 0 }],
     });
     // The batch never discloses guest names (adr-012 §3).
     expect(response.body).not.toContain("Ірина");
@@ -96,7 +96,7 @@ describe("POST /api/invitations/counts", () => {
     expect(results[0]).toEqual({
       id,
       status: "ok",
-      counts: { yes: 1, no: 0, guests: 1 },
+      counts: { yes: 1, no: 0, maybe: 0, guests: 1 },
       new_since: 0,
     });
     expect(results[1]).toEqual({ id, status: "forbidden" });
@@ -127,7 +127,7 @@ describe("POST /api/invitations/counts", () => {
     ).json();
 
     expect(batch.results[0].counts).toEqual(single.counts);
-    expect(batch.results[0].counts).toEqual({ yes: 2, no: 0, guests: 4 });
+    expect(batch.results[0].counts).toEqual({ yes: 2, no: 0, maybe: 0, guests: 4 });
   });
 
   it("counts new_since from the client baseline, excluding superseded answers", async () => {

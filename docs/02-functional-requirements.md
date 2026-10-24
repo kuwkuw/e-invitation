@@ -104,8 +104,13 @@ implementation.
   authentication, no registration.
 - FR-4.2 The public payload contains only the latest invitation version: never
   the manage token, never other guests' RSVPs.
-- FR-4.3 A guest RSVPs with: name (≤100 chars), attending yes/no, party size
-  1–10, optional note (≤500 chars).
+- FR-4.3 A guest RSVPs with: name (≤100 chars), an answer — yes, no or
+  «Ще не знаю» — a party size 1–10 for a yes only, and an optional note
+  (≤500 chars). The record stores the answer as `answer` beside `attending`,
+  which is true for a yes only, so a reader that predates the maybe still
+  counts right; a record written before it has `attending` alone and reads
+  as yes or no (adr-019 §9.1). A client that sends `attending` alone is still
+  accepted. *Amended 2026-10-24: the answer was yes or no.*
 - FR-4.4 RSVPs append to the invitation record and are never mutated or
   removed — a guest changes their mind by submitting again. Collapsing those
   re-submissions is a read-time concern of the host view (FR-5.5), so the
@@ -152,6 +157,12 @@ implementation.
   first two hosts' initials from `brief.hosts` («М&А»), one letter for one
   host, and INVINTO's letter for none, so nothing new is stored (§9.2). After a
   yes, sharing the link is offered in the thanks card.
+- FR-4.10 The reply card offers «Ще не знаю» as a third radio in the same
+  group, on a quieter full-width row beneath yes and no
+  ([adr-019](decisions/adr-019-paper-direction.md) §9.1). A maybe asks no
+  party size and sends one. Its thanks card takes a no's muted seal and pill,
+  «Дякуємо, що відповіли», «Ви ще вирішуєте», and a line pointing at «Змінити
+  відповідь»; sharing the link stays a yes's.
 ## FR-5 Host views responses
 
 **Status: built** — `GET /api/invitations/:id/rsvps`,
@@ -162,13 +173,15 @@ implementation.
 
 - FR-5.1 Requires the `x-manage-token` header matching the record's token
   (constant-time comparison).
-- FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, and total
-  guests among attendees. Counts cover the live answers only (FR-5.5).
+- FR-5.2 Returns the full RSVP list plus aggregate counts: yes, no, maybe, and
+  total guests among attendees. A maybe is reported beside yes and no and
+  never added to the guests. Counts cover the live answers only (FR-5.5).
+  Every entry carries `answer`, read from either era of record (FR-4.3).
 - FR-5.3 The dashboard exports the list as CSV, built client-side from the
   fetched data ([csv.ts](../web/src/csv.ts)): UTF-8 BOM (so Excel reads
-  Cyrillic), localized headers/answers, guest count blank on declines, and a
-  status column marking superseded rows — every row is exported, so the file
-  is a full record.
+  Cyrillic), localized headers/answers (yes, no or «Можливо»), guest count
+  blank on a no or a maybe, and a status column marking superseded rows —
+  every row is exported, so the file is a full record.
 - FR-5.4 **Durable host access.** `/manage/:id` is a read-only response
   dashboard ([useHostManage.ts](../web/src/hooks/useHostManage.ts)), composed
   from the public invitation endpoint plus the token-gated RSVP one. The token
@@ -212,15 +225,17 @@ implementation.
   ([useHostInvitationCounts.ts](../web/src/hooks/useHostInvitationCounts.ts))
   and fills counts in after: no spinner, no layout shift, and a failed fetch
   is silent — rows show their reply count and a "new" marker where a token
-  checked out, and stay plain title/time rows where it did not.
+  checked out, and stay plain title/time rows where it did not. The reply
+  count is every live answer, a maybe included.
 - FR-5.8 **The dashboard on paper** ([adr-019](decisions/adr-019-paper-direction.md)
   §8). A grained page whose header carries the hosts' seal (FR-4.9's
   monogram) beside the title, then `details_line`, then a countdown in the
   host's UI language («До свята N днів», «Свято сьогодні!»), hidden when the
   date doesn't parse or has passed. The summary leads with the headcount
-  (FR-5.2's `guests`) over a thin bar of yes and no, each segment sized by its
-  count and absent at zero, with the counts beneath as text; the bar is a
-  proportion, never progress toward a total. Once someone has replied,
+  (FR-5.2's `guests`) over a thin bar of yes, no and maybe, each segment
+  sized by its count and absent at zero, with the counts beneath as text; the
+  bar is a proportion, never progress toward a total. The list marks a maybe
+  with its own pill, «Можливо», and never a party size. Once someone has replied,
   «Нагадати гостям» copies the public link `/i/:id`; before that, the empty
   state's share row is the same action, so the two never show together, and
   a clipboard that refuses fails quietly in both. «Побажання від гостей»

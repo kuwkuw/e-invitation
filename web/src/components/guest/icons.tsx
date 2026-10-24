@@ -19,6 +19,20 @@ export const CrossIcon = ({ size = 16, color = "currentColor" }) => (
   </svg>
 );
 
+/** «Ще не знаю» (adr-019 §9.1): a question, not an answer yet. */
+export const QuestionIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M9 9.2a3 3 0 115.2 2.1c-.9.9-2.2 1.5-2.2 3"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="12" cy="18.2" r="1.1" fill="currentColor" />
+  </svg>
+);
+
 export const CalendarIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" strokeWidth="1.7" />

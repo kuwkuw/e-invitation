@@ -72,8 +72,15 @@ export interface PublishedInvitation {
   invitation: Invitation;
 }
 
+/** What a guest said (adr-019 §9.1). Mirrors `RsvpAnswer` in schemas.ts. */
+export type RsvpAnswer = "yes" | "no" | "maybe";
+
 export interface RsvpInput {
   name: string;
+  answer: RsvpAnswer;
+  /** True for a yes only: "counts toward the headcount". Sent beside
+   *  `answer` so a server that predates the maybe, after a revert, still
+   *  reads the reply. Read `answer` to know what a guest said. */
   attending: boolean;
   guests_count: number;
   note: string | null;
@@ -90,6 +97,8 @@ export interface RsvpEntry extends RsvpInput {
 export interface RsvpCounts {
   yes: number;
   no: number;
+  /** Reported beside yes and no, never added to `guests` (adr-019 §9.1). */
+  maybe: number;
   guests: number;
 }
 

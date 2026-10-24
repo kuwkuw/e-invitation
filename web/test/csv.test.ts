@@ -5,6 +5,7 @@ const uk: RsvpCsvStrings = {
   headers: ["Ім'я", "Відповідь", "Гості", "Побажання", "Час відповіді", "Статус"],
   yes: "Так",
   no: "Ні",
+  maybe: "Можливо",
   superseded: "замінена",
 };
 
@@ -14,6 +15,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: "Ірина",
+          answer: "yes",
           attending: true,
           guests_count: 2,
           note: null,
@@ -22,6 +24,7 @@ describe("buildRsvpCsv", () => {
         },
         {
           name: "Марко",
+          answer: "no",
           attending: false,
           guests_count: 1,
           note: null,
@@ -41,6 +44,26 @@ describe("buildRsvpCsv", () => {
     expect(lines[3]).toBe("");
   });
 
+  // adr-019 §9.1: a maybe is its own answer, and like a decline it carries no
+  // party size, whatever was stored.
+  it("exports a maybe by its own word, with the guests cell blank", () => {
+    const csv = buildRsvpCsv(
+      [
+        {
+          name: "Тарас",
+          answer: "maybe",
+          attending: false,
+          guests_count: 3,
+          note: null,
+          created_at: "2026-08-03T12:00:00.000Z",
+          superseded: false,
+        },
+      ],
+      uk,
+    );
+    expect(csv.slice(1).split("\r\n")[1]).toBe("Тарас,Можливо,,,2026-08-03 12:00,");
+  });
+
   it("exports superseded answers too, marked rather than dropped", () => {
     // The file is the host's full record (adr-010 §5) — a guest who changed
     // their mind leaves both rows, with only the old one flagged.
@@ -48,6 +71,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: "Тарас",
+          answer: "no",
           attending: false,
           guests_count: 1,
           note: null,
@@ -56,6 +80,7 @@ describe("buildRsvpCsv", () => {
         },
         {
           name: "Тарас",
+          answer: "yes",
           attending: true,
           guests_count: 2,
           note: null,
@@ -75,6 +100,7 @@ describe("buildRsvpCsv", () => {
       [
         {
           name: 'Олена "Оля", молодша',
+          answer: "yes",
           attending: true,
           guests_count: 1,
           note: "Буду пізніше,\nдесь о 19:00",

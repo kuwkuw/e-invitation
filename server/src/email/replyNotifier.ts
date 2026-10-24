@@ -74,7 +74,7 @@ export async function notifyNewReplies(record: PublishedRecord, baseUrl: string)
       // nothing, but for a first email it is exactly the number.
       const newReplies = target.last_notified_at
         ? countNewSince(summary.rsvps, target.last_notified_at)
-        : summary.counts.yes + summary.counts.no;
+        : summary.counts.yes + summary.counts.no + summary.counts.maybe;
       if (newReplies === 0) continue;
 
       await notifyOne(record, target.user_id, target.email, newReplies, baseUrl);

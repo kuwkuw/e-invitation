@@ -513,6 +513,45 @@ and a maybe is information a host wants. The rules that come with it:
 - It is schema-first: `schemas.ts` and `types.ts` in one pass, then the
   summary, CSV, email and UI.
 
+**Amended 2026-10-24, step 7.** Building 9.1 settled what it left open, as
+the step's plan proposed (`docs/superpowers/plans/2026-10-24-maybe-reply.md`).
+The first decision reads the table's "`attending` … becomes a three-value
+enum" through this ADR's own Consequences, and is the one to know:
+
+- **`answer` sits beside `attending`; it doesn't replace it.** `answer` is
+  yes, no or maybe; `attending` stays a boolean, true for a yes only,
+  meaning "counts toward the headcount". The reader before this step tests
+  `attending` for truthiness, and "no" is truthy, so an in-place enum would
+  have made a revert count every no and maybe written in between as a yes,
+  headcount included: the irreversible step Consequences warns of. As
+  written, a revert counts yes and no right and reads a maybe as a no.
+- **Old records are read, never rewritten.** One written before the maybe has
+  `attending` alone; `answerOf` in `rsvpSummary.ts` reads both eras, and
+  every host-facing entry carries a normalized `answer`.
+- **The request** takes `answer`, or `attending` alone from a guest page
+  loaded before the deploy. The guest page sends both, so one still open
+  across a revert submits to a server that reads `attending`. `answer` wins
+  when both arrive.
+- **No party size on a maybe.** Only a yes shows the stepper; a maybe sends
+  one and is never summed.
+- **On a 360 px phone** «Ще не знаю» is a quieter full-width tile beneath yes
+  and no, in the same radio group: three equal tiles don't fit, and an equal
+  third one is how a maybe becomes a soft no (the revisit trigger below).
+- **After a maybe**, the thanks card takes a no's muted seal and pill, says
+  «Дякуємо, що відповіли», and points at «Змінити відповідь»; sharing stays a
+  yes's.
+- **The host's word is «Можливо»**, short and neutral like «Так» and «Ні», on
+  the list's pill, the third count and the CSV.
+- **An ochre, `--rsvp-maybe`** (5.24:1 on `--surface`), with its own `-bg`
+  and `-edge`. `--caution-*` measures close but does another job.
+- **Order is yes, no, maybe**, on the bar and in the counts, as §8.2 lists
+  them.
+- **"How many replied" counts the maybe** in the two places that added it up
+  by hand: the landing row and the first reply email, which would otherwise
+  have read a list of maybes as no replies and emailed nobody. The email's
+  copy is unchanged; a maybe is a reply.
+- **The landing's guest point** names all three answers (FR-13.11).
+
 **9.2, the monogram.** «Марія», «Андрій» → «М&А»; one host → one letter; no
 hosts → the letter `lp-brand-mono` already derives from `INVINTO`, so the
 product's mark is not spelled a second way. The seal is chrome, never the card
@@ -646,7 +685,8 @@ implementation (#82) and #66 among them.
 6. **Manage** (§8), with its checkbox (§10). *Built 2026-10-24, before step
    5 (§8, amended).* `feat/ds-notify-checkbox` is deleted after step 5
    instead, the last surface it is the reference for (§10).
-7. **«Ще не знаю»** (§9.1), schema-first.
+7. **«Ще не знаю»** (§9.1), schema-first. *Built 2026-10-24 (§9.1,
+   amended).*
 8. **Gallery** onto the ratchet (§11).
 9. **Rename** `.glass*` → `.sheet*`, and drop the reduced-transparency branch
    (§4.1). Zero pixels.
