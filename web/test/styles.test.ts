@@ -7,6 +7,7 @@ import {
   bannerTitles,
   blend,
   contrast,
+  deltaE76,
   readStyles,
   rootTokens,
   ruleBlocks,
@@ -330,6 +331,7 @@ const CONVERTED = [
   "Landing: returning-host block",
   "Reply email checkbox",
   "Share panel",
+  "Share panel: signed in",
 ];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
@@ -419,6 +421,59 @@ function textFloors(section: string, rows: [selector: string, ground: string, fl
     });
   }
 }
+
+/** The panel a host publishes into (adr-010 §3, adr-019 §10). */
+describe("the share panel's text", () => {
+  textFloors("Share panel", [
+    [".sp-subtitle", "--surface", 4.5],
+    [".sp-label", "--surface", 4.5],
+    [".sp-hint", "--surface", 3],
+    [".sp-version", "--ground", 3],
+    [".sp-manage-label", "--caution-wash", 4.5],
+    [".sp-manage-warning", "--caution-wash", 4.5],
+    [".sp-manage-value", "--caution-surface", 3],
+    [".sp-reveal", "--caution-wash", 3],
+    [".sp-responses-link", "--surface", 4.5],
+  ]);
+  textFloors("Share panel: signed in", [
+    [".sp-account-note", "--surface", 4.5],
+    [".sp-manage-collapsed-label", "--caution-wash", 4.5],
+    [".sp-manage-collapsed-action", "--caution-wash", 4.5],
+    [".sp-manage-hide", "--caution-wash", 3],
+  ]);
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Share panel") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+  });
+
+  it("sets its corners on the radius tokens", () => {
+    for (const name of ["Share panel", "Share panel: signed in"]) {
+      const body = stripComments(sections(css).get(name) ?? "");
+      expect(
+        [...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1]),
+        name,
+      ).toEqual([]);
+    }
+  });
+});
+
+// adr-010 §3: the manage-token block exists to not be the clean chrome. Under
+// paper its wash sat 2.4 from the card stock it's set on, inside the 2.5 at
+// which this stylesheet collapses two values into one (adr-019 §1, step 5).
+describe("the manage-token block", () => {
+  it("stays a different material from the chrome around it", () => {
+    const t = (name: string) => tokens.get(name) as string;
+    expect(deltaE76(t("--caution-wash"), t("--surface"))).toBeGreaterThanOrEqual(6);
+    expect(deltaE76(t("--caution-wash"), t("--wash"))).toBeGreaterThanOrEqual(6);
+    expect(deltaE76(t("--caution-surface"), t("--surface"))).toBeGreaterThanOrEqual(2.5);
+  });
+
+  it("measures distance as the :root comment quotes it", () => {
+    // `--caution-wash` vs `--wash` read 2.2 under glass (#f8f2ea, #f1efe9).
+    expect(deltaE76("#f8f2ea", "#f1efe9")).toBeCloseTo(2.18, 1);
+  });
+});
 
 /** Where a host reads their replies. */
 describe("the manage page's text", () => {

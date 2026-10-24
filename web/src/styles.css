@@ -139,28 +139,32 @@
   --glass-shadow: var(--e-2);
 
   /* Caution. The warm material the share panel's manage-token block is built
-     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal. Its warmth is
-     not decoration: adr-010 makes the manage link a subordinate, visually
-     distinct action beside the public one, and that hierarchy is the only
-     thing standing between a host and pasting the wrong link into a chat.
+     from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal, and the
+     collapsed row a signed-in host sees. Its warmth is not decoration:
+     adr-010 makes the manage link a subordinate, visually distinct action
+     beside the public one, and that hierarchy is the only thing standing
+     between a host and pasting the wrong link into a chat.
 
-     Two of these sit inside the dE 2.5 threshold that collapsed values
-     elsewhere in this block — --caution-wash is 2.2 from --wash and
-     --caution-surface is 1.8 from --surface — and are kept separate anyway.
-     The rule is that values collapse when they do the same *job*, not when
-     they merely measure alike; these two exist to not be the clean chrome.
+     Re-tuned toward kraft for paper (adr-019 §1, step 5). Under glass the
+     wash sat 2.2 (CIE76) from --wash, and under paper 2.4 from the --surface
+     it is set on: inside the 2.5 at which this block collapses values that
+     do the same job. These exist to not be the clean chrome, so the wash is
+     now 8.9 from --surface and 7.4 from --wash, and --caution-surface, the
+     field the masked link sits in, 3.9 from --surface. test/styles.test.ts
+     pins all three.
 
      The three edges are a deliberate depth ramp (block, inner field, ghost
-     button) measuring 2.9–6.0 apart, and the two faints 7.3 apart, so none
-     of them is drift. --caution-ink-masked carries the masked token itself. */
-  --caution-wash: #f8f2ea;
-  --caution-surface: #fffdfa;
-  --caution-edge: #ecdcc9;
-  --caution-edge-hi: #e4d4c0;
-  --caution-edge-strong: #dcccb6;
+     button). --caution-ink-faint labels the reveal and hide buttons, so it
+     clears 3:1 on the wash (3.38; it was 2.63), and --caution-ink-masked
+     carries the masked token itself at 3.21 on its field. */
+  --caution-wash: #f2e7d5;
+  --caution-surface: #f9f2e6;
+  --caution-edge: #e3d3b9;
+  --caution-edge-hi: #dccab0;
+  --caution-edge-strong: #d2bfa2;
   --caution-ink: #7a5638;
-  --caution-ink-faint: #a89478;
-  --caution-ink-masked: #9a8f7d;
+  --caution-ink-faint: #937859;
+  --caution-ink-masked: #928672;
 
   /* Status colours preserved at their existing values, deliberately. Their only
      consumers render on surfaces adr-018 §8 puts out of scope — `.error` on the
@@ -433,7 +437,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--r-xl);
-  box-shadow: 0 26px 60px rgba(20, 18, 14, 0.24);
+  box-shadow: var(--e-3);
   padding: 22px;
 }
 
@@ -766,7 +770,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row input {
   flex: 1;
   border: 1px solid var(--edge-strong);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 6px 10px;
   font: inherit;
   font-size: 0.9rem;
@@ -775,7 +779,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .share-row button {
   border: 1px solid var(--edge-strong);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   padding: 4px 10px;
   font-size: 0.85rem;
   cursor: pointer;
@@ -791,15 +795,16 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
   background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); color: var(--rsvp-yes);
 }
 .sp-title { flex: 1; margin: 0; font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 500; color: var(--ink); }
-.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: 999px; padding: 4px 10px; }
+/* A counter, not a control, so it keeps the pill. */
+.sp-version { flex: 0 0 auto; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); background: var(--ground); border: 1px solid var(--edge); border-radius: var(--r-pill); padding: 4px 10px; }
 .sp-subtitle { margin: 6px 0 18px; font-size: 0.9rem; line-height: 1.5; color: var(--ink-muted); }
 
 .sp-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: var(--ink); }
-.sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: 6px; padding: 2px 7px; }
+.sp-badge { font-size: 0.68rem; font-weight: 700; color: var(--rsvp-yes); background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: var(--r-sm); padding: 2px 7px; }
 .sp-link {
   display: flex; align-items: center; gap: 10px;
   height: 48px; padding: 0 14px; margin-bottom: 12px;
-  border: 1px solid var(--edge); border-radius: 14px; background: var(--app-bg);
+  border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--app-bg);
   color: var(--ink-placeholder);
 }
 .sp-link-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; font-weight: 600; color: var(--ink); }
@@ -811,13 +816,13 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .sp-primary {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; height: 52px;
-  border: none; border-radius: 16px;
+  border: none; border-radius: var(--r-lg);
   background: var(--ui-accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
-  box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3);
+  box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3);
   transition: background 0.15s, box-shadow 0.15s;
 }
-.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(179, 89, 46, 0.34); }
+.sp-primary:hover { background: var(--accent-hi); box-shadow: 0 12px 28px rgba(var(--ui-accent-rgb), 0.34); }
 
 /* Copy, once the share sheet has taken the primary. Still a button rather than
    a text link: pasting the link somewhere that is not a chat is ordinary, and
@@ -825,7 +830,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
    share natively. Neutral chrome keeps it clear of the warm manage block. */
 .sp-secondary {
   width: 100%; height: 46px; margin-top: 8px;
-  border: 1px solid var(--edge); border-radius: 14px; background: var(--surface);
+  border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface);
   color: var(--ink-strong); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
@@ -836,21 +841,21 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 
 /* Sensitive block: warm tint distinct from the clean chrome, so the eye reads
    "different kind of thing" before it reads any words. */
-.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: 14px; padding: 14px 15px 15px; }
+.sp-manage { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-lg); padding: 14px 15px 15px; }
 .sp-manage-label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
 .sp-manage-warning { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.45; color: var(--rsvp-no); }
 .sp-manage-row { display: flex; align-items: center; gap: 8px; }
 .sp-manage-value {
   flex: 1; min-width: 0;
   height: 46px; display: flex; align-items: center; padding: 0 12px;
-  border: 1px solid var(--caution-edge-hi); border-radius: 12px; background: var(--caution-surface);
+  border: 1px solid var(--caution-edge-hi); border-radius: var(--r-md); background: var(--caution-surface);
   font-size: 0.88rem; color: var(--caution-ink-masked);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Outline only — never filled, so it can't be mistaken for the primary. */
 .sp-ghost {
   flex: 0 0 auto; height: 46px; padding: 0 14px;
-  border: 1px solid var(--caution-edge-strong); border-radius: 12px; background: transparent;
+  border: 1px solid var(--caution-edge-strong); border-radius: var(--r-md); background: transparent;
   color: var(--caution-ink); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
@@ -2170,18 +2175,21 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* 10px, not 14: this and .sp-notify below it are one stack of account facts,
    and the tighter gap groups them instead of reading as three
    equally-spaced rows (design project "NotifyLine" §4). */
-.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
-.sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: #8aa98f; }
+/* A sentence, so --ink-muted; its check is the yes-green, a fact settled. */
+.sp-account-note { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; font-size: 0.8rem; color: var(--ink-muted); line-height: 1.45; }
+.sp-account-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--rsvp-yes); }
 /* Reply email (adr-015 §7): the checkbox the landing footer and the
    dashboard carry, in the Reply email checkbox section below (adr-019 §10). */
 .sp-notify { margin: 0 0 12px; }
-.sp-manage-collapsed { width: 100%; background: #faf6f0; border: 1px solid #f0e5d6; border-radius: 12px; display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
-.sp-manage-collapsed:hover { border-color: #e4d4c0; }
-.sp-manage-collapsed svg { flex: 0 0 auto; color: #b99a78; }
-.sp-manage-collapsed-label { flex: 1; font-size: 0.82rem; font-weight: 600; color: #8d7a63; }
-.sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
-.sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: #a89478; cursor: pointer; padding: 0 2px; }
-.sp-manage-hide:hover { color: #7a5638; }
+/* The manage block's own material, collapsed: the same kraft, so the row
+   still reads as the sensitive thing before a word of it is read. */
+.sp-manage-collapsed { width: 100%; background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-md); display: flex; align-items: center; gap: 9px; padding: 12px 14px; min-height: 46px; font: inherit; cursor: pointer; text-align: left; }
+.sp-manage-collapsed:hover { border-color: var(--caution-edge-hi); }
+.sp-manage-collapsed svg { flex: 0 0 auto; color: var(--caution-ink-faint); }
+.sp-manage-collapsed-label { flex: 1; font-size: 0.82rem; font-weight: 600; color: var(--caution-ink); }
+.sp-manage-collapsed-action { flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
+.sp-manage-hide { margin-left: auto; border: none; background: none; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--caution-ink-faint); cursor: pointer; padding: 0 2px; }
+.sp-manage-hide:hover { color: var(--caution-ink); }
 
 /* Reply email checkbox -------------------------------------------------- */
 /* Reply email as one control (adr-019 §10, from PR #66's design pass):

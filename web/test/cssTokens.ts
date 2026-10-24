@@ -98,6 +98,24 @@ export function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+/** CIE76 colour distance: sRGB → linear → XYZ (D65) → CIELAB, then the
+ *  straight-line distance. It is the measure the `:root` comments' "dE"
+ *  figures use, where 2.5 is the distance under which two values that do the
+ *  same job collapse into one token. */
+export function deltaE76(a: string, b: string): number {
+  const lab = (hex: string) => {
+    const [r, g, bl] = rgb(hex).map(channel);
+    const x = (r * 0.4124 + g * 0.3576 + bl * 0.1805) / 0.95047;
+    const y = r * 0.2126 + g * 0.7152 + bl * 0.0722;
+    const z = (r * 0.0193 + g * 0.1192 + bl * 0.9505) / 1.08883;
+    const f = (t: number) => (t > 216 / 24389 ? Math.cbrt(t) : ((24389 / 27) * t + 16) / 116);
+    const [fx, fy, fz] = [f(x), f(y), f(z)];
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  };
+  const [p, q] = [lab(a), lab(b)];
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+}
+
 /** Composite `fg` at `alpha` over `bg` — a translucent surface with its blur
  *  ignored, which is exactly what the spec's legibility rule assumes. */
 export function blend(fg: string, alpha: number, bg: string): string {
