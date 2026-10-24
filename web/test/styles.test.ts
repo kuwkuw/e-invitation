@@ -321,6 +321,7 @@ describe("paper materials (adr-019 §3)", () => {
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
 const CONVERTED = [
+  "Account sheets",
   "App chrome",
   "Creation chat",
   "Design controls",
@@ -332,6 +333,7 @@ const CONVERTED = [
   "Reply email checkbox",
   "Share panel",
   "Share panel: signed in",
+  "Sign-in gate",
 ];
 
 /** `sections()` keys a Map by banner title, which has two silent bypasses
@@ -472,6 +474,35 @@ describe("the manage-token block", () => {
   it("measures distance as the :root comment quotes it", () => {
     // `--caution-wash` vs `--wash` read 2.2 under glass (#f8f2ea, #f1efe9).
     expect(deltaE76("#f8f2ea", "#f1efe9")).toBeCloseTo(2.18, 1);
+  });
+});
+
+/** The share sheet's first frame (adr-014 §2), and the two sheets built on it. */
+describe("the sign-in gate's and the account sheets' text", () => {
+  textFloors("Sign-in gate", [
+    [".ag-title", "--surface", 4.5],
+    [".ag-why", "--surface", 4.5],
+    [".ag-note", "--surface", 4.5],
+    [".ag-textbtn", "--surface", 3],
+    [".ag-code", "--surface", 3],
+    [".ag-draft", "--wash", 4.5],
+    [".ag-waiting", "--app-bg", 3],
+  ]);
+  textFloors("Account sheets", [
+    [".da-keep-head", "--rsvp-yes-bg", 4.5],
+    [".da-keep-list", "--rsvp-yes-bg", 4.5],
+    [".da-goes", "--surface", 4.5],
+    [".da-keys-title", "--caution-wash", 4.5],
+    [".da-keys-body", "--caution-wash", 4.5],
+    [".da-confirm", "--surface", 4.5],
+    [".so-confirm", "--surface", 4.5],
+  ]);
+
+  it("spins, fills and retries in the paper accent", () => {
+    const body = stripComments(sections(css).get("Sign-in gate") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    const spin = ruleBlocks(body).find((r) => r.selectors.includes(".ag-spin"));
+    expect(spin?.body).toMatch(/color:\s*var\(--ui-accent\)/);
   });
 });
 
@@ -676,8 +707,11 @@ describe("the reply email checkbox", () => {
  *  the guest page kept terracotta icons beside adr-019's oxblood that way.
  *  Guest and landing components colour everything through currentColor, set
  *  by the CSS rule that places them, and carry no hex at all. */
-describe("the guest page's, the landing's and the dashboard's components", () => {
-  it("carry no hex literal at all", () => {
+// Google's sign-in mark must be drawn in Google's own colours.
+const GOOGLE_MARK = ["#4285F4", "#34A853", "#FBBC05", "#EA4335"];
+
+describe("the guest page's, the landing's, the dashboard's and the editor's components", () => {
+  it("carry no hex literal at all, beyond the Google mark", () => {
     const src = fileURLToPath(new URL("../src/", import.meta.url));
     const inDir = (dir: string) =>
       readdirSync(join(src, dir))
@@ -687,17 +721,25 @@ describe("the guest page's, the landing's and the dashboard's components", () =>
       ...inDir("components/guest"),
       ...inDir("components/landing"),
       ...inDir("components/manage"),
+      ...inDir("components/editor"),
       "ManagePage.tsx",
+      "App.tsx",
+      "components/ByokSettings.tsx",
+      "components/SignOutSheet.tsx",
+      "components/DeleteAccountSheet.tsx",
       "components/Countdown.tsx",
       "components/NotifyCheckbox.tsx",
       "components/AccountFooter.tsx",
     ];
     const named = files.flatMap((file) =>
-      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(
-        (m) => `${file}: ${m[0]}`,
-      ),
+      [...readFileSync(join(src, file), "utf8").matchAll(/#[0-9a-fA-F]{3,8}\b/g)]
+        .filter((m) => !(file.endsWith("AuthGate.tsx") && GOOGLE_MARK.includes(m[0])))
+        .map((m) => `${file}: ${m[0]}`),
     );
     expect(named).toEqual([]);
+    // The allowance is the mark, not a licence: each colour appears once.
+    const gate = source("components/editor/AuthGate.tsx");
+    expect(GOOGLE_MARK.map((hex) => gate.split(hex).length - 1)).toEqual([1, 1, 1, 1]);
   });
 });
 

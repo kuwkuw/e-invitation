@@ -2122,47 +2122,56 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    container, same rounded top edge, and the invitation stays visible behind a
    scrim because that is what makes interrupting a committed host tolerable.
    No filled accent lives here until a public link exists — the one exception
-   is the retry in `failed`, where repeating really is the useful action. */
-.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(35, 33, 29, 0.30); display: flex; align-items: flex-end; justify-content: center; }
-.ag-sheet { width: 100%; max-width: 460px; background: #fff; border-radius: 26px 26px 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(20, 18, 14, 0.16); }
-.ag-grab { width: 40px; height: 5px; border-radius: 999px; background: #e4ddd0; margin: 0 auto 18px; }
-.ag-title { font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 400; color: #23211d; margin: 0 0 6px; }
+   is the retry in `failed`, where repeating really is the useful action.
+
+   On paper since adr-019's editor step, which converted it with the share
+   panel because it is that panel's first frame (§11). Its retry, spinner and
+   progress had kept glass's terracotta until then. As elsewhere, a sentence
+   takes --ink-muted and a label --ink-faint, and test/styles.test.ts holds
+   each to the ground it sits on. */
+.ag-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(28, 26, 23, 0.3); display: flex; align-items: flex-end; justify-content: center; }
+.ag-sheet { width: 100%; max-width: 460px; background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 14px 20px 24px; box-shadow: 0 -18px 40px rgba(28, 26, 23, 0.16); }
+.ag-grab { width: 40px; height: 5px; border-radius: var(--r-pill); background: var(--edge); margin: 0 auto 18px; }
+.ag-title { font-family: var(--ui-font-display); font-size: 1.35rem; font-weight: 400; color: var(--ink); margin: 0 0 6px; }
 .ag-title-inline { margin: 0; }
 .ag-returning-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.ag-why { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 20px; }
-.ag-google { width: 100%; height: 56px; border: 1px solid #ddd6c8; border-radius: 16px; background: #fff; color: #23211d; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: 0 4px 12px rgba(20, 18, 14, 0.06); cursor: pointer; }
-.ag-google:hover { border-color: #c9bfab; }
-.ag-waiting { width: 100%; height: 56px; border: 1px solid #ece7dd; border-radius: 16px; background: #faf8f4; display: flex; align-items: center; justify-content: center; gap: 11px; color: #8d8577; font-weight: 700; font-size: 1rem; }
-.ag-retry { width: 100%; height: 56px; border: none; border-radius: 16px; background: #b3592e; color: #fff; font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(179, 89, 46, 0.3); cursor: pointer; }
-.ag-retry:hover { background: #9f4d26; }
-.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0eadf; font-size: 0.8rem; color: #8d8577; line-height: 1.45; }
-.ag-note svg { flex: 0 0 auto; margin-top: 2px; }
+.ag-why { font-size: 0.88rem; color: var(--ink-muted); line-height: 1.5; margin: 0 0 20px; }
+.ag-google { width: 100%; height: 56px; border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 11px; box-shadow: var(--e-1); cursor: pointer; }
+.ag-google:hover { border-color: var(--edge-strong); }
+.ag-waiting { width: 100%; height: 56px; border: 1px solid var(--edge-soft); border-radius: var(--r-lg); background: var(--app-bg); display: flex; align-items: center; justify-content: center; gap: 11px; color: var(--ink-faint); font-weight: 700; font-size: 1rem; }
+.ag-retry { width: 100%; height: 56px; border: none; border-radius: var(--r-lg); background: var(--ui-accent); color: var(--surface); font: inherit; font-weight: 700; font-size: 1.02rem; display: flex; align-items: center; justify-content: center; gap: 9px; box-shadow: 0 10px 24px rgba(var(--ui-accent-rgb), 0.3); cursor: pointer; }
+.ag-retry:hover { background: var(--accent-hi); }
+.ag-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--edge-soft); font-size: 0.8rem; color: var(--ink-muted); line-height: 1.45; }
+.ag-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--ink-faint); }
 .ag-back { text-align: center; margin-top: 14px; }
-.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: #8d8577; cursor: pointer; padding: 4px 8px; }
-.ag-textbtn:hover { color: #23211d; }
-.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: #23211d; }
-.ag-textbtn-off { color: #c3bbac; cursor: default; }
+.ag-textbtn { border: none; background: none; font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink-faint); cursor: pointer; padding: 4px 8px; }
+.ag-textbtn:hover { color: var(--ink); }
+.ag-textbtn-strong { font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+/* Disabled while the browser is leaving for Google: faded, never re-coloured
+   below the label floor. */
+.ag-textbtn-off { opacity: 0.6; cursor: default; }
 /* Red lives only in this 28px icon — never a border, banner, or body text. */
-.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: #fbf0ef; border: 1px solid #eed3d1; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
-.ag-draft { display: flex; align-items: center; gap: 9px; background: #f7f5f1; border: 1px solid #eee8dd; border-radius: 12px; padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: #6b6659; }
-.ag-draft svg { flex: 0 0 auto; }
-.ag-code { font-size: 0.74rem; color: #c3bbac; text-align: center; margin: 12px 0 0; }
-.ag-progress { height: 3px; border-radius: 999px; background: #f0eadf; margin-bottom: 20px; overflow: hidden; }
-.ag-progress-fill { width: 72%; height: 100%; background: #b3592e; border-radius: 999px; }
+.ag-fail-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--rsvp-no-bg); border: 1px solid var(--rsvp-no-edge); color: var(--rsvp-no); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.ag-draft { display: flex; align-items: center; gap: 9px; background: var(--wash); border: 1px solid var(--edge-soft); border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 18px; font-size: 0.82rem; color: var(--ink-muted); }
+.ag-draft svg { flex: 0 0 auto; color: var(--rsvp-yes); }
+/* A code a host may read out to support, so it holds the label floor. */
+.ag-code { font-size: 0.74rem; color: var(--ink-faint); text-align: center; margin: 12px 0 0; }
+.ag-progress { height: 3px; border-radius: var(--r-pill); background: var(--edge-soft); margin-bottom: 20px; overflow: hidden; }
+.ag-progress-fill { width: 72%; height: 100%; background: var(--ui-accent); border-radius: var(--r-pill); }
 /* The share panel's own blocks in their final positions, greyed. The host is
    watching the panel being born, not reading about authentication. */
-.ag-skeleton-label { width: 42%; height: 11px; border-radius: 6px; background: #f0eadf; margin-bottom: 12px; }
-.ag-skeleton-link { height: 50px; border: 1px solid #f0eadf; border-radius: 14px; background: #faf8f4; margin-bottom: 12px; }
-.ag-skeleton-primary { height: 54px; border-radius: 16px; background: #f2e7de; margin-bottom: 12px; }
-.ag-skeleton-divider { height: 1px; background: #f4efe6; margin: 16px 0; }
-.ag-skeleton-manage { height: 70px; border-radius: 14px; background: #faf6f0; border: 1px solid #f4ece1; }
-.ag-spin { animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
+.ag-skeleton-label { width: 42%; height: 11px; border-radius: var(--r-sm); background: var(--edge-soft); margin-bottom: 12px; }
+.ag-skeleton-link { height: 50px; border: 1px solid var(--edge-soft); border-radius: var(--r-lg); background: var(--app-bg); margin-bottom: 12px; }
+.ag-skeleton-primary { height: 54px; border-radius: var(--r-lg); background: var(--accent-wash); margin-bottom: 12px; }
+.ag-skeleton-divider { height: 1px; background: var(--ground); margin: 16px 0; }
+.ag-skeleton-manage { height: 70px; border-radius: var(--r-lg); background: var(--caution-wash); border: 1px solid var(--edge-soft); }
+.ag-spin { color: var(--ui-accent); animation: agSpin 1s linear infinite; transform-origin: 50% 50%; }
 @keyframes agSpin { to { transform: rotate(360deg); } }
 @media (min-width: 800px) {
   /* Desktop: the same sheet becomes a popover under the Publish button, which
      is where the share panel already appears. */
   .ag-scrim { align-items: flex-start; justify-content: flex-end; padding: 64px 16px 0; }
-  .ag-sheet { max-width: 380px; border-radius: 18px; box-shadow: 0 18px 40px rgba(20, 18, 14, 0.18); }
+  .ag-sheet { max-width: 380px; border-radius: var(--r-xl); box-shadow: var(--e-3); }
   .ag-grab { display: none; }
 }
 
@@ -2256,29 +2265,32 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 
 /* Account sheets -------------------------------------------------------- */
 /* Sign-out and account deletion (adr-014 §9). Both open from the landing
-   page but are built on the sign-in gate's sheet (.ag-*), so they convert
-   with it rather than with the landing. */
+   page but are built on the sign-in gate's sheet (.ag-*), so they converted
+   with it, in adr-019's editor step. */
 .da-title { margin-bottom: 16px; }
-.da-keep { background: #f4f7f4; border: 1px solid #d9e5da; border-radius: 16px; padding: 17px 16px 15px; margin-bottom: 16px; }
-.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; font-weight: 500; color: #2f5637; line-height: 1.35; margin: 0 0 13px; }
-.da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: #3f4f42; line-height: 1.45; }
+.da-keep { background: var(--rsvp-yes-bg); border: 1px solid var(--rsvp-yes-edge); border-radius: var(--r-lg); padding: 17px 16px 15px; margin-bottom: 16px; }
+.da-keep-head { font-family: var(--ui-font-display); font-size: 1.18rem; font-weight: 500; color: var(--rsvp-yes); line-height: 1.35; margin: 0 0 13px; }
+.da-keep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 0.87rem; color: var(--ink); line-height: 1.45; }
 .da-keep-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
-.da-keep-list svg { margin-top: 2px; }
-.da-goes { font-size: 0.88rem; color: #6b6659; line-height: 1.5; margin: 0 0 16px; }
-.da-keys { background: #f8f2ea; border: 1px solid #ecdcc9; border-radius: 14px; padding: 14px 15px; margin-bottom: 20px; }
-.da-keys-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #7a5638; }
-.da-keys-body { font-size: 0.8rem; color: #7a5638; line-height: 1.45; margin: 0 0 12px; }
+.da-keep-list svg { margin-top: 2px; color: var(--rsvp-yes); }
+.da-goes { font-size: 0.88rem; color: var(--ink-muted); line-height: 1.5; margin: 0 0 16px; }
+/* The keys are the manage links, so they sit in the manage block's material. */
+.da-keys { background: var(--caution-wash); border: 1px solid var(--caution-edge); border-radius: var(--r-lg); padding: 14px 15px; margin-bottom: 20px; }
+.da-keys-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: var(--caution-ink); }
+.da-keys-title svg { color: var(--caution-ink-faint); }
+.da-keys-body { font-size: 0.8rem; color: var(--caution-ink); line-height: 1.45; margin: 0 0 12px; }
 .da-keys-btn { width: 100%; height: 46px; }
 .da-cancel { height: 54px; font-size: 1rem; }
 /* Red as a text colour only — a filled red button would shout "irreversible
-   catastrophe" at a host whose invitations are all about to survive. */
-.da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #a83f3f; cursor: pointer; padding: 4px 8px; }
-.da-confirm:hover { color: #8f3535; }
+   catastrophe" at a host whose invitations are all about to survive. Its
+   hover underlines rather than darkening, so no token is minted for it. */
+.da-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: var(--rsvp-no); cursor: pointer; padding: 4px 8px; text-underline-offset: 3px; }
+.da-confirm:hover { text-decoration: underline; }
 /* Sign-out's confirm: the delete sheet's shape, never its colour. Red belongs
    to account deletion alone or it stops meaning anything, so this stays the
-   same quiet #6b6659 the control in the card footer already is. */
-.so-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: #6b6659; cursor: pointer; padding: 4px 8px; }
-.so-confirm:hover { color: #23211d; }
+   same quiet --ink-muted the control in the card footer already is. */
+.so-confirm { border: none; background: none; font: inherit; font-size: 0.9rem; font-weight: 700; color: var(--ink-muted); cursor: pointer; padding: 4px 8px; }
+.so-confirm:hover { color: var(--ink); }
 
 /* Gallery --------------------------------------------------------------- */
 /* The sample-invitation pages (adr-017): /gallery and /gallery/:occasion.
