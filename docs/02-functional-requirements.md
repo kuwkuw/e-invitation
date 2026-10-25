@@ -684,7 +684,9 @@ FR-13.2.
 - FR-14.2 An occasion page carries **four ready-to-use invitations**, each
   rendered through the same `InvitationPreview` the editor uses, each with its
   own call to action. There is no separate marketing prose: what a visitor
-  searched for and what the product makes are the same object.
+  searched for and what the product makes are the same object. Each card sits
+  on the guest page's deckled mat, so a visitor sees it as a guest will
+  ([adr-019](decisions/adr-019-paper-direction.md) §11, step 8).
 - FR-14.3 The four examples of an occasion are **visibly different** — a
   distinct palette each. Range is what the page promises, and it is held by a
   test rather than by care.
