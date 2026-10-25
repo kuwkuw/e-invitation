@@ -16,7 +16,7 @@ interface Props {
 export function PastDateBanner({ blocked, message }: Props) {
   if (!blocked) return null;
   return (
-    <div className="cc-banner glass-solid" role="status">
+    <div className="cc-banner sheet-solid" role="status">
       {message}
     </div>
   );

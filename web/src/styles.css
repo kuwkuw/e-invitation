@@ -126,17 +126,15 @@
   --dur-fast: 160ms;
   --dur-base: 280ms;
 
-  /* Glass, now paper (adr-019 §4.1): card stock at full opacity, no blur,
-     a ruled hairline for an edge. The alpha stays a token of its own so the
-     contrast test can composite the surface over the ground without parsing
-     an rgba() string — at 1 the composite is just --surface. */
-  --glass-alpha: 1;
-  --glass-alpha-solid: 1;
-  --glass-tint: var(--surface);
-  --glass-tint-solid: var(--surface);
-  --glass-blur: none;
-  --glass-edge: inset 0 0 0 1px var(--edge);
-  --glass-shadow: var(--e-2);
+  /* Sheets (adr-019 §4.1): card stock at full opacity, a ruled hairline for
+     an edge. They were adr-018's glass tokens, renamed in adr-019 step 9. The
+     alpha and blur went with the rename: they let the contrast test
+     composite a translucent surface over the ground, and nothing is
+     translucent now. */
+  --sheet-tint: var(--surface);
+  --sheet-tint-solid: var(--surface);
+  --sheet-edge: inset 0 0 0 1px var(--edge);
+  --sheet-shadow: var(--e-2);
 
   /* Caution. The warm material the share panel's manage-token block is built
      from — .sp-manage, .sp-manage-value, .sp-ghost, .sp-reveal, and the
@@ -190,35 +188,25 @@
   --rsvp-maybe-edge: #e6d7b5;
 }
 
-/* Glass surfaces (adr-018), opaque paper since adr-019 §4.1. Two, not one:
-   under glass .glass-solid carried text and so took more tint and less blur
-   than a toolbar did; under paper both are card stock.
+/* Sheets: the chrome's card stock (adr-019 §4.1). Two, not one: .sheet is
+   the chat's panel, and .sheet-solid the surfaces made of text — the date
+   banner and the design sheets. Both are --surface today, and
+   test/styles.test.ts holds ink at AA on each.
 
-   adr-018's rule is what made that a token swap rather than a rewrite:
-   **every glass surface must be legible with its blur removed.** The tint
-   always carried the contrast, so taking the blur away moved no text.
-   test/styles.test.ts still composites each tint over --ground. The class
-   names, and the reduced-transparency block below, go in adr-019's rename
-   step (9). */
-.glass {
-  background: var(--glass-tint);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-edge), var(--glass-shadow);
+   These were adr-018's .glass and .glass-solid, and adr-018's rule is what
+   made paper a token swap rather than a rewrite: every glass surface had to
+   be legible with its blur removed, so the tint always carried the contrast
+   and taking the blur away moved no text. adr-019 step 9 renamed them with no
+   pixel change, and with nothing translucent left, took out the blur and
+   the prefers-reduced-transparency branch that cleared it. NFR-9 now asks
+   for every surface to be opaque, and the test holds that no rule blurs. */
+.sheet {
+  background: var(--sheet-tint);
+  box-shadow: var(--sheet-edge), var(--sheet-shadow);
 }
-.glass-solid {
-  background: var(--glass-tint-solid);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-edge), var(--glass-shadow);
-}
-
-/* iOS's own Reduce Transparency, and its web equivalent. Nothing is
-   translucent under paper, so there are no tokens left to swap; the blur
-   reset stays until the rename step removes the block (adr-019 §4.1). */
-@media (prefers-reduced-transparency: reduce) {
-  .glass,
-  .glass-solid { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sheet-solid {
+  background: var(--sheet-tint-solid);
+  box-shadow: var(--sheet-edge), var(--sheet-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {

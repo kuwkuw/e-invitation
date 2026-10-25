@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import {
   atRuleSpan,
   bannerTitles,
-  blend,
   contrast,
   deltaE76,
   readStyles,
@@ -157,91 +156,51 @@ describe("token contrast (WCAG 2.1)", () => {
   });
 });
 
-describe("glass", () => {
+describe("sheets (adr-019 §4.1)", () => {
   it("declares both surfaces and their primitives", () => {
-    for (const t of [
-      "--glass-tint",
-      "--glass-tint-solid",
-      "--glass-alpha",
-      "--glass-alpha-solid",
-      "--glass-blur",
-      "--glass-edge",
-      "--glass-shadow",
-    ]) {
-      expect(tokens.has(t)).toBe(true);
+    for (const t of ["--sheet-tint", "--sheet-tint-solid", "--sheet-edge", "--sheet-shadow"]) {
+      expect(tokens.has(t), t).toBe(true);
     }
-    expect(css).toMatch(/^\.glass\s*\{/m);
-    expect(css).toMatch(/^\.glass-solid\s*\{/m);
+    expect(css).toMatch(/^\.sheet\s*\{/m);
+    expect(css).toMatch(/^\.sheet-solid\s*\{/m);
   });
 
-  it("ships the -webkit- prefix beside every backdrop-filter", () => {
-    const plain = [...css.matchAll(/(?<!-webkit-)backdrop-filter\s*:/g)].length;
-    const prefixed = [...css.matchAll(/-webkit-backdrop-filter\s*:/g)].length;
-    expect(plain).toBeGreaterThan(0);
-    expect(prefixed).toBe(plain);
-  });
-
-  // The spec's central rule: the tint alone carries the contrast, so the
-  // reduced-transparency fallback cannot be a second design.
-  it("keeps ink legible on both surfaces with the blur ignored", () => {
-    const ground = tokens.get("--ground") as string;
-    const surface = tokens.get("--surface") as string;
-    const over = (alphaToken: string) => blend(surface, Number(tokens.get(alphaToken)), ground);
-    for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
-      expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
+  // adr-018's central rule, which made paper a token swap: the tint alone
+  // carries the contrast. With nothing translucent, the tint is the surface.
+  it("keeps body ink at AA on both", () => {
+    for (const t of ["--sheet-tint", "--sheet-tint-solid"]) {
+      const tint = tokens.get(t) as string;
+      expect(contrast(tokens.get("--ink") as string, tint), t).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(tokens.get("--ink-muted") as string, tint), t).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it("is opaque paper since adr-019: the tint is --surface at alpha 1, and nothing blurs", () => {
-    expect(tokens.get("--glass-tint")).toBe(tokens.get("--surface"));
-    expect(tokens.get("--glass-tint-solid")).toBe(tokens.get("--surface"));
-    expect(Number(tokens.get("--glass-alpha"))).toBe(1);
-    expect(Number(tokens.get("--glass-alpha-solid"))).toBe(1);
-    expect(tokens.get("--glass-blur")).toBe("none");
+  it("are card stock: both tints are --surface", () => {
+    expect(tokens.get("--sheet-tint")).toBe(tokens.get("--surface"));
+    expect(tokens.get("--sheet-tint-solid")).toBe(tokens.get("--surface"));
   });
 
-  it("leaves reduced transparency no tokens to swap, since nothing is translucent", () => {
+  /** NFR-9: every surface is opaque. A blur would need its -webkit- prefix and
+   *  a prefers-reduced-transparency fallback that clears it, and both went
+   *  with the rename (step 9), so the guard is that nothing blurs at all. */
+  it("leaves nothing translucent: no rule blurs, and no transparency branch is left", () => {
     const bare = stripComments(css);
-    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(span).not.toBeNull();
-    const { start, end } = span as { start: number; end: number };
-    expect(bare.slice(start, end)).not.toMatch(/:root/);
+    expect(bare).not.toMatch(/backdrop-filter/);
+    expect(bare).not.toMatch(/prefers-reduced-transparency/);
+    expect(bare).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 
-  it("degrades to opaque when the viewer asks for less transparency", () => {
-    expect(css).toMatch(/@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
-  });
-
-  /** The check above proves only that the block exists. A third glass surface
-   *  would blur under Reduce Transparency with every other guard still green:
-   *  the prefix test counts declarations file-wide, and the contrast test
-   *  reads the two alpha tokens it was written against. So name the
-   *  selectors — whatever sets a blur must be cleared by the fallback.
-   *
-   *  Prefixed-vs-plain parity inside the block is not re-checked here; the
-   *  `-webkit-` test above counts the whole file, reduce block included, so
-   *  clearing only one of the pair already fails it. */
-  it("clears the blur on every selector that sets one, not just the two it shipped with", () => {
-    const bare = stripComments(css);
-    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(span, "no prefers-reduced-transparency block to scan").not.toBeNull();
-    const { start, end } = span as { start: number; end: number };
-
-    const blurred = new Set<string>();
-    const cleared = new Set<string>();
-    for (const rule of ruleBlocks(bare)) {
-      if (!/backdrop-filter\s*:/.test(rule.body)) continue;
-      const insideFallback = rule.at > start && rule.at < end;
-      const clears = insideFallback && /backdrop-filter\s*:\s*none/.test(rule.body);
-      for (const selector of rule.selectors) (clears ? cleared : blurred).add(selector);
-    }
-
-    // Guards the scan itself: a renamed class or a broken regex would leave
-    // both sets empty, and an empty subset check passes for the wrong reason.
-    expect(blurred.size).toBeGreaterThan(0);
-    expect([...blurred].filter((s) => !cleared.has(s)).sort()).toEqual([]);
+  it("finishes the rename: no glass class or token in the stylesheet or the markup", () => {
+    expect(stripComments(css)).not.toMatch(/\.glass\b|--glass-/);
+    const src = fileURLToPath(new URL("../src/", import.meta.url));
+    const markup = readdirSync(src, { recursive: true, encoding: "utf8" }).filter((f) =>
+      f.endsWith(".tsx"),
+    );
+    expect(markup.length).toBeGreaterThan(0);
+    const named = markup.filter((f) =>
+      /className=(?:"[^"]*|\{`[^`]*)\bglass\b/.test(readFileSync(join(src, f), "utf8")),
+    );
+    expect(named).toEqual([]);
   });
 });
 
@@ -435,7 +394,7 @@ describe("the editor's header (adr-019 §7.2)", () => {
     expect(header?.body).toMatch(/background-color:\s*var\(--surface\)/);
     expect(header?.body).toMatch(/border-bottom:\s*1px solid var\(--edge\)/);
     expect(header?.body).not.toMatch(/border-radius/);
-    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bglass\b/);
+    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bsheet\b/);
   });
 
   it("hangs the share and key panels from the bar, whatever its height", () => {
