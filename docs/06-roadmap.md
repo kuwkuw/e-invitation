@@ -16,7 +16,8 @@ sections it owed — public discoverability and the date rules had both shipped
 with only a backlog strikethrough between them — and 2026-09-15 when the
 material system (adr-018) shipped as **NFR-9**, the first iteration this file
 records that changed how the product looks rather than what it does, recorded
-the same day it shipped. This
+the same day it shipped, and 2026-10-25 when the paper direction (adr-019)
+closed with its last two steps and production was read again. This
 doc plans the **next** iteration; when an item ships it moves into [02-functional-requirements.md](02-functional-requirements.md) /
 [03-non-functional-requirements.md](03-non-functional-requirements.md) with a
 stable ID, per the docs conventions.
@@ -30,7 +31,7 @@ fallbacks, BYOK for power users, operator-cost guardrails, durable metrics,
 add-to-calendar, CSV export, optional AI backgrounds, single-container deploy
 on a custom domain.
 
-Fourteen iterations have shipped since (three were missing from this list
+Fifteen iterations have shipped since (three were missing from this list
 until 2026-08-08, and the last three until 2026-09-12 — this list has now
 twice been the thing that fell behind):
 
@@ -65,6 +66,10 @@ twice been the thing that fell behind):
   [adr-018](decisions/adr-018-material-system.md), below. Shipped as
   **NFR-9**, amending NFR-1's bundle line and NFR-8's hand-mirror list. No new
   FR.
+- **The paper direction** — [adr-019](decisions/adr-019-paper-direction.md),
+  below. Shipped across FR-3.7, FR-4.3, FR-4.5, FR-4.8–4.10, FR-5.2–5.3,
+  FR-5.7–5.8, FR-6.4, FR-11.11, FR-12.7, FR-12.11–12.12, FR-13.11–13.12 and
+  FR-14.2, amending NFR-1, NFR-8 and NFR-9.
 
 ## Shipped: the host can come back
 
@@ -866,9 +871,109 @@ the same day — unlike three of the iterations above, nothing here was owed.
   CPU throttle emulates neither. The device is the gate; the throttle pass was
   never going to be the part that decided.
 
+## Shipped: the paper direction
+
+Settled in [adr-019](decisions/adr-019-paper-direction.md) (accepted) and
+shipped from 2026-10-22 to 2026-10-25 in nine steps. The second iteration this
+file records about how the product looks, and the first to change what it does
+along the way: the guest page gained an envelope, a countdown, a route link and
+a third reply.
+
+**Why it was taken.** adr-018's glass did what it promised for the editor and
+nothing for the two surfaces that decide whether the product spreads: the guest
+page every guest sees, and the landing page a guest's "create your own" link
+lands on. Editorial paper was chosen from three directions rendered against the
+real copy, then refined after a round of consumer research. The ADR said in
+advance what it could not be measured against: 27 generations, 16 publishes and
+9 guest views lifetime, one generation in the forty days before it.
+
+**What shipped**, in the order it merged. Each step was a PR with its own green
+suite. The five that built a surface or a behaviour (the guest page through the
+editor) each had a plan PR first that listed what the ADR left open, and each
+one's amendment to the ADR records the answers; the last two, a conversion and
+a rename, needed none.
+
+1. **Tokens and fonts** (#110): paper values in the token block, and Literata
+   and Golos Text for the chrome.
+2. **The editor's table** (#111): the palette-tinted ground and its hand-mirror
+   retired, so NFR-8 lost an entry rather than gaining one.
+3. **The guest page** (#114): the envelope on first open, the pinned bar, the
+   card on a deckled mat, the countdown, «Маршрут», add-to-calendar before a
+   reply, and the hosts' monogram on a wax seal. Checking it on production
+   turned up dead share links answering a direct load with raw JSON, fixed as
+   FR-4.6 (#115).
+4. **The landing** (#117): the hero types its sentence and raises a card from
+   an envelope; "what guests see"; one true number; four questions, the price
+   among them; the reply-email checkbox.
+5. **The manage dashboard** (#119, step 6 of the ADR), built before the editor
+   at the owner's choice: a sealed header, the countdown, the headcount over a
+   bar of answers, «Нагадати гостям» and the guests' newest wish.
+6. **«Ще не знаю»** (#121, step 7), schema-first: a third reply with no party
+   size, counted beside yes and no wherever a count appears. The one step that
+   changed the stored RSVP shape, and old records still load.
+7. **The editor** (#123, step 5): the card on the guest's mat, a header bar
+   with the replies so far, underlined tabs with «Конверт» that finally pin
+   under the card (the sticky bug in the backlog below), and reply email as the
+   share panel's checkbox, the last of PR #66's three surfaces.
+8. **The gallery and the crash screen on tokens, and the rename** (steps 8 and
+   9, one PR in two commits): each gallery example on the mat, the crash screen
+   on the dashboard's values, and `.glass` renamed `.sheet` with no pixel
+   change, taking the blur and the reduced-transparency branch with it.
+
+Three things worth carrying forward:
+
+1. **The ratchet closed.** adr-018's `CONVERTED` started on 2026-09-15 with two
+   sections. It now lists every section but the one that defines the tokens and
+   the card's, which the OG renderer mirrors, and a new section has to join it
+   to exist. The roadmap entry that tracked the hex below is struck through.
+2. **Two gates were waived, and said so where it happened.** The owner waived
+   the editor's two design boards (adr-019 §7.5), and the guest page merged
+   before its real-device envelope check, which then ran on production with the
+   device unrecorded (#114). Both stand as written; the envelope's revisit
+   trigger (a stutter in a messenger webview → a cross-fade) still applies.
+3. **The design project is behind.** The DS took one CSS-only sync, for steps
+   1 and 2. A full resync is owed for the token panel, `conventions.md`'s
+   layout sentence and now the rename, and it has to search the design
+   project's canvases for `glass` first (`.design-sync/NOTES.md`).
+
+**What this iteration is answerable for.** Production on 2026-10-25, beside
+the last reading:
+
+| | 2026-09-11 | 2026-10-25 |
+|---|---|---|
+| generations | 26 | **27** |
+| publishes | 15 | **17** |
+| guest-page views | 8 | **10** |
+| referred generations | 0 | **0** |
+| gallery generations / publishes | 0 / 0 | **0 / 0** |
+| `views_per_publish` | 0.53 | **0.59** |
+
+One generation in forty-four days. Nine steps of a visual direction were built
+in four days against that, and the ADR said beforehand that no usage number
+would judge it. The warning this file has repeated since 2026-07-31 applies in
+full: **this was built for hosts who are not here yet.** What it bought is a
+guest page and a landing page that a referral can arrive on without the
+product looking like a demo, which pays only once somebody is referred.
+
+Two readings are standing, and neither is due:
+
+- **The share-sheet mark** (above): (10 − 6) / (17 − 12) is **0.8 views per
+  post-mark publish, on n = 5**, half the ten publishes it needs. Under 1.0 so
+  far, which leans toward "friction was not the explanation", but not readable.
+- **The gallery**: no conclusion before about 2026-12-15, and zero
+  gallery-attributed generations or publishes in forty-three days. The Search
+  Console check this file said would answer in about two weeks, whether the
+  pages are indexed at all, is recorded nowhere. It is overdue and costs no
+  code.
+
 ## Candidate backlog
 
-- **What is left on raw hex**, after five conversions — the guest page and
+- ~~**What is left on raw hex**~~ — **nothing, since 2026-10-25.** The
+  gallery and the crash screen converted in adr-019's last step, the crash
+  screen's terracotta glow with them, and `CONVERTED` now names every section
+  but the tokens' and the card's. Kept for the record:
+
+  After five conversions — the guest page and
   the share panel on 2026-09-19 (60 literals, 299 of 306 declarations
   byte-identical; 39, 185 of 189), then `Design controls` and the manage
   dashboard on 2026-10-01 (9 literals, 28 of 28; 59 literals, 339 of 350),
@@ -1001,7 +1106,7 @@ the same day — unlike three of the iterations above, nothing here was owed.
   reading, and six observations spread over the product's whole life is not a
   copy-quality signal at any rate. Revisit only if the number moves.
 - **Nothing has ever used the AI background layer.** `backgrounds` is **0
-  lifetime** — a feature with its own ADR ([adr-009](decisions/adr-009-ai-background-layer.md)),
+  lifetime** (still 0 on 2026-10-25) — a feature with its own ADR ([adr-009](decisions/adr-009-ai-background-layer.md)),
   an image model, a scrim spec synced from the DS and a per-IP guardrail, and
   not one invocation in production. That is not a bug report; it is a fact
   about where effort went, and it belongs on this list next to every proposal

@@ -10,7 +10,12 @@ import { InvitationPreview } from "../InvitationPreview";
  *
  *  The call to action is an `<a href>`, never a `<Link>`. A crawler needs a
  *  real edge to follow, and a full page load is what makes `?sample=`
- *  reload-safe and pasteable. */
+ *  reload-safe and pasteable.
+ *
+ *  The card sits on the guest page's deckled mat (adr-019 §11), so a host
+ *  choosing one sees it as a guest will. The mat wraps the card and never sits
+ *  on it (§3); `.gl-mat` casts its shadow, which the mat's own clip would cut
+ *  off. `prerender.ts` writes the same markup for crawlers. */
 export function ExampleCard({
   example,
   design,
@@ -22,7 +27,11 @@ export function ExampleCard({
 }) {
   return (
     <article className="gl-example">
-      <InvitationPreview copy={example.copy} design={design} />
+      <div className="gl-mat">
+        <div className="deckle">
+          <InvitationPreview copy={example.copy} design={design} />
+        </div>
+      </div>
       <div className="gl-example-foot">
         <div>
           <div className="gl-example-style">{example.style}</div>

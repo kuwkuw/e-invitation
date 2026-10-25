@@ -12,9 +12,14 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **142.0 kB gzipped** (494.2 kB raw, CSS + JS), measured 2026-10-24 with
-  `pnpm --filter inv-app-web build` — 14.03 kB CSS plus 128.01 kB JS, after
-  [adr-019](decisions/adr-019-paper-direction.md)'s editor (step 5): the
+  **141.9 kB gzipped** (494.5 kB raw, CSS + JS), measured 2026-10-25 with
+  `pnpm --filter inv-app-web build` — 13.85 kB CSS plus 128.01 kB JS, after
+  [adr-019](decisions/adr-019-paper-direction.md)'s last two steps: the
+  gallery and the crash screen on tokens, and the rename of glass to sheets,
+  which took out the blur and the reduced-transparency branch. Hex literals
+  gave way to token reads that compress better, so the CSS fell 0.18 kB
+  gzipped while growing 0.2 kB raw. It was 142.0 kB (494.2 kB raw) on
+  2026-10-24, 14.03 kB CSS plus 128.01 kB JS, after the editor (step 5): the
   mat, the header bar with its seal and replies link and the hook behind it,
   the five tabs and the envelope still, the share panel's checkbox, the sign-in
   gate and the account sheets on tokens, and their copy in both languages
@@ -305,8 +310,9 @@
   not a guarantee: the tests hold the 3:1 floor and, outside the surfaces
   named next, nothing about where `--ink-faint` is used. On the manage
   dashboard, the guest page, the landing page, the share panel, the sign-in
-  gate and the account sheets, and for the editor's header, tabs, envelope
-  still and peek line, they hold the placement too: each text selector is
+  gate and the account sheets, the gallery and the crash screen, and for the
+  editor's header, tabs, envelope still and peek line, they hold the
+  placement too: each text selector is
   named with the ground it sits on and the floor its role owes (4.5:1 for a
   sentence, 3:1 for a label, placeholder or timestamp). The share panel's
   manage-token block is also held apart from the chrome it sits on, at a
@@ -321,18 +327,22 @@
   adr-018 the rule was that every glass surface must be legible with its blur
   removed — the tint carried the contrast — and that is what let
   [adr-019](decisions/adr-019-paper-direction.md) replace glass with paper by
-  a token swap: the two glass classes are now card stock at full opacity
-  with no blur. Its paper materials (grain, the deckled mat, the seal) may
+  a token swap: the two glass classes became card stock at full opacity with
+  no blur, and then `.sheet` and `.sheet-solid`. No rule in the stylesheet
+  blurs. Its paper materials (grain, the deckled mat, the seal) may
   wrap the card but never sit on `.inv` or inside it, which keeps the OG
-  renderer's mirror honest; `web/test/styles.test.ts` holds both. Grain sits
-  on the editor's table, the guest page's ground, the landing page's ground
-  and its hero's table, and the manage dashboard's ground, and it sets only
-  an image under 5% alpha, so it moves no contrast. The deckled mat wraps the
-  card on the guest page, in the landing's hero and in the editor, where it is
+  renderer's mirror honest; `web/test/styles.test.ts` holds all three. Grain
+  sits on the editor's table, the guest page's ground, the landing page's
+  ground and its hero's table, the manage dashboard's ground and the crash
+  screen's, and it sets only an image under 5% alpha, so it moves no
+  contrast. The deckled mat wraps the card on the guest page, in the
+  landing's hero, under each gallery example and in the editor, where it is
   the guest page's mat at the guest's width, so the host edits the card the
   guest opens.
-- **Reduced transparency and reduced motion are honoured**, not detected: the
-  two media queries above, never a device or user-agent check. The guest
+- **Reduced motion is honoured**, not detected: a media query, never a device
+  or user-agent check. Reduced transparency needs nothing, because no surface
+  is translucent; the `prefers-reduced-transparency` branch that cleared
+  glass's blur went with the rename. The guest
   page's envelope ([adr-019](decisions/adr-019-paper-direction.md) §5.1)
   reads the same reduced-motion query through `matchMedia` once at mount,
   because "no envelope at all" means not mounting it, which CSS alone can't

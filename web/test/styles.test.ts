@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import {
   atRuleSpan,
   bannerTitles,
-  blend,
   contrast,
   deltaE76,
   readStyles,
@@ -157,91 +156,51 @@ describe("token contrast (WCAG 2.1)", () => {
   });
 });
 
-describe("glass", () => {
+describe("sheets (adr-019 §4.1)", () => {
   it("declares both surfaces and their primitives", () => {
-    for (const t of [
-      "--glass-tint",
-      "--glass-tint-solid",
-      "--glass-alpha",
-      "--glass-alpha-solid",
-      "--glass-blur",
-      "--glass-edge",
-      "--glass-shadow",
-    ]) {
-      expect(tokens.has(t)).toBe(true);
+    for (const t of ["--sheet-tint", "--sheet-tint-solid", "--sheet-edge", "--sheet-shadow"]) {
+      expect(tokens.has(t), t).toBe(true);
     }
-    expect(css).toMatch(/^\.glass\s*\{/m);
-    expect(css).toMatch(/^\.glass-solid\s*\{/m);
+    expect(css).toMatch(/^\.sheet\s*\{/m);
+    expect(css).toMatch(/^\.sheet-solid\s*\{/m);
   });
 
-  it("ships the -webkit- prefix beside every backdrop-filter", () => {
-    const plain = [...css.matchAll(/(?<!-webkit-)backdrop-filter\s*:/g)].length;
-    const prefixed = [...css.matchAll(/-webkit-backdrop-filter\s*:/g)].length;
-    expect(plain).toBeGreaterThan(0);
-    expect(prefixed).toBe(plain);
-  });
-
-  // The spec's central rule: the tint alone carries the contrast, so the
-  // reduced-transparency fallback cannot be a second design.
-  it("keeps ink legible on both surfaces with the blur ignored", () => {
-    const ground = tokens.get("--ground") as string;
-    const surface = tokens.get("--surface") as string;
-    const over = (alphaToken: string) => blend(surface, Number(tokens.get(alphaToken)), ground);
-    for (const a of ["--glass-alpha", "--glass-alpha-solid"]) {
-      expect(contrast(tokens.get("--ink") as string, over(a))).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(tokens.get("--ink-muted") as string, over(a))).toBeGreaterThanOrEqual(4.5);
+  // adr-018's central rule, which made paper a token swap: the tint alone
+  // carries the contrast. With nothing translucent, the tint is the surface.
+  it("keeps body ink at AA on both", () => {
+    for (const t of ["--sheet-tint", "--sheet-tint-solid"]) {
+      const tint = tokens.get(t) as string;
+      expect(contrast(tokens.get("--ink") as string, tint), t).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(tokens.get("--ink-muted") as string, tint), t).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it("is opaque paper since adr-019: the tint is --surface at alpha 1, and nothing blurs", () => {
-    expect(tokens.get("--glass-tint")).toBe(tokens.get("--surface"));
-    expect(tokens.get("--glass-tint-solid")).toBe(tokens.get("--surface"));
-    expect(Number(tokens.get("--glass-alpha"))).toBe(1);
-    expect(Number(tokens.get("--glass-alpha-solid"))).toBe(1);
-    expect(tokens.get("--glass-blur")).toBe("none");
+  it("are card stock: both tints are --surface", () => {
+    expect(tokens.get("--sheet-tint")).toBe(tokens.get("--surface"));
+    expect(tokens.get("--sheet-tint-solid")).toBe(tokens.get("--surface"));
   });
 
-  it("leaves reduced transparency no tokens to swap, since nothing is translucent", () => {
+  /** NFR-9: every surface is opaque. A blur would need its -webkit- prefix and
+   *  a prefers-reduced-transparency fallback that clears it, and both went
+   *  with the rename (step 9), so the guard is that nothing blurs at all. */
+  it("leaves nothing translucent: no rule blurs, and no transparency branch is left", () => {
     const bare = stripComments(css);
-    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(span).not.toBeNull();
-    const { start, end } = span as { start: number; end: number };
-    expect(bare.slice(start, end)).not.toMatch(/:root/);
+    expect(bare).not.toMatch(/backdrop-filter/);
+    expect(bare).not.toMatch(/prefers-reduced-transparency/);
+    expect(bare).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 
-  it("degrades to opaque when the viewer asks for less transparency", () => {
-    expect(css).toMatch(/@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
-  });
-
-  /** The check above proves only that the block exists. A third glass surface
-   *  would blur under Reduce Transparency with every other guard still green:
-   *  the prefix test counts declarations file-wide, and the contrast test
-   *  reads the two alpha tokens it was written against. So name the
-   *  selectors — whatever sets a blur must be cleared by the fallback.
-   *
-   *  Prefixed-vs-plain parity inside the block is not re-checked here; the
-   *  `-webkit-` test above counts the whole file, reduce block included, so
-   *  clearing only one of the pair already fails it. */
-  it("clears the blur on every selector that sets one, not just the two it shipped with", () => {
-    const bare = stripComments(css);
-    const span = atRuleSpan(bare, /@media\s*\(prefers-reduced-transparency:\s*reduce\)/);
-    expect(span, "no prefers-reduced-transparency block to scan").not.toBeNull();
-    const { start, end } = span as { start: number; end: number };
-
-    const blurred = new Set<string>();
-    const cleared = new Set<string>();
-    for (const rule of ruleBlocks(bare)) {
-      if (!/backdrop-filter\s*:/.test(rule.body)) continue;
-      const insideFallback = rule.at > start && rule.at < end;
-      const clears = insideFallback && /backdrop-filter\s*:\s*none/.test(rule.body);
-      for (const selector of rule.selectors) (clears ? cleared : blurred).add(selector);
-    }
-
-    // Guards the scan itself: a renamed class or a broken regex would leave
-    // both sets empty, and an empty subset check passes for the wrong reason.
-    expect(blurred.size).toBeGreaterThan(0);
-    expect([...blurred].filter((s) => !cleared.has(s)).sort()).toEqual([]);
+  it("finishes the rename: no glass class or token in the stylesheet or the markup", () => {
+    expect(stripComments(css)).not.toMatch(/\.glass\b|--glass-/);
+    const src = fileURLToPath(new URL("../src/", import.meta.url));
+    const markup = readdirSync(src, { recursive: true, encoding: "utf8" }).filter((f) =>
+      f.endsWith(".tsx"),
+    );
+    expect(markup.length).toBeGreaterThan(0);
+    const named = markup.filter((f) =>
+      /className=(?:"[^"]*|\{`[^`]*)\bglass\b/.test(readFileSync(join(src, f), "utf8")),
+    );
+    expect(named).toEqual([]);
   });
 });
 
@@ -316,15 +275,18 @@ describe("paper materials (adr-019 §3)", () => {
 /** Sections converted to the material system. Each future surface conversion
  *  ADDS a name here — that is the ratchet. Without it, "we'll tokenise the
  *  rest later" is an intention rather than a checkable claim, and the second
- *  surface arrives with fresh literals.
+ *  surface arrives with fresh literals. Since adr-019 it lists every section
+ *  but two, and a new section has to join it (tested below).
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
 const CONVERTED = [
   "Account sheets",
   "App chrome",
+  "Crash screen",
   "Creation chat",
   "Design controls",
+  "Gallery",
   "Guest page",
   "Host manage dashboard",
   "Landing page",
@@ -375,6 +337,16 @@ describe("no raw hex in converted sections", () => {
   it("names only sections that exist", () => {
     expect(CONVERTED.filter((n) => !parts.has(n))).toEqual([]);
   });
+
+  // adr-019 closed the ratchet: the gallery and the crash screen were the last
+  // sections on literals. Only the section that defines the tokens and the
+  // card's, which the OG renderer mirrors, may carry hex, so a new section
+  // has to join CONVERTED to exist.
+  it("leaves nothing off it but the tokens' section and the card's", () => {
+    const off = [...parts.keys()].filter((n) => n !== "preamble" && !CONVERTED.includes(n));
+    expect(off.sort()).toEqual(["Invitation card", "Material system"]);
+    expect(parts.get("preamble")).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  });
 });
 
 describe("the editor canvas", () => {
@@ -422,7 +394,7 @@ describe("the editor's header (adr-019 §7.2)", () => {
     expect(header?.body).toMatch(/background-color:\s*var\(--surface\)/);
     expect(header?.body).toMatch(/border-bottom:\s*1px solid var\(--edge\)/);
     expect(header?.body).not.toMatch(/border-radius/);
-    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bglass\b/);
+    expect(source("components/editor/EditorHeader.tsx")).not.toMatch(/className="[^"]*\bsheet\b/);
   });
 
   it("hangs the share and key panels from the bar, whatever its height", () => {
@@ -807,7 +779,7 @@ describe("the reply email checkbox", () => {
 // Google's sign-in mark must be drawn in Google's own colours.
 const GOOGLE_MARK = ["#4285F4", "#34A853", "#FBBC05", "#EA4335"];
 
-describe("the guest page's, the landing's, the dashboard's and the editor's components", () => {
+describe("every surface's components, the gallery's and the crash screen's included", () => {
   it("carry no hex literal at all, beyond the Google mark", () => {
     const src = fileURLToPath(new URL("../src/", import.meta.url));
     const inDir = (dir: string) =>
@@ -819,7 +791,11 @@ describe("the guest page's, the landing's, the dashboard's and the editor's comp
       ...inDir("components/landing"),
       ...inDir("components/manage"),
       ...inDir("components/editor"),
+      ...inDir("components/gallery"),
       "ManagePage.tsx",
+      "GalleryHubPage.tsx",
+      "GalleryOccasionPage.tsx",
+      "components/CrashScreen.tsx",
       "App.tsx",
       "components/ByokSettings.tsx",
       "components/SignOutSheet.tsx",
@@ -918,6 +894,7 @@ describe("sub-faint inks", () => {
       .flatMap((r) => r.selectors)
       .sort();
     expect(users).toEqual([
+      ".cr-brand",
       ".gr-brand",
       ".gr-cta-mark",
       ".hm-brand",
@@ -1006,7 +983,7 @@ describe("the chrome's faces (adr-019 §2)", () => {
   });
 
   it("sets the INVINTO wordmarks in Literata 500, tracked 0.32em (adr-019 §2)", () => {
-    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand"]) {
+    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand", ".cr-brand"]) {
       const rule = ruleBlocks(stripComments(css)).find((r) => r.selectors.includes(selector));
       expect(rule?.body, selector).toMatch(/font-family:\s*var\(--ui-font-display\)/);
       expect(rule?.body, selector).toMatch(/font-weight:\s*500/);
@@ -1115,5 +1092,88 @@ describe("the landing on paper (adr-019 §3)", () => {
       /<div className="lp-stage-card">\s*<div className="deckle">\s*<InvitationPreview/,
     );
     expect(rule(".lp-stage-card")).toMatch(/filter:\s*drop-shadow\(/);
+  });
+});
+
+/** adr-019 step 8 (§11): the gallery's frame on paper. Most of it sits on the
+ *  page (--app-bg); the hub's tiles and the chips are card stock. */
+describe("the gallery on paper", () => {
+  textFloors("Gallery", [
+    [".gl-intro", "--app-bg", 4.5],
+    [".gl-crumbs", "--app-bg", 3],
+    [".gl-example-style", "--app-bg", 4.5],
+    [".gl-example-note", "--app-bg", 3],
+    [".gl-use", "--ui-accent", 4.5],
+    [".gl-tile-count", "--surface", 3],
+    [".gl-chip", "--surface", 4.5],
+    [".gl-empty", "--app-bg", 4.5],
+  ]);
+
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Gallery") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("sets each example on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("components/gallery/ExampleCard.tsx")).toMatch(
+      /<div className="gl-mat">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    // The crawler's copy of the page is the same markup (prerender.ts).
+    expect(source("prerender.ts")).toMatch(
+      /<article class="gl-example"><div class="gl-mat"><div class="deckle">\$\{card\}<\/div><\/div>/,
+    );
+    expect(rule(".gl-mat")).toMatch(/filter:\s*drop-shadow\(var\(--e-2\)\)/);
+  });
+
+  // Four layouts in a row stretch to one height, so the labels and the calls
+  // to action line up; the stretch has to pass through both of the mat's
+  // wrappers to reach the card.
+  it("stretches the card through the mat", () => {
+    expect(rule(".gl-mat")).toMatch(/flex:\s*1/);
+    expect(rule(".gl-mat > .deckle")).toMatch(/flex:\s*1/);
+    expect(rule(".gl-example .inv")).toMatch(/flex:\s*1/);
+  });
+
+  it("shows the hub's windows on the table a card is set on", () => {
+    expect(rule(".gl-tile-shot")).toMatch(/background:\s*var\(--table\)/);
+  });
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Gallery") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    expect(rule(".gl-use")).toMatch(/background:\s*var\(--accent\)/);
+  });
+
+  it("sets its corners on the radius tokens, and keeps the pill off its chips", () => {
+    const body = stripComments(sections(css).get("Gallery") ?? "");
+    expect([...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1])).toEqual([]);
+    expect(body).not.toMatch(/var\(--r-pill\)/);
+  });
+});
+
+/** The route error boundary's fallback, set as the manage dashboard is. */
+describe("the crash screen on paper", () => {
+  textFloors("Crash screen", [
+    [".cr-title", "--surface", 4.5],
+    [".cr-body", "--surface", 4.5],
+    [".cr-hint", "--surface", 4.5],
+    [".cr-action", "--ui-accent", 4.5],
+  ]);
+
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Crash screen") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("grains its page, coloured without the shorthand", () => {
+    expect(rule(".cr-page")).toMatch(/background-color:\s*var\(--app-bg\)/);
+    expect(rule(".cr-page")).not.toMatch(/(?:^|[;\s])background\s*:/);
+    expect(source("components/CrashScreen.tsx")).toMatch(/className="cr-page grain"/);
+  });
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Crash screen") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    expect([...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1])).toEqual([]);
   });
 });

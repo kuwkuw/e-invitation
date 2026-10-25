@@ -206,18 +206,17 @@ side panel and `minimal` rejects backgrounds.
 one-line token rules (Biome's CSS formatting is off) so they stay scannable
 against the OG renderer's maps. Because sections follow components, a
 contextual override often comes before its base rule: descending specificity
-is deliberate. The file opens with a `:root` token block (ground, glass, ink, accent,
+is deliberate. The file opens with a `:root` token block (ground, sheet, ink, accent,
 radius, elevation, motion), the single source of colour for converted
 sections. **`CONVERTED` in `test/styles.test.ts` is the ratchet**: it lists
-the converted sections, and each conversion adds one. Unconverted sections
-still have hex values and a `/* Title ---- */` banner each. Two converted
-sections keep hex on purpose and the test allowlists them: `Creation chat`'s
-`.cc-sk` shimmer (it needs a stop lighter than both ends) and the
-`Material system` banner, which defines the tokens. The account sheets are
-built on the sign-in gate's `.ag-*` shell, and converted with it in adr-019's
-editor step; `Gallery` and `Crash screen` are what's left. The component hex
-test covers the editor too, and allows only the Google mark's four brand
-colours in `AuthGate.tsx`.
+the converted sections, and since adr-019 that is **every section but two**:
+`Material system`, which defines the tokens, and `Invitation card`, whose
+hex the OG renderer mirrors. A new section has to join `CONVERTED` to exist
+(tested), and gets a `/* Title ---- */` banner like the rest. `Creation
+chat`'s `.cc-sk` shimmer keeps its hex on purpose and the test allowlists it
+(it needs a stop lighter than both ends). The component hex test covers every
+surface's components, and allows only the Google mark's four brand colours in
+`AuthGate.tsx`.
 
 - **The unit is a section, not a surface.** A section runs from its banner to
   the next one, so a rule added after the last banner silently joins it. A
@@ -245,11 +244,12 @@ colours in `AuthGate.tsx`.
   never name a face in a rule.
 - `.palette-*`/`.type-*`/`.layout-*`/`.ornament-*` are permanently exempt:
   their raw hex is what keeps the OG renderer's hand mirror visible.
-- Glass is `.glass` and `.glass-solid` (the one that carries text). Since
-  adr-019 both are **opaque paper** (`--surface`, no blur) and keep their
-  names until its rename step. **No paper material (`.grain`, `.deckle`,
-  `.seal`) may sit on `.inv` or inside it**; wrapping the card is fine
-  (tested).
+- The chrome's card stock is `.sheet` and `.sheet-solid` (the one made of
+  text), adr-018's `.glass` pair renamed in adr-019 step 9. Both are
+  **opaque** `--surface`. **Nothing blurs**: no rule may set
+  `backdrop-filter`, and there is no `prefers-reduced-transparency` branch to
+  keep in step (tested). **No paper material (`.grain`, `.deckle`, `.seal`)
+  may sit on `.inv` or inside it**; wrapping the card is fine (tested).
 - The editor sets the card on `--table` with `.grain`, whatever its palette
   (adr-019 §4.2), inside the guest page's deckled mat (`.cc-mat > .deckle`,
   the twin of `.gr-mat`) at the guest's width, so nothing overrides `.inv`
@@ -259,7 +259,9 @@ colours in `AuthGate.tsx`.
   shorthand, which would wipe the grain. `data-palette` stays on `.cc-shell`
   as an unused hook (an attribute, not the `palette-*` class, which would push
   the card's ink into the chrome). The landing carries `.grain` on `.landing`
-  and on its hero's `.lp-stage` too, and the dashboard on `.hm-page`.
+  and on its hero's `.lp-stage` too, the dashboard on `.hm-page` and the
+  crash screen on `.cr-page`. Each gallery example sits on the mat too
+  (`.gl-mat > .deckle`, in `ExampleCard` and in `prerender.ts`'s copy).
 - **The landing's motion lives in one block**: every `animation` in the
   `Landing page` section sits inside its single
   `@media (prefers-reduced-motion: no-preference)`, so reduced motion gets the

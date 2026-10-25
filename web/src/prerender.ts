@@ -173,7 +173,7 @@ function exampleHtml(example: GalleryExample, design: DesignTokens, useLabel: st
     `<p class="inv-closing">${escapeHtml(example.copy.closing)}</p>` +
     `</div>`;
   return (
-    `<article class="gl-example">${card}` +
+    `<article class="gl-example"><div class="gl-mat"><div class="deckle">${card}</div></div>` +
     `<div class="gl-example-foot"><div>` +
     `<div class="gl-example-style">${escapeHtml(example.style)}</div>` +
     `<div class="gl-example-note">${escapeHtml(example.styleNote)}</div>` +

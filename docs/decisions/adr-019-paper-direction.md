@@ -220,6 +220,17 @@ needs re-measuring beyond the alpha change, and the glass contrast test passes
 trivially. Renaming to `.sheet` / `.sheet-solid` is a separate PR with zero
 pixel change (step 9), so the re-skin diff stays reviewable.
 
+*Done in step 9, 2026-10-25.* The editor rendered byte-identical before and
+after, at 390 and 1280 px. The `--glass-*` tokens became `--sheet-*`, and the
+alpha and blur tokens went with the reduced-transparency branch below: they
+existed so the contrast test could composite a translucent surface over the
+ground, and nothing is translucent. The test now holds that no rule sets
+`backdrop-filter` at all, which is a stronger guard than the fallback scan it
+replaced, and that no `glass` class is left in the markup. The DS keeps the
+old names until its next upload, which has to rewrite `conventions.md` and
+search the design project's canvases first (`.design-sync/NOTES.md`,
+"Re-sync risks").
+
 Three things in adr-018 change meaning with the blur gone, and are recorded so
 nobody keeps honouring them by habit:
 
@@ -709,15 +720,27 @@ deleted once this merges.
 
 - **The gallery.** It isn't in A2. It converts by taking its section (22 hex)
   onto the new tokens and the mat — one `CONVERTED` line, after the landing
-  (step 8).
+  (step 8). *Done 2026-10-25: each example sits on the guest page's mat
+  (`.gl-mat > .deckle`), which the row's stretch passes through so a row's
+  calls to action still line up, and the hub's windows sit on `--table`. The
+  hub's tiles keep no mat: a window shows a card's top third at 0.46 scale,
+  where a mat would frame nothing. Terracotta became the oxblood, the chips
+  lost the pill (§1 keeps it for the language switch), and every line is held
+  to its floor. No grain: the gallery's column has no ground of its own to
+  carry it, and giving it one would change a layout §11 did not ask about.*
 - **Crash screen, Sign-in gate, Account sheets, Share panel: signed in, Reply
   notifications.** They inherit the new values wherever they already read
   tokens and stay on the allowlist otherwise. The sign-in gate is the share
   sheet's first frame ([adr-014](adr-014-host-accounts.md) §2), so it converts
   with the share panel's board. *Step 5 converted the gate, the account
   sheets built on it and the panel's signed-in rows, and the reply
-  notifications section went with the sentence it drew (§7, amended); the
-  crash screen remains.*
+  notifications section went with the sentence it drew (§7, amended). The
+  crash screen converted with the gallery in step 8, onto the manage
+  dashboard's values, which its section had always copied: the grained page,
+  card stock, the oxblood action and the tracked wordmark. Its hint is a
+  sentence and rose from 2.6:1 to `--ink-muted`. With it the ratchet closed:
+  every section is in `CONVERTED` but the tokens' and the card's, and a new
+  one has to join it (tested).*
 - **A photo cover, or a monogram printed on the card.** Either would change the
   card and its OG mirror, and would need its own ADR.
 - **Music, gift lists, love stories.** Competitor features, not design.
@@ -749,9 +772,11 @@ implementation (#82) and #66 among them.
    instead, the last surface it is the reference for (§10).
 7. **«Ще не знаю»** (§9.1), schema-first. *Built 2026-10-24 (§9.1,
    amended).*
-8. **Gallery** onto the ratchet (§11).
+8. **Gallery** onto the ratchet (§11). *Built 2026-10-25, with the crash
+   screen, the last section on literals.*
 9. **Rename** `.glass*` → `.sheet*`, and drop the reduced-transparency branch
-   (§4.1). Zero pixels.
+   (§4.1). Zero pixels. *Built 2026-10-25, in the same PR as step 8 but its
+   own commit, so the pixel change and the rename stay apart.*
 
 ## Consequences
 

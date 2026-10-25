@@ -22,7 +22,7 @@ export function CrashScreen({ audience }: { audience: CrashAudience }) {
   const t = CRASH[crashLang(audience)][audience];
 
   return (
-    <div className="cr-page" role="alert">
+    <div className="cr-page grain" role="alert">
       <div className="cr-card">
         <span className="cr-icon" aria-hidden="true">
           {/* Mirrors the manage dashboard's AlertIcon; kept local so this

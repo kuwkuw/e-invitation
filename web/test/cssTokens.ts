@@ -41,7 +41,7 @@ export function bannerTitles(css: string): string[] {
 
 /** Custom properties declared on a bare `:root` (not on a class or attribute).
  *  Reads only the top-level `:root`, not nested blocks inside @media queries — those
- *  are intentional conditional overrides (e.g., prefers-reduced-transparency fallbacks)
+ *  are intentional conditional overrides (e.g., prefers-reduced-motion's durations)
  *  and would shadow base token values if read. */
 export function rootTokens(css: string): Map<string, string> {
   const out = new Map<string, string>();
@@ -114,17 +114,6 @@ export function deltaE76(a: string, b: string): number {
   };
   const [p, q] = [lab(a), lab(b)];
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
-}
-
-/** Composite `fg` at `alpha` over `bg` — a translucent surface with its blur
- *  ignored, which is exactly what the spec's legibility rule assumes. */
-export function blend(fg: string, alpha: number, bg: string): string {
-  const [fr, fg2, fb] = rgb(fg);
-  const [br, bg3, bb] = rgb(bg);
-  const mix = (f: number, b: number) => Math.round(f * alpha + b * (1 - alpha));
-  return `#${[mix(fr, br), mix(fg2, bg3), mix(fb, bb)]
-    .map((c) => c.toString(16).padStart(2, "0"))
-    .join("")}`;
 }
 
 /** CSS with comments removed. Every scanner below works on this, so a brace
