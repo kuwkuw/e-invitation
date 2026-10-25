@@ -316,15 +316,18 @@ describe("paper materials (adr-019 §3)", () => {
 /** Sections converted to the material system. Each future surface conversion
  *  ADDS a name here — that is the ratchet. Without it, "we'll tokenise the
  *  rest later" is an intention rather than a checkable claim, and the second
- *  surface arrives with fresh literals.
+ *  surface arrives with fresh literals. Since adr-019 it lists every section
+ *  but two, and a new section has to join it (tested below).
  *
  *  `Invitation card` is permanently absent by design: its values are mirrored
  *  by hand in server/src/og/render.ts. */
 const CONVERTED = [
   "Account sheets",
   "App chrome",
+  "Crash screen",
   "Creation chat",
   "Design controls",
+  "Gallery",
   "Guest page",
   "Host manage dashboard",
   "Landing page",
@@ -374,6 +377,16 @@ describe("no raw hex in converted sections", () => {
 
   it("names only sections that exist", () => {
     expect(CONVERTED.filter((n) => !parts.has(n))).toEqual([]);
+  });
+
+  // adr-019 closed the ratchet: the gallery and the crash screen were the last
+  // sections on literals. Only the section that defines the tokens and the
+  // card's, which the OG renderer mirrors, may carry hex, so a new section
+  // has to join CONVERTED to exist.
+  it("leaves nothing off it but the tokens' section and the card's", () => {
+    const off = [...parts.keys()].filter((n) => n !== "preamble" && !CONVERTED.includes(n));
+    expect(off.sort()).toEqual(["Invitation card", "Material system"]);
+    expect(parts.get("preamble")).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });
 
@@ -807,7 +820,7 @@ describe("the reply email checkbox", () => {
 // Google's sign-in mark must be drawn in Google's own colours.
 const GOOGLE_MARK = ["#4285F4", "#34A853", "#FBBC05", "#EA4335"];
 
-describe("the guest page's, the landing's, the dashboard's and the editor's components", () => {
+describe("every surface's components, the gallery's and the crash screen's included", () => {
   it("carry no hex literal at all, beyond the Google mark", () => {
     const src = fileURLToPath(new URL("../src/", import.meta.url));
     const inDir = (dir: string) =>
@@ -819,7 +832,11 @@ describe("the guest page's, the landing's, the dashboard's and the editor's comp
       ...inDir("components/landing"),
       ...inDir("components/manage"),
       ...inDir("components/editor"),
+      ...inDir("components/gallery"),
       "ManagePage.tsx",
+      "GalleryHubPage.tsx",
+      "GalleryOccasionPage.tsx",
+      "components/CrashScreen.tsx",
       "App.tsx",
       "components/ByokSettings.tsx",
       "components/SignOutSheet.tsx",
@@ -918,6 +935,7 @@ describe("sub-faint inks", () => {
       .flatMap((r) => r.selectors)
       .sort();
     expect(users).toEqual([
+      ".cr-brand",
       ".gr-brand",
       ".gr-cta-mark",
       ".hm-brand",
@@ -1006,7 +1024,7 @@ describe("the chrome's faces (adr-019 §2)", () => {
   });
 
   it("sets the INVINTO wordmarks in Literata 500, tracked 0.32em (adr-019 §2)", () => {
-    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand"]) {
+    for (const selector of [".lp-brand", ".gr-brand", ".hm-brand", ".cr-brand"]) {
       const rule = ruleBlocks(stripComments(css)).find((r) => r.selectors.includes(selector));
       expect(rule?.body, selector).toMatch(/font-family:\s*var\(--ui-font-display\)/);
       expect(rule?.body, selector).toMatch(/font-weight:\s*500/);
@@ -1115,5 +1133,88 @@ describe("the landing on paper (adr-019 §3)", () => {
       /<div className="lp-stage-card">\s*<div className="deckle">\s*<InvitationPreview/,
     );
     expect(rule(".lp-stage-card")).toMatch(/filter:\s*drop-shadow\(/);
+  });
+});
+
+/** adr-019 step 8 (§11): the gallery's frame on paper. Most of it sits on the
+ *  page (--app-bg); the hub's tiles and the chips are card stock. */
+describe("the gallery on paper", () => {
+  textFloors("Gallery", [
+    [".gl-intro", "--app-bg", 4.5],
+    [".gl-crumbs", "--app-bg", 3],
+    [".gl-example-style", "--app-bg", 4.5],
+    [".gl-example-note", "--app-bg", 3],
+    [".gl-use", "--ui-accent", 4.5],
+    [".gl-tile-count", "--surface", 3],
+    [".gl-chip", "--surface", 4.5],
+    [".gl-empty", "--app-bg", 4.5],
+  ]);
+
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Gallery") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("sets each example on the deckled mat, with the mat's shadow outside its clip", () => {
+    expect(source("components/gallery/ExampleCard.tsx")).toMatch(
+      /<div className="gl-mat">\s*<div className="deckle">\s*<InvitationPreview/,
+    );
+    // The crawler's copy of the page is the same markup (prerender.ts).
+    expect(source("prerender.ts")).toMatch(
+      /<article class="gl-example"><div class="gl-mat"><div class="deckle">\$\{card\}<\/div><\/div>/,
+    );
+    expect(rule(".gl-mat")).toMatch(/filter:\s*drop-shadow\(var\(--e-2\)\)/);
+  });
+
+  // Four layouts in a row stretch to one height, so the labels and the calls
+  // to action line up; the stretch has to pass through both of the mat's
+  // wrappers to reach the card.
+  it("stretches the card through the mat", () => {
+    expect(rule(".gl-mat")).toMatch(/flex:\s*1/);
+    expect(rule(".gl-mat > .deckle")).toMatch(/flex:\s*1/);
+    expect(rule(".gl-example .inv")).toMatch(/flex:\s*1/);
+  });
+
+  it("shows the hub's windows on the table a card is set on", () => {
+    expect(rule(".gl-tile-shot")).toMatch(/background:\s*var\(--table\)/);
+  });
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Gallery") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    expect(rule(".gl-use")).toMatch(/background:\s*var\(--accent\)/);
+  });
+
+  it("sets its corners on the radius tokens, and keeps the pill off its chips", () => {
+    const body = stripComments(sections(css).get("Gallery") ?? "");
+    expect([...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1])).toEqual([]);
+    expect(body).not.toMatch(/var\(--r-pill\)/);
+  });
+});
+
+/** The route error boundary's fallback, set as the manage dashboard is. */
+describe("the crash screen on paper", () => {
+  textFloors("Crash screen", [
+    [".cr-title", "--surface", 4.5],
+    [".cr-body", "--surface", 4.5],
+    [".cr-hint", "--surface", 4.5],
+    [".cr-action", "--ui-accent", 4.5],
+  ]);
+
+  const rule = (selector: string) =>
+    ruleBlocks(stripComments(sections(css).get("Crash screen") ?? "")).find((r) =>
+      r.selectors.includes(selector),
+    )?.body ?? "";
+
+  it("grains its page, coloured without the shorthand", () => {
+    expect(rule(".cr-page")).toMatch(/background-color:\s*var\(--app-bg\)/);
+    expect(rule(".cr-page")).not.toMatch(/(?:^|[;\s])background\s*:/);
+    expect(source("components/CrashScreen.tsx")).toMatch(/className="cr-page grain"/);
+  });
+
+  it("glows in the paper accent, never glass's terracotta", () => {
+    const body = stripComments(sections(css).get("Crash screen") ?? "");
+    expect(body).not.toMatch(/rgba\(\s*179\s*,\s*89\s*,\s*46/);
+    expect([...body.matchAll(/border-radius:\s*(\d+px)/g)].map((m) => m[1])).toEqual([]);
   });
 });

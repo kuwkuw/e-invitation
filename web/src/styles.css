@@ -2151,49 +2151,59 @@ a.lp-cta { display: inline-block; text-decoration: none; }
 /* Crash screen ---------------------------------------------------------
    The route error boundary's fallback. It borrows the shape of the other
    state cards (.gr-notfound, .hm-prompt) rather than sharing their classes:
-   those belong to a route, and this one has to render on any of the four.
-   Values are copied from .hm-prompt / .hm-primary on purpose — a crash is the
-   worst moment to look like a different product. */
+   those belong to a route, and this one has to render on any of the six.
+   Values are copied from the manage dashboard on purpose (.hm-page, .hm-card,
+   .hm-state-*, .hm-primary, .hm-brand) — a crash is the worst moment to look
+   like a different product.
+
+   On paper since adr-019 closed (§11): the grained page, card stock, the
+   oxblood action and the tracked wordmark. The hint is a sentence, so it
+   takes --ink-muted as .hm-state-hint does; it sat at 2.6:1 on glass's
+   values. test/styles.test.ts holds each line to its floor. */
+/* background-color, not the shorthand: the page carries .grain, whose image
+   the shorthand would wipe (adr-019 §3). */
 .cr-page {
   min-height: 100dvh;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 22px;
-  background: #f6f5f2;
+  background-color: var(--app-bg);
   padding: 32px 20px;
 }
 .cr-card {
   width: 100%; max-width: 420px;
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
-  background: #fff;
-  border: 1px solid #e4ddd0;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 18, 14, 0.05);
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-xl);
+  box-shadow: var(--e-2);
   padding: 30px 24px 26px;
 }
+/* Decorative: the title says what the glyph shows, as on the dashboard's and
+   the guest page's states. */
 .cr-icon {
   width: 72px; height: 72px; margin-bottom: 20px;
   border-radius: 50%;
-  background: #efece6;
-  color: #a29a8b;
+  background: var(--wash);
+  color: var(--accent-ink-faint);
   display: flex; align-items: center; justify-content: center;
 }
 .cr-title {
   margin: 0 0 12px;
   font-family: var(--ui-font-display);
-  font-size: 1.45rem; font-weight: 500; color: #23211d;
+  font-size: 1.45rem; font-weight: 500; color: var(--ink);
 }
-.cr-body { margin: 0; max-width: 320px; font-size: 0.95rem; line-height: 1.55; color: #6b6659; }
-.cr-hint { margin: 14px 0 0; max-width: 300px; font-size: 0.85rem; line-height: 1.5; color: #a29a8b; }
+.cr-body { margin: 0; max-width: 320px; font-size: 0.95rem; line-height: 1.55; color: var(--ink-muted); }
+.cr-hint { margin: 14px 0 0; max-width: 300px; font-size: 0.85rem; line-height: 1.5; color: var(--ink-muted); }
 .cr-action {
   width: 100%; height: 52px; margin-top: 22px;
-  border: none; border-radius: 14px;
-  background: #b3592e; color: #fff;
+  border: none; border-radius: var(--r-md);
+  background: var(--accent); color: var(--surface);
   font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
-  box-shadow: 0 8px 20px rgba(179, 89, 46, 0.26);
+  box-shadow: 0 8px 20px rgba(var(--ui-accent-rgb), 0.26);
 }
-.cr-action:hover { background: #a04e27; }
-.cr-brand { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: #c3bbac; }
+.cr-action:hover { background: var(--accent-hi); }
+.cr-brand { margin: 0; font-family: var(--ui-font-display); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.32em; color: var(--ink-whisper); }
 
 /* Sign-in gate ----------------------------------------------------------- */
 /* Sign-in gate (adr-014 §2). From the "auth-gate" screens in the E-invitation
@@ -2376,51 +2386,67 @@ a.lp-cta { display: inline-block; text-decoration: none; }
    Mobile is the design here, not the reflow — search traffic to these pages is
    overwhelmingly mobile, which inverts the assumption the rest of the chrome
    makes. The card itself is `InvitationPreview` unchanged; everything below is
-   the frame. */
-.gl { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; color: #23211d; }
+   the frame.
+
+   On paper since adr-019 step 8 (§11): each example sits on the guest page's
+   deckled mat, and the hub's windows on the table a card is set on. As
+   elsewhere, a sentence takes --ink-muted and a label --ink-faint, and
+   test/styles.test.ts holds each to the ground it sits on. */
+.gl { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; color: var(--ink); }
 .gl h1 { font-family: var(--ui-font-display); font-weight: 500; font-size: 2.2rem; line-height: 1.15; margin: 0 0 14px; }
 /* Not `.gl h2`: the card's own title is an h2, and `.gl h2` outranks
    `.inv-title`, so the examples' titles lost their own face, and most of
    them their size too. The page's only h2 of its own is this one. */
 .gl-others h2 { font-family: var(--ui-font-display); font-weight: 500; font-size: 1.2rem; margin: 0 0 14px; }
-.gl-intro { color: #6b6659; line-height: 1.65; max-width: 70ch; margin: 0 0 34px; }
-.gl-crumbs { display: flex; flex-wrap: wrap; gap: 7px; font-size: 0.8rem; color: #8d8577; margin-bottom: 18px; }
+.gl-intro { color: var(--ink-muted); line-height: 1.65; max-width: 70ch; margin: 0 0 34px; }
+.gl-crumbs { display: flex; flex-wrap: wrap; gap: 7px; font-size: 0.8rem; color: var(--ink-faint); margin-bottom: 18px; }
 .gl-crumbs a { color: inherit; text-decoration: none; }
-.gl-crumbs a:hover { color: #b3592e; }
+.gl-crumbs a:hover { color: var(--accent); }
 .gl-crumbs a::after { content: "/"; margin-left: 7px; opacity: 0.5; }
 
 .gl-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
 /* Cards in a row are rarely the same natural height — four different layouts
    is the point. Stretching the card makes the labels and the calls to action
-   line up across the row instead of stepping raggedly down it. */
+   line up across the row instead of stepping raggedly down it. The mat
+   stretches with it, so the stretch passes through both wrappers to the
+   card. */
 .gl-example { display: flex; flex-direction: column; }
+/* The card on the deckled mat, as the guest page sets it (.gr-mat). The
+   shadow lives here because the mat's clip-path cuts off one cast by the
+   mat itself. */
+.gl-mat { flex: 1; display: flex; filter: drop-shadow(var(--e-2)); }
+.gl-mat > .deckle { flex: 1; display: flex; flex-direction: column; }
 .gl-example .inv { flex: 1; }
 .gl-example-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; }
-.gl-example-style { font-size: 0.92rem; font-weight: 700; color: #23211d; }
-.gl-example-note { font-size: 0.82rem; color: #8d8577; margin-top: 2px; }
+.gl-example-style { font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+.gl-example-note { font-size: 0.82rem; color: var(--ink-faint); margin-top: 2px; }
 /* The one filled accent on an example (adr-010 §3, adr-017 §2). */
-.gl-use { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 12px; background: #b3592e; color: #fff; font-weight: 700; font-size: 0.9rem; text-decoration: none; flex: 0 0 auto; box-shadow: 0 8px 18px rgba(179, 89, 46, 0.26); transition: background 0.15s, box-shadow 0.15s; }
-.gl-use:hover { background: #9f4d26; box-shadow: 0 12px 26px rgba(179, 89, 46, 0.32); }
+.gl-use { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: var(--r-md); background: var(--accent); color: var(--surface); font-weight: 700; font-size: 0.9rem; text-decoration: none; flex: 0 0 auto; box-shadow: 0 8px 18px rgba(var(--ui-accent-rgb), 0.26); transition: background 0.15s, box-shadow 0.15s; }
+.gl-use:hover { background: var(--accent-hi); box-shadow: 0 12px 26px rgba(var(--ui-accent-rgb), 0.32); }
 
 /* The hub: no filled accent at all — the tile is the link. */
 .gl-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.gl-tile { display: block; background: #fff; border: 1px solid #e4ddd0; border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; transition: box-shadow 0.16s, transform 0.16s, border-color 0.16s; }
-.gl-tile:hover { box-shadow: 0 18px 40px rgba(20, 18, 14, 0.14); transform: translateY(-2px); border-color: #dcd3c4; }
+.gl-tile { display: block; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-xl); overflow: hidden; text-decoration: none; color: inherit; transition: box-shadow 0.16s, transform 0.16s, border-color 0.16s; }
+.gl-tile:hover { box-shadow: var(--e-3); transform: translateY(-2px); border-color: var(--edge-strong); }
 /* A window onto a real card. The card keeps its own 380px min-height and
    padding — it is `InvitationPreview` untouched — so the tile clips it and
-   scales it down rather than asking the component for a compact mode. */
-.gl-tile-shot { display: block; height: 190px; background: #f3efe8; overflow: hidden; position: relative; }
+   scales it down rather than asking the component for a compact mode. The
+   window is the table a card is set on, not a mat: it shows the card's top
+   third, and a mat would be a frame around nothing at that scale. */
+.gl-tile-shot { display: block; height: 190px; background: var(--table); overflow: hidden; position: relative; }
 .gl-tile-shot-inner { display: block; position: absolute; top: 14px; left: 50%; width: 420px; margin-left: -210px; transform: scale(0.46); transform-origin: top center; pointer-events: none; }
 .gl-tile-body { display: block; padding: 16px 18px 18px; }
 .gl-tile-name { display: block; font-family: var(--ui-font-display); font-size: 1.2rem; font-weight: 500; margin-bottom: 4px; }
-.gl-tile-count { display: block; font-size: 0.84rem; color: #8d8577; }
+.gl-tile-count { display: block; font-size: 0.84rem; color: var(--ink-faint); }
 
-.gl-others { margin-top: 40px; padding-top: 26px; border-top: 1px solid #e4ddd0; }
+.gl-others { margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--edge); }
 .gl-chips { display: flex; flex-wrap: wrap; gap: 10px; }
-.gl-chip { font-size: 0.88rem; color: #6b6659; border: 1px solid #e4ddd0; border-radius: 999px; padding: 9px 16px; background: #fff; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
-.gl-chip:hover { border-color: #b3592e; color: #23211d; }
-.gl-empty { text-align: center; padding: 80px 20px; color: #6b6659; }
-.gl-empty a { color: #b3592e; }
+/* Stationery corners, not the pill, which adr-019 §1 keeps for the language
+   switch alone. */
+.gl-chip { font-size: 0.88rem; color: var(--ink-muted); border: 1px solid var(--edge); border-radius: var(--r-md); padding: 9px 16px; background: var(--surface); text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+.gl-chip:hover { border-color: var(--accent); color: var(--ink); }
+.gl-empty { text-align: center; padding: 80px 20px; color: var(--ink-muted); }
+.gl-empty a { color: var(--accent); }
 
 @media (max-width: 800px) {
   .gl { padding: 22px 16px 44px; }
