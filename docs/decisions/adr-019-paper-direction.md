@@ -443,7 +443,7 @@ step's plan proposed (`docs/superpowers/archive/plans/2026-10-24-landing-paper.m
 
 **Amended 2026-10-24, step 5.** **The two boards in 5 were waived by the
 owner**, who chose to build without them. The step's plan settled what they
-would have (`docs/superpowers/plans/2026-10-24-editor-paper.md`), against the
+would have (`docs/superpowers/archive/plans/2026-10-24-editor-paper.md`), against the
 canvas row `A2 · Editor` and the design project's `ShareSignedIn`, `NotifyLine`
 and `AuthGate` boards, and building it settled the rest:
 

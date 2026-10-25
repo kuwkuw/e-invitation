@@ -75,8 +75,20 @@ implementation.
   accounts). The web client stores it at publish under `inv-manage:<id>` and
   reads it back at `/manage/:id` (FR-5.4), so host access outlives the editor
   session that published it.
-- FR-3.4 A fresh generation in the editor detaches from any previously
-  published link (new event → new link).
+- FR-3.4 **One editor session is one event, and keeps one link.** A chat turn
+  adds a detail to the description and re-runs generation on all of it
+  ([useInvitationEditor.ts](../web/src/hooks/useInvitationEditor.ts)), so it
+  refines the event rather than starting another; it, a field edit, a design
+  change and a background all change what the next Publish sends as a new
+  version of the same link (FR-3.2). The sign-in round trip keeps the link
+  too: the parked draft carries it (adr-014 §2). A new event is a new
+  session: leaving `/create` discards the editor's state, so the next
+  publish there mints a new link, and a gallery sample opens one with a full
+  page load. *Amended 2026-10-24:* this said "a fresh generation detaches
+  from any previously published link", which was true of the form editor,
+  where each generate replaced the description. The chat editor (2026-07-16)
+  made each generate a refinement of the same event and kept the link on
+  purpose; the requirement's text had not followed it.
 - FR-3.5 OG image for messenger link unfurling: `GET
   /api/invitations/:id/og.png` renders a 1200×630 PNG server-side from the
   design tokens ([render.ts](../server/src/og/render.ts)); `GET /i/:id` serves
