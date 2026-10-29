@@ -33,6 +33,12 @@ artifacts.
    - Optional: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — paid fallbacks. (The
      `gemma3-4b` Ollama entry always fails in prod — it points at a
      dev-machine host — and is skipped the same way.)
+   - Optional: the guardrails' limits ([adr-008](decisions/adr-008-operator-cost-guardrails.md)),
+     whose defaults are in `server/.env.example` and need no setting:
+     `LIMIT_GENERATIONS_PER_DAY`, `LIMIT_REGENERATIONS_PER_DAY`,
+     `LIMIT_BACKGROUNDS_PER_DAY`, `DAILY_BUDGET_USD`, and
+     `LIMIT_RSVPS_PER_DAY` (30 guest replies per IP per UTC day). `0`
+     disables one. `/healthz` reports what is in force.
 5. Deploy. Northflank rebuilds on every push to `main` (CI is built in).
 
 **Free-tier quotas**: one generation costs 3 calls (brief + copy + design).

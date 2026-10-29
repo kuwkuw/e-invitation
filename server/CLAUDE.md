@@ -68,7 +68,9 @@ directly. Groq/Ollama are never BYOK. Keys are never stored or logged:
 (`LIMIT_GENERATIONS_PER_DAY`, `LIMIT_REGENERATIONS_PER_DAY` → 429) and a daily
 budget breaker (`DAILY_BUDGET_USD` → 503) fed by the gateway's cost estimates,
 for non-BYOK requests only. `0` disables one. `/healthz` reports limits and
-today's spend.
+today's spend. Guest replies share the per-IP mechanism
+(`LIMIT_RSVPS_PER_DAY` → 429, adr-008's 2026-10-29 amendment) with no BYOK
+bypass and no budget: it is the only unauthenticated write, not an LLM cost.
 
 **AI background** (adr-009): `POST /api/invitations/background` is an explicit
 editor action, never part of the 3 s path. `llm/imageGen.ts` calls

@@ -12,8 +12,11 @@
 - Per-field regeneration should feel interactive (single small completion,
   512 max tokens).
 - The client bundle is part of this budget for a mobile-first audience:
-  **141.9 kB gzipped** (494.5 kB raw, CSS + JS), measured 2026-10-25 with
-  `pnpm --filter inv-app-web build` — 13.85 kB CSS plus 128.01 kB JS, after
+  **142.0 kB gzipped** (494.8 kB raw, CSS + JS), measured 2026-10-29 with
+  `pnpm --filter inv-app-web build` — 13.85 kB CSS plus 128.12 kB JS, after
+  the guest form learned to name the RSVP limit (FR-9.5): one string per
+  language and the branch that picks it. It was **141.9 kB** (494.5 kB raw)
+  on 2026-10-25, 13.85 kB CSS plus 128.01 kB JS, after
   [adr-019](decisions/adr-019-paper-direction.md)'s last two steps: the
   gallery and the crash screen on tokens, and the rename of glass to sheets,
   which took out the blur and the reduced-transparency branch. Hex literals

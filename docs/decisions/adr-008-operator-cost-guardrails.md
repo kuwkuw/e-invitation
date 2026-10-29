@@ -53,3 +53,37 @@ Shared properties:
   persistence would buy little at this scale.
 - Per-key metering/credits stays rejected-for-now (adr-006); revisit if
   free-tier + limits proves too tight for real traffic.
+
+## Amendment 2026-10-29: guest replies share the per-IP allowance
+
+`POST /api/invitations/:id/rsvp` spends no LLM capacity, so this ADR left it
+out. It is still the app's only unauthenticated write: it had no limit of any
+kind, each reply rewrites the whole record file, and the link it serves is
+made to be posted in group chats. The cost is disk and a host's reply list,
+not money, but the mechanism above already fits it.
+
+- **A third per-IP allowance**: `LIMIT_RSVPS_PER_DAY` (default 30) replies per
+  client IP per UTC day, across every invitation, through the same
+  `consumeIpAllowance`. Over it, `429`. A guest replies once and may change
+  their mind (FR-4.4), so 30 leaves room for a household on one connection
+  answering several invitations.
+- **Admitted after validation**, as the LLM endpoints are: a dead link (`404`)
+  or a malformed reply (`400`) spends nothing.
+- **No BYOK bypass**, because there is no key to spend, and **no budget
+  breaker**: nothing here has a cost estimate to feed one.
+- **The guest page says so**: a `429` shows its own message in the
+  invitation's language, that the day's replies from this network are used
+  up, rather than "try again", which would only fail again (FR-9.5).
+- `/healthz` reports it beside the others as `rsvps_per_ip_per_day`.
+
+The shared-IP consequence above weighs more here. Guests, unlike hosts,
+arrive in numbers and often on mobile carriers that put many subscribers
+behind one address. The allowance counts per day across every invitation,
+and at today's traffic (ten guest views in the product's life) no real IP
+comes near 30. If a real guest is ever refused, raise the default before
+reaching for anything finer.
+
+Not done: **a cap per record**. It would bound one invitation's file however
+many addresses wrote to it, but once reached it locks out that invitation's
+real guests, which turns a disk problem into an outage for one host. It waits
+for a record that actually grows.

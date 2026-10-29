@@ -357,6 +357,13 @@ implementation.
   pointing at the BYOK panel.
 - FR-9.4 `GET /healthz` reports the configured limits and today's estimated
   spend.
+- FR-9.5 A guest's replies (FR-4.3) are subject to a per-IP daily allowance
+  of their own (`LIMIT_RSVPS_PER_DAY`, default 30 per UTC day, across every
+  invitation), checked after the link resolves and the reply validates; over
+  it the endpoint returns `429` and stores nothing. The guest page shows that
+  as its own message in the invitation's language, saying to try tomorrow,
+  never the generic "try again". No BYOK bypass applies, since no key is
+  spent. *Added 2026-10-29, amending adr-008.*
 
 ## FR-10 Optional AI background layer
 
