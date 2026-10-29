@@ -134,6 +134,7 @@ describe("daily budget circuit breaker", () => {
         generations_per_ip_per_day: 10,
         regenerations_per_ip_per_day: 30,
         backgrounds_per_ip_per_day: 3,
+        rsvps_per_ip_per_day: 30,
       },
       budget: { daily_usd: 2, spent_today_usd: 0.5, exhausted: false },
     });

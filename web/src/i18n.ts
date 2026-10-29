@@ -955,6 +955,9 @@ export interface GuestStrings {
   notFoundBody: string;
   notFoundHint: string;
   error: string;
+  /** A reply refused by the server's per-IP daily allowance (adr-008,
+   *  amended), where "try again" would only fail again until tomorrow. */
+  limited: string;
   yourName: string;
   namePlaceholder: string;
   /** The reply card's heading, which also names the yes/no choice. */
@@ -1011,6 +1014,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     notFoundBody: "The link may be outdated, or the invitation hasn't been published yet.",
     notFoundHint: "Ask the host to send you a fresh link.",
     error: "Something went wrong. Please try again.",
+    limited: "Too many replies from this network today. Please try again tomorrow.",
     yourName: "Your name",
     namePlaceholder: "Type your name",
     replyTitle: "Will you join us?",
@@ -1053,6 +1057,7 @@ export const GUEST: Record<Language, GuestStrings> = {
     notFoundBody: "Можливо, посилання застаріло або запрошення ще не опубліковане.",
     notFoundHint: "Попросіть господаря надіслати актуальне посилання.",
     error: "Щось пішло не так. Спробуйте ще раз.",
+    limited: "Сьогодні з цієї мережі надіслали забагато відповідей. Спробуйте завтра.",
     yourName: "Ваше ім'я",
     namePlaceholder: "Напишіть ім'я",
     replyTitle: "Ви з нами?",

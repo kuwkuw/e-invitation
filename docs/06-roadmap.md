@@ -1193,7 +1193,11 @@ and the wrong one for a gap, which is why these are kept apart.
   (publishing with `id` + `manage_token` appends a version, FR-3.2). The open
   questions deserve an ADR: republish on every edit or on an explicit action,
   what a guest sees mid-edit, and whether the manage view stays read-only.
-- **The RSVP write endpoint has no limit.** `POST /api/invitations/:id/rsvp` is
+- ~~**The RSVP write endpoint has no limit.**~~ — **a per-IP allowance since
+  2026-10-29**, as FR-9.5 and adr-008's amendment: 30 replies per IP per UTC
+  day, and the guest page says so in the invitation's language. The cap per
+  record was left out, since reaching it locks out that invitation's real
+  guests. Original entry: `POST /api/invitations/:id/rsvp` is
   the only unauthenticated write in the app and has no per-IP allowance, no
   per-record cap and no global limiter, and each reply rewrites the whole
   record file. adr-008's guardrails cover LLM spend only; this costs disk, and

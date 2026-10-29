@@ -3,20 +3,27 @@
 // gateway's per-request cost estimates. BYOK requests bypass both — they
 // spend the caller's key, not the operator's.
 //
+// The RSVP endpoint shares the per-IP allowance (adr-008, amended 2026-10-29)
+// though it spends no LLM capacity: it is the only unauthenticated write, and
+// each reply rewrites the whole record file. BYOK has nothing to bypass there.
+//
 // State is in-process, same as metrics: the NFR-7 single-process assumption.
 // An allowance is consumed when the request is admitted (before the LLM
 // call), so failed generations count too — otherwise hammering a failing
 // pipeline would be free.
 
-export type LimitedTask = "generation" | "regeneration" | "background";
+export type LimitedTask = "generation" | "regeneration" | "background" | "rsvp";
 
 // Read lazily so tests (and operators) can change limits via env without a
 // rebuild. 0 disables a guardrail. Backgrounds are an order of magnitude
-// pricier than text (adr-009), so their allowance is an order tighter.
+// pricier than text (adr-009), so their allowance is an order tighter. A
+// guest replies once and may change their mind; 30 leaves room for a
+// household on one connection answering several invitations.
 const LIMIT_ENV: Record<LimitedTask, { env: string; fallback: number }> = {
   generation: { env: "LIMIT_GENERATIONS_PER_DAY", fallback: 10 },
   regeneration: { env: "LIMIT_REGENERATIONS_PER_DAY", fallback: 30 },
   background: { env: "LIMIT_BACKGROUNDS_PER_DAY", fallback: 3 },
+  rsvp: { env: "LIMIT_RSVPS_PER_DAY", fallback: 30 },
 };
 
 function limitFor(task: LimitedTask): number {
@@ -41,6 +48,7 @@ interface IpUsage {
   generation: number;
   regeneration: number;
   background: number;
+  rsvp: number;
 }
 
 const ipUsage = new Map<string, IpUsage>();
@@ -66,7 +74,13 @@ export function consumeIpAllowance(ip: string, task: LimitedTask): boolean {
   const limit = limitFor(task);
   if (limit === 0) return true;
   rollover();
-  const usage = ipUsage.get(ip) ?? { day: usageDay, generation: 0, regeneration: 0, background: 0 };
+  const usage = ipUsage.get(ip) ?? {
+    day: usageDay,
+    generation: 0,
+    regeneration: 0,
+    background: 0,
+    rsvp: 0,
+  };
   if (usage[task] >= limit) return false;
   usage[task] += 1;
   ipUsage.set(ip, usage);
@@ -97,6 +111,7 @@ export function guardrailsSnapshot() {
       generations_per_ip_per_day: limitFor("generation"),
       regenerations_per_ip_per_day: limitFor("regeneration"),
       backgrounds_per_ip_per_day: limitFor("background"),
+      rsvps_per_ip_per_day: limitFor("rsvp"),
     },
     budget: {
       daily_usd: budget,
