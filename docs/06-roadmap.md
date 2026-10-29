@@ -935,6 +935,10 @@ Three things worth carrying forward:
    1 and 2. A full resync is owed for the token panel, `conventions.md`'s
    layout sentence and now the rename, and it has to search the design
    project's canvases for `glass` first (`.design-sync/NOTES.md`).
+   *Paid 2026-10-29:* the search found no canvas using a `glass` class or
+   token, the DS took the full resync with `conventions.md` rewritten for
+   paper, and the design project's binding took all six files, its lint list
+   of allowed tokens and fonts among them.
 
 **What this iteration is answerable for.** Production on 2026-10-25, beside
 the last reading:
