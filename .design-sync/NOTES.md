@@ -10,7 +10,7 @@
 - validate prints ".d.ts parse check skipped — typescript not in node_modules": typescript is installed in `.ds-sync/node_modules` but validate resolves from cwd. Harmless for one hand-written props body.
 - **Windows EPERM on rebuild**: a driver run started right after a previous validate can die with `Error: EPERM … rm '\\?\C:\projects\inv-app\ds-bundle'` — a chromium/file handle from the render check is still open on the output dir. Fix is `rm -rf ds-bundle` then re-run the driver; it is not a converter bug and needs no config change.
 - **Two Claude Design projects since the 2026-10-02 split** (spec: `docs/superpowers/archive/specs/2026-10-02-design-project-split-design.md`). **E-invitation DS** (`53daa9fc-5618-4769-9cff-7fbf338169de`, this sync's target) is the system: `InvitationPreview`, the stylesheet and its tokens, and the `card-background` and `lang-switcher` template sets. **E-invitation design** (`530d4226-b043-40eb-bdc2-326eed222b0f`, a regular project, never a sync target) binds the DS at `_ds/e-invitation-ds-53daa9fc-5618-4769-9cff-7fbf338169de/` and holds **every product screen**, flat at its root: all eleven former DS screen sets (sign-in gate, creation chat, gallery, guest RSVP and its Phase 2 add-ons, host dashboard, landing, RSVP notifications, share panel, feedback sheet, brand name), 56 canvases in all, sharing one root `ds-base.js` and `support.js`. The split finished on 2026-10-10 (see "How the screen sets moved" below). In this repo "DS" means the DS project; a board in the design project is cited as ``design project `Name` ``. The older "Design System" project (`d96adb40-4a0f-401c-8e5a-7a518a31b5d5`, 16 token cards from `scripts/build-design-cards.mjs`) is retired, though not yet deleted: the DS token panel and the `InvitationPreview` card cover every enum, nothing reads it, and the script has no live target. The "E-invitation Design System" exploration (`350a2663-afbf-4816-8ab4-e51a7bbabb71`) was deleted by its owner during the split, its concepts canvas with it. A stray "Share Panel Post-Publish" project (`f72dfa3f-013a-4495-ba22-f10a16818cf1`), made by a home-screen "start from template" during the move, holds duplicates only and can be deleted.
-- **The binding is a snapshot, not live.** After the DS's `_ds_manifest.json` was rewritten on 2026-10-10, the copy under `_ds/<folder>/` in the design project still listed the old template set. The binding is a fixed six-file copy (`README.md`, `_adherence.oxlintrc.json`, `_ds_bundle.css`, `_ds_bundle.js`, `_ds_manifest.json`, `styles.css`) taken when the project was bound. That is also why a probe file written anywhere else in the DS could never show up in it, and why the first freshness probe was inconclusive. **After every DS sync, refresh the binding**, or the screens render against the previous stylesheet. That is the two-month sync gap below, one level further out. Claude Design offers no refresh for a bound DS (2026-10-10), so the refresh is a DesignSync write into `_ds/<folder>/` of the design project, from the bytes just uploaded to the DS: `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and `styles.css` from `ds-bundle/` by `localPath`, plus the DS's current `_ds_manifest.json`. Leave `_adherence.oxlintrc.json` alone; the app generates it and it changes only with the component. Check by reading the bound `README.md` or grepping the bound `_ds_bundle.css` for text that changed in the sync.
+- **The binding is a snapshot, not live.** After the DS's `_ds_manifest.json` was rewritten on 2026-10-10, the copy under `_ds/<folder>/` in the design project still listed the old template set. The binding is a fixed six-file copy (`README.md`, `_adherence.oxlintrc.json`, `_ds_bundle.css`, `_ds_bundle.js`, `_ds_manifest.json`, `styles.css`) taken when the project was bound. That is also why a probe file written anywhere else in the DS could never show up in it, and why the first freshness probe was inconclusive. **After every DS sync, refresh the binding**, or the screens render against the previous stylesheet. That is the two-month sync gap below, one level further out. Claude Design offers no refresh for a bound DS (2026-10-10), so the refresh is a DesignSync write into `_ds/<folder>/` of the design project, from the bytes just uploaded to the DS: `README.md`, `_ds_bundle.css`, `_ds_bundle.js` and `styles.css` from `ds-bundle/` by `localPath`, plus the DS's current `_ds_manifest.json` and `_adherence.oxlintrc.json`. **The adherence file is not component-only** (corrected 2026-10-29; this said to leave it alone): it is the design project's lint list of allowed custom properties and font families, and the DS's recompile rebuilds it from the stylesheet, so a full resync changes it too. The bound copy had been left since the binding was made and still allowed `--glass-*`, `--lp-*` and only the card's four fonts. Copy both files only after the DS has been opened (see 2026-10-17). Check the refresh by comparing each bound file's SHA-256 with the DS's own copy, in the signed-in browser (see 2026-10-29).
 
 - **Claude Design token annotations live in `web/src/styles.css`**: inline `/* @kind color */` on every `--wash` declaration (base `.inv` + five `palette-*`; minimal has no wash) and `/* @kind font */` on `:root`'s `--ui-font-display` and `--ui-font-body` (the second added with adr-019's chrome faces, Literata and Golos Text, in 2026-10). The DS app's token panel reads them from the declaration line in `_ds_bundle.css`. The display one moved there on 2026-10-17 from `.landing`'s `--lp-display`, which the gallery could not reach, and the panel has listed the display face under its new name since that day's second sync; `web/test/styles.test.ts` fails unless exactly those two `:root` lines carry the font annotation, in that order. With both, the count below is 8. After that sync every file in the design project was searched for a `--lp-*` read or definition, and none has one (see "The resync of 2026-10-17"). They were originally patched remotely by the design agent and reverted by every sync — now upstream, so they persist. Don't strip these comments; verify `grep -c '/\* @kind' ds-bundle/_ds_bundle.css` ≥ 7 after build. The bare `"@kind"` pattern also counts the comments that explain the annotations, so it reads 9 and would still pass with two annotations lost (2026-10-17).
 
@@ -129,7 +129,58 @@ and is byte-identical to `main`'s (97,037 bytes).
 - `conventions.md`'s "palette-tinted ground", noted under "Re-sync risks".
 
 Neither affects how a screen renders: the canvases read the bundle, not the
-panel.
+panel. *Both paid in the full resync of 2026-10-29, below.*
+
+## The full resync of 2026-10-29 (adr-019 finished: steps 3–9 and the rename)
+
+A full resync from `main` at `31a857d`, after #125 renamed `.glass` to
+`.sheet`. Run from the main checkout this time, on a fresh branch, with the
+remote `_ds_sync.json` saved to `.design-sync/.cache/remote-sync.json` first.
+Same verdict as every resync since 2026-10-02: anchor ok, `InvitationPreview`
+unchanged, upload = styling + aux (`_ds_bundle.css`, `styles.css`,
+`README.md`, `_ds_needs_recompile`, then `_ds_sync.json`). `@kind` read 8,
+and the README's tokens went 68 → 69. The recompiled manifest lists 110 token
+entries, because it counts each palette's and typography's scoped
+redefinitions apart; the README counts names.
+
+Before the upload:
+- **`conventions.md` was rewritten** for paper: `.sheet` / `.sheet-solid`,
+  `--table`, the chrome's two faces, "every surface is opaque", `.grain` and
+  `.deckle` as materials that wrap a card and never sit on it, the
+  `--ink-placeholder` / `--ink-whisper` tiers by order rather than "below
+  3:1", and the editor sentence from `.cc-preview-inner` and `.cc-mat`.
+- **Every canvas in E-invitation design was searched for `glass`**: all 58
+  files plus the root `ds-base.js` and `support.js`, 2.04 MB. The only
+  matches are prose in `CreationChat.dc.html`, the `Superseded · Creation
+  chat (pre-glass)` label and its banner. No canvas sets a `glass` class or
+  reads a `--glass-*` property. The control held: 53 files matched the
+  bundle's loader.
+
+After it, the DS was opened, the marker was gone, and the manifest had
+`--sheet-*`, `--table` and `--ui-font-body`, no `glass` token, and both
+template entries. The binding then took all six files (see "The binding is a
+snapshot"), the adherence file included for the first time. Every bound file's
+SHA-256 equals the DS's own copy.
+
+How it ran, worth knowing next time:
+- **The search ran in Claude in Chrome**, not the in-app browser. The pane
+  never kept a claude.ai sign-in: Continue with Google left a Google cookie
+  but no session, and the design API answered 401 throughout. The `GetFile`
+  loop above worked unchanged in Chrome.
+- **The extension redacts what looks like a hash or a token list** in a
+  script's return value (`[BLOCKED: …]`). Compare inside the page and return
+  booleans.
+- **The manifest and adherence file reached the disk by transcription**, one
+  copy each, checked by SHA-256 against the DS's bytes in the page. The check
+  caught a slip in the manifest's `brandFonts` before upload. It replaces the
+  two-transcriptions-and-`cmp` method of 2026-10-17, as it compares with the
+  source rather than with a second copy.
+- **DesignSync can lose its authorization between turns** of one session.
+  It needs `/design-login` from an interactive `claude` terminal, which this
+  session can't run.
+- The token panel shows `--dur-fast` and `--dur-base` as `1ms`: the compiler
+  keeps the last declaration, which is the reduced-motion override. The
+  stylesheet is right; only the panel's label is.
 
 ## Marking a template set superseded (2026-10-02)
 
@@ -191,19 +242,19 @@ move between projects again. Nothing left the DS before its copy was verified.
 
 ## Known render warns
 
-- `[FONT_REMOTE] "Cormorant Garamond", "Marck Script", "Segoe Script", "Manrope", "Playfair Display"` — expected; families served by the Google Fonts `@import` at runtime (Manrope/Playfair joined the warn when the landing page moved their usage into `styles.css`, 2026-07-16).
+- `[FONT_REMOTE] "Literata", "Golos Text", "Marck Script", "Segoe Script", "Cormorant Garamond"` (2026-10-29) — expected; families served by the Google Fonts `@import` at runtime. The list has changed with the stylesheet before: Manrope and Playfair joined it when the landing page moved their usage into `styles.css` (2026-07-16), and by 2026-10-29, after adr-019, the chrome's two faces had joined it and those two had left.
 
 ## Re-sync risks
 
 - `dtsPropsFor` and `conventions.md` enumerate the token enums by hand — they go silently stale if `schemas.ts`/`types.ts` widen or rename tokens. Diff them against `web/src/types.ts` on every re-sync. **This has already fired once**: the 2026-07-28 re-sync found `background?: BackgroundRef | null` (adr-009) shipped in `InvitationPreview.tsx` but missing from `dtsPropsFor` and `conventions.md`. Widen the check beyond the token enums — diff the component's whole `Props` interface, not just `DesignTokens`/`InvitationCopy`.
 - Props whose value only resolves against a running server (today: `background`, an id served from `/api/backgrounds/:id`) must be documented as **omit-in-designs** in both the `dtsPropsFor` JSDoc and `conventions.md`. The design agent has no server; an id it invents renders a broken layer.
-- `conventions.md` carries layout advice with concrete pixel figures. Those are NOT enum names and no validator catches them — the 2026-07-28 pass found a stale "~520 px" column claim with nothing behind it, restated as ~590 px from `.page`/`.workspace`. adr-018 then replaced that grid with the glass editor, and the 2026-10-10 pass found `.page`/`.workspace` still in the stylesheet but rendered by nothing. The figure is now 460 px, from `.cc-preview-inner { width: min(460px, 100%) }` inside `.cc-preview`'s 28 px padding. Re-derive it if those two rules change. **Known stale since 2026-10-24:** the same sentence says "centred on the palette-tinted ground"; adr-019 step 2 replaced that ground with the grained `--table`. It was left unedited because `conventions.md` is a converter input, and touching it would void the CSS-only sync that step needs. Change it to "the grained table" in the next full resync. **Staler since adr-019 step 5:** the editor now sets the card inside the guest page's deckled mat (`.cc-mat > .deckle`), 460 px including the mat's 12 px pad, so the card itself is 436 px there, and the near-bleed override the sentence's neighbours describe is gone. Rewrite the sentence from `.cc-preview-inner` and `.cc-mat` in that same full resync, which this step also needs for the token panel (the `--caution-*` re-tune).
+- `conventions.md` carries layout advice with concrete pixel figures. Those are NOT enum names and no validator catches them — the 2026-07-28 pass found a stale "~520 px" column claim with nothing behind it, restated as ~590 px from `.page`/`.workspace`. adr-018 then replaced that grid with the glass editor, and the 2026-10-10 pass found `.page`/`.workspace` still in the stylesheet but rendered by nothing. The figure is 460 px including the deckled mat's 12 px pad, so 436 px for the card itself, from `.cc-preview-inner { width: min(460px, 100%) }` inside `.cc-preview`'s 28 px padding and `.cc-mat > .deckle` (rewritten 2026-10-29 for adr-019: the ground is the grained `--table`, no longer palette-tinted). Re-derive it if any of those rules change.
 - The authored preview (`.design-sync/previews/InvitationPreview.tsx`) hard-codes realistic copy; it tracks the pipeline's copy shape (`title/greeting/body/details_line/rsvp_prompt/closing`). A schema rename breaks it loudly (compile), a semantic change only stales it quietly.
 - Google Fonts are fetched at runtime — render checks need network for true typography; offline runs fall back to Georgia/Segoe and screenshots will look wrong without being a regression.
 - Build assumptions: pnpm v10 workspace install from repo root; converter deps staged in `.ds-sync/` (npm, isolated); playwright chromium cached at `%LOCALAPPDATA%\ms-playwright`.
 - **The DS project holds more than this sync produces — never sweep it.** Alongside our 13 files it carries a `templates/` tree authored *in* claude.ai/design: the two system sets (`card-background`, `lang-switcher`); every screen set moved to the design project on 2026-10-10. It also carries app-generated `Canvas.dc.html`, `support.js`, `_ds_manifest.json`, `_adherence.oxlintrc.json` and `uploads/`. **That list has been wrong before** (`brand-name`, `feedback-sheet` and `gallery` were all missing from it until 2026-09-12), so treat it as a reminder that the tree is larger than this sync, not as an inventory. None are converter output. With a healthy anchor this is safe automatically (`deletePaths` only ever names our own paths). **The trap is the no-anchor branch of §5**, which says to review `list_files` for "files this build doesn't produce" and put them in `deletes`. Applied literally here, that deletes the system's two template sets. If the anchor is ever missing, pass `deletes: []` and re-anchor instead. **The design project is never a sync target**: the only thing this pipeline writes to `530d4226-b043-40eb-bdc2-326eed222b0f` is the binding refresh above, into `_ds/<folder>/` and nowhere else.
 
-- **adr-019 step 9 renamed `.glass` / `.glass-solid` to `.sheet` / `.sheet-solid`** (2026-10-25), and the `--glass-*` tokens to `--sheet-*`, dropping the alpha and blur tokens and the `prefers-reduced-transparency` block. Nothing in the design projects broke, because the DS's `_ds_bundle.css` still carries the old names; **the next upload of `styles.css` removes them**. Before it: rewrite `conventions.md`'s "the `.glass` / `.glass-solid` classes" to the new names, which makes that sync a full one (it already is, see above); and search every canvas in E-invitation design for `glass` the way the 2026-10-17 `--lp-*` search was run, because a canvas that sets `class="glass"` or reads `--glass-tint` would lose its surface and edge with nothing in the render check to say so.
+- **adr-019 step 9 renamed `.glass` / `.glass-solid` to `.sheet` / `.sheet-solid`** (2026-10-25), and the `--glass-*` tokens to `--sheet-*`, dropping the alpha and blur tokens and the `prefers-reduced-transparency` block. *Done in the full resync of 2026-10-29:* `conventions.md` names the new classes, and the canvas search found no `glass` class or `--glass-*` read, so the upload that removed the old names broke nothing. The lesson stands for any rename in the stylesheet: a canvas that sets a removed class loses its surface with nothing in the render check to say so, so search the design project's canvases before the upload that drops the old name.
 
 ## Registering a new template set (learned 2026-09-12)
 
