@@ -222,6 +222,12 @@ export function registerInvitationRoutes(app: FastifyInstance): void {
     } catch (error) {
       return reply.code(400).send({ error: describeZodError(error) });
     }
+    // Admitted after validation, like the LLM endpoints (adr-008, amended): a
+    // dead link or a malformed reply spends nothing. The guest page maps 429
+    // to its own message, so this wording is for direct callers.
+    if (!consumeIpAllowance(request.ip, "rsvp")) {
+      return reply.code(429).send({ error: "Too many replies today. Try again tomorrow." });
+    }
     // `addRsvp` is immutable and returns the updated record — the reply that
     // just arrived is only in *that* one. Notifying from `record` would count
     // every reply except the one being notified about, which for a first reply
