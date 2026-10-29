@@ -14,7 +14,7 @@
 
 **Tech Stack:** React 19, react-router-dom (declarative), CSS custom properties, Vitest with jsdom and `@testing-library/react`, Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md) §7, §10, §11 and §1's step-1 amendment (the `--caution-*` re-tune "belongs to the share-panel step (5)"). Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md) §7. The share panel's checkbox is redone from PR #66's design pass, at `58a504e` on `feat/ds-notify-checkbox`.
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md) §7, §10, §11 and §1's step-1 amendment (the `--caution-*` re-tune "belongs to the share-panel step (5)"). Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md) §7. The share panel's checkbox is redone from PR #66's design pass, at `58a504e` on `feat/ds-notify-checkbox`.
 
 **The boards §7.5 asks for were waived by the owner.** §7.5 names two boards in the design project before this step: the desktop two-pane layout and the share panel. The owner chose to build without them. This plan settles what they would have, in the table below, and the PR records the waiver as an adr-019 amendment, as step 6's reordering was. The visual references that do exist still hold: the canvas row `A2 · Editor`, and the design project's `ShareSignedIn`, `NotifyLine` and `AuthGate` boards for the panel's hierarchy and the gate's frames.
 

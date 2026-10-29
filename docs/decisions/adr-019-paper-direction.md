@@ -11,7 +11,7 @@ Replaces [adr-018](adr-018-material-system.md)'s **direction** and keeps its
 **system**: the `:root` token block, the `CONVERTED` ratchet and the contrast
 tests stay exactly as they are, and this decision changes what they hold. The
 long form, with the mockup references and the research sources, is the
-[paper-direction spec](../superpowers/specs/2026-10-21-paper-direction-design.md).
+[paper-direction spec](../superpowers/archive/specs/2026-10-21-paper-direction-design.md).
 Where the two differ, this ADR wins: it settles the four product questions the
 spec left open (§9), takes in a design pass the spec did not mention (§10), and
 pins one ordering constraint the spec did not state (§5.1).

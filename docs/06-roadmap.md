@@ -967,8 +967,18 @@ Two readings are standing, and neither is due:
 - **The gallery**: no conclusion before about 2026-12-15, and zero
   gallery-attributed generations or publishes in forty-three days. The Search
   Console check this file said would answer in about two weeks, whether the
-  pages are indexed at all, is recorded nowhere. It is overdue and costs no
-  code.
+  pages are indexed at all, ran on 2026-10-16, three weeks late, and is
+  written down here on 2026-10-29. **9 of the sitemap's 16 pages were
+  indexed**: `/`, `/gallery`, birthday and jubilee in both languages, and
+  christening in English. The other seven (wedding, kids and corporate in
+  both, christening in Ukrainian) were *discovered, not indexed* and had
+  never been crawled. That is Google's queue, not a fault: each serves 200
+  with `index, follow`, its own canonical and a prerendered body. Over three
+  months, **0 clicks from 51 impressions**. 38 were the query "invinto" at an
+  average position of 5, so the site does not rank first for its own name,
+  and the one non-brand query, "anniversary invitation wording", sat at 78.
+  Every impression landed on `/` or an English gallery page; the Ukrainian
+  gallery pages, the primary market's, had none.
 
 ## Candidate backlog
 
@@ -1223,4 +1233,6 @@ on the dashboard with "not just this one" in its state line (FR-12.11). The
 share panel's, the last, shipped with step 5 (2026-10-24): the checkbox at
 publish (FR-12.7), and the rule behind it written down as adr-010 §3.1. The
 whole pass is now ported, so `feat/ds-notify-checkbox`, kept as the
-reference until the editor step landed, is deleted once that step merges.
+reference until the editor step landed, was deleted on 2026-10-29. The
+commits the archived plans cite (`58a504e`, `9e08178`) stay reachable on
+GitHub from PR #66's head.

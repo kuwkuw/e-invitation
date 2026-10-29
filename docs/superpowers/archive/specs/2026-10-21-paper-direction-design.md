@@ -1,7 +1,7 @@
 # Spec — the paper direction (A2)
 
 **Date:** 2026-10-21 · **Status:** settled as
-[adr-019](../../decisions/adr-019-paper-direction.md) on 2026-10-22 ·
+[adr-019](../../../decisions/adr-019-paper-direction.md) on 2026-10-22 ·
 **Lands as:** amends NFR-9's token values and adds four FR changes (§9). Keeps
 the adr-018 *system* — the `:root` block, the `CONVERTED` ratchet, the contrast
 tests — and replaces its *direction*.
@@ -30,7 +30,7 @@ mockups disagree, this spec wins: it was written after reading the code, and
 Glass did what it promised for the editor. It did nothing for the two surfaces
 that decide whether this product spreads: the **guest page**, which every guest
 sees, and the **landing page**, where the "create your own" referral lands
-(FR-4.7, [07-monetization.md](../../07-monetization.md) §5.1). Neither surface
+(FR-4.7, [07-monetization.md](../../../07-monetization.md) §5.1). Neither surface
 was the subject of D1.
 
 **What the research said, and what it changes here.**
@@ -243,7 +243,7 @@ A new section with a still of the envelope and seal. Copy comes from new
 #### 6.4 Pricing copy, corrected
 
 A2's composer footnote («платите лише при публікації») and its FAQ answer
-contradict [07-monetization.md](../../07-monetization.md) §5.2: publishing stays
+contradict [07-monetization.md](../../../07-monetization.md) §5.2: publishing stays
 free, and the paid step is a one-time unlock that removes the badge. Gating
 publish "severs the loop". The copy becomes:
 
