@@ -21,7 +21,7 @@ The stored RSVP keeps `attending: boolean` and gains `answer: "yes" | "no" | "ma
 
 **Tech Stack:** zod v4 and Fastify on the server. React 19, CSS custom properties, Vitest with jsdom and `@testing-library/react`, Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md) §9.1, its Consequences ("the one step here that a careless implementation could make irreversible") and its revisit triggers ("maybes outnumber yeses"). The long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md) §9.1.
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md) §9.1, its Consequences ("the one step here that a careless implementation could make irreversible") and its revisit triggers ("maybes outnumber yeses"). The long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md) §9.1.
 
 **Order:** step 7 follows step 6, at the owner's choice. Step 5, the editor, still waits on its two design-project boards (§7.5). Nothing here depends on step 5. Step 5's header link «16 буде · 3 ні» will read the maybe from the same `/rsvps` summary when it's built.
 

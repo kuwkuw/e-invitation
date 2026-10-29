@@ -13,7 +13,7 @@
 
 **Tech Stack:** React 19, CSS custom properties, Vitest with jsdom and `@testing-library/react`, Biome.
 
-**Spec:** [adr-019](../../decisions/adr-019-paper-direction.md) §8 and §10. Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md). Like steps 3 and 4, this was planned from adr-019's text alone. The reply-email checkbox on this page is redone from PR #66's design pass, at `58a504e` on `feat/ds-notify-checkbox`.
+**Spec:** [adr-019](../../../decisions/adr-019-paper-direction.md) §8 and §10. Its long form is the [paper-direction spec](../specs/2026-10-21-paper-direction-design.md). Like steps 3 and 4, this was planned from adr-019's text alone. The reply-email checkbox on this page is redone from PR #66's design pass, at `58a504e` on `feat/ds-notify-checkbox`.
 
 **Order:** the owner chose to take this step before step 5. Step 5, the editor, waits on two boards in the design project, and this step needs none (adr-019 §7.5 names boards for the editor only). adr-019 §12 orders the steps to avoid stacked PRs, and no code here depends on step 5's.
 
