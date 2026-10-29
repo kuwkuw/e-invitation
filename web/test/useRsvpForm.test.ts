@@ -74,7 +74,7 @@ describe("useRsvpForm", () => {
       note: "+1 dessert",
     });
     expect(result.current.sent).toBe(true);
-    expect(result.current.submitError).toBe(false);
+    expect(result.current.submitError).toBeNull();
   });
 
   it("surfaces a failure without losing the guest's answers", async () => {
@@ -89,10 +89,30 @@ describe("useRsvpForm", () => {
       await result.current.submit({ preventDefault: () => {} } as React.FormEvent);
     });
 
-    await waitFor(() => expect(result.current.submitError).toBe(true));
+    await waitFor(() => expect(result.current.submitError).toBe("failed"));
     expect(result.current.sent).toBe(false);
     expect(result.current.sending).toBe(false);
     expect(result.current.name).toBe("Оксана");
+  });
+
+  // adr-008, amended: the server limits replies per IP per day. Trying again
+  // in a moment can't help, so the guest is told so rather than "try again".
+  it("tells a daily limit apart from any other failure", async () => {
+    const limited = new api.ApiError("Too many replies today. Try again tomorrow.");
+    limited.status = 429;
+    vi.spyOn(api, "submitRsvp").mockRejectedValue(limited);
+    const { result } = renderHook(() => useRsvpForm("abc123"));
+
+    act(() => {
+      result.current.setName("Оксана");
+      result.current.setAnswer("yes");
+    });
+    await act(async () => {
+      await result.current.submit({ preventDefault: () => {} } as React.FormEvent);
+    });
+
+    expect(result.current.submitError).toBe("limited");
+    expect(result.current.sent).toBe(false);
   });
 
   it("reopens the form with the previous answers after 'change my answer'", async () => {

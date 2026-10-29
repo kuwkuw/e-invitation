@@ -113,7 +113,9 @@ export function RsvpForm({ form, t }: Props) {
             rows={2}
           />
 
-          {form.submitError && <p className="error">{t.error}</p>}
+          {form.submitError && (
+            <p className="error">{form.submitError === "limited" ? t.limited : t.error}</p>
+          )}
         </div>
 
         <button className="gr-submit" type="submit" disabled={!form.canSubmit}>

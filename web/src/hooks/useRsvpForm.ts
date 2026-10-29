@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { submitRsvp } from "../api";
+import { ApiError, submitRsvp } from "../api";
 import type { RsvpAnswer, RsvpInput } from "../types";
 
 /** Server-side bounds from RsvpRequest in schemas.ts; mirrored here so the
@@ -35,7 +35,9 @@ export function useRsvpForm(invitationId: string) {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [submitError, setSubmitError] = useState(false);
+  // "limited" is the server's per-IP daily allowance (adr-008, amended): a
+  // retry can't help until tomorrow, so the form says that instead.
+  const [submitError, setSubmitError] = useState<"failed" | "limited" | null>(null);
 
   const canSubmit = name.trim().length > 0 && answer !== null && !sending;
 
@@ -43,12 +45,12 @@ export function useRsvpForm(invitationId: string) {
     event.preventDefault();
     if (!canSubmit || answer === null) return;
     setSending(true);
-    setSubmitError(false);
+    setSubmitError(null);
     try {
       await submitRsvp(invitationId, buildRsvpInput({ name, answer, guestsCount, note }));
       setSent(true);
-    } catch {
-      setSubmitError(true);
+    } catch (error) {
+      setSubmitError(error instanceof ApiError && error.status === 429 ? "limited" : "failed");
     } finally {
       setSending(false);
     }

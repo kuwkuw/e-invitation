@@ -272,6 +272,17 @@ describe("the reply card (adr-019 §5.3)", () => {
     );
   });
 
+  it("says the day's replies are used up when the server limits them", async () => {
+    const limited = new api.ApiError("Too many replies today. Try again tomorrow.");
+    limited.status = 429;
+    vi.spyOn(api, "submitRsvp").mockRejectedValue(limited);
+    renderPage();
+    await answer("yes");
+
+    expect(await screen.findByText(t.limited)).toBeDefined();
+    expect(screen.queryByText(t.error)).toBeNull();
+  });
+
   it("thanks a maybe quietly, and points at changing the reply", async () => {
     renderPage();
     await answer("maybe");
